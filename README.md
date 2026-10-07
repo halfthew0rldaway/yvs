@@ -1,5 +1,4 @@
 <div align="center">
-    <img src="logo undira.png" alt="Logo" width="120" />
     <h1>Platform Serv.io</h1>
     <p>Sistem Manajemen Pusat Servis & Perbaikan IT Skala Enterprise</p>
 
@@ -491,11 +490,8 @@ Setelah frontend terbuka di browser, gunakan kredensial berikut untuk masuk:
 
 ---
 <div align="center">
-    <h3>Pengembang Proyek (Universitas Dian Nusantara)</h3>
+    <h3>Pengembang Proyek</h3>
     <p>
-        <strong>Wisnu Widya Pradana</strong> (411231088) <br>
-        <strong>Muhammad Aditya</strong> (411231139) <br>
-        <strong>Rhio Isma Rizky Aziz</strong> (411231085)
+        <strong>Wisnu Widya Pradana</strong> (411231088)
     </p>
 </div>
-# yvs
