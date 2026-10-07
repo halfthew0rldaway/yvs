@@ -1,0 +1,29 @@
+# Kredensial dan Rahasia
+.env
+.env.local
+
+# Dependensi Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build Frontend
+frontend/dist/
+frontend/build/
+
+# Upload / Media Backend
+backend/uploads/
+backend/public/uploads/
+
+# OS/Editor Files
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Dokumen dan Presentasi
+docs/
+req/
+presentation/
