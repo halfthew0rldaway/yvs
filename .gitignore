@@ -27,3 +27,12 @@ backend/public/uploads/
 docs/
 req/
 presentation/
+
+# Production secrets
+.env.production
+.env.production.*
+!.env.production.example
+
+# Track dependency lockfiles for reproducible builds
+!backend/package-lock.json
+!frontend/package-lock.json

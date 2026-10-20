@@ -961,7 +961,9 @@ export default function TiketServisDetail() {
                                     <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">Foto Kondisi Awal</p>
                                     <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
                                         {JSON.parse(tiket.foto_kondisi).map((foto, idx) => {
-                                            const imageUrl = foto.startsWith('http') ? foto : `http://localhost:5000${foto}`;
+                                            const imageUrl = foto.startsWith('http')
+    ? foto
+    : `/${foto.replace(/^\/+/, '')}`;
                                             return (
                                                 <button 
                                                     key={idx} 
