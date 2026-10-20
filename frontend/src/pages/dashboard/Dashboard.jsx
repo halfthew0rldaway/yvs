@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import {
@@ -18,32 +18,60 @@ import {
     Database,
     ChevronDown,
     FileJson,
-    FileSpreadsheet
+    FileSpreadsheet,
+    Timer,
+    TrendingUp,
+    ArrowRight,
+    Zap,
+    ShieldAlert,
+    Calendar,
+    MessageCircle
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, AreaChart, Area, LineChart, Line } from 'recharts';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
-function StatCard({ label, value, icon: Icon, color = "blue" }) {
+function StatCard({ label, value, icon: Icon, color = "blue", to }) {
     const colors = {
-        blue: "bg-blue-50 text-blue-600 border-blue-100",
-        green: "bg-emerald-50 text-emerald-600 border-emerald-100",
-        amber: "bg-amber-50 text-amber-600 border-amber-100",
-        red: "bg-red-50 text-red-600 border-red-100",
-        slate: "bg-slate-50 text-slate-600 border-slate-200",
-        indigo: "bg-indigo-50 text-indigo-600 border-indigo-100",
+        blue: "bg-blue-50 text-blue-600 border-blue-100 group-hover:bg-blue-100 group-hover:border-blue-200 transition-colors",
+        green: "bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-emerald-100 group-hover:border-emerald-200 transition-colors",
+        amber: "bg-amber-50 text-amber-600 border-amber-100 group-hover:bg-amber-100 group-hover:border-amber-200 transition-colors",
+        red: "bg-red-50 text-red-600 border-red-100 group-hover:bg-red-100 group-hover:border-red-200 transition-colors",
+        slate: "bg-slate-50 text-slate-600 border-slate-200 group-hover:bg-slate-100 group-hover:border-slate-300 transition-colors",
+        indigo: "bg-indigo-50 text-indigo-600 border-indigo-100 group-hover:bg-indigo-100 group-hover:border-indigo-200 transition-colors",
     };
+
+    const cardContent = (
+        <div className="flex items-center gap-3">
+            <div className={`p-3 rounded-xl border ${colors[color]}`}>
+                <Icon className="w-6 h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide truncate">{label}</p>
+                <p className="text-xl xl:text-2xl font-bold text-slate-900 mt-1 truncate" title={value}>{value}</p>
+            </div>
+            {to && (
+                <div className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all">
+                    <ArrowRight className="w-4 h-4" />
+                </div>
+            )}
+        </div>
+    );
+
+    if (to) {
+        return (
+            <Link 
+                to={to} 
+                className="group bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 flex flex-col justify-center h-full block cursor-pointer"
+            >
+                {cardContent}
+            </Link>
+        );
+    }
 
     return (
         <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200 flex flex-col justify-center h-full">
-            <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-xl border ${colors[color]}`}>
-                    <Icon className="w-6 h-6" />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide truncate">{label}</p>
-                    <p className="text-xl xl:text-2xl font-bold text-slate-900 mt-1 truncate" title={value}>{value}</p>
-                </div>
-            </div>
+            {cardContent}
         </div>
     );
 }
@@ -99,8 +127,253 @@ const SHORT_NAMES = {
     "Didiagnosis": "Diagnosis"
 };
 
+// SLA & Antrean Monitoring Card with Donut Chart and Interactive Filter Cards
+function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
+    const navigate = useNavigate();
+    const totalActive = slaSummary?.totalActive ?? 0;
+    const overdueCount = slaSummary?.overdueCount ?? 0;
+    const expressCount = slaSummary?.expressCount ?? 0;
+    const pendingApprovalCount = slaSummary?.pendingApprovalCount ?? 0;
+    const onTrackCount = slaSummary?.onTrackCount ?? 0;
+    const warningCount = slaSummary?.warningCount ?? 0;
+
+    const rawChartData = slaSummary?.chartData || [
+        { name: "Sesuai Estimasi", shortName: "On Track", value: onTrackCount, color: "#10b981", percent: 0 },
+        { name: "Mendekati Batas", shortName: "Warning (<12j)", value: warningCount, color: "#f59e0b", percent: 0 },
+        { name: "Melewati Estimasi", shortName: "Overdue", value: overdueCount, color: "#ef4444", percent: 0 },
+        { name: "Menunggu Persetujuan", shortName: "Pause (ACC)", value: pendingApprovalCount, color: "#64748b", percent: 0 },
+    ];
+
+    const activeSegments = rawChartData.filter(item => item.value > 0);
+    const hasData = totalActive > 0 && activeSegments.length > 0;
+    const chartSegments = hasData 
+        ? activeSegments 
+        : [{ name: "Tidak ada tiket aktif", value: 1, color: "#e2e8f0", isDummy: true }];
+
+    const handleSliceClick = (entry) => {
+        if (!entry || entry.isDummy) return;
+        const scopePrefix = isTeknisi ? "scope=my&" : "";
+        if (entry.name === "Sesuai Estimasi") {
+            navigate(`/tiket-servis?${scopePrefix}status=aktif`);
+        } else if (entry.name === "Mendekati Batas") {
+            navigate(`/tiket-servis?${scopePrefix}sla_urgency=warning`);
+        } else if (entry.name === "Melewati Estimasi") {
+            navigate(`/tiket-servis?${scopePrefix}sla_urgency=overdue`);
+        } else if (entry.name === "Menunggu Persetujuan") {
+            navigate(`/tiket-servis?${scopePrefix}status=menunggu_persetujuan`);
+        }
+    };
+
+    const scopePrefix = isTeknisi ? "scope=my&" : "";
+
+    return (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                        <Timer className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                        <h2 className="text-base font-bold text-slate-900 tracking-tight">Kepatuhan Estimasi SLA & Antrean</h2>
+                        <p className="text-xs text-slate-400">Monitoring ketepatan waktu pengerjaan dan prioritas tiket aktif</p>
+                    </div>
+                </div>
+                {overdueCount > 0 && (
+                    <Link
+                        to={`/tiket-servis?${scopePrefix}sla_urgency=overdue`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition-all group self-start sm:self-auto"
+                    >
+                        <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                        <span>{overdueCount} Melewati Estimasi</span>
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                )}
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-col lg:flex-row items-center gap-6">
+                {/* Donut Chart */}
+                <div className="w-full lg:w-5/12 flex flex-col items-center">
+                    <div className="w-full h-[210px] relative flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={chartSegments}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={62}
+                                    outerRadius={88}
+                                    paddingAngle={hasData ? 3 : 0}
+                                    dataKey="value"
+                                    stroke="none"
+                                    className={hasData ? "cursor-pointer" : ""}
+                                    onClick={(e) => e && handleSliceClick(e)}
+                                >
+                                    {chartSegments.map((entry, index) => (
+                                        <Cell 
+                                            key={`sla-cell-${index}`} 
+                                            fill={entry.color} 
+                                            className={hasData ? "hover:opacity-80 transition-opacity cursor-pointer" : ""} 
+                                        />
+                                    ))}
+                                </Pie>
+                                {hasData && (
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length && !payload[0].payload.isDummy) {
+                                                const item = payload[0].payload;
+                                                return (
+                                                    <div className="bg-white text-slate-700 text-xs rounded-xl px-3 py-2 shadow-lg border border-slate-100">
+                                                        <p className="font-semibold text-slate-800">{item.name}</p>
+                                                        <p className="font-bold text-sm mt-0.5" style={{ color: item.color }}>
+                                                            {item.value} <span className="text-xs font-normal text-slate-400">tiket ({item.percent}%)</span>
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                )}
+                            </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                                {totalActive}
+                            </span>
+                            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
+                                Tiket Aktif
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-1 text-xs">
+                        {rawChartData.map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }}></span>
+                                <span className="text-slate-500 font-medium">{item.shortName}:</span>
+                                <span className="font-bold text-slate-800">{item.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 4 Cards (2x2 grid) */}
+                <div className="w-full lg:w-7/12 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Melewati Estimasi */}
+                    <Link
+                        to={`/tiket-servis?${scopePrefix}sla_urgency=overdue`}
+                        className={`group p-4 rounded-xl border transition-all flex items-start justify-between ${
+                            overdueCount > 0 
+                                ? "bg-rose-50/50 border-rose-200 hover:bg-rose-50 hover:border-rose-300 hover:shadow-xs" 
+                                : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                        }`}
+                    >
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <div className={`p-1.5 rounded-lg ${overdueCount > 0 ? "bg-rose-100 text-rose-600" : "bg-slate-100 text-slate-400"}`}>
+                                    <ShieldAlert className="w-4 h-4" />
+                                </div>
+                                <span className="text-xs font-bold text-slate-700">Melewati Estimasi</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 pl-0.5">Overdue batas waktu servis</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xl font-extrabold ${overdueCount > 0 ? "text-rose-600" : "text-slate-400"}`}>
+                                {overdueCount}
+                            </span>
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                    </Link>
+
+                    {/* Prioritas Express */}
+                    <Link
+                        to={`/tiket-servis?${scopePrefix}sla_paket=express`}
+                        className={`group p-4 rounded-xl border transition-all flex items-start justify-between ${
+                            expressCount > 0 
+                                ? "bg-amber-50/50 border-amber-200 hover:bg-amber-50 hover:border-amber-300 hover:shadow-xs" 
+                                : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                        }`}
+                    >
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <div className={`p-1.5 rounded-lg ${expressCount > 0 ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-400"}`}>
+                                    <Zap className="w-4 h-4 fill-current" />
+                                </div>
+                                <span className="text-xs font-bold text-slate-700">Prioritas Express</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 pl-0.5">Antrean cepat paket kilat</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xl font-extrabold ${expressCount > 0 ? "text-amber-600" : "text-slate-400"}`}>
+                                {expressCount}
+                            </span>
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                    </Link>
+
+                    {/* Menunggu Persetujuan */}
+                    <Link
+                        to={`/tiket-servis?${scopePrefix}status=menunggu_persetujuan`}
+                        className={`group p-4 rounded-xl border transition-all flex items-start justify-between ${
+                            pendingApprovalCount > 0 
+                                ? "bg-slate-50 border-slate-200 hover:bg-slate-100/80 hover:border-slate-300 hover:shadow-xs" 
+                                : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                        }`}
+                    >
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <div className={`p-1.5 rounded-lg ${pendingApprovalCount > 0 ? "bg-slate-200 text-slate-700" : "bg-slate-100 text-slate-400"}`}>
+                                    <Clock className="w-4 h-4" />
+                                </div>
+                                <span className="text-xs font-bold text-slate-700">Menunggu Persetujuan</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 pl-0.5">Estimasi SLA dijeda (ACC)</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xl font-extrabold ${pendingApprovalCount > 0 ? "text-slate-700" : "text-slate-400"}`}>
+                                {pendingApprovalCount}
+                            </span>
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                    </Link>
+
+                    {/* Sesuai Estimasi */}
+                    <Link
+                        to={`/tiket-servis?${scopePrefix}status=aktif`}
+                        className={`group p-4 rounded-xl border transition-all flex items-start justify-between ${
+                            onTrackCount > 0 
+                                ? "bg-emerald-50/50 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-xs" 
+                                : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                        }`}
+                    >
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <div className={`p-1.5 rounded-lg ${onTrackCount > 0 ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"}`}>
+                                    <CheckCircle2 className="w-4 h-4" />
+                                </div>
+                                <span className="text-xs font-bold text-slate-700">Sesuai Estimasi</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 pl-0.5">Pengerjaan tepat waktu</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xl font-extrabold ${onTrackCount > 0 ? "text-emerald-600" : "text-slate-400"}`}>
+                                {onTrackCount}
+                            </span>
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Dashboard() {
     const { isAdmin, user } = useAuth();
+    const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
@@ -124,7 +397,9 @@ export default function Dashboard() {
                     }));
                 }
                 
-                if (isMounted) setData(res.data);
+                if (isMounted) {
+                    setData(res.data);
+                }
             } catch (err) {
                 console.error(err);
             } finally {
@@ -137,8 +412,12 @@ export default function Dashboard() {
 
         loadData();
 
-        // Fitur Real-time Sync (Polling setiap 3 detik)
-        const intervalId = setInterval(loadData, 3000);
+        // Fitur Real-time Sync (Polling setiap 10 detik dan hanya saat tab aktif)
+        const intervalId = setInterval(() => {
+            if (document.visibilityState === "visible") {
+                loadData();
+            }
+        }, 10000);
 
         return () => {
             isMounted = false;
@@ -159,101 +438,51 @@ export default function Dashboard() {
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Halo, {user?.nama}! 👋</h1>
+                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Halo, {user?.nama}!</h1>
                         <p className="text-sm text-slate-500 mt-1">Selamat datang di Dashboard Admin. Berikut ringkasan performa sistem hari ini.</p>
-                    </div>
-                    
-                    {/* Export Dropdown Group */}
-                    <div className="relative">
-                        <button 
-                            onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm"
-                        >
-                            <Database className="w-4 h-4" />
-                            <span>Backup Database</span>
-                            <ChevronDown className="w-4 h-4 opacity-70" />
-                        </button>
-
-                        {exportDropdownOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-50">
-                                <div className="py-1">
-                                    <button
-                                        onClick={async () => {
-                                            setExportDropdownOpen(false);
-                                            try {
-                                                const res = await api.get('/dashboard/database/export');
-                                                const dbData = res.data;
-                                                delete dbData.exportedAt;
-                                                
-                                                const wb = XLSX.utils.book_new();
-                                                
-                                                for (const key of Object.keys(dbData)) {
-                                                    if (Array.isArray(dbData[key]) && dbData[key].length > 0) {
-                                                        const ws = XLSX.utils.json_to_sheet(dbData[key]);
-                                                        XLSX.utils.book_append_sheet(wb, ws, key.substring(0, 31)); // excel sheet names max 31 chars
-                                                    }
-                                                }
-                                                
-                                                XLSX.writeFile(wb, `Servio_Backup_${new Date().toISOString().split('T')[0]}.xlsx`);
-                                                toast.success("Database diekspor ke Excel!");
-                                            } catch (error) {
-                                                console.error("Gagal export excel", error);
-                                                toast.error("Gagal mengekspor database ke Excel");
-                                            }
-                                        }}
-                                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-2 transition-colors font-medium"
-                                    >
-                                        <FileSpreadsheet className="w-4 h-4" />
-                                        Export as Excel
-                                    </button>
-                                    <button
-                                        onClick={async () => {
-                                            setExportDropdownOpen(false);
-                                            try {
-                                                const res = await api.get('/dashboard/database/export', {
-                                                    responseType: 'blob'
-                                                });
-                                                const url = window.URL.createObjectURL(new Blob([res.data]));
-                                                const link = document.createElement('a');
-                                                link.href = url;
-                                                link.setAttribute('download', `servio_db_backup_${new Date().toISOString().split('T')[0]}.json`);
-                                                document.body.appendChild(link);
-                                                link.click();
-                                                link.parentNode.removeChild(link);
-                                            } catch (error) {
-                                                console.error("Gagal export JSON", error);
-                                                toast.error("Gagal mengekspor database JSON");
-                                            }
-                                        }}
-                                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 flex items-center gap-2 transition-colors font-medium border-t border-slate-100"
-                                    >
-                                        <FileJson className="w-4 h-4" />
-                                        Export as JSON
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                    <StatCard label="Total Customer" value={data?.totalCustomer || 0} icon={Users} color="blue" />
-                    <StatCard label="Total Perangkat" value={data?.totalPerangkat || 0} icon={MonitorSmartphone} color="slate" />
-                    <StatCard label="Tiket Aktif" value={data?.tiketAktif || 0} icon={Ticket} color="amber" />
-                    <StatCard label="Tiket Selesai" value={data?.tiketSelesai || 0} icon={CheckCircle2} color="green" />
-                    <StatCard label="Pendapatan (Bulan Ini)" value={formatRupiah(data?.pendapatanBulanIni || 0)} icon={BadgeDollarSign} color="indigo" />
+                    <StatCard label="Total Customer" value={data?.totalCustomer || 0} icon={Users} color="blue" to="/customer" />
+                    <StatCard label="Total Perangkat" value={data?.totalPerangkat || 0} icon={MonitorSmartphone} color="slate" to="/perangkat" />
+                    <StatCard label="Tiket Aktif" value={data?.tiketAktif || 0} icon={Ticket} color="amber" to="/tiket-servis?status=aktif" />
+                    <StatCard label="Tiket Selesai" value={data?.tiketSelesai || 0} icon={CheckCircle2} color="green" to="/tiket-servis?status=selesai" />
+                    <StatCard label="Pendapatan (Bulan Ini)" value={formatRupiah(data?.pendapatanBulanIni || 0)} icon={BadgeDollarSign} color="indigo" to="/invoice" />
                 </div>
+
+                {/* SLA & Antrean Compliance Chart Card */}
+                <SlaMonitoringCard slaSummary={data?.slaSummary} isTeknisi={false} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Charts Section */}
                     <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-[420px]">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Distribusi Status Tiket</h2>
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Distribusi Status Tiket</h2>
+                                <p className="text-xs text-slate-400 mt-0.5">Klik salah satu bar untuk melihat daftar tiket terkait</p>
+                            </div>
+                            <Link to="/tiket-servis" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                                <span>Semua Tiket</span>
+                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
                         </div>
                         {data?.chartData?.length > 0 ? (
                             <div className="flex-1 w-full min-h-0">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={data.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <BarChart 
+                                        data={data.chartData} 
+                                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                                        onClick={(e) => {
+                                            if (e && e.activePayload && e.activePayload.length > 0) {
+                                                const clicked = e.activePayload[0].payload;
+                                                const statusKey = (clicked.name || "").toLowerCase().replace(/ /g, "_");
+                                                if (statusKey) {
+                                                    navigate(`/tiket-servis?status=${statusKey}`);
+                                                }
+                                            }
+                                        }}
+                                    >
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                         <XAxis 
                                             dataKey="shortName" 
@@ -271,9 +500,9 @@ export default function Dashboard() {
                                             dx={-10} 
                                         />
                                         <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                                        <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                                        <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40} className="cursor-pointer">
                                             {data.chartData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.fillColor} />
+                                                <Cell key={`cell-${index}`} fill={entry.fillColor} className="hover:opacity-80 transition-opacity cursor-pointer" />
                                             ))}
                                         </Bar>
                                     </BarChart>
@@ -288,14 +517,20 @@ export default function Dashboard() {
 
                     {/* Sparepart hampir habis */}
                     <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-[420px]">
-                        <div className="flex items-center gap-2 mb-6">
-                            <AlertTriangle className="w-5 h-5 text-amber-500" />
-                            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Stok Menipis</h2>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Stok Menipis</h2>
+                            </div>
+                            <Link to="/sparepart" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                                <span>Katalog</span>
+                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
                         </div>
                         {data?.sparepartHampirHabis?.length > 0 ? (
                             <div className="overflow-y-auto flex-1 custom-scrollbar pr-2 -mr-2">
                                 <table className="w-full text-sm text-left">
-                                    <thead>
+                                    <thead className="sticky top-0 bg-white z-10 shadow-[0_1px_0_0_#e2e8f0]">
                                         <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
                                             <th className="font-semibold py-3 px-4 rounded-tl-lg">Nama Suku Cadang</th>
                                             <th className="font-semibold py-3 px-4 text-right rounded-tr-lg">Sisa</th>
@@ -303,8 +538,13 @@ export default function Dashboard() {
                                     </thead>
                                     <tbody>
                                         {data.sparepartHampirHabis.map((s) => (
-                                            <tr key={s.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                                                <td className="py-3 px-4 font-medium text-slate-700">{s.nama}</td>
+                                            <tr 
+                                                key={s.id} 
+                                                onClick={() => navigate('/sparepart')}
+                                                className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer group"
+                                                title="Klik untuk membuka katalog sparepart"
+                                            >
+                                                <td className="py-3 px-4 font-medium text-slate-700 group-hover:text-blue-600 transition-colors">{s.nama}</td>
                                                 <td className="py-3 px-4 text-right">
                                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
                                                         {s.stok}
@@ -327,6 +567,116 @@ export default function Dashboard() {
                     </div>
                 </div>
 
+                {/* Row 3: Tren Pendapatan + Avg Waktu + Top Kerusakan */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Tren Pendapatan Bulanan - Area Chart */}
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-[380px]">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-blue-600" />
+                                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Tren Pendapatan 6 Bulan</h2>
+                            </div>
+                            <Link to="/invoice" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                                <span>Rincian Invoice</span>
+                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
+                        </div>
+                        {data?.trendPendapatan?.length > 0 ? (
+                            <div className="flex-1 w-full min-h-0">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={data.trendPendapatan} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorPendapatan" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="bulan" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(1)}jt` : v >= 1000 ? `${(v/1000).toFixed(0)}rb` : v} />
+                                        <Tooltip
+                                            formatter={(value) => [formatRupiah(value), "Pendapatan"]}
+                                            contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                                            labelStyle={{ fontWeight: 600, color: '#334155' }}
+                                        />
+                                        <Area type="monotone" dataKey="pendapatan" stroke="#3b82f6" strokeWidth={2.5} fill="url(#colorPendapatan)" dot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                Belum ada data pendapatan
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Rata-rata Waktu + Top 5 Kerusakan */}
+                    <div className="lg:col-span-1 flex flex-col gap-6">
+                        {/* Rata-rata Waktu Penyelesaian */}
+                        <Link 
+                            to="/tiket-servis?status=selesai"
+                            className="group bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer block"
+                            title="Klik untuk melihat tiket yang telah selesai diperbaiki"
+                        >
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                    <Timer className="w-5 h-5 text-amber-500" />
+                                    <h2 className="text-sm font-bold text-slate-900 tracking-tight">Rata-rata Waktu Servis</h2>
+                                </div>
+                                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                            </div>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-3xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{data?.rataRataHari || 0}</span>
+                                <span className="text-sm font-medium text-slate-500">hari</span>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1">
+                                Dari {data?.totalTiketSelesaiDihitung || 0} tiket yang sudah selesai
+                            </p>
+                        </Link>
+
+                        {/* Top 5 Jenis Kerusakan */}
+                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex-1">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Wrench className="w-5 h-5 text-violet-500" />
+                                    <h2 className="text-sm font-bold text-slate-900 tracking-tight">Top Kerusakan</h2>
+                                </div>
+                                <Link to="/tiket-servis" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                                    <span>Semua</span>
+                                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                </Link>
+                            </div>
+                            {data?.topKerusakan?.length > 0 ? (
+                                <div className="space-y-3">
+                                    {data.topKerusakan.map((item, i) => {
+                                        const max = data.topKerusakan[0]?.value || 1;
+                                        const pct = Math.round((item.value / max) * 100);
+                                        const colors = ["bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-violet-500", "bg-rose-400"];
+                                        return (
+                                            <Link 
+                                                key={i} 
+                                                to={`/tiket-servis?search=${encodeURIComponent(item.name)}`}
+                                                className="group block cursor-pointer"
+                                                title={`Cari tiket dengan kerusakan: ${item.name}`}
+                                            >
+                                                <div className="flex items-center justify-between mb-1 gap-2">
+                                                    <span className="text-xs font-medium text-slate-700 group-hover:text-blue-600 truncate flex-1 min-w-0 transition-colors">{item.name}</span>
+                                                    <span className="text-xs font-bold text-slate-500 group-hover:text-blue-600 transition-colors shrink-0">{item.value} tiket</span>
+                                                </div>
+                                                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div className={`h-full rounded-full ${colors[i % colors.length]} group-hover:opacity-80 transition-opacity`} style={{ width: `${pct}%` }} />
+                                                </div>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-slate-400">Belum ada data diagnosis</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Activity Log Section */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mt-6">
                     <div className="flex items-center justify-between mb-6">
@@ -339,29 +689,118 @@ export default function Dashboard() {
                                 <p className="text-sm text-slate-500">Pantau pergerakan data dan tugas di dalam sistem</p>
                             </div>
                         </div>
-                        <button 
-                            onClick={async () => {
-                                try {
-                                    const today = new Date().toISOString().split("T")[0];
-                                    const res = await api.get(`/dashboard/activities/export?date=${today}`, {
-                                        responseType: 'blob'
-                                    });
-                                    const url = window.URL.createObjectURL(new Blob([res.data]));
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.setAttribute('download', `activity_log_${today}.csv`);
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    link.parentNode.removeChild(link);
-                                } catch (error) {
-                                    console.error("Gagal export CSV", error);
-                                }
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors shadow-sm"
-                        >
-                            <Download className="w-4 h-4" />
-                            <span className="hidden sm:inline">Export CSV Hari Ini</span>
-                        </button>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Link 
+                                to="/users" 
+                                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors shadow-sm group"
+                                title="Lihat daftar user & performa"
+                            >
+                                <span>User & Performa</span>
+                                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
+                            <button 
+                                onClick={async () => {
+                                    try {
+                                        const today = new Date().toISOString().split("T")[0];
+                                        const res = await api.get(`/dashboard/activities/export?date=${today}`, {
+                                            responseType: 'blob'
+                                        });
+                                        const url = window.URL.createObjectURL(new Blob([res.data]));
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.setAttribute('download', `activity_log_${today}.csv`);
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        link.parentNode.removeChild(link);
+                                        window.URL.revokeObjectURL(url);
+                                    } catch (error) {
+                                        console.error("Gagal export CSV", error);
+                                    }
+                                }}
+                                className="flex items-center gap-2 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors shadow-sm"
+                                title="Unduh log aktivitas harian ke format CSV"
+                            >
+                                <Download className="w-4 h-4 text-slate-500" />
+                                <span className="hidden sm:inline">Export Log</span>
+                            </button>
+
+                            {/* Backup Database Dropdown */}
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                                    className="flex items-center gap-2 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-all shadow-xs"
+                                    title="Cadangkan seluruh database sistem"
+                                >
+                                    <Database className="w-4 h-4 text-emerald-400" />
+                                    <span>Backup Database</span>
+                                    <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                                </button>
+
+                                {exportDropdownOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setExportDropdownOpen(false)}></div>
+                                        <div className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-50">
+                                            <div className="py-1">
+                                                <button
+                                                    onClick={async () => {
+                                                        setExportDropdownOpen(false);
+                                                        try {
+                                                            const res = await api.get('/dashboard/database/export');
+                                                            const dbData = res.data;
+                                                            delete dbData.exportedAt;
+                                                            
+                                                            const wb = XLSX.utils.book_new();
+                                                            
+                                                            for (const key of Object.keys(dbData)) {
+                                                                if (Array.isArray(dbData[key]) && dbData[key].length > 0) {
+                                                                    const ws = XLSX.utils.json_to_sheet(dbData[key]);
+                                                                    XLSX.utils.book_append_sheet(wb, ws, key.substring(0, 31));
+                                                                }
+                                                            }
+                                                            
+                                                            XLSX.writeFile(wb, `Servio_Backup_${new Date().toISOString().split('T')[0]}.xlsx`);
+                                                            toast.success("Database diekspor ke Excel!");
+                                                        } catch (error) {
+                                                            console.error("Gagal export excel", error);
+                                                            toast.error("Gagal mengekspor database ke Excel");
+                                                        }
+                                                    }}
+                                                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-2 transition-colors font-medium"
+                                                >
+                                                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                                                    Export as Excel
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        setExportDropdownOpen(false);
+                                                        try {
+                                                            const res = await api.get('/dashboard/database/export', {
+                                                                responseType: 'blob'
+                                                            });
+                                                            const url = window.URL.createObjectURL(new Blob([res.data]));
+                                                            const link = document.createElement('a');
+                                                            link.href = url;
+                                                            link.setAttribute('download', `servio_db_backup_${new Date().toISOString().split('T')[0]}.json`);
+                                                            document.body.appendChild(link);
+                                                            link.click();
+                                                            link.parentNode.removeChild(link);
+                                                            window.URL.revokeObjectURL(url);
+                                                        } catch (error) {
+                                                            console.error("Gagal export JSON", error);
+                                                            toast.error("Gagal mengekspor database JSON");
+                                                        }
+                                                    }}
+                                                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 flex items-center gap-2 transition-colors font-medium border-t border-slate-100"
+                                                >
+                                                    <FileJson className="w-4 h-4 text-amber-600" />
+                                                    Export as JSON
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </div>
                     
                     {data?.recentActivities?.length > 0 ? (
@@ -403,6 +842,7 @@ export default function Dashboard() {
                         </div>
                     )}
                 </div>
+
             </div>
         );
     }
@@ -412,22 +852,29 @@ export default function Dashboard() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Halo, {user?.nama}! 👋</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Halo, {user?.nama}!</h1>
                     <p className="text-sm text-slate-500 mt-1">Selamat datang di Dashboard Teknisi. Berikut tugas perbaikan dan antrean Anda hari ini.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <StatCard label="Antrean Tersedia" value={data?.tiketTersedia || 0} icon={Ticket} color="red" />
-                <StatCard label="Tiket Ditugaskan" value={data?.tiketDitugaskan || 0} icon={ClipboardList} color="blue" />
-                <StatCard label="Menunggu Diagnosis" value={data?.menungguDiagnosis || 0} icon={Search} color="amber" />
-                <StatCard label="Dalam Perbaikan" value={data?.dalamPerbaikan || 0} icon={Wrench} color="indigo" />
-                <StatCard label="Selesai Diperbaiki" value={data?.tiketSelesai || 0} icon={CheckCircle2} color="green" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <StatCard label="Antrean Tersedia" value={data?.tiketTersedia || 0} icon={Ticket} color="red" to="/tiket-servis?status=diterima" />
+                <StatCard label="Tiket Ditugaskan" value={data?.tiketDitugaskan || 0} icon={ClipboardList} color="blue" to="/tiket-servis?scope=my" />
+                <StatCard label="Menunggu Diagnosis" value={data?.menungguDiagnosis || 0} icon={Search} color="amber" to="/tiket-servis?scope=my&status=diterima" />
+                <StatCard label="Dalam Perbaikan" value={data?.dalamPerbaikan || 0} icon={Wrench} color="indigo" to="/tiket-servis?scope=my&status=dalam_perbaikan" />
+                <StatCard label="Selesai Diperbaiki" value={data?.tiketSelesai || 0} icon={CheckCircle2} color="green" to="/tiket-servis?scope=my&status=selesai" />
             </div>
+
+            {/* SLA & Antrean Compliance Chart Card */}
+            <SlaMonitoringCard slaSummary={data?.slaSummary} isTeknisi={true} />
 
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-bold text-slate-900 tracking-tight">Status Tugas Perbaikan Anda</h2>
+                    <Link to="/tiket-servis?scope=my" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                        <span>Buka Semua Tiket Saya</span>
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
                 </div>
                 {data?.chartData?.length > 0 ? (
                     <div className="flex flex-col md:flex-row items-center gap-8 h-auto md:h-[300px]">
@@ -444,9 +891,16 @@ export default function Dashboard() {
                                         paddingAngle={4}
                                         dataKey="value"
                                         stroke="none"
+                                        className="cursor-pointer"
+                                        onClick={(e) => {
+                                            if (e && e.name) {
+                                                const statusKey = e.name.toLowerCase().replace(/ /g, "_");
+                                                navigate(`/tiket-servis?scope=my&status=${statusKey}`);
+                                            }
+                                        }}
                                     >
                                         {data.chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.fillColor} />
+                                            <Cell key={`cell-${index}`} fill={entry.fillColor} className="hover:opacity-80 transition-opacity cursor-pointer" />
                                         ))}
                                     </Pie>
                                     <Tooltip content={<CustomTooltip />} />
@@ -463,17 +917,28 @@ export default function Dashboard() {
 
                         {/* Status Summary List */}
                         <div className="w-full md:w-1/2 flex flex-col gap-3 justify-center">
-                            {data.chartData.map((entry, index) => (
-                                <div key={index} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-colors shadow-sm">
-                                    <div className="flex items-center gap-3.5">
-                                        <div className="w-4 h-4 rounded-full border-[3px] border-white shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: entry.fillColor }}></div>
-                                        <span className="font-semibold text-slate-700 text-sm">{entry.name}</span>
-                                    </div>
-                                    <div className="flex items-center justify-center min-w-[36px] px-2 py-1 bg-white rounded-lg border border-slate-200 shadow-sm">
-                                        <span className="font-bold text-slate-900">{entry.value}</span>
-                                    </div>
-                                </div>
-                            ))}
+                            {data.chartData.map((entry, index) => {
+                                const statusKey = entry.name.toLowerCase().replace(/ /g, "_");
+                                return (
+                                    <Link 
+                                        key={index} 
+                                        to={`/tiket-servis?scope=my&status=${statusKey}`}
+                                        className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-blue-50/60 hover:border-blue-200 transition-all shadow-sm group cursor-pointer"
+                                        title={`Buka tiket berstatus ${entry.name}`}
+                                    >
+                                        <div className="flex items-center gap-3.5">
+                                            <div className="w-4 h-4 rounded-full border-[3px] border-white shadow-sm ring-1 ring-slate-200" style={{ backgroundColor: entry.fillColor }}></div>
+                                            <span className="font-semibold text-slate-700 group-hover:text-blue-600 text-sm transition-colors">{entry.name}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center justify-center min-w-[36px] px-2 py-1 bg-white rounded-lg border border-slate-200 shadow-sm group-hover:border-blue-200">
+                                                <span className="font-bold text-slate-900 group-hover:text-blue-600">{entry.value}</span>
+                                            </div>
+                                            <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                                        </div>
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </div>
                 ) : (
@@ -495,6 +960,10 @@ export default function Dashboard() {
                             <p className="text-sm text-slate-500">5 Tiket perbaikan aktif terbaru yang sedang Anda tangani</p>
                         </div>
                     </div>
+                    <Link to="/tiket-servis?scope=my" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                        <span>Semua Tiket</span>
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
                 </div>
                 
                 {data?.activeTickets?.length > 0 ? (
@@ -510,12 +979,17 @@ export default function Dashboard() {
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {data.activeTickets.map(tiket => (
-                                    <tr key={tiket.id} className="hover:bg-slate-50 transition-colors">
+                                    <tr 
+                                        key={tiket.id} 
+                                        onClick={() => navigate(`/tiket-servis/${tiket.id}`)}
+                                        className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                                        title="Buka detail tiket servis"
+                                    >
                                         <td className="py-3 px-4">
-                                            <span className="font-mono font-medium text-slate-900">{tiket.nomor_tiket}</span>
+                                            <span className="font-mono font-medium text-slate-900 group-hover:text-blue-600 transition-colors">{tiket.nomor_tiket}</span>
                                         </td>
                                         <td className="py-3 px-4">
-                                            <p className="font-medium text-slate-900">{tiket.perangkat?.merk} {tiket.perangkat?.model}</p>
+                                            <p className="font-medium text-slate-900">{tiket.perangkat?.merk || tiket.perangkat?.merek} {tiket.perangkat?.model}</p>
                                             <p className="text-xs text-slate-500">{tiket.perangkat?.customer?.nama}</p>
                                         </td>
                                         <td className="py-3 px-4">
@@ -530,7 +1004,9 @@ export default function Dashboard() {
                                             </span>
                                         </td>
                                         <td className="py-3 px-4 text-right">
-                                            <Link to={`/tiket-servis/${tiket.id}`} className="text-sm font-semibold text-blue-600 hover:text-blue-700">Lihat Detail</Link>
+                                            <span className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 group-hover:text-blue-700">
+                                                Detail <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                            </span>
                                         </td>
                                     </tr>
                                 ))}
@@ -543,6 +1019,7 @@ export default function Dashboard() {
                     </div>
                 )}
             </div>
+
         </div>
     );
 }

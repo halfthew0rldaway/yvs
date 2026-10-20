@@ -13,7 +13,7 @@ const logValidation = [
     body("catatan").notEmpty().withMessage("Catatan wajib diisi"),
 ];
 
-router.post("/", authorize("teknisi"), logValidation, validate, create);
+router.post("/", authorize("teknisi", "admin"), logValidation, validate, create);
 router.get("/:id", getByTiketId);
 
 module.exports = router;

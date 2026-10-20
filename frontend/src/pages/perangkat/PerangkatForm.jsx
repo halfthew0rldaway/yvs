@@ -1,16 +1,18 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { ArrowLeft, Save, MonitorSmartphone, User, Box, Hash } from "lucide-react";
 
 export default function PerangkatForm() {
     const { id } = useParams();
+    const [searchParams] = useSearchParams();
+    const customerParam = searchParams.get("customer_id");
     const navigate = useNavigate();
     const isEdit = !!id;
 
     const [form, setForm] = useState({
-        customer_id: "",
+        customer_id: customerParam || "",
         jenis_perangkat: "",
         merek: "",
         model: "",
@@ -220,8 +222,8 @@ export default function PerangkatForm() {
                         Histori Perbaikan Perangkat Ini
                     </h2>
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm text-slate-600">
+                        <div className="w-full overflow-x-auto custom-scrollbar">
+                            <table className="w-full text-left text-sm text-slate-600 whitespace-nowrap">
                                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
                                     <tr>
                                         <th className="px-6 py-4">Nomor Tiket</th>

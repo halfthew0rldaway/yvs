@@ -22,7 +22,7 @@ const perangkatValidation = [
         .notEmpty().withMessage("Model wajib diisi")
         .isLength({ max: 50 }).withMessage("Maksimal 50 karakter")
         .trim(),
-    body("nomor_seri")
+    body("serial_number")
         .optional({ checkFalsy: true })
         .isLength({ max: 100 }).withMessage("Maksimal 100 karakter")
         .trim()

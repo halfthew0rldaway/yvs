@@ -3,7 +3,21 @@ const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate, authorize } = require("../middleware/auth");
 const upload = require("../middleware/upload");
-const { getAll, getById, create, update, updateReminder } = require("../controllers/tiket-servis.controller");
+const { 
+    getAll, 
+    getById, 
+    create, 
+    update, 
+    updateDefectMap,
+    updateReminder, 
+    createWarrantyClaim, 
+    getExpiringWarranties, 
+    markWarrantyFollowUp,
+    getMaintenanceDue,
+    markMaintenanceFollowUp,
+    getUnclaimedDue,
+    markUnclaimedFollowUp
+} = require("../controllers/tiket-servis.controller");
 
 const router = express.Router();
 
@@ -22,8 +36,17 @@ const tiketValidation = [
 ];
 
 router.get("/", getAll);
+router.get("/warranty/expiring", getExpiringWarranties);
+router.get("/maintenance/due", getMaintenanceDue);
+router.get("/unclaimed/due", getUnclaimedDue);
 router.get("/:id", getById);
 router.post("/", authorize("admin"), upload.array("foto_kondisi", 5), tiketValidation, validate, create);
+router.post("/:id/claim-garansi", authorize("admin"), createWarrantyClaim);
+router.post("/:id/reminder-garansi", authorize("admin", "teknisi"), markWarrantyFollowUp);
+router.post("/:id/reminder-maintenance", authorize("admin", "teknisi"), markMaintenanceFollowUp);
+router.post("/:id/reminder-unclaimed", authorize("admin", "teknisi"), markUnclaimedFollowUp);
+router.patch("/:id/defect-map", authorize("admin", "teknisi"), updateDefectMap);
+router.put("/:id/defect-map", authorize("admin", "teknisi"), updateDefectMap);
 router.put("/:id", authorize("admin", "teknisi"), update);
 router.put("/:id/reminder", authorize("admin"), updateReminder);
 

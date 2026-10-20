@@ -26,6 +26,9 @@ export default function Profile() {
         if (formData.newPassword && !formData.currentPassword) {
             return toast.error("Masukkan password lama Anda untuk mengubah password.");
         }
+        if (formData.currentPassword && !formData.newPassword) {
+            return toast.error("Masukkan password baru Anda.");
+        }
 
         setLoading(true);
         try {

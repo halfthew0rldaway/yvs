@@ -82,6 +82,12 @@ async function updateProfile(req, res) {
         if (nama) dataToUpdate.nama = nama;
 
         // Ubah password jika form diisi
+        if (newPassword && !currentPassword) {
+            return res.status(400).json({ message: "Password lama wajib diisi untuk mengubah password" });
+        }
+        if (currentPassword && !newPassword) {
+            return res.status(400).json({ message: "Password baru wajib diisi" });
+        }
         if (currentPassword && newPassword) {
             const valid = await bcrypt.compare(currentPassword, user.password);
             if (!valid) return res.status(400).json({ message: "Password lama tidak sesuai" });

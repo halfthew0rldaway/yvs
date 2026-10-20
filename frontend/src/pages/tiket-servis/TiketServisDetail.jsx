@@ -1,10 +1,16 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
-import { ArrowLeft, Edit, Save, Trash2, CheckCircle2, XCircle, AlertCircle, Phone, MapPin, Search, Plus, Filter, MonitorSmartphone, User, Info, FileText, Wrench, ClipboardList, Send, Package, Camera, ExternalLink, MessageCircle, CheckCircle, ArrowRight, PenTool, FileCheck, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Edit, Save, Trash2, CheckCircle2, XCircle, AlertCircle, Phone, MapPin, Search, Plus, Filter, MonitorSmartphone, User, Info, FileText, Wrench, ClipboardList, Send, Package, Camera, ExternalLink, MessageCircle, CheckCircle, ArrowRight, PenTool, FileCheck, AlertTriangle, ShieldCheck, Award, KeyRound, Lock, Eye, EyeOff, History, Calendar, Clock, Copy, Check, ChevronDown, ChevronUp, Shield, Sparkles, Smile, HardDrive, Target, BookOpen, Zap, ShieldAlert } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
+import SopWaModal from "../../components/SopWaModal";
+import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
+import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS } from "../../utils/checklistItems";
+import SlaBadge, { SlaCountdownCard, SLA_PENGERJAAN_PACKAGES } from "../../components/SlaBadge";
+import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
+import RepairWikiDetailModal from "../wiki/RepairWikiDetailModal";
 
 
 const STATUS_LABELS = {
@@ -19,10 +25,10 @@ const STATUS_LABELS = {
 };
 
 const STATUS_TRANSITIONS = {
-    diterima: ["didiagnosis"],
-    didiagnosis: ["menunggu_persetujuan"],
+    diterima: ["didiagnosis", "dibatalkan"],
+    didiagnosis: ["menunggu_persetujuan", "dibatalkan"],
     menunggu_persetujuan: ["disetujui", "dibatalkan"],
-    disetujui: ["dalam_perbaikan"],
+    disetujui: ["dalam_perbaikan", "dibatalkan"],
     dalam_perbaikan: ["selesai"],
     selesai: ["diambil"],
     diambil: [],
@@ -36,7 +42,7 @@ function formatRupiah(num) {
 function generateWaLink(tiket) {
     if (!tiket || !tiket.perangkat?.customer) return "#";
     const customer = tiket.perangkat.customer;
-    let phone = customer.nomor_telepon || "";
+    let phone = (customer.nomor_telepon || "").replace(/[^0-9]/g, "");
     if (phone.startsWith("0")) phone = "62" + phone.substring(1);
     
     let text = "";
@@ -57,11 +63,11 @@ Apakah perbaikan ingin dilanjutkan? Mohon konfirmasinya ya kak. Terima kasih!`;
         const tagihanInfo = tiket.invoice ? `\n*Total Tagihan:* ${formatRupiah(tiket.invoice.total_biaya)}\n` : "";
         text = `Halo kak ${customer.nama},
 
-Kabar gembira! Perbaikan perangkat *${tiket.perangkat.merek} ${tiket.perangkat.model}* milik kakak dengan nomor tiket *${tiket.nomor_tiket}* telah selesai dikerjakan oleh teknisi kami. 🎉
+Kabar gembira! Perbaikan perangkat *${tiket.perangkat.merek} ${tiket.perangkat.model}* milik kakak dengan nomor tiket *${tiket.nomor_tiket}* telah selesai dikerjakan oleh teknisi kami.
 ${tagihanInfo}
 Perangkat sudah bisa diambil di toko pada jam operasional kami. Mohon tunjukkan nomor tiket ini saat pengambilan.
 
-Terima kasih telah mempercayakan perbaikan perangkat Anda kepada kami! 🙏`;
+Terima kasih telah mempercayakan perbaikan perangkat Anda kepada kami!`;
     }
 
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
@@ -103,7 +109,7 @@ const MAINTENANCE_TIPS = {
 function generateWarrantyWaLink(tiket) {
     if (!tiket || !tiket.perangkat?.customer) return "#";
     const customer = tiket.perangkat.customer;
-    let phone = customer.nomor_telepon || "";
+    let phone = (customer.nomor_telepon || "").replace(/[^0-9]/g, "");
     if (phone.startsWith("0")) phone = "62" + phone.substring(1);
     
     const kategori = tiket.kategori_perbaikan || "Umum";
@@ -111,18 +117,24 @@ function generateWarrantyWaLink(tiket) {
     const tipsList = MAINTENANCE_TIPS[kategori] || MAINTENANCE_TIPS["Umum"];
     const tipsText = tipsList.map((tip, idx) => `${idx + 1}. ${tip}`).join("\n");
     
+    let expiredInfo = "";
+    if (tiket.garansi_berakhir_at) {
+        const expDateStr = new Date(tiket.garansi_berakhir_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' });
+        expiredInfo = `\nGaransi Berlaku Hingga: *${expDateStr}*`;
+    }
+
     let text = `Halo kak ${customer.nama},
 
-Terima kasih telah melakukan perbaikan perangkat *${tiket.perangkat.merek} ${tiket.perangkat.model}* (No. Tiket: *${tiket.nomor_tiket}*) di YVS Computer. 🎉
+Terima kasih telah melakukan perbaikan perangkat *${tiket.perangkat.merek} ${tiket.perangkat.model}* (No. Tiket: *${tiket.nomor_tiket}*) di YVS Computer.
 
 *Info Garansi Perbaikan:*
-🛡️ Durasi Garansi: *${durasi}*
+Durasi Garansi: *${durasi}*${expiredInfo}
 *(Garansi berlaku untuk perbaikan / sparepart yang diganti)*
 
-💡 *Tips Perawatan Perangkat (${kategori}):*
+*Tips Perawatan Perangkat (${kategori}):*
 ${tipsText}
 
-Jika ada kendala selama masa garansi, jangan ragu untuk menghubungi kami atau membawa kembali unit ke toko. Semoga perangkatnya awet dan lancar selalu ya kak! 🙏`;
+Jika ada kendala selama masa garansi, jangan ragu untuk menghubungi kami atau membawa kembali unit ke toko. Semoga perangkatnya awet dan lancar selalu ya kak!`;
 
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
@@ -139,13 +151,14 @@ Kami dari YVS Computer ingin mengingatkan kembali terkait perangkat *${tiket.per
 
 Perangkat kakak telah selesai diperbaiki sejak ${months} bulan yang lalu dan saat ini masih berada di toko kami. Mohon kesediaannya untuk segera mengambil perangkat tersebut pada jam operasional toko kami.
 
-Apabila ada kendala dalam pengambilan, mohon konfirmasikan kepada kami. Terima kasih! 🙏`;
+Apabila ada kendala dalam pengambilan, mohon konfirmasikan kepada kami. Terima kasih!`;
 
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 
 export default function TiketServisDetail() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const { isAdmin, isTeknisi, user } = useAuth();
     const [tiket, setTiket] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -156,7 +169,114 @@ export default function TiketServisDetail() {
     const [kategoriPerbaikan, setKategoriPerbaikan] = useState("Umum");
     const [durasiGaransi, setDurasiGaransi] = useState("1 Bulan");
     const [isSavingWarrantyConfig, setIsSavingWarrantyConfig] = useState(false);
+
+    // Feature 4: Device Credential Vault State
+    const [showVaultPassword, setShowVaultPassword] = useState(false);
+    const [isEditingVault, setIsEditingVault] = useState(false);
+    const [vaultTipeKunci, setVaultTipeKunci] = useState("Tidak Ada");
+    const [vaultPassword, setVaultPassword] = useState("");
+    const [isSavingVault, setIsSavingVault] = useState(false);
+    const [copiedVault, setCopiedVault] = useState(false);
+
+    // Service Protocols & Permissions State
+    const [isSopWaModalOpen, setIsSopWaModalOpen] = useState(false);
+    const [sopWaInitialScenario, setSopWaInitialScenario] = useState("");
+    const [isEditingSopPermissions, setIsEditingSopPermissions] = useState(false);
+    const [sopIzinBongkar, setSopIzinBongkar] = useState(true);
+    const [sopIzinAksesOs, setSopIzinAksesOs] = useState(true);
+    const [sopIzinBackupMandiri, setSopIzinBackupMandiri] = useState(true);
+    const [sopBatasanIzin, setSopBatasanIzin] = useState("");
+    const [sopPrioritasPelanggan, setSopPrioritasPelanggan] = useState("Standar");
+    const [sopKondisiFisik, setSopKondisiFisik] = useState("Bersih");
+    const [sopSpesifikasiAwal, setSopSpesifikasiAwal] = useState("");
+    const [isSavingSopPermissions, setIsSavingSopPermissions] = useState(false);
+
+    // Feature 2.1: Handover QC Inspection Modal State
+    const [isQcModalOpen, setIsQcModalOpen] = useState(false);
+    const [isSavingQc, setIsSavingQc] = useState(false);
+    const [qcModalData, setQcModalData] = useState({
+        power_test: false,
+        display_test: false,
+        keyboard_touchpad: false,
+        audio_multimedia: false,
+        port_io_connectivity: false,
+        os_thermal_performance: false,
+        clean_wow: false,
+        accessories_handover: false,
+        passed_qc: false,
+        catatan_qc: ""
+    });
+
+    // Dual-Phase SLA: ACC & Estimasi SLA Pengerjaan Modal State
+    const [isAccModalOpen, setIsAccModalOpen] = useState(false);
+    const [accTargetStatus, setAccTargetStatus] = useState("disetujui");
+    const [accSlaPaket, setAccSlaPaket] = useState("reguler");
+    const [accUseCustomDate, setAccUseCustomDate] = useState(false);
+    const [accCustomTargetDate, setAccCustomTargetDate] = useState("");
+    const [isSubmittingAcc, setIsSubmittingAcc] = useState(false);
+
+    // Collapsible Drawers & Accordions State
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [isSopOpen, setIsSopOpen] = useState(false);
+    const [isQcOpen, setIsQcOpen] = useState(false);
+    const [isWikiOpen, setIsWikiOpen] = useState(false);
+    const [isIntakeChecklistOpen, setIsIntakeChecklistOpen] = useState(false);
     
+    // Digital Warranty Certificate Modal
+    const [isWarrantyCertModalOpen, setIsWarrantyCertModalOpen] = useState(false);
+
+    // Feature 1: Defect Mapper State
+    const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
+    const [isSavingDefectMap, setIsSavingDefectMap] = useState(false);
+
+    // Feature 6: Internal Repair Wiki State
+    const [wikiSuggestions, setWikiSuggestions] = useState([]);
+    const [loadingWikiSuggestions, setLoadingWikiSuggestions] = useState(false);
+    const [activeWikiModal, setActiveWikiModal] = useState(null);
+    const [isSavingToWiki, setIsSavingToWiki] = useState(false);
+
+    async function handleSaveDefectMap(newMap) {
+        try {
+            setIsSavingDefectMap(true);
+            await api.patch(`/tiket-servis/${id}/defect-map`, { defect_map: newMap });
+            setTiket(prev => ({ ...prev, defect_map: newMap }));
+            toast.success("Peta cacat fisik berhasil disimpan!");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal menyimpan peta cacat fisik");
+        } finally {
+            setIsSavingDefectMap(false);
+        }
+    }
+
+    async function fetchWikiSuggestions(merek, model, keluhan) {
+        try {
+            setLoadingWikiSuggestions(true);
+            const res = await api.get("/repair-wiki/suggestions", {
+                params: { merek, model, keluhan }
+            });
+            setWikiSuggestions(res.data || []);
+        } catch (err) {
+            console.error("Gagal memuat saran wiki", err);
+        } finally {
+            setLoadingWikiSuggestions(false);
+        }
+    }
+
+    async function handleSaveToWiki() {
+        try {
+            setIsSavingToWiki(true);
+            const res = await api.post(`/repair-wiki/from-tiket/${id}`);
+            toast.success(res.data?.message || "Solusi tiket berhasil disalin ke Pustaka Wiki Toko!");
+            if (tiket?.perangkat) {
+                fetchWikiSuggestions(tiket.perangkat.merek, tiket.perangkat.model, tiket.keluhan);
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal menyimpan ke wiki");
+        } finally {
+            setIsSavingToWiki(false);
+        }
+    }
+
     // Modals state
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isTakeOverModalOpen, setIsTakeOverModalOpen] = useState(false);
@@ -181,6 +301,22 @@ export default function TiketServisDetail() {
             setSelectedStatus("");
             setKategoriPerbaikan(res.data.kategori_perbaikan || "Umum");
             setDurasiGaransi(res.data.durasi_garansi || "1 Bulan");
+            setVaultTipeKunci(res.data.tipe_kunci || "Tidak Ada");
+            setVaultPassword(res.data.password_perangkat || "");
+            
+            // SOP protocol & permission fields
+            setSopIzinBongkar(res.data.izin_bongkar ?? true);
+            setSopIzinAksesOs(res.data.izin_akses_os ?? true);
+            setSopIzinBackupMandiri(res.data.izin_backup_mandiri ?? true);
+            setSopBatasanIzin(res.data.batasan_izin || "");
+            setSopPrioritasPelanggan(res.data.prioritas_pelanggan || "Standar");
+            setSopKondisiFisik(res.data.kondisi_fisik || "Bersih");
+            setSopSpesifikasiAwal(res.data.spesifikasi_awal || "");
+
+            // Fetch Wiki hardware suggestions
+            if (res.data?.perangkat) {
+                fetchWikiSuggestions(res.data.perangkat.merek, res.data.perangkat.model, res.data.keluhan);
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -188,8 +324,89 @@ export default function TiketServisDetail() {
         }
     }
 
+    function handleOpenAccModal(targetStatus = "disetujui") {
+        setAccTargetStatus(targetStatus);
+        setAccSlaPaket(tiket?.sla_paket || "reguler");
+        if (tiket?.target_selesai_at) {
+            setAccUseCustomDate(true);
+            const d = new Date(tiket.target_selesai_at);
+            const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            setAccCustomTargetDate(localIso);
+        } else {
+            setAccUseCustomDate(false);
+            setAccCustomTargetDate("");
+        }
+        setIsAccModalOpen(true);
+    }
+
+    async function handleConfirmAcc() {
+        setIsSubmittingAcc(true);
+        try {
+            const payload = {
+                status: accTargetStatus || "disetujui",
+                sla_paket: accSlaPaket,
+                kategori_perbaikan: kategoriPerbaikan,
+                durasi_garansi: durasiGaransi,
+            };
+
+            // Jika belum memiliki disetujui_at, set ke timestamp sekarang
+            if (!tiket.disetujui_at) {
+                payload.disetujui_at = new Date().toISOString();
+            }
+
+            if (accUseCustomDate && accCustomTargetDate) {
+                payload.target_selesai_at = new Date(accCustomTargetDate).toISOString();
+            } else {
+                const approvalDate = tiket.disetujui_at ? new Date(tiket.disetujui_at) : new Date();
+                const pkg = SLA_PENGERJAAN_PACKAGES.find(p => p.id === accSlaPaket) || SLA_PENGERJAAN_PACKAGES[1];
+                const target = new Date(approvalDate.getTime() + (pkg.hours * 60 * 60 * 1000));
+                payload.target_selesai_at = target.toISOString();
+            }
+
+            if (catatanAdmin && isAdmin) {
+                payload.catatan_admin = catatanAdmin;
+            }
+
+            await api.put(`/tiket-servis/${id}`, payload);
+            toast.success(`Estimasi SLA Pengerjaan (${accSlaPaket.toUpperCase()}) berhasil diaktifkan!`);
+            setIsAccModalOpen(false);
+            setCatatanAdmin("");
+            setSelectedStatus("");
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal menyimpan estimasi SLA persetujuan");
+        } finally {
+            setIsSubmittingAcc(false);
+        }
+    }
+
     function handleStatusChangeClick() {
         if (!selectedStatus) return;
+
+        // Intercept jika transisi ke disetujui atau dalam_perbaikan dan belum di-ACC pelanggan
+        if ((selectedStatus === "disetujui" || selectedStatus === "dalam_perbaikan") && !tiket.disetujui_at) {
+            handleOpenAccModal(selectedStatus);
+            return;
+        }
+
+        // Feature 2.1: Intercept status transition to selesai or diambil if QC not passed
+        if ((selectedStatus === "selesai" || selectedStatus === "diambil") && !tiket.checklist_qc?.passed_qc) {
+            const currentQc = tiket.checklist_qc || {};
+            setQcModalData({
+                power_test: Boolean(currentQc.power_test ?? currentQc.baterai),
+                display_test: Boolean(currentQc.display_test),
+                keyboard_touchpad: Boolean(currentQc.keyboard_touchpad ?? (currentQc.keyboard && currentQc.touchpad)),
+                audio_multimedia: Boolean(currentQc.audio_multimedia ?? (currentQc.sound || currentQc.webcam)),
+                port_io_connectivity: Boolean(currentQc.port_io_connectivity ?? (currentQc.usb_port || currentQc.wifi_lan)),
+                os_thermal_performance: Boolean(currentQc.os_thermal_performance ?? (currentQc.os_status || currentQc.software)),
+                clean_wow: Boolean(currentQc.clean_wow ?? currentQc.cleaning_done ?? currentQc.kebersihan),
+                accessories_handover: Boolean(currentQc.accessories_handover),
+                passed_qc: false,
+                catatan_qc: currentQc.catatan_qc || ""
+            });
+            setIsQcModalOpen(true);
+            return;
+        }
         setIsUpdatingStatus(true);
     }
 
@@ -269,6 +486,146 @@ export default function TiketServisDetail() {
         }
     }
 
+    async function handleSaveVault() {
+        setIsSavingVault(true);
+        try {
+            await api.put(`/tiket-servis/${id}`, {
+                tipe_kunci: vaultTipeKunci,
+                password_perangkat: vaultTipeKunci === "Tidak Ada" ? "" : vaultPassword
+            });
+            toast.success("Kredensial perangkat berhasil diperbarui!");
+            setIsEditingVault(false);
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memperbarui kredensial");
+        } finally {
+            setIsSavingVault(false);
+        }
+    }
+
+    async function handleSaveSopPermissions() {
+        setIsSavingSopPermissions(true);
+        try {
+            await api.put(`/tiket-servis/${id}`, {
+                izin_bongkar: sopIzinBongkar,
+                izin_akses_os: sopIzinAksesOs,
+                izin_backup_mandiri: sopIzinBackupMandiri,
+                batasan_izin: sopBatasanIzin,
+                prioritas_pelanggan: sopPrioritasPelanggan,
+                kondisi_fisik: sopKondisiFisik,
+                spesifikasi_awal: sopSpesifikasiAwal
+            });
+            toast.success("Protokol & izin standar layanan berhasil diperbarui!");
+            setIsEditingSopPermissions(false);
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memperbarui izin standar layanan");
+        } finally {
+            setIsSavingSopPermissions(false);
+        }
+    }
+
+    function handleCopyVault(text) {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        setCopiedVault(true);
+        setTimeout(() => setCopiedVault(false), 2000);
+        toast.success("Kredensial disalin ke clipboard!");
+    }
+
+    async function handleCreateWarrantyClaim() {
+        const warranty = tiket?.warranty_status;
+        const confirmMsg = warranty?.isExpired 
+            ? `PERHATIAN: Masa garansi unit ini telah KEDALUWARSA (berakhir pada ${warranty.garansi_berakhir_at ? new Date(warranty.garansi_berakhir_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}).\n\nApakah Anda tetap ingin menerbitkan klaim garansi retur perbaikan sebagai kebijakan toko?`
+            : `Masa garansi unit ini masih AKTIF (sisa ${warranty?.sisaHari || 0} hari).\n\nTerbitkan tiket klaim garansi retur perbaikan untuk tiket #${tiket?.nomor_tiket}?`;
+            
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            const res = await api.post(`/tiket-servis/${id}/claim-garansi`, { alasan: "Klaim garansi retur perbaikan." });
+            toast.success(res.data.message || "Tiket klaim garansi berhasil diterbitkan!");
+            navigate(`/tiket-servis/${res.data.data.id}`);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal menerbitkan klaim garansi");
+        }
+    }
+
+    async function handleToggleQCChecklist(key, value) {
+        const currentQC = tiket.checklist_qc || {};
+        const updatedQC = {
+            ...currentQC,
+            [key]: value
+        };
+        if (key === "passed_qc" && value) {
+            updatedQC.qc_by = user?.nama || "Teknisi / Admin";
+            updatedQC.qc_at = new Date().toISOString();
+        }
+
+        try {
+            await api.put(`/tiket-servis/${id}`, { checklist_qc: updatedQC });
+            toast.success("Checklist Quality Control diperbarui");
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memperbarui QC");
+        }
+    }
+
+    async function handleApproveAllQC() {
+        const finalQc = {
+            power_test: true,
+            display_test: true,
+            keyboard_touchpad: true,
+            audio_multimedia: true,
+            port_io_connectivity: true,
+            os_thermal_performance: true,
+            clean_wow: true,
+            accessories_handover: true,
+            passed_qc: true,
+            qc_by: user?.nama || "Teknisi / Admin",
+            qc_at: new Date().toISOString(),
+            catatan_qc: tiket.checklist_qc?.catatan_qc || "Lulus uji kelayakan 8 poin kendali mutu & pembersihan menyeluruh standar WOW Service."
+        };
+
+        try {
+            await api.put(`/tiket-servis/${id}`, { checklist_qc: finalQc });
+            toast.success("Seluruh 8 poin QC (Standar WOW) berhasil diluluskan!");
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal meluluskan QC");
+        }
+    }
+
+    async function handleSaveQcAndChangeStatus() {
+        setIsSavingQc(true);
+        try {
+            const finalQc = {
+                ...qcModalData,
+                passed_qc: true,
+                qc_by: user?.nama || "Teknisi / Admin",
+                qc_at: new Date().toISOString()
+            };
+
+            const payload = { 
+                status: selectedStatus,
+                kategori_perbaikan: kategoriPerbaikan,
+                durasi_garansi: durasiGaransi,
+                checklist_qc: finalQc
+            };
+            if (catatanAdmin && isAdmin) {
+                payload.catatan_admin = catatanAdmin;
+            }
+            await api.put(`/tiket-servis/${id}`, payload);
+            toast.success(`QC berhasil diverifikasi & status diubah menjadi "${STATUS_LABELS[selectedStatus]?.label}"!`);
+            setIsQcModalOpen(false);
+            setCatatanAdmin("");
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memproses QC dan status");
+        } finally {
+            setIsSavingQc(false);
+        }
+    }
+
     async function handleUseSparepart(e) {
         e.preventDefault();
         setUseSparepartLoading(true);
@@ -288,6 +645,20 @@ export default function TiketServisDetail() {
             toast.error(err.response?.data?.message || "Gagal menggunakan sparepart");
         } finally {
             setUseSparepartLoading(false);
+        }
+    }
+
+    async function handleRemoveSparepartUsage(usageId) {
+        if (!window.confirm("Apakah Anda yakin ingin membatalkan penggunaan sparepart ini? Stok akan dikembalikan ke inventaris.")) return;
+        try {
+            await api.delete(`/sparepart/use/${usageId}`);
+            toast.success("Penggunaan sparepart berhasil dibatalkan dan stok dikembalikan!");
+            fetchTiket();
+            // Refresh sparepart list
+            const res = await api.get("/sparepart");
+            setSpareparts(res.data);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal membatalkan penggunaan sparepart");
         }
     }
 
@@ -336,9 +707,9 @@ export default function TiketServisDetail() {
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-mono">{tiket.nomor_tiket}</h1>
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider ${STATUS_LABELS[tiket.status]?.color}`}>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight font-mono">{tiket.nomor_tiket}</h1>
+                            <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider ${STATUS_LABELS[tiket.status]?.color}`}>
                                 {STATUS_LABELS[tiket.status]?.label}
                             </span>
                         </div>
@@ -347,18 +718,24 @@ export default function TiketServisDetail() {
                         </p>
                     </div>
                 </div>
-                {isAdmin && (tiket.status === "menunggu_persetujuan" || tiket.status === "selesai" || tiket.status === "diambil") && (
-                    <a
-                        href={tiket.status === "diambil" ? generateWarrantyWaLink(tiket) : generateWaLink(tiket)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl text-sm font-bold shadow-md shadow-green-500/20 transition-all shrink-0"
+                {isAdmin && (
+                    <button
+                        type="button"
+                        onClick={() => setIsSopWaModalOpen(true)}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
                     >
-                        <MessageCircle className="w-5 h-5" />
-                        {tiket.status === "diambil" ? "Kirim Garansi & Tips WA" : "Kabari via WhatsApp"}
-                    </a>
+                        <MessageCircle className="w-4 h-4" />
+                        <span>Pesan WhatsApp Pelanggan</span>
+                    </button>
                 )}
             </div>
+
+            {/* Feature 7: SLA Express Queue & Countdown Alert */}
+            <SlaCountdownCard 
+                tiket={tiket} 
+                onAccClick={isAdmin ? () => handleOpenAccModal("disetujui") : undefined}
+                onEditSla={isAdmin && ["disetujui", "dalam_perbaikan"].includes(tiket?.status) ? () => handleOpenAccModal(tiket?.status) : undefined}
+            />
 
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -370,10 +747,30 @@ export default function TiketServisDetail() {
                     <div className="space-y-4 text-sm">
                         <div className="flex items-start gap-3">
                             <User className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-                            <div>
+                            <div className="flex-1">
                                 <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-0.5">Customer</p>
                                 <p className="font-medium text-slate-900">{tiket.perangkat?.customer?.nama}</p>
                                 <p className="text-slate-500">{tiket.perangkat?.customer?.nomor_telepon}</p>
+
+                                {tiket.perangkat?.customer && (
+                                    <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                            <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                                                <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                                Profil & Gaya Komunikasi
+                                            </span>
+                                            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                                {tiket.perangkat.customer.tipe_kepribadian || "Netral"}
+                                            </span>
+                                        </div>
+                                        {tiket.perangkat.customer.catatan_khusus && (
+                                            <div className="text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed">
+                                                <span className="font-semibold text-slate-800 block text-[11px] mb-0.5">Catatan Khusus:</span>
+                                                {tiket.perangkat.customer.catatan_khusus}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="flex items-start gap-3">
@@ -393,6 +790,147 @@ export default function TiketServisDetail() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Feature 1: 2D Visual Scratch & Defect Mapper */}
+                        <div className="flex items-start gap-3 pt-3 border-t border-slate-100">
+                            <PenTool className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                            <div className="w-full">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Peta Cacat Fisik (2D Defect Map)</p>
+                                    <DefectMapBadge 
+                                        value={tiket.defect_map} 
+                                        onClick={() => setIsDefectModalOpen(true)} 
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                                    <p className="text-slate-600">
+                                        {Array.isArray(tiket.defect_map?.items) && tiket.defect_map.items.length > 0
+                                            ? `${tiket.defect_map.items.length} cacat fisik terpetakan pada casing.`
+                                            : "Belum ada cacat fisik yang ditandai pada blueprint 2D."}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsDefectModalOpen(true)}
+                                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline shrink-0"
+                                    >
+                                        {(isAdmin || isAssignedToMe) ? "Buka / Edit Peta" : "Lihat Blueprint"}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Feature 4: Device Credential Vault / PIN & Lock */}
+                        <div className="flex items-start gap-3 pt-3 border-t border-slate-100">
+                            <KeyRound className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
+                            <div className="w-full">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Kredensial / PIN Unit</p>
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                            {tiket.tipe_kunci || "Tidak Ada"}
+                                        </span>
+                                    </div>
+                                    {(isAdmin || isAssignedToMe) && !isEditingVault && (
+                                        <button 
+                                            onClick={() => {
+                                                setVaultTipeKunci(tiket.tipe_kunci || "Tidak Ada");
+                                                setVaultPassword(tiket.password_perangkat || "");
+                                                setIsEditingVault(true);
+                                            }}
+                                            className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 hover:underline"
+                                        >
+                                            <Edit className="w-3 h-3" /> Edit
+                                        </button>
+                                    )}
+                                </div>
+
+                                {isEditingVault ? (
+                                    <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 space-y-3 mt-1">
+                                        <div>
+                                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Tipe Kunci</label>
+                                            <select
+                                                value={vaultTipeKunci}
+                                                onChange={(e) => setVaultTipeKunci(e.target.value)}
+                                                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                            >
+                                                <option value="Tidak Ada">Tidak Ada (Tanpa Kunci/Password)</option>
+                                                <option value="PIN">PIN Angka</option>
+                                                <option value="Password">Password / Kata Sandi</option>
+                                                <option value="Pola Kunci">Pola Gambar (Pattern)</option>
+                                            </select>
+                                        </div>
+
+                                        {vaultTipeKunci !== "Tidak Ada" && (
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                                                    {vaultTipeKunci === "PIN" ? "Kode PIN" : vaultTipeKunci === "Password" ? "Password Akun" : "Catatan Pola"}
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={vaultPassword}
+                                                    onChange={(e) => setVaultPassword(e.target.value)}
+                                                    placeholder="Masukkan kredensial..."
+                                                    className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-end gap-2 pt-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsEditingVault(false)}
+                                                className="px-3 py-1 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-medium"
+                                            >
+                                                Batal
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleSaveVault}
+                                                disabled={isSavingVault}
+                                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm disabled:opacity-50"
+                                            >
+                                                {isSavingVault ? "Menyimpan..." : "Simpan"}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mt-1 flex items-center justify-between">
+                                        {tiket.tipe_kunci === "Tidak Ada" || !tiket.tipe_kunci ? (
+                                            <span className="text-slate-500 text-xs italic">Perangkat tanpa kunci/password</span>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-center gap-2">
+                                                    <Lock className="w-3.5 h-3.5 text-indigo-500" />
+                                                    <span className="font-mono text-sm font-bold text-slate-800">
+                                                        {showVaultPassword ? (tiket.password_perangkat || "(Kosong)") : "••••••••"}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowVaultPassword(!showVaultPassword)}
+                                                        className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors"
+                                                        title={showVaultPassword ? "Sembunyikan" : "Tampilkan"}
+                                                    >
+                                                        {showVaultPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                    </button>
+                                                    {tiket.password_perangkat && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleCopyVault(tiket.password_perangkat)}
+                                                            className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors"
+                                                            title="Salin ke Clipboard"
+                                                        >
+                                                            {copiedVault ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -445,188 +983,69 @@ export default function TiketServisDetail() {
                                 </div>
                             </div>
                         )}
+                        {/* Intake Inspection Checklist Display */}
+                        {tiket.checklist_intake && (
+                            <div className="pt-3 border-t border-slate-100">
+                                <div 
+                                    onClick={() => setIsIntakeChecklistOpen(!isIntakeChecklistOpen)}
+                                    className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 transition-colors cursor-pointer select-none"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                                        <span className="text-xs font-semibold text-slate-800">Checklist Fisik Awal</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                            CHECKLIST_ITEMS.filter(i => tiket.checklist_intake[i.key]).length === CHECKLIST_ITEMS.length
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                : "bg-amber-50 text-amber-800 border-amber-300"
+                                        }`}>
+                                            {CHECKLIST_ITEMS.filter(i => tiket.checklist_intake[i.key]).length}/{CHECKLIST_ITEMS.length} Normal
+                                        </span>
+                                        {isIntakeChecklistOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                                    </div>
+                                </div>
+
+                                {isIntakeChecklistOpen && (
+                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-1.5 bg-slate-50/70 p-3 rounded-xl border border-slate-200 text-xs mt-2 transition-all">
+                                        {CHECKLIST_ITEMS.map(item => {
+                                            const val = tiket.checklist_intake[item.key];
+                                            const ItemIcon = item.Icon;
+                                            return (
+                                                <div key={item.key} className={`flex items-center gap-2 p-1.5 rounded-lg border ${val ? "bg-white text-emerald-800 border-emerald-200" : "bg-white text-rose-600 border-rose-200"}`}>
+                                                    <ItemIcon className="w-3.5 h-3.5 shrink-0" />
+                                                    <span className="shrink-0">
+                                                        {val ? <Check className="w-3 h-3 text-emerald-600" /> : <XCircle className="w-3 h-3 text-rose-500" />}
+                                                    </span>
+                                                    <span className={val ? "text-slate-700 font-medium truncate" : "text-slate-400 line-through truncate"}>{item.label}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Ambil Alih Action */}
-            {isTeknisi && !tiket.teknisi && tiket.status !== "selesai" && tiket.status !== "diambil" && tiket.status !== "dibatalkan" && (
-                <div className="bg-amber-50/50 rounded-2xl p-6 shadow-sm border border-amber-200 mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                        <User className="w-5 h-5 text-amber-600" />
-                        <h2 className="text-base font-bold text-amber-900">Tiket Belum Ditangani</h2>
-                    </div>
-                    <p className="text-sm text-amber-700/80 mb-5">
-                        Tiket ini masih berada di antrean. Apakah kamu ingin mengambil alih dan menangani perbaikan perangkat ini?
-                    </p>
-                    <button
-                        onClick={() => setIsTakeOverModalOpen(true)}
-                        className="w-full sm:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-amber-600/20 flex items-center justify-center gap-2"
-                    >
-                        <User className="w-4 h-4" />
-                        <span>Ambil Alih Tiket Ini</span>
-                    </button>
-                </div>
-            )}
-
-            {/* Unassigned Warning for Admin */}
-            {isAdmin && !tiket.teknisi && tiket.status !== "selesai" && tiket.status !== "diambil" && tiket.status !== "dibatalkan" && (
-                <div className="bg-amber-50/50 border border-amber-200 rounded-2xl p-6 shadow-sm mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle className="w-5 h-5 text-amber-600" />
-                        <h2 className="text-base font-bold text-amber-900">Perhatian: Tiket Belum Ditugaskan!</h2>
-                    </div>
-                    <p className="text-sm text-amber-700/80">
-                        Tiket ini belum memiliki teknisi penanggung jawab sehingga proses diagnosis dan perbaikan tidak bisa dimulai. Silakan pilih teknisi pada menu di panel "Informasi Tiket" di sebelah kanan.
-                    </p>
-                </div>
-            )}
-
-            {/* Reminder Section */}
-            {isAdmin && tiket.status === "selesai" && getReminderDue(tiket) && (
-                <div className="bg-red-50/50 border border-red-200 rounded-2xl p-6 shadow-sm mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                        <AlertCircle className="w-5 h-5 text-red-600" />
-                        <h2 className="text-base font-bold text-red-900">Pengingat Pengambilan (Due)</h2>
-                    </div>
-                    <p className="text-sm text-red-700/80 mb-5">
-                        Tiket ini sudah selesai lebih dari {getReminderDue(tiket)} bulan tetapi belum diambil. Kirim pesan pengingat kepada customer.
-                    </p>
-                    <div className="flex items-center gap-3">
-                        <a
-                            href={generateReminderWaLink(tiket, getReminderDue(tiket))}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={() => handleSendReminder(getReminderDue(tiket))}
-                            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-red-600/20 flex items-center justify-center gap-2"
-                        >
-                            <MessageCircle className="w-4 h-4" />
-                            <span>Kirim Pengingat {getReminderDue(tiket)} Bulan</span>
-                        </a>
-                    </div>
-                </div>
-            )}
-
-            {/* Warranty & Care Tips Card for Diambil */}
-            {tiket.status === "diambil" && (
-                <div className="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-6 shadow-sm mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                        <h2 className="text-base font-bold text-emerald-900">Garansi & Tips Perawatan Perangkat</h2>
-                    </div>
-                    <p className="text-sm text-emerald-700/80 mb-5">
-                        Perangkat telah diambil oleh pelanggan. Anda dapat mengirimkan rincian garansi beserta tips perawatan yang disesuaikan dengan jenis perbaikan.
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                        <div>
-                            <label className="block text-xs font-semibold text-emerald-900 uppercase tracking-wider mb-1.5">
-                                Kategori Perbaikan / Tips
-                            </label>
-                            <select
-                                value={kategoriPerbaikan}
-                                onChange={(e) => setKategoriPerbaikan(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-white border border-emerald-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
-                            >
-                                {Object.keys(MAINTENANCE_TIPS).map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-emerald-900 uppercase tracking-wider mb-1.5">
-                                Durasi Garansi
-                            </label>
-                            <input
-                                type="text"
-                                value={durasiGaransi}
-                                onChange={(e) => setDurasiGaransi(e.target.value)}
-                                placeholder="Misal: 1 Bulan / 3 Bulan / 14 Hari"
-                                className="w-full px-4 py-2.5 bg-white border border-emerald-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-emerald-100">
-                        {isAdmin && (
-                            <button
-                                onClick={handleSaveWarrantyConfig}
-                                disabled={isSavingWarrantyConfig}
-                                className="w-full sm:w-auto px-5 py-2.5 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2"
-                            >
-                                <Save className="w-4 h-4" />
-                                <span>{isSavingWarrantyConfig ? "Menyimpan..." : "Simpan Pengaturan Garansi"}</span>
-                            </button>
-                        )}
-
-                        <a
-                            href={generateWarrantyWaLink(tiket)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="w-full sm:w-auto px-6 py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-green-500/20 flex items-center justify-center gap-2 shrink-0"
-                        >
-                            <MessageCircle className="w-5 h-5" />
-                            <span>Kirim Info Garansi & Tips via WhatsApp</span>
-                        </a>
-                    </div>
-                </div>
-            )}
-
-            {/* Status Actions */}
-            {canUpdateStatus && filteredTransitions.length > 0 && (
-                <div className="bg-blue-50/50 rounded-2xl p-6 shadow-sm border border-blue-100">
-                    <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle className="w-5 h-5 text-blue-600" />
-                        <h2 className="text-base font-bold text-blue-900">Perbarui Status Tiket</h2>
-                    </div>
-                    <p className="text-sm text-blue-700/80 mb-5">
-                        Pilih status dari daftar di bawah ini untuk memperbarui progres perbaikan tiket.
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center gap-3">
-                        <select
-                            value={selectedStatus}
-                            onChange={(e) => setSelectedStatus(e.target.value)}
-                            className="w-full sm:w-auto flex-1 px-4 py-3 bg-white border border-blue-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                        >
-                            <option value="" disabled>Pilih Status Selanjutnya...</option>
-                            {filteredTransitions.map((s) => (
-                                <option key={s} value={s}>{STATUS_LABELS[s]?.label}</option>
-                            ))}
-                        </select>
-                        <button
-                            onClick={handleStatusChangeClick}
-                            disabled={!selectedStatus}
-                            className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                            <Save className="w-4 h-4" />
-                            <span>Simpan Status</span>
-                        </button>
-                    </div>
-
-                    {isAdmin && (selectedStatus === "dalam_perbaikan" || selectedStatus === "disetujui") && (
-                        <div className="mt-4 pt-4 border-t border-blue-100">
-                            <label className="block text-sm font-semibold text-blue-900 mb-2">
-                                Catatan Khusus untuk Teknisi (Opsional)
-                            </label>
-                            <textarea
-                                value={catatanAdmin}
-                                onChange={(e) => setCatatanAdmin(e.target.value)}
-                                placeholder="Misal: Customer minta tolong sekalian install aplikasi X..."
-                                rows={2}
-                                className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 text-sm"
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Diagnosis */}
+            {/* 1. Hasil Diagnosis & Solusi */}
             {tiket.diagnosis && (
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                    <div className="flex items-center gap-2 mb-5 pb-4 border-b border-slate-100">
-                        <Search className="w-5 h-5 text-amber-500" />
-                        <h2 className="text-base font-bold text-slate-900">Hasil Diagnosis</h2>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-6">
+                    <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-100">
+                        <div className="flex items-center gap-2">
+                            <Search className="w-5 h-5 text-amber-500" />
+                            <h2 className="text-base font-bold text-slate-900">Hasil Diagnosis</h2>
+                        </div>
+                        {(isAdmin || isAssignedToMe) && ["diterima", "didiagnosis", "menunggu_persetujuan"].includes(tiket.status) && (
+                            <Link
+                                to={`/tiket-servis/${id}/diagnosis`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200"
+                            >
+                                <Edit className="w-3.5 h-3.5" />
+                                <span>Edit Diagnosis</span>
+                            </Link>
+                        )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                         <div>
@@ -643,15 +1062,25 @@ export default function TiketServisDetail() {
                             <p className="text-blue-800 font-semibold text-sm">Estimasi Biaya Perbaikan</p>
                             <p className="text-blue-900 font-bold text-xl">{formatRupiah(tiket.diagnosis.estimasi_biaya)}</p>
                         </div>
+                        {isAdmin && tiket.status === "menunggu_persetujuan" && (
+                            <button
+                                type="button"
+                                onClick={() => handleOpenAccModal("disetujui")}
+                                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span>Konfirmasi Persetujuan Pelanggan (ACC)</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
 
             {/* Diagnosis Form Action */}
-            {isTeknisi && isAssignedToMe && tiket.status === "diterima" && !tiket.diagnosis && (
+            {(isAdmin || (isTeknisi && isAssignedToMe)) && ["diterima", "didiagnosis"].includes(tiket.status) && !tiket.diagnosis && (
                 <Link
                     to={`/tiket-servis/${id}/diagnosis`}
-                    className="flex flex-col items-center justify-center p-8 bg-amber-50/50 border-2 border-dashed border-amber-200 rounded-2xl text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all group"
+                    className="flex flex-col items-center justify-center p-8 bg-amber-50/50 border-2 border-dashed border-amber-200 rounded-2xl text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all group mb-6"
                 >
                     <div className="bg-white p-3 rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
                         <Search className="w-6 h-6 text-amber-500" />
@@ -661,6 +1090,7 @@ export default function TiketServisDetail() {
                 </Link>
             )}
 
+            {/* 2. Workbench Utama: Log Perbaikan & Penggunaan Sparepart / Invoice */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[650px] mb-6">
                 {/* Log Perbaikan */}
                 <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full">
@@ -758,7 +1188,10 @@ export default function TiketServisDetail() {
                                             <th className="py-3 px-4 font-semibold rounded-tl-lg">Sparepart</th>
                                             <th className="py-3 px-4 font-semibold text-center">Jumlah</th>
                                             <th className="py-3 px-4 font-semibold text-right">Harga Satuan</th>
-                                            <th className="py-3 px-4 font-semibold text-right rounded-tr-lg">Subtotal</th>
+                                            <th className="py-3 px-4 font-semibold text-right">Subtotal</th>
+                                            {(isTeknisi || isAdmin) && tiket.status === "dalam_perbaikan" && (
+                                                <th className="py-3 px-4 font-semibold text-center rounded-tr-lg w-16">Aksi</th>
+                                            )}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -768,6 +1201,18 @@ export default function TiketServisDetail() {
                                                 <td className="py-3 px-4 text-center text-slate-600">{ps.jumlah}</td>
                                                 <td className="py-3 px-4 text-right text-slate-600">{formatRupiah(ps.sparepart?.harga)}</td>
                                                 <td className="py-3 px-4 text-right font-semibold text-slate-900">{formatRupiah(ps.sparepart?.harga * ps.jumlah)}</td>
+                                                {(isTeknisi || isAdmin) && tiket.status === "dalam_perbaikan" && (
+                                                    <td className="py-3 px-4 text-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveSparepartUsage(ps.id)}
+                                                            title="Batalkan penggunaan sparepart (kembalikan ke stok)"
+                                                            className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center justify-center"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </td>
+                                                )}
                                             </tr>
                                         ))}
                                     </tbody>
@@ -777,6 +1222,7 @@ export default function TiketServisDetail() {
                                             <td className="py-3 px-4 text-right text-slate-900">
                                                 {formatRupiah(tiket.penggunaan_sparepart.reduce((acc, ps) => acc + (ps.sparepart?.harga * ps.jumlah), 0))}
                                             </td>
+                                            {(isTeknisi || isAdmin) && tiket.status === "dalam_perbaikan" && <td></td>}
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -898,6 +1344,982 @@ export default function TiketServisDetail() {
                 </div>
             </div>
 
+            {/* 3. Status Actions */}
+            {canUpdateStatus && filteredTransitions.length > 0 && (
+                <div className="bg-blue-50/50 rounded-2xl p-6 shadow-sm border border-blue-100 mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="w-5 h-5 text-blue-600" />
+                        <h2 className="text-base font-bold text-blue-900">Perbarui Status Tiket</h2>
+                    </div>
+                    <p className="text-sm text-blue-700/80 mb-5">
+                        Pilih status dari daftar di bawah ini untuk memperbarui progres perbaikan tiket.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <select
+                            value={selectedStatus}
+                            onChange={(e) => setSelectedStatus(e.target.value)}
+                            className="w-full sm:w-auto flex-1 px-4 py-3 bg-white border border-blue-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                        >
+                            <option value="" disabled>Pilih Status Selanjutnya...</option>
+                            {filteredTransitions.map((s) => (
+                                <option key={s} value={s}>{STATUS_LABELS[s]?.label}</option>
+                            ))}
+                        </select>
+                        <button
+                            onClick={handleStatusChangeClick}
+                            disabled={!selectedStatus}
+                            className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            <Save className="w-4 h-4" />
+                            <span>Simpan Status</span>
+                        </button>
+                    </div>
+
+                    {isAdmin && (selectedStatus === "dalam_perbaikan" || selectedStatus === "disetujui") && (
+                        <div className="mt-4 pt-4 border-t border-blue-100">
+                            <label className="block text-sm font-semibold text-blue-900 mb-2">
+                                Catatan Khusus untuk Teknisi (Opsional)
+                            </label>
+                            <textarea
+                                value={catatanAdmin}
+                                onChange={(e) => setCatatanAdmin(e.target.value)}
+                                placeholder="Misal: Customer minta tolong sekalian install aplikasi X..."
+                                rows={2}
+                                className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 text-sm"
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* 4. Contextual Actions & Alerts */}
+            {/* Ambil Alih Action */}
+            {isTeknisi && !tiket.teknisi && tiket.status !== "selesai" && tiket.status !== "diambil" && tiket.status !== "dibatalkan" && (
+                <div className="bg-amber-50/50 rounded-2xl p-6 shadow-sm border border-amber-200 mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                        <User className="w-5 h-5 text-amber-600" />
+                        <h2 className="text-base font-bold text-amber-900">Tiket Belum Ditangani</h2>
+                    </div>
+                    <p className="text-sm text-amber-700/80 mb-5">
+                        Tiket ini masih berada di antrean. Apakah kamu ingin mengambil alih dan menangani perbaikan perangkat ini?
+                    </p>
+                    <button
+                        onClick={() => setIsTakeOverModalOpen(true)}
+                        className="w-full sm:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-amber-600/20 flex items-center justify-center gap-2"
+                    >
+                        <User className="w-4 h-4" />
+                        <span>Ambil Alih Tiket Ini</span>
+                    </button>
+                </div>
+            )}
+
+            {/* Unassigned Warning for Admin */}
+            {isAdmin && !tiket.teknisi && tiket.status !== "selesai" && tiket.status !== "diambil" && tiket.status !== "dibatalkan" && (
+                <div className="bg-amber-50/50 border border-amber-200 rounded-2xl p-6 shadow-sm mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="w-5 h-5 text-amber-600" />
+                        <h2 className="text-base font-bold text-amber-900">Perhatian: Tiket Belum Ditugaskan!</h2>
+                    </div>
+                    <p className="text-sm text-amber-700/80">
+                        Tiket ini belum memiliki teknisi penanggung jawab sehingga proses diagnosis dan perbaikan tidak bisa dimulai. Silakan pilih teknisi pada menu di panel "Informasi Tiket" di sebelah kanan.
+                    </p>
+                </div>
+            )}
+
+            {/* Reminder Section */}
+            {isAdmin && tiket.status === "selesai" && getReminderDue(tiket) && (
+                <div className="bg-red-50/50 border border-red-200 rounded-2xl p-6 shadow-sm mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertCircle className="w-5 h-5 text-red-600" />
+                        <h2 className="text-base font-bold text-red-900">Pengingat Pengambilan (Due)</h2>
+                    </div>
+                    <p className="text-sm text-red-700/80 mb-5">
+                        Tiket ini sudah selesai lebih dari {getReminderDue(tiket)} bulan tetapi belum diambil. Kirim pesan pengingat kepada customer.
+                    </p>
+                    <div className="flex items-center gap-3">
+                        <a
+                            href={generateReminderWaLink(tiket, getReminderDue(tiket))}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => handleSendReminder(getReminderDue(tiket))}
+                            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-red-600/20 flex items-center justify-center gap-2"
+                        >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>Kirim Pengingat {getReminderDue(tiket)} Bulan</span>
+                        </a>
+                    </div>
+                </div>
+            )}
+
+            {/* Feature 2.2: CRM & Notifikasi Pengingat Garansi (H-3 Expiry Follow-up) */}
+            {tiket.status === "diambil" && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
+                <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-sm mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-200">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-amber-100 text-amber-800 rounded-xl border border-amber-200">
+                                <Clock className="w-5 h-5 text-amber-700" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-bold text-amber-950">CRM: Pengingat Garansi Hampir Habis (H-{tiket.warranty_status.sisaHari})</h3>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 uppercase">
+                                        Proaktif
+                                    </span>
+                                </div>
+                                <p className="text-xs text-amber-800 mt-0.5">
+                                    Garansi berakhir pada {tiket.warranty_status.garansi_berakhir_at ? new Date(tiket.warranty_status.garansi_berakhir_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }) : "-"} (Tersisa {tiket.warranty_status.sisaHari} hari)
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-amber-800">Gaya:</span>
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white text-slate-800 border border-amber-200 shadow-2xs">
+                                {tiket.perangkat?.customer?.tipe_kepribadian || "Netral"}
+                            </span>
+                        </div>
+                    </div>
+
+                    <p className="text-xs text-amber-900/90 my-3 leading-relaxed">
+                        Standar Layanan Service Excellent merekomendasikan follow-up pelanggan proaktif pada H-3 s/d H-7 sebelum masa garansi berakhir untuk memastikan unit tetap beroperasi normal, menunjukkan kepedulian purnajual, dan menjaga loyalitas pelanggan (Transparent, Trusted, WOW).
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                        <div className="text-xs text-amber-800">
+                            {tiket.log_perbaikan?.some(l => l.fase === "Follow-Up Garansi") ? (
+                                <span className="font-semibold text-emerald-800 flex items-center gap-1.5">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                    Follow-up CRM garansi telah dicatat pada sistem
+                                </span>
+                            ) : (
+                                <span className="italic text-amber-700">Belum ada follow-up CRM garansi yang dikirim untuk tiket ini.</span>
+                            )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsWarrantyCertModalOpen(true)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold border border-slate-200 shadow-sm transition-all"
+                            >
+                                <Award className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Cetak Kartu Garansi Digital</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSopWaInitialScenario("pengingat_garansi");
+                                    setIsSopWaModalOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all"
+                            >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                                <span>Kirim Follow-Up Garansi (WhatsApp)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Feature 9: Real-time Warranty Countdown & Expiry Tracker */}
+            {tiket.status === "diambil" && (
+                <div className={`rounded-2xl p-6 shadow-sm border mb-6 transition-all ${
+                    tiket.warranty_status?.isExpired 
+                        ? "bg-rose-50/60 border-rose-200" 
+                        : "bg-emerald-50/60 border-emerald-200"
+                }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/60">
+                        <div className="flex items-center gap-2.5">
+                            <ShieldCheck className={`w-6 h-6 ${tiket.warranty_status?.isExpired ? "text-rose-600" : "text-emerald-600"}`} />
+                            <div>
+                                <h2 className={`text-base font-bold ${tiket.warranty_status?.isExpired ? "text-rose-950" : "text-emerald-950"}`}>
+                                    Status Garansi Servis (Real-time Tracker)
+                                </h2>
+                                <p className="text-xs text-slate-500">
+                                    Dihitung sejak unit diambil pada {tiket.tgl_diambil ? new Date(tiket.tgl_diambil).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Real-time Status Badge */}
+                        <div className="flex items-center gap-2">
+                            {tiket.warranty_status?.isExpired ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                                    <AlertTriangle className="w-4 h-4 text-rose-600" />
+                                    Kedaluwarsa ({tiket.warranty_status?.lewatHari || 0} hari lalu)
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    <Clock className="w-4 h-4 text-emerald-600" />
+                                    Garansi Aktif (Sisa {tiket.warranty_status?.sisaHari || 0} hari)
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Expiry Details Banner */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
+                        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Durasi Garansi</p>
+                            <p className="text-base font-bold text-slate-800 mt-0.5">{tiket.durasi_garansi || "1 Bulan"}</p>
+                        </div>
+                        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tanggal Diambil</p>
+                            <p className="text-sm font-bold text-slate-800 mt-0.5">
+                                {tiket.tgl_diambil ? new Date(tiket.tgl_diambil).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}
+                            </p>
+                        </div>
+                        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Batas Garansi Berakhir</p>
+                            <p className={`text-sm font-bold mt-0.5 ${tiket.warranty_status?.isExpired ? "text-rose-600" : "text-emerald-700"}`}>
+                                {tiket.warranty_status?.garansi_berakhir_at 
+                                    ? new Date(tiket.warranty_status.garansi_berakhir_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) 
+                                    : (tiket.garansi_berakhir_at ? new Date(tiket.garansi_berakhir_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) : "-")}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5 pt-3 border-t border-slate-200/50">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-800 uppercase tracking-wider mb-1.5">
+                                Kategori Perbaikan / Tips
+                            </label>
+                            <select
+                                value={kategoriPerbaikan}
+                                onChange={(e) => setKategoriPerbaikan(e.target.value)}
+                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
+                            >
+                                {Object.keys(MAINTENANCE_TIPS).map((cat) => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-800 uppercase tracking-wider mb-1.5">
+                                Sesuaikan Durasi Garansi
+                            </label>
+                            <input
+                                type="text"
+                                value={durasiGaransi}
+                                onChange={(e) => setDurasiGaransi(e.target.value)}
+                                placeholder="Misal: 1 Bulan / 3 Bulan / 14 Hari"
+                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-200/50">
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                            {isAdmin && (
+                                <button
+                                    onClick={handleSaveWarrantyConfig}
+                                    disabled={isSavingWarrantyConfig}
+                                    className="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                                >
+                                    <Save className="w-4 h-4" />
+                                    <span>{isSavingWarrantyConfig ? "Menyimpan..." : "Simpan Garansi"}</span>
+                                </button>
+                            )}
+
+                            <button
+                                type="button"
+                                onClick={() => setIsWarrantyCertModalOpen(true)}
+                                className="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                            >
+                                <Award className="w-4 h-4 text-blue-600" />
+                                <span>Cetak Kartu Garansi</span>
+                            </button>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                            <a
+                                href={generateWarrantyWaLink(tiket)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full sm:w-auto px-5 py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-green-500/20 flex items-center justify-center gap-2 shrink-0"
+                            >
+                                <MessageCircle className="w-4 h-4" />
+                                <span>Kirim Info Garansi (WA)</span>
+                            </a>
+
+                            <button
+                                onClick={handleCreateWarrantyClaim}
+                                className={`w-full sm:w-auto px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 ${
+                                    tiket.warranty_status?.isExpired 
+                                        ? "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20" 
+                                        : "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20"
+                                }`}
+                            >
+                                <ShieldCheck className="w-4 h-4" />
+                                <span>Klaim Garansi</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 5. Panel Kepatuhan & Informasi Pendukung (Accordion Drawers) */}
+            <div className="space-y-4 mb-6">
+                <div className="flex items-center justify-between px-1">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Informasi Pendukung & Kepatuhan Layanan
+                    </h3>
+                    <span className="text-[11px] text-slate-400">
+                        Klik panel untuk melihat detail
+                    </span>
+                </div>
+
+                {/* Accordion 1: Protokol Layanan & Izin Unit (SOP) */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all">
+                    <div
+                        onClick={() => setIsSopOpen(!isSopOpen)}
+                        className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer select-none hover:bg-slate-50/60 transition-colors"
+                    >
+                        <div className="flex items-start sm:items-center gap-3">
+                            <div className="p-2.5 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 shrink-0">
+                                <ShieldCheck className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <h2 className="text-sm font-bold text-slate-900">Protokol Layanan & Izin Unit</h2>
+                                    <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                                        Standar Servis
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-0.5">
+                                    Verifikasi fisik intake, prioritas layanan, dan batas wewenang teknisi
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Summary Badges & Quick Action */}
+                        <div className="flex items-center gap-2 flex-wrap self-end md:self-center">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                                tiket.prioritas_pelanggan === "Data Aman"
+                                    ? "bg-purple-50 text-purple-700 border-purple-200"
+                                    : tiket.prioritas_pelanggan === "Cepat Selesai"
+                                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                                        : tiket.prioritas_pelanggan === "Biaya Hemat"
+                                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                                            : "bg-slate-100 text-slate-700 border-slate-200"
+                            }`}>
+                                <Target className="w-3 h-3" />
+                                <span>{tiket.prioritas_pelanggan || "Standar"}</span>
+                            </span>
+
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                                tiket.izin_bongkar !== false ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200"
+                            }`}>
+                                Bongkar: {tiket.izin_bongkar !== false ? "Diizinkan" : "Ditolak"}
+                            </span>
+
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                                tiket.izin_akses_os !== false ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200"
+                            }`}>
+                                OS: {tiket.izin_akses_os !== false ? "Diizinkan" : "Ditolak"}
+                            </span>
+
+                            {tiket.batasan_izin && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                    <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                    <span>Ada Batasan Khusus</span>
+                                </span>
+                            )}
+
+                            {(isAdmin || isAssignedToMe) && !isEditingSopPermissions && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsSopOpen(true);
+                                        setIsEditingSopPermissions(true);
+                                    }}
+                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs"
+                                >
+                                    <Edit className="w-3.5 h-3.5 text-slate-500" />
+                                    <span>Edit</span>
+                                </button>
+                            )}
+
+                            <div className="p-1 text-slate-400 hover:text-slate-600 transition-colors ml-1">
+                                {isSopOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </div>
+                        </div>
+                    </div>
+
+                    {isSopOpen && (
+                        <div className="p-5 pt-0 border-t border-slate-100">
+                            {isEditingSopPermissions ? (
+                                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 mt-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                                Prioritas Pelanggan
+                                            </label>
+                                            <select
+                                                value={sopPrioritasPelanggan}
+                                                onChange={(e) => setSopPrioritasPelanggan(e.target.value)}
+                                                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-xs"
+                                            >
+                                                <option value="Standar">Standar (Reguler)</option>
+                                                <option value="Data Aman">Data Aman (Proteksi Data)</option>
+                                                <option value="Cepat Selesai">Cepat Selesai (Mendesak)</option>
+                                                <option value="Biaya Hemat">Biaya Hemat (Ekonomis)</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                                Kondisi Fisik Luar
+                                            </label>
+                                            <select
+                                                value={sopKondisiFisik}
+                                                onChange={(e) => setSopKondisiFisik(e.target.value)}
+                                                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-xs"
+                                            >
+                                                <option value="Bersih">Bersih</option>
+                                                <option value="Kotor">Kotor</option>
+                                                <option value="Ada yang Rusak">Ada yang Rusak</option>
+                                                <option value="Pecah">Pecah</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                                Spesifikasi Awal
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={sopSpesifikasiAwal}
+                                                onChange={(e) => setSopSpesifikasiAwal(e.target.value)}
+                                                placeholder="RAM, SSD, OS..."
+                                                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-slate-900 shadow-xs"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                                        <label className={`flex items-center gap-2.5 p-3 rounded-lg border text-xs cursor-pointer select-none transition-all ${
+                                            sopIzinBongkar 
+                                                ? "bg-emerald-50/70 border-emerald-300 text-emerald-950 font-semibold" 
+                                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                                        }`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={sopIzinBongkar}
+                                                onChange={(e) => setSopIzinBongkar(e.target.checked)}
+                                                className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                                            />
+                                            <span>Izin Bongkar Hardware</span>
+                                        </label>
+                                        <label className={`flex items-center gap-2.5 p-3 rounded-lg border text-xs cursor-pointer select-none transition-all ${
+                                            sopIzinAksesOs 
+                                                ? "bg-emerald-50/70 border-emerald-300 text-emerald-950 font-semibold" 
+                                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                                        }`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={sopIzinAksesOs}
+                                                onChange={(e) => setSopIzinAksesOs(e.target.checked)}
+                                                className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                                            />
+                                            <span>Izin Akses OS / Test</span>
+                                        </label>
+                                        <label className={`flex items-center gap-2.5 p-3 rounded-lg border text-xs cursor-pointer select-none transition-all ${
+                                            sopIzinBackupMandiri 
+                                                ? "bg-emerald-50/70 border-emerald-300 text-emerald-950 font-semibold" 
+                                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                                        }`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={sopIzinBackupMandiri}
+                                                onChange={(e) => setSopIzinBackupMandiri(e.target.checked)}
+                                                className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                                            />
+                                            <span>Konfirmasi Backup</span>
+                                        </label>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                            Batasan Izin Khusus
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={sopBatasanIzin}
+                                            onChange={(e) => setSopBatasanIzin(e.target.value)}
+                                            placeholder="Batasan akses yang diminta pelanggan (opsional)..."
+                                            className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-slate-900 shadow-xs"
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsEditingSopPermissions(false)}
+                                            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold transition-colors shadow-sm"
+                                        >
+                                            Batal
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveSopPermissions}
+                                            disabled={isSavingSopPermissions}
+                                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm disabled:opacity-50 transition-colors"
+                                        >
+                                            {isSavingSopPermissions ? "Menyimpan..." : "Simpan Perubahan"}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                    {/* Column 1: Intake & Specs */}
+                                    <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-4 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex items-center gap-2 pb-2.5 border-b border-slate-200/60 mb-3">
+                                                <HardDrive className="w-4 h-4 text-slate-500 shrink-0" />
+                                                <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                                                    Pengecekan Fisik Awal
+                                                </span>
+                                            </div>
+                                            <div className="space-y-3 text-xs">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-slate-500">Kondisi Fisik:</span>
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                                                        tiket.kondisi_fisik === "Pecah" 
+                                                            ? "bg-red-50 text-red-700 border-red-200" 
+                                                            : tiket.kondisi_fisik === "Ada yang Rusak" 
+                                                                ? "bg-amber-50 text-amber-700 border-amber-200" 
+                                                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                    }`}>
+                                                        {tiket.kondisi_fisik || "Bersih"}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-slate-500 block mb-1">Spesifikasi Awal:</span>
+                                                    <div className="text-xs text-slate-800 bg-white p-2.5 rounded-lg border border-slate-200 break-words leading-relaxed min-h-[52px]">
+                                                        {tiket.spesifikasi_awal || "Tidak dicatat / Standar pabrik"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Column 2: Customer Priority */}
+                                    <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-4 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex items-center gap-2 pb-2.5 border-b border-slate-200/60 mb-3">
+                                                <Target className="w-4 h-4 text-slate-500 shrink-0" />
+                                                <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                                                    Prioritas Pelanggan
+                                                </span>
+                                            </div>
+                                            <div className="space-y-3 text-xs">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-slate-500">Fokus Penanganan:</span>
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                                                        tiket.prioritas_pelanggan === "Data Aman"
+                                                            ? "bg-purple-50 text-purple-700 border-purple-200"
+                                                            : tiket.prioritas_pelanggan === "Cepat Selesai"
+                                                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                                : tiket.prioritas_pelanggan === "Biaya Hemat"
+                                                                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                                                                    : "bg-slate-100 text-slate-700 border-slate-200"
+                                                    }`}>
+                                                        {tiket.prioritas_pelanggan || "Standar"}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-slate-500 block mb-1">Panduan Layanan:</span>
+                                                    <div className="text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed min-h-[52px]">
+                                                        {tiket.prioritas_pelanggan === "Data Aman" && "Prioritas proteksi data pelanggan: Wajib izin sebelum tindakan storage atau OS."}
+                                                        {tiket.prioritas_pelanggan === "Cepat Selesai" && "Prioritas waktu pengerjaan: Pelanggan membutuhkan unit segera selesai."}
+                                                        {tiket.prioritas_pelanggan === "Biaya Hemat" && "Prioritas efisiensi biaya: Utamakan solusi ekonomis dan estimasi terjangkau."}
+                                                        {(!tiket.prioritas_pelanggan || tiket.prioritas_pelanggan === "Standar") && "Standar pengerjaan workshop yang seimbang antara kualitas dan durasi."}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Column 3: Privacy & Permissions */}
+                                    <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-4 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex items-center gap-2 pb-2.5 border-b border-slate-200/60 mb-3">
+                                                <ShieldCheck className="w-4 h-4 text-slate-500 shrink-0" />
+                                                <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                                                    Izin & Batasan Akses
+                                                </span>
+                                            </div>
+                                            <div className="space-y-2 text-xs">
+                                                <div className="flex items-center justify-between gap-2 py-0.5">
+                                                    <span className="text-slate-600">Bongkar Hardware:</span>
+                                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                                                        tiket.izin_bongkar !== false ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"
+                                                    }`}>
+                                                        {tiket.izin_bongkar !== false ? "Diizinkan" : "Ditolak"}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between gap-2 py-0.5">
+                                                    <span className="text-slate-600">Akses OS / Testing:</span>
+                                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                                                        tiket.izin_akses_os !== false ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"
+                                                    }`}>
+                                                        {tiket.izin_akses_os !== false ? "Diizinkan" : "Ditolak"}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between gap-2 py-0.5">
+                                                    <span className="text-slate-600">Konfirmasi Backup:</span>
+                                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                                                        tiket.izin_backup_mandiri !== false ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                                                    }`}>
+                                                        {tiket.izin_backup_mandiri !== false ? "Disepakati" : "Belum Konfirmasi"}
+                                                    </span>
+                                                </div>
+                                                {tiket.batasan_izin && (
+                                                    <div className="mt-2 pt-2 border-t border-slate-200/80">
+                                                        <span className="text-[10px] font-bold text-amber-800 uppercase block mb-0.5">Batasan Khusus:</span>
+                                                        <p className="text-[11px] text-slate-700 bg-amber-50/80 p-2 rounded-lg border border-amber-200 leading-relaxed">
+                                                            {tiket.batasan_izin}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Accordion 2: Rekam Medis & Riwayat Servis Unit Ini */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all">
+                    <div 
+                        onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                        className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/60 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 shrink-0">
+                                <History className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <h2 className="text-sm font-bold text-slate-900">Rekam Medis & Riwayat Servis Unit Ini</h2>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                                        (tiket.perangkat?.tiket_servis?.length || 0) > 0 
+                                            ? "bg-amber-50 text-amber-800 border-amber-200" 
+                                            : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                    }`}>
+                                        {(tiket.perangkat?.tiket_servis?.length || 0) > 0 
+                                            ? `${tiket.perangkat.tiket_servis.length}x Servis Sebelumnya` 
+                                            : "Kunjungan Pertama"}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-0.5">
+                                    Riwayat kerusakan dan tindakan masa lalu untuk {tiket.perangkat?.merek} {tiket.perangkat?.model} (SN: {tiket.perangkat?.serial_number || "-"})
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-1 text-slate-400 hover:text-slate-600 transition-colors self-end sm:self-auto">
+                            {isHistoryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </div>
+                    </div>
+
+                    {isHistoryOpen && (
+                        <div className="p-5 pt-0 border-t border-slate-100">
+                            {tiket.perangkat?.tiket_servis && tiket.perangkat.tiket_servis.length > 0 ? (
+                                <div className="space-y-3 mt-4">
+                                    {tiket.perangkat.tiket_servis.map((hist) => (
+                                        <div key={hist.id} className="bg-slate-50/70 hover:bg-slate-50 p-4 rounded-xl border border-slate-200 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div className="space-y-1.5 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <Link 
+                                                        to={`/tiket-servis/${hist.id}`}
+                                                        className="font-mono font-bold text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                                                    >
+                                                        {hist.nomor_tiket}
+                                                        <ExternalLink className="w-3 h-3" />
+                                                    </Link>
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${STATUS_LABELS[hist.status]?.color || "bg-slate-100 text-slate-700"}`}>
+                                                        {STATUS_LABELS[hist.status]?.label || hist.status}
+                                                    </span>
+                                                    <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {new Date(hist.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-slate-700 font-medium">
+                                                    <span className="text-slate-500">Keluhan: </span>{hist.keluhan}
+                                                </p>
+                                                {hist.diagnosis && (
+                                                    <p className="text-xs text-slate-600">
+                                                        <span className="text-slate-500">Diagnosis: </span>{hist.diagnosis.masalah} &bull; <span className="text-emerald-700 font-semibold">{hist.diagnosis.solusi}</span>
+                                                    </p>
+                                                )}
+                                                {hist.penggunaan_sparepart && hist.penggunaan_sparepart.length > 0 && (
+                                                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                                                        <span className="text-[11px] text-slate-400">Sparepart diganti:</span>
+                                                        {hist.penggunaan_sparepart.map(ps => (
+                                                            <span key={ps.id} className="bg-white px-2 py-0.5 rounded-md text-[10px] font-medium text-slate-700 border border-slate-200">
+                                                                {ps.sparepart?.nama} ({ps.jumlah}x)
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="text-left md:text-right shrink-0 border-t md:border-t-0 pt-2 md:pt-0 border-slate-200">
+                                                <p className="text-[11px] text-slate-400">Teknisi</p>
+                                                <p className="text-xs font-bold text-slate-800">{hist.teknisi?.nama || "Tidak tercatat"}</p>
+                                                {hist.invoice && (
+                                                    <p className="text-xs font-semibold text-emerald-600 mt-1">{formatRupiah(hist.invoice.total_biaya)}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 flex items-center gap-3 text-emerald-800 text-xs mt-4">
+                                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                                    <div>
+                                        <p className="font-bold">Tidak ada riwayat perbaikan terdahulu untuk unit ini.</p>
+                                        <p className="text-emerald-700/80">Ini adalah kali pertama perangkat tercatat masuk ke pusat servis Serv.io.</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Accordion 3: Pustaka Solusi Wiki Toko */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all">
+                    <div
+                        onClick={() => setIsWikiOpen(!isWikiOpen)}
+                        className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/60 transition-colors"
+                    >
+                        <div className="flex items-start sm:items-center gap-3">
+                            <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-200 shrink-0">
+                                <BookOpen className="w-5 h-5 text-indigo-600" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <h2 className="text-sm font-bold text-slate-900">Pustaka Solusi Wiki Toko</h2>
+                                    <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                        Hardware Knowledge Base
+                                    </span>
+                                    <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                                        {wikiSuggestions?.length || 0} Solusi
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-0.5">
+                                    Panduan hardware internal & solusi teruji untuk <span className="font-semibold text-slate-700">{tiket.perangkat?.merek} {tiket.perangkat?.model}</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap self-end md:self-auto">
+                            {tiket.diagnosis && (isAdmin || isAssignedToMe) && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSaveToWiki();
+                                    }}
+                                    disabled={isSavingToWiki}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors shadow-2xs disabled:opacity-50"
+                                    title="Simpan hasil diagnosis & solusi tiket ini sebagai artikel di Wiki Toko"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <span>{isSavingToWiki ? "Menyimpan..." : "Simpan Solusi ke Wiki"}</span>
+                                </button>
+                            )}
+                            <Link
+                                to="/wiki"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span>Buka Wiki</span>
+                            </Link>
+                            <div className="p-1 text-slate-400 hover:text-slate-600 transition-colors ml-1">
+                                {isWikiOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </div>
+                        </div>
+                    </div>
+
+                    {isWikiOpen && (
+                        <div className="p-5 pt-0 border-t border-slate-100">
+                            {loadingWikiSuggestions ? (
+                                <div className="py-6 flex items-center justify-center gap-2 text-xs text-slate-400 mt-4">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-500 border-t-transparent"></div>
+                                    <span>Mencari panduan yang relevan...</span>
+                                </div>
+                            ) : wikiSuggestions && wikiSuggestions.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-4">
+                                    {wikiSuggestions.map((wiki) => (
+                                        <div
+                                            key={wiki.id}
+                                            onClick={() => setActiveWikiModal(wiki)}
+                                            className="p-3.5 bg-slate-50/80 hover:bg-indigo-50/30 rounded-xl border border-slate-200 hover:border-indigo-200 transition-all cursor-pointer group flex flex-col justify-between"
+                                        >
+                                            <div>
+                                                <div className="flex items-center justify-between gap-1 mb-1.5">
+                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 border border-slate-200">
+                                                        {wiki.kategori}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-indigo-600 group-hover:underline flex items-center gap-0.5">
+                                                        Baca <ArrowRight className="w-3 h-3" />
+                                                    </span>
+                                                </div>
+                                                <h4 className="text-xs font-bold text-slate-900 group-hover:text-indigo-950 line-clamp-1 mb-1">
+                                                    {wiki.judul}
+                                                </h4>
+                                                <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                                                    {wiki.gejala || wiki.solusi_langkah}
+                                                </p>
+                                            </div>
+                                            <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+                                                <span>{wiki.brand?.nama || "Semua Merek"}</span>
+                                                <span>{wiki.view_count || 0}x dibaca</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-5 text-center text-xs text-slate-500 mt-2">
+                                    Belum ada panduan perbaikan yang spesifik untuk model/keluhan ini. Tekan <span className="font-semibold text-slate-700">"Simpan Solusi ke Wiki"</span> di atas setelah perbaikan selesai agar teknisi lain dapat menggunakannya sebagai acuan!
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Accordion 4: Inspeksi Kendali Mutu (QC Pra-Penyerahan WOW) */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all">
+                    <div
+                        onClick={() => setIsQcOpen(!isQcOpen)}
+                        className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/60 transition-colors"
+                    >
+                        <div className="flex items-start sm:items-center gap-3">
+                            <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 shrink-0">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <h2 className="text-sm font-bold text-slate-900">Inspeksi Kendali Mutu (QC Pra-Penyerahan Unit)</h2>
+                                    <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                        8 Poin WOW Service
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-0.5">
+                                    {tiket.checklist_qc?.passed_qc && tiket.checklist_qc?.qc_by ? (
+                                        <span>
+                                            Diinspeksi oleh <strong className="text-slate-700">{tiket.checklist_qc.qc_by}</strong> pada {tiket.checklist_qc.qc_at ? new Date(tiket.checklist_qc.qc_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "tahap akhir"}
+                                        </span>
+                                    ) : (
+                                        "Pengujian wajib sebelum serah terima unit kepada pelanggan atau mengubah status ke Selesai / Diambil."
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap self-end md:self-auto">
+                            {tiket.checklist_qc?.passed_qc ? (
+                                <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1 rounded-full border border-emerald-300">
+                                    <Award className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Lulus QC</span>
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 font-bold text-xs px-3 py-1 rounded-full border border-amber-200">
+                                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                    <span>Menunggu QC</span>
+                                </span>
+                            )}
+
+                            {(isAdmin || isAssignedToMe) && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleApproveAllQC();
+                                    }}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                                >
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    <span>Luluskan Semua</span>
+                                </button>
+                            )}
+
+                            <div className="p-1 text-slate-400 hover:text-slate-600 transition-colors ml-1">
+                                {isQcOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </div>
+                        </div>
+                    </div>
+
+                    {isQcOpen && (
+                        <div className="p-5 pt-0 border-t border-slate-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs my-4">
+                                {QC_CHECKLIST_ITEMS.map(item => {
+                                    const isChecked = Boolean(
+                                        tiket.checklist_qc?.[item.key] ?? 
+                                        (item.key === "power_test" ? tiket.checklist_qc?.baterai : false) ??
+                                        (item.key === "clean_wow" ? tiket.checklist_qc?.cleaning_done : false)
+                                    );
+                                    const ItemIcon = item.Icon;
+                                    return (
+                                        <label key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all cursor-pointer select-none ${
+                                            isChecked ? "bg-emerald-50/70 border-emerald-300 text-emerald-950 font-semibold shadow-2xs" : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100/70"
+                                        }`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={(e) => handleToggleQCChecklist(item.key, e.target.checked)}
+                                                className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer mt-0.5 shrink-0"
+                                            />
+                                            <div className="space-y-0.5 min-w-0">
+                                                <div className="flex items-center gap-1.5">
+                                                    <ItemIcon className={`w-3.5 h-3.5 shrink-0 ${isChecked ? "text-emerald-600" : "text-slate-400"}`} />
+                                                    <span className="font-bold text-slate-900 truncate">{item.label}</span>
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 leading-tight font-normal">{item.desc}</p>
+                                            </div>
+                                        </label>
+                                    );
+                                })}
+
+                                {/* Final QC Passed Toggle */}
+                                <label className={`flex items-center justify-between gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none col-span-full ${
+                                    Boolean(tiket.checklist_qc?.passed_qc) ? "bg-emerald-100/90 border-emerald-400 text-emerald-950 font-bold" : "bg-amber-50/80 border-amber-300 text-amber-900"
+                                }`}>
+                                    <div className="flex items-center gap-2.5">
+                                        <Award className={`w-5 h-5 shrink-0 ${Boolean(tiket.checklist_qc?.passed_qc) ? "text-emerald-700" : "text-amber-600"}`} />
+                                        <div>
+                                            <span className="text-sm">Quality Control PASSED (Final Approval Pra-Penyerahan)</span>
+                                            <p className="text-xs font-normal opacity-85">
+                                                Menyatakan perangkat telah memenuhi standar uji fungsional dan siap diserahkan kepada pelanggan.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(tiket.checklist_qc?.passed_qc)}
+                                        onChange={(e) => handleToggleQCChecklist("passed_qc", e.target.checked)}
+                                        className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer shrink-0"
+                                    />
+                                </label>
+                            </div>
+
+                            {tiket.checklist_qc?.catatan_qc && (
+                                <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
+                                    <span className="font-bold text-slate-800 block mb-0.5">Catatan QC:</span>
+                                    {tiket.checklist_qc.catatan_qc}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+
             <ConfirmModal
                 isOpen={isUpdatingStatus}
                 title="Konfirmasi Perubahan Status"
@@ -930,9 +2352,418 @@ export default function TiketServisDetail() {
                     <img 
                         src={selectedImage} 
                         alt="Preview" 
-                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-lg"
                         onClick={(e) => e.stopPropagation()} 
                     />
+                </div>
+            )}
+
+            {/* Feature 2.1: Handover QC Inspection Modal (Standar WOW Service) */}
+            {isQcModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full flex flex-col max-h-[92vh] overflow-hidden">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
+                                    <Award className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-base font-bold text-slate-900">Checklist QC Pra-Penyerahan Unit</h2>
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                            Target: {STATUS_LABELS[selectedStatus]?.label}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-500">
+                                        Pengujian 8 poin kendali mutu & pembersihan menyeluruh (Standar WOW Service)
+                                    </p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setIsQcModalOpen(false)}
+                                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                            >
+                                <XCircle className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-5 overflow-y-auto space-y-4 custom-scrollbar">
+                            {/* Info Bar */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                                <div className="flex items-center gap-2">
+                                    <User className="w-4 h-4 text-slate-400" />
+                                    <span className="text-slate-500">Inspektor:</span>
+                                    <span className="font-semibold text-slate-800">{user?.nama || "Teknisi / Admin"}</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setQcModalData({
+                                            power_test: true,
+                                            display_test: true,
+                                            keyboard_touchpad: true,
+                                            audio_multimedia: true,
+                                            port_io_connectivity: true,
+                                            os_thermal_performance: true,
+                                            clean_wow: true,
+                                            accessories_handover: true,
+                                            passed_qc: true,
+                                            catatan_qc: qcModalData.catatan_qc || "Unit telah lulus uji kelayakan 8 poin kendali mutu dan dibersihkan menyeluruh."
+                                        });
+                                        toast.success("Semua 8 poin QC ditandai lulus!");
+                                    }}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                                >
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    <span>Luluskan Semua (Standar WOW)</span>
+                                </button>
+                            </div>
+
+                            {/* 8 Checkpoints Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                {QC_CHECKLIST_ITEMS.map((item) => {
+                                    const isChecked = Boolean(qcModalData[item.key]);
+                                    const ItemIcon = item.Icon;
+                                    return (
+                                        <label
+                                            key={item.key}
+                                            className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none ${
+                                                isChecked
+                                                    ? "bg-emerald-50/70 border-emerald-300 text-emerald-950 shadow-2xs"
+                                                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={(e) => setQcModalData({ ...qcModalData, [item.key]: e.target.checked })}
+                                                className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer mt-0.5 shrink-0"
+                                            />
+                                            <div className="space-y-0.5 min-w-0">
+                                                <div className="flex items-center gap-1.5">
+                                                    <ItemIcon className={`w-3.5 h-3.5 shrink-0 ${isChecked ? "text-emerald-600" : "text-slate-400"}`} />
+                                                    <span className="text-xs font-bold text-slate-900 truncate">{item.label}</span>
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 leading-tight">{item.desc}</p>
+                                            </div>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Catatan Tambahan QC */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                    Catatan Pengujian & Kondisi Fisik (Opsional)
+                                </label>
+                                <textarea
+                                    value={qcModalData.catatan_qc}
+                                    onChange={(e) => setQcModalData({ ...qcModalData, catatan_qc: e.target.value })}
+                                    placeholder="Contoh: Unit dites streaming 15 menit suhu normal 60°C, adaptor charger bawaan disertakan rapi..."
+                                    rows={2}
+                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none shadow-2xs"
+                                />
+                            </div>
+
+                            {/* Approval Banner */}
+                            <div className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 ${
+                                qcModalData.passed_qc ? "bg-emerald-100 border-emerald-300 text-emerald-900" : "bg-amber-50 border-amber-200 text-amber-900"
+                            }`}>
+                                <div className="flex items-center gap-2">
+                                    <Award className={`w-5 h-5 shrink-0 ${qcModalData.passed_qc ? "text-emerald-700" : "text-amber-600"}`} />
+                                    <div>
+                                        <p className="text-xs font-bold">Persetujuan Kendali Mutu (Final Approval)</p>
+                                        <p className="text-[11px] opacity-80">
+                                            {qcModalData.passed_qc ? "Perangkat siap diserahkan kepada pelanggan" : "Centang persetujuan setelah seluruh pengujian diverifikasi"}
+                                        </p>
+                                    </div>
+                                </div>
+                                <label className="flex items-center gap-2 text-xs font-bold cursor-pointer select-none shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={qcModalData.passed_qc}
+                                        onChange={(e) => setQcModalData({ ...qcModalData, passed_qc: e.target.checked })}
+                                        className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                                    />
+                                    <span>Lulus QC</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsQcModalOpen(false)}
+                                className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition-colors"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSaveQcAndChangeStatus}
+                                disabled={isSavingQc}
+                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                <Save className="w-3.5 h-3.5" />
+                                <span>{isSavingQc ? "Menyimpan QC..." : `Simpan QC & Ubah ke ${STATUS_LABELS[selectedStatus]?.label}`}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* SOP WhatsApp Template Modal */}
+            <SopWaModal
+                isOpen={isSopWaModalOpen}
+                onClose={() => {
+                    setIsSopWaModalOpen(false);
+                    setSopWaInitialScenario("");
+                }}
+                tiket={tiket}
+                initialScenario={sopWaInitialScenario}
+            />
+
+            {/* Digital Warranty Certificate Modal */}
+            <WarrantyCertificateModal
+                isOpen={isWarrantyCertModalOpen}
+                onClose={() => setIsWarrantyCertModalOpen(false)}
+                tiket={tiket}
+                customer={tiket?.perangkat?.customer}
+                perangkat={tiket?.perangkat}
+                invoice={tiket?.invoice}
+            />
+
+            {/* Feature 1: 2D Visual Defect Mapper Modal */}
+            <DefectMapperModal
+                isOpen={isDefectModalOpen}
+                onClose={() => setIsDefectModalOpen(false)}
+                value={tiket?.defect_map}
+                onChange={handleSaveDefectMap}
+                readOnly={!(isAdmin || isAssignedToMe)}
+                title={`Peta Cacat Fisik: ${tiket?.perangkat?.merek || ""} ${tiket?.perangkat?.model || ""}`}
+            />
+
+            {/* Feature 6: Internal Repair Wiki Reader Modal */}
+            <RepairWikiDetailModal
+                isOpen={Boolean(activeWikiModal)}
+                onClose={() => setActiveWikiModal(null)}
+                wiki={activeWikiModal}
+            />
+
+            {/* Modal Konfirmasi Persetujuan Pelanggan & Estimasi SLA Pengerjaan Servis */}
+            {isAccModalOpen && (
+                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
+                        {/* Header */}
+                        <div className="p-5 border-b border-slate-100 flex items-start justify-between gap-4 bg-slate-50/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200">
+                                    <CheckCircle2 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-slate-900">
+                                        Konfirmasi Persetujuan Pelanggan & Estimasi SLA
+                                    </h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Pelanggan telah menyetujui penawaran biaya. Tentukan target estimasi SLA pengerjaan servis fisik.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsAccModalOpen(false)}
+                                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                            >
+                                <XCircle className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+                            {/* Ringkasan Penawaran */}
+                            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                                <div className="flex items-center justify-between text-slate-600">
+                                    <span className="text-slate-500">Nomor Tiket:</span>
+                                    <span className="font-bold text-slate-800">#{tiket.nomor_tiket}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-slate-600">
+                                    <span className="text-slate-500">Perangkat:</span>
+                                    <span className="font-semibold text-slate-800">{tiket.perangkat?.merek} {tiket.perangkat?.model}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-slate-600">
+                                    <span className="text-slate-500">Pelanggan:</span>
+                                    <span className="font-medium text-slate-800">{tiket.perangkat?.customer?.nama}</span>
+                                </div>
+                                {tiket.diagnosis && (
+                                    <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                                        <span className="text-slate-600 font-semibold">Estimasi Biaya Disetujui:</span>
+                                        <span className="font-bold text-emerald-700 text-sm">{formatRupiah(tiket.diagnosis.estimasi_biaya || 0)}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Pilihan Status Selanjutnya */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
+                                    Status Tiket Selanjutnya
+                                </label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setAccTargetStatus("disetujui")}
+                                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                                            accTargetStatus === "disetujui"
+                                                ? "bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/20"
+                                                : "bg-white border-slate-200 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="font-bold text-xs text-slate-900">Disetujui (ACC)</span>
+                                            {accTargetStatus === "disetujui" && <Check className="w-4 h-4 text-emerald-600" />}
+                                        </div>
+                                        <p className="text-[11px] text-slate-500">
+                                            Antrean pengerjaan teknisi dibuka
+                                        </p>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setAccTargetStatus("dalam_perbaikan")}
+                                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                                            accTargetStatus === "dalam_perbaikan"
+                                                ? "bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500/20"
+                                                : "bg-white border-slate-200 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="font-bold text-xs text-slate-900">Dalam Perbaikan</span>
+                                            {accTargetStatus === "dalam_perbaikan" && <Check className="w-4 h-4 text-indigo-600" />}
+                                        </div>
+                                        <p className="text-[11px] text-slate-500">
+                                            Teknisi langsung mulai membongkar/servis
+                                        </p>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Pilihan Paket Estimasi SLA Pengerjaan Servis */}
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                                        Paket Estimasi SLA Pengerjaan Servis
+                                    </label>
+                                    <span className="text-[11px] text-slate-500">
+                                        Timer dihitung sejak persetujuan pelanggan
+                                    </span>
+                                </div>
+
+                                <div className="space-y-2.5">
+                                    {SLA_PENGERJAAN_PACKAGES.map((pkg) => {
+                                        const PkgIcon = pkg.icon;
+                                        const isSelected = accSlaPaket === pkg.id && !accUseCustomDate;
+                                        return (
+                                            <div
+                                                key={pkg.id}
+                                                onClick={() => {
+                                                    setAccSlaPaket(pkg.id);
+                                                    setAccUseCustomDate(false);
+                                                }}
+                                                className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                                                    isSelected
+                                                        ? `${pkg.badgeBg} ring-2 ring-blue-500/20 shadow-xs`
+                                                        : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <PkgIcon className="w-4 h-4" />
+                                                        <span className="text-xs font-bold">{pkg.label}</span>
+                                                        {pkg.id === "express" && (
+                                                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white uppercase tracking-wider">
+                                                                Prioritas Meja
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                                        isSelected ? "border-blue-600 bg-blue-600" : "border-slate-300 bg-white"
+                                                    }`}>
+                                                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                                    </div>
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 pl-6 leading-relaxed">
+                                                    {pkg.desc}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Opsi Target Estimasi Selesai Khusus */}
+                            <div className="pt-2 border-t border-slate-100">
+                                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 mb-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={accUseCustomDate}
+                                        onChange={(e) => setAccUseCustomDate(e.target.checked)}
+                                        className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
+                                    />
+                                    <span>Tentukan Target Estimasi Selesai Khusus (Tanggal & Jam Manual)</span>
+                                </label>
+
+                                {accUseCustomDate && (
+                                    <div className="pl-6 space-y-1">
+                                        <input
+                                            type="datetime-local"
+                                            value={accCustomTargetDate}
+                                            onChange={(e) => setAccCustomTargetDate(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
+                                        />
+                                        <p className="text-[11px] text-slate-400">
+                                            Cocok untuk servis yang memerlukan pemesanan sparepart khusus (part indent).
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Catatan Khusus untuk Teknisi */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Catatan Khusus untuk Teknisi (Opsional)
+                                </label>
+                                <textarea
+                                    value={catatanAdmin}
+                                    onChange={(e) => setCatatanAdmin(e.target.value)}
+                                    placeholder="Contoh: Customer menyetujui penggantian baterai & kipas saja, install ulang tidak perlu..."
+                                    rows={2}
+                                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none shadow-2xs"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsAccModalOpen(false)}
+                                className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmAcc}
+                                disabled={isSubmittingAcc}
+                                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                            >
+                                <Save className="w-3.5 h-3.5" />
+                                <span>{isSubmittingAcc ? "Menyimpan Estimasi..." : "Konfirmasi & Mulai Estimasi Servis"}</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

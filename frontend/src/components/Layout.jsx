@@ -4,43 +4,124 @@ import { useAuth } from "../hooks/useAuth";
 import {
     LayoutDashboard,
     Users,
+    UserCheck,
     MonitorSmartphone,
     Ticket,
     Wrench,
     FileText,
-    MapPin,
     LogOut,
     Menu,
     X,
     Settings,
-    User as UserIcon
+    User as UserIcon,
+    BookOpen,
+    Plus,
+    HeartHandshake
 } from "lucide-react";
+import SopModal from "./SopModal";
+import api from "../services/api";
+import CrmFloatingBubble from "./CrmFloatingBubble";
+import MaintenanceRecallModal from "./MaintenanceRecallModal";
 
 const adminMenu = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/customer", label: "Customer", icon: Users },
     { path: "/perangkat", label: "Perangkat", icon: MonitorSmartphone },
     { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
+    { path: "/retensi", label: "Retensi & CRM", icon: HeartHandshake },
     { path: "/sparepart", label: "Sparepart", icon: Wrench },
     { path: "/invoice", label: "Invoice", icon: FileText },
+    { path: "/wiki", label: "Pustaka Wiki", icon: BookOpen },
+    { path: "/users", label: "User & Performa", icon: UserCheck },
 ];
 
 const teknisiMenu = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
     { path: "/sparepart", label: "Sparepart", icon: Wrench },
+    { path: "/wiki", label: "Pustaka Wiki", icon: BookOpen },
 ];
 
 export default function Layout({ children }) {
     const { user, logout, isAdmin } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
-    // Close mobile menu on route change
+
+    // Responsive sidebar state: open by default on desktop (>=1024px), closed on mobile
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+        if (typeof window !== "undefined") {
+            return window.innerWidth >= 1024;
+        }
+        return true;
+    });
+    const [isSopModalOpen, setIsSopModalOpen] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [maintenanceDueData, setMaintenanceDueData] = useState({ items: [], total_due: 0, urgent_count: 0 });
+    const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
+
+    // Periodic maintenance recall fetch across the app
     useEffect(() => {
-        setIsMobileMenuOpen(false);
+        let isMounted = true;
+        const fetchMaintenance = async () => {
+            try {
+                const res = await api.get("/tiket-servis/maintenance/due");
+                if (isMounted && res.data) {
+                    setMaintenanceDueData(res.data);
+                }
+            } catch (err) {
+                // Keep default state
+            }
+        };
+
+        fetchMaintenance();
+        const interval = setInterval(() => {
+            if (document.visibilityState === "visible") {
+                fetchMaintenance();
+            }
+        }, 20000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
     }, [location.pathname]);
+
+    // Live ticking timer every second
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const dayName = currentTime.toLocaleDateString("id-ID", { weekday: "long" });
+    const dateFormatted = currentTime.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    });
+    const hours = String(currentTime.getHours()).padStart(2, "0");
+    const minutes = String(currentTime.getMinutes()).padStart(2, "0");
+    const seconds = String(currentTime.getSeconds()).padStart(2, "0");
+    
+    // Close mobile menu on route change, but retain desktop state
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.innerWidth < 1024) {
+            setIsSidebarOpen(false);
+        }
+    }, [location.pathname]);
+
+    // Handle resize adjustments
+    useEffect(() => {
+        function handleResize() {
+            if (window.innerWidth < 1024 && isSidebarOpen) {
+                // If transitioning to small screen, close overlay drawer
+                setIsSidebarOpen(false);
+            }
+        }
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, [isSidebarOpen]);
 
     const menu = isAdmin ? adminMenu : teknisiMenu;
 
@@ -51,39 +132,46 @@ export default function Layout({ children }) {
 
     return (
         <div className="flex h-screen print:h-auto bg-slate-50 overflow-hidden print:overflow-visible font-sans">
-            {/* Mobile overlay */}
-            {isMobileMenuOpen && (
+            {/* Mobile / Tablet backdrop */}
+            {isSidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+                    onClick={() => setIsSidebarOpen(false)}
                 />
             )}
 
-            {/* Sidebar */}
+            {/* Sidebar (Fully Toggleable on Desktop & Mobile) */}
             <aside 
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out print:hidden ${
-                    isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col transition-all duration-300 ease-in-out print:hidden ${
+                    isSidebarOpen 
+                        ? "w-72 translate-x-0 shadow-lg lg:shadow-none" 
+                        : "-translate-x-full lg:translate-x-0 lg:w-0 lg:border-r-0 lg:overflow-hidden"
                 }`}
             >
-                <div className="flex items-center justify-between p-6 h-20 border-b border-slate-100">
+                {/* Sidebar Brand Header */}
+                <div className="flex items-center justify-between p-5 h-16 border-b border-slate-100 shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="bg-blue-50 border border-blue-100 p-2 rounded-xl">
-                            <Settings className="w-6 h-6 text-blue-600" />
+                            <Settings className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Serv.io</h1>
+                            <h1 className="text-lg font-bold text-slate-900 tracking-tight">Serv.io</h1>
+                            <p className="text-[10px] text-slate-400 font-medium">Workshop Platform</p>
                         </div>
                     </div>
+                    {/* Toggle button to close sidebar */}
                     <button 
-                        className="lg:hidden p-2 text-slate-400 hover:text-slate-600"
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                        onClick={() => setIsSidebarOpen(false)}
+                        title="Tutup Menu Sidebar"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
-                    <p className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Menu Utama</p>
+                {/* Sidebar Nav */}
+                <nav className="flex-1 overflow-y-auto py-5 px-4 space-y-1 custom-scrollbar">
+                    <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Menu Utama</p>
                     {menu.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname.startsWith(item.path);
@@ -91,43 +179,61 @@ export default function Layout({ children }) {
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                                     isActive
-                                        ? "bg-blue-50 text-blue-600 border border-blue-100/50 shadow-sm"
+                                        ? "bg-blue-50 text-blue-600 font-semibold border border-blue-100 shadow-2xs"
                                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                 }`}
                             >
-                                <Icon className={`w-5 h-5 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
+                                <Icon className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
                                 <span>{item.label}</span>
                             </Link>
                         );
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-slate-100">
-                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col gap-4">
+                {/* Quick SOP / Guidance pocket book */}
+                <div className="px-4 py-2 border-t border-slate-100 shrink-0">
+                    <button
+                        type="button"
+                        onClick={() => setIsSopModalOpen(true)}
+                        className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-800 transition-colors shadow-2xs group"
+                    >
+                        <div className="flex items-center gap-2.5">
+                            <BookOpen className="w-4 h-4 text-blue-600" />
+                            <span className="text-xs font-semibold text-slate-800">Panduan Standar Layanan</span>
+                        </div>
+                        <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+                            WOW
+                        </span>
+                    </button>
+                </div>
+
+                {/* User Info & Profile card */}
+                <div className="p-4 border-t border-slate-100 shrink-0">
+                    <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 flex flex-col gap-3">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
-                                {user?.nama?.charAt(0).toUpperCase()}
+                            <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                                {user?.nama?.charAt(0)?.toUpperCase() || "U"}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-slate-900 text-sm truncate">{user?.nama}</p>
-                                <p className="text-xs text-slate-500 capitalize truncate">{user?.role}</p>
+                                <p className="font-bold text-slate-900 text-xs truncate">{user?.nama}</p>
+                                <p className="text-[11px] text-slate-500 capitalize truncate">{user?.role}</p>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                             <Link
                                 to="/profile"
-                                className="flex items-center justify-center gap-2 w-full py-2 px-2 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 rounded-xl text-sm font-medium transition-colors shadow-sm"
+                                className="flex items-center justify-center gap-1.5 w-full py-1.5 px-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition-colors"
                             >
-                                <UserIcon className="w-4 h-4" />
+                                <UserIcon className="w-3.5 h-3.5 text-slate-500" />
                                 <span>Profil</span>
                             </Link>
                             <button
                                 onClick={handleLogout}
-                                className="flex items-center justify-center gap-2 w-full py-2 px-2 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl text-sm font-medium transition-colors shadow-sm"
+                                className="flex items-center justify-center gap-1.5 w-full py-1.5 px-2 bg-white hover:bg-red-50 text-slate-700 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-lg text-xs font-semibold transition-colors"
                             >
-                                <LogOut className="w-4 h-4" />
+                                <LogOut className="w-3.5 h-3.5 text-slate-500 hover:text-red-500" />
                                 <span>Keluar</span>
                             </button>
                         </div>
@@ -135,31 +241,87 @@ export default function Layout({ children }) {
                 </div>
             </aside>
 
-            {/* Main content area */}
+            {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 print:bg-white print:overflow-visible">
-                {/* Mobile Header */}
-                <header className="lg:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-slate-200 shrink-0 print:hidden">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-blue-50 border border-blue-100 p-1.5 rounded-lg">
-                            <Settings className="w-5 h-5 text-blue-600" />
+                {/* Global Top Navbar */}
+                <header className="grid grid-cols-[1fr_auto_1fr] items-center h-16 px-4 sm:px-6 bg-white border-b border-slate-200 shrink-0 print:hidden z-10 gap-2 sm:gap-4">
+                    {/* Left: Sidebar Toggle & Page Title */}
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <button 
+                            type="button"
+                            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shrink-0"
+                            onClick={() => setIsSidebarOpen(prev => !prev)}
+                            title={isSidebarOpen ? "Tutup Sidebar Menu" : "Buka Sidebar Menu"}
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+
+                        <div className="hidden md:flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-slate-400 min-w-0 overflow-hidden">
+                            <span className="text-slate-500 uppercase tracking-wider text-[11px] shrink-0">Workshop</span>
+                            <span className="text-slate-300 shrink-0">/</span>
+                            <span className="text-slate-800 text-xs sm:text-sm font-bold tracking-tight truncate">
+                                {location.pathname.startsWith("/dashboard") && "Dashboard"}
+                                {location.pathname.startsWith("/customer") && "Data Pelanggan"}
+                                {location.pathname.startsWith("/perangkat") && "Data Perangkat"}
+                                {location.pathname.startsWith("/tiket-servis") && "Tiket Servis"}
+                                {location.pathname.startsWith("/retensi") && "Retensi & CRM Pelanggan"}
+                                {location.pathname.startsWith("/sparepart") && "Katalog Sparepart"}
+                                {location.pathname.startsWith("/invoice") && "Faktur & Pembayaran"}
+                                {location.pathname.startsWith("/users") && "User & Performa"}
+                                {location.pathname.startsWith("/profile") && "Profil Akun"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/retensi", "/sparepart", "/invoice", "/users", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
+                            </span>
                         </div>
-                        <h1 className="text-lg font-bold text-slate-900">Serv.io</h1>
                     </div>
-                    <button 
-                        className="p-2 -mr-2 text-slate-600 hover:text-slate-900"
-                        onClick={() => setIsMobileMenuOpen(true)}
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
+
+                    {/* Center: Live Clock & Date */}
+                    <div className="flex items-center justify-center gap-2 sm:gap-2.5 select-none shrink-0 px-1 sm:px-2">
+                        <span className="font-mono tabular-nums text-sm sm:text-base lg:text-lg font-semibold text-slate-800 tracking-tight">
+                            {hours}<span className="text-slate-300">:</span>{minutes}<span className="text-slate-300">:</span>{seconds}
+                        </span>
+                        <span className="hidden xl:block w-px h-4 bg-slate-200"></span>
+                        <span className="hidden xl:inline text-xs text-slate-500 font-medium whitespace-nowrap">
+                            {dayName}, {dateFormatted}
+                        </span>
+                    </div>
+
+                    {/* Right: Quick Action Button */}
+                    <div className="flex items-center justify-end gap-2 min-w-0">
+                        {isAdmin && (
+                            <Link
+                                to="/tiket-servis/tambah"
+                                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all shadow-xs shrink-0 whitespace-nowrap"
+                                title="Buat Tiket Servis Baru"
+                            >
+                                <Plus className="w-3.5 h-3.5 shrink-0" />
+                                <span className="hidden sm:inline">Tiket Baru</span>
+                            </Link>
+                        )}
+                    </div>
                 </header>
 
-                {/* Page Content */}
-                <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 print:p-0 print:overflow-visible">
+                {/* Page Content Scroll Container */}
+                <div className="flex-1 overflow-auto p-4 sm:p-6 print:p-0 print:overflow-visible custom-scrollbar">
                     <div className="w-full space-y-6 print:space-y-0">
                         {children}
                     </div>
                 </div>
             </main>
+
+            {/* In-App SOP Pocket Book Modal */}
+            <SopModal isOpen={isSopModalOpen} onClose={() => setIsSopModalOpen(false)} />
+
+            {/* Maintenance Recall Modal */}
+            <MaintenanceRecallModal
+                isOpen={isMaintenanceModalOpen}
+                onClose={() => setIsMaintenanceModalOpen(false)}
+            />
+
+            {/* Global Interactive Draggable 3D Floating CRM Recall Bubble */}
+            <CrmFloatingBubble 
+                maintenanceDueData={maintenanceDueData}
+                onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
+            />
         </div>
     );
 }

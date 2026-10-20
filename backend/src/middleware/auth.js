@@ -26,7 +26,9 @@ function authorize(...roles) {
             return res.status(401).json({ message: "Tidak terautentikasi" });
         }
 
-        if (!roles.includes(req.user.role)) {
+        // Pimpinan memiliki hak akses supervisi penuh setingkat admin
+        const hasAccess = roles.includes(req.user.role) || (req.user.role === "pimpinan" && roles.includes("admin"));
+        if (!hasAccess) {
             return res.status(403).json({ message: "Tidak memiliki akses" });
         }
 

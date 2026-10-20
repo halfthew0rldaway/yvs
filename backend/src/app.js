@@ -13,6 +13,8 @@ const invoiceRoutes = require("./routes/invoice.routes");
 const trackingRoutes = require("./routes/tracking.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const brandRoutes = require("./routes/brand.routes");
+const userRoutes = require("./routes/user.routes");
+const repairWikiRoutes = require("./routes/repair-wiki.routes");
 const activityLogger = require("./middleware/activityLogger");
 
 const app = express();
@@ -29,6 +31,7 @@ app.use(activityLogger);
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/perangkat", perangkatRoutes);
 app.use("/api/tiket-servis", tiketServisRoutes);
@@ -39,6 +42,7 @@ app.use("/api/diagnosis", diagnosisRoutes);
 app.use("/api/log-perbaikan", logPerbaikanRoutes);
 app.use("/api/invoice", invoiceRoutes);
 app.use("/api/tracking", trackingRoutes);
+app.use("/api/repair-wiki", repairWikiRoutes);
 
 // Health check
 app.get("/", (req, res) => {

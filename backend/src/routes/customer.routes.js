@@ -15,7 +15,8 @@ const customerValidation = [
         .trim(),
     body("nomor_telepon")
         .notEmpty().withMessage("Nomor telepon wajib diisi")
-        .matches(/^[0-9]{10,13}$/).withMessage("No telepon harus berupa angka, 10-13 digit"),
+        .customSanitizer(val => typeof val === "string" ? val.replace(/[\s\-]/g, "") : val)
+        .matches(/^(\+?62|0)[0-9]{8,13}$/).withMessage("Nomor telepon tidak valid (contoh: 081234567890 atau +6281234567890)"),
     body("alamat")
         .optional()
         .isLength({ max: 255 }).withMessage("Alamat maksimal 255 karakter")

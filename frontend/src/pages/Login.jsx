@@ -220,9 +220,9 @@ export default function Login() {
                     }}
                 />
                 
-                {/* Radial Gradient overlay for depth */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/5 via-slate-100/50 to-slate-200/20 z-0" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-[100px] z-0 pointer-events-none" />
+                {/* Background fill */}
+                <div className="absolute inset-0 bg-slate-50 z-0" />
+                <div className="absolute inset-0 bg-slate-50 z-0" />
 
                 {/* Content */}
                 <motion.div 
@@ -236,7 +236,7 @@ export default function Login() {
                             <Lottie 
                                 animationData={lottieData} 
                                 loop={true}
-                                className="w-full h-full drop-shadow-2xl opacity-90"
+                                className="w-full h-full opacity-90"
                             />
                         ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center rounded-2xl animate-pulse bg-slate-200/30">

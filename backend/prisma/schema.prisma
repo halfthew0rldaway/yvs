@@ -12,13 +12,15 @@ model User {
   nama       String
   email      String   @unique
   password   String
-  role                   String    @default("teknisi") // admin | teknisi
+  role                   String    @default("teknisi") // admin | teknisi | pimpinan
   reset_password_token   String?   @db.VarChar(255)
   reset_password_expires DateTime?
   created_at             DateTime  @default(now())
 
   tiket_servis TiketServis[] @relation("TeknisiTiket")
   activity_logs ActivityLog[]
+  restock_logs  RestockLog[]
+  repair_wikis  RepairWiki[]
 }
 
 model Customer {
@@ -26,6 +28,8 @@ model Customer {
   nama          String
   nomor_telepon String
   alamat        String?
+  tipe_kepribadian String?  @default("Netral") // Netral, Koleris, Sanguinis, Plegmatis, Melankolis
+  catatan_khusus   String?  @db.Text
   created_at    DateTime @default(now())
 
   perangkat Perangkat[]
@@ -55,10 +59,57 @@ model TiketServis {
   status         String   @default("diterima") // diterima, didiagnosis, menunggu_persetujuan, disetujui, dalam_perbaikan, selesai, diambil, dibatalkan
   created_at     DateTime @default(now())
   completed_at   DateTime?
-  last_reminder_sent Int @default(0)
   kategori_perbaikan String? @default("Umum")
   durasi_garansi     String? @default("1 Bulan")
   tgl_diambil        DateTime?
+  last_reminder_sent Int @default(0)
+
+  // Feature: Post-Service Care Tips from Technician
+  tips_perawatan     String?  @db.Text
+
+  // Feature: Structured Deposited Accessories Checklist
+  kelengkapan_detail Json?
+  
+  // Feature 1: Warranty Claim
+  is_garansi_claim   Boolean   @default(false)
+  parent_tiket_id    Int?
+  parent_tiket       TiketServis?  @relation("WarrantyClaims", fields: [parent_tiket_id], references: [id], onDelete: SetNull)
+  child_claims       TiketServis[] @relation("WarrantyClaims")
+
+  // Feature 2: Intake & QC Inspection Checklists
+  checklist_intake   Json?     // Physical intake checklist during drop-off
+  checklist_qc       Json?     // Quality control checklist before completion
+
+  // Feature 4: Device Credential Vault / PIN & Lock
+  tipe_kunci          String?   @default("Tidak Ada") // Tidak Ada, PIN, Password, Pola Kunci
+  password_perangkat  String?   @db.VarChar(255)
+
+  // Feature SOP: Permission & Privasi Pelanggan (Bab 9)
+  izin_bongkar        Boolean   @default(true)
+  izin_akses_os       Boolean   @default(true)
+  izin_backup_mandiri Boolean   @default(true)
+  batasan_izin        String?   @db.VarChar(255)
+
+  // Feature SOP: Pengecekan Tahap Awal & Prioritas (Bab 5 & 8)
+  kondisi_fisik       String?   @default("Bersih") // Bersih, Kotor, Ada yang Rusak, Pecah
+  spesifikasi_awal    String?   @db.Text
+  prioritas_pelanggan String?   @default("Standar") // Standar, Data Aman, Cepat Selesai, Biaya Hemat
+
+  // Feature 9: Real-time Warranty Expiry Tracker
+  garansi_berakhir_at DateTime?
+
+  // Feature 6: Customer Rating & Store Link
+  rating_teknisi       Int?      // 1-5 Star rating given by customer
+  rating_submitted_at DateTime?
+
+  // Feature 1: Interactive 2D Visual Scratch & Defect Mapper
+  defect_map          Json?     // Array of visual defect markers on device surfaces
+
+  // Feature 7: Dual-Phase SLA Engine (SLA Pengecekan & SLA Pengerjaan Servis)
+  sla_paket            String?   @default("reguler") // express, reguler, kompleks
+  target_pengecekan_at DateTime? // Batas waktu pengecekan / diagnosis awal
+  target_selesai_at    DateTime? // Batas waktu pengerjaan servis fisik (dihitung setelah disetujui customer)
+  disetujui_at         DateTime? // Waktu penawaran di-ACC oleh pelanggan (titik awal SLA servis)
 
   perangkat         Perangkat          @relation(fields: [perangkat_id], references: [id], onDelete: Cascade)
   teknisi           User?              @relation("TeknisiTiket", fields: [teknisi_id], references: [id], onDelete: SetNull)
@@ -95,7 +146,8 @@ model Brand {
   nama       String   @unique
   created_at DateTime @default(now())
 
-  spareparts Sparepart[]
+  spareparts   Sparepart[]
+  repair_wikis RepairWiki[]
 }
 
 model Sparepart {
@@ -104,11 +156,13 @@ model Sparepart {
   kategori   String   @default("Umum") // Laptop, Desktop, Printer, Umum
   nama       String
   stok       Int      @default(0)
-  harga      Float
+  harga_beli Float    @default(0) // Harga modal / HPP
+  harga      Float    // Harga jual
   created_at DateTime @default(now())
 
   brand      Brand?   @relation(fields: [brand_id], references: [id], onDelete: Restrict)
   penggunaan_sparepart PenggunaanSparepart[]
+  restock_logs         RestockLog[]
 }
 
 model PenggunaanSparepart {
@@ -121,6 +175,23 @@ model PenggunaanSparepart {
   sparepart Sparepart   @relation(fields: [sparepart_id], references: [id], onDelete: Cascade)
 
   @@unique([tiket_id, sparepart_id])
+}
+
+model RestockLog {
+  id             Int       @id @default(autoincrement())
+  sparepart_id   Int
+  supplier_nama  String?   @db.VarChar(255)
+  jumlah_masuk   Int
+  harga_beli_pcs Float
+  nomor_faktur   String?   @db.VarChar(255)
+  tanggal_beli   DateTime  @default(now())
+  catatan        String?   @db.Text
+  user_id        Int?
+  user_nama      String?   @db.VarChar(255)
+  created_at     DateTime  @default(now())
+
+  sparepart      Sparepart @relation(fields: [sparepart_id], references: [id], onDelete: Cascade)
+  user           User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
 }
 
 model Invoice {
@@ -143,4 +214,28 @@ model ActivityLog {
   created_at DateTime @default(now())
 
   user       User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+}
+
+// Feature 6: Internal Repair Wiki & Hardware Knowledge Base
+model RepairWiki {
+  id                Int       @id @default(autoincrement())
+  brand_id          Int?
+  merek             String?   @db.VarChar(100)
+  model_seri        String?   @db.VarChar(150)
+  kategori          String    @default("Motherboard / Power") // Motherboard, Layar / Display, Keyboard & Touchpad, Kipas & Thermal, Storage & OS, Lainnya
+  judul             String    @db.VarChar(255)
+  gejala            String    @db.Text
+  penyebab          String?   @db.Text
+  solusi_langkah    String    @db.Text
+  komponen_terkait  String?   @db.VarChar(255)
+  tingkat_kesulitan String    @default("Menengah") // Mudah, Menengah, Mahir, Spesialis
+  estimasi_waktu    String?   @default("1-2 Jam")
+  tingkat_sukses    Int?      @default(90)
+  sumber_tiket_id   Int?
+  user_id           Int?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  brand             Brand?    @relation(fields: [brand_id], references: [id], onDelete: SetNull)
+  user              User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
 }

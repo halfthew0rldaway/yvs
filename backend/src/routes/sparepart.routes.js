@@ -2,7 +2,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate, authorize } = require("../middleware/auth");
-const { getAll, create, update, remove, use } = require("../controllers/sparepart.controller");
+const { getAll, create, update, remove, use, removeUsage, restock, getUsageHistory, getRestockHistory, getAllRestockLogs, getRestockManifest } = require("../controllers/sparepart.controller");
 
 const router = express.Router();
 
@@ -26,9 +26,16 @@ const useValidation = [
 ];
 
 router.get("/", getAll);
+router.get("/restock-manifest", getRestockManifest);
+router.get("/restock-logs/all", getAllRestockLogs);
+router.get("/:id/usage-history", getUsageHistory);
+router.get("/:id/restock-history", getRestockHistory);
 router.post("/", authorize("admin"), sparepartValidation, validate, create);
+router.post("/:id/restock", authorize("admin"), restock);
 router.put("/:id", authorize("admin"), update);
 router.delete("/:id", authorize("admin"), remove);
 router.post("/use", authorize("teknisi", "admin"), useValidation, validate, use);
+router.delete("/use/:id", authorize("teknisi", "admin"), removeUsage);
 
 module.exports = router;
+

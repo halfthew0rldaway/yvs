@@ -118,7 +118,7 @@ const newGenerationBlock = `
 
 main()
     .catch((e) => {
-        console.error("Gagal melakukan seeding data:", e);
+        console.error("Gagal melakukan ing data:", e);
         process.exit(1);
     })
     .finally(async () => {

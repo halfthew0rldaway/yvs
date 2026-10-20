@@ -1,20 +1,62 @@
 const prisma = require("../config/database");
+const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 
 // Mengambil seluruh invoice
 async function getAll(req, res) {
     try {
-        const invoices = await prisma.invoice.findMany({
-            include: {
-                tiket: {
-                    include: {
-                        perangkat: { include: { customer: true } },
-                    },
+        const { search, startDate, endDate } = req.query;
+        const { isPaginated, page, limit, skip } = parsePagination(req.query);
+        const where = {};
+
+        if (startDate || endDate) {
+            where.created_at = {};
+            if (startDate) where.created_at.gte = new Date(startDate);
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                where.created_at.lte = end;
+            }
+        }
+
+        if (search) {
+            where.OR = [
+                { tiket: { nomor_tiket: { contains: search } } },
+                { tiket: { perangkat: { customer: { nama: { contains: search } } } } },
+            ];
+        }
+
+        const include = {
+            tiket: {
+                include: {
+                    perangkat: { include: { customer: true } },
+                    teknisi: { select: { id: true, nama: true } },
                 },
             },
-            orderBy: { created_at: "desc" },
-        });
+        };
 
-        return res.json(invoices);
+        const orderBy = [{ created_at: "desc" }, { id: "desc" }];
+
+        if (!isPaginated) {
+            const invoices = await prisma.invoice.findMany({
+                where,
+                include,
+                orderBy,
+            });
+            return res.json(invoices);
+        }
+
+        const [total, invoices] = await Promise.all([
+            prisma.invoice.count({ where }),
+            prisma.invoice.findMany({
+                where,
+                include,
+                orderBy,
+                skip,
+                take: limit,
+            }),
+        ]);
+
+        return res.json(buildPaginationResponse(invoices, total, page, limit));
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
     }
@@ -34,6 +76,10 @@ async function create(req, res) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
         }
 
+        if (tiket.status === "dibatalkan") {
+            return res.status(400).json({ message: "Tidak dapat menerbitkan invoice untuk tiket yang telah dibatalkan." });
+        }
+
         if (tiket.invoice) {
             return res.status(400).json({ message: "Invoice untuk tiket ini sudah ada" });
         }
@@ -48,12 +94,17 @@ async function create(req, res) {
             return total + p.sparepart.harga * p.jumlah;
         }, 0);
 
-        const total_biaya = Number(biaya_jasa) + biaya_sparepart;
+        const jasa = Number(biaya_jasa) || 0;
+        if (isNaN(jasa) || jasa < 0) {
+            return res.status(400).json({ message: "Biaya jasa harus berupa angka dan tidak boleh negatif" });
+        }
+
+        const total_biaya = jasa + biaya_sparepart;
 
         const invoice = await prisma.invoice.create({
             data: {
                 tiket_id: Number(tiket_id),
-                biaya_jasa: Number(biaya_jasa),
+                biaya_jasa: jasa,
                 biaya_sparepart,
                 total_biaya,
             },
@@ -73,12 +124,34 @@ async function create(req, res) {
     }
 }
 
-// Mengambil detail invoice berdasarkan ID
-async function getById(req, res) {
+// Memperbarui biaya jasa invoice
+async function update(req, res) {
     try {
-        const { id } = req.params;
+        const id = Number(req.params.id);
+        const { biaya_jasa } = req.body;
+
         const invoice = await prisma.invoice.findUnique({
-            where: { id: Number(id) },
+            where: { id },
+            include: { tiket: true },
+        });
+
+        if (!invoice) {
+            return res.status(404).json({ message: "Invoice tidak ditemukan" });
+        }
+
+        const jasa = Number(biaya_jasa);
+        if (isNaN(jasa) || jasa < 0) {
+            return res.status(400).json({ message: "Biaya jasa harus berupa angka dan tidak boleh negatif" });
+        }
+
+        const total_biaya = jasa + invoice.biaya_sparepart;
+
+        const updated = await prisma.invoice.update({
+            where: { id },
+            data: {
+                biaya_jasa: jasa,
+                total_biaya,
+            },
             include: {
                 tiket: {
                     include: {
@@ -91,6 +164,47 @@ async function getById(req, res) {
             },
         });
 
+        return res.json({ message: "Invoice berhasil diperbarui", data: updated });
+    } catch (error) {
+        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+    }
+}
+
+// Mengambil detail invoice berdasarkan ID (mendukung pencarian via ID invoice maupun tiket_id)
+async function getById(req, res) {
+    try {
+        const paramId = Number(req.params.id);
+        let invoice = await prisma.invoice.findUnique({
+            where: { id: paramId },
+            include: {
+                tiket: {
+                    include: {
+                        perangkat: { include: { customer: true } },
+                        penggunaan_sparepart: { include: { sparepart: true } },
+                        teknisi: { select: { nama: true } },
+                        diagnosis: true
+                    },
+                },
+            },
+        });
+
+        // Fallback: Jika tidak ditemukan dengan invoice id, cari apakah parameter adalah tiket_id
+        if (!invoice) {
+            invoice = await prisma.invoice.findUnique({
+                where: { tiket_id: paramId },
+                include: {
+                    tiket: {
+                        include: {
+                            perangkat: { include: { customer: true } },
+                            penggunaan_sparepart: { include: { sparepart: true } },
+                            teknisi: { select: { nama: true } },
+                            diagnosis: true
+                        },
+                    },
+                },
+            });
+        }
+
         if (!invoice) {
             return res.status(404).json({ message: "Invoice tidak ditemukan" });
         }
@@ -101,4 +215,94 @@ async function getById(req, res) {
     }
 }
 
-module.exports = { getAll, create, getById };
+// Mengambil rekapitulasi laporan keuangan & performa servis periodik
+async function getReport(req, res) {
+    try {
+        const { startDate, endDate } = req.query;
+
+        const dateFilter = {};
+        if (startDate) {
+            dateFilter.gte = new Date(startDate);
+        }
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            dateFilter.lte = end;
+        }
+
+        const invoiceWhere = Object.keys(dateFilter).length > 0 ? { created_at: dateFilter } : {};
+        const tiketWhere = Object.keys(dateFilter).length > 0 ? { created_at: dateFilter } : {};
+
+        const [invoices, tikets] = await Promise.all([
+            prisma.invoice.findMany({
+                where: invoiceWhere,
+                include: {
+                    tiket: {
+                        include: {
+                            perangkat: { include: { customer: true } },
+                            teknisi: { select: { id: true, nama: true } }
+                        }
+                    }
+                },
+                orderBy: { created_at: "desc" }
+            }),
+            prisma.tiketServis.findMany({
+                where: tiketWhere,
+                include: {
+                    teknisi: { select: { id: true, nama: true } }
+                }
+            })
+        ]);
+
+        const totalPendapatan = invoices.reduce((sum, inv) => sum + inv.total_biaya, 0);
+        const totalJasa = invoices.reduce((sum, inv) => sum + inv.biaya_jasa, 0);
+        const totalSparepart = invoices.reduce((sum, inv) => sum + inv.biaya_sparepart, 0);
+
+        // Rekap status servis
+        const tiketSelesai = tikets.filter(t => ["selesai", "diambil"].includes(t.status)).length;
+        const tiketProses = tikets.filter(t => !["selesai", "diambil", "dibatalkan"].includes(t.status)).length;
+        const tiketBatal = tikets.filter(t => t.status === "dibatalkan").length;
+
+        // Rekap performa teknisi
+        const teknisiMap = {};
+        tikets.forEach(t => {
+            const nama = t.teknisi?.nama || "Belum Ditugaskan";
+            if (!teknisiMap[nama]) {
+                teknisiMap[nama] = { nama, totalTiket: 0, tiketSelesai: 0, totalOmset: 0 };
+            }
+            teknisiMap[nama].totalTiket += 1;
+            if (["selesai", "diambil"].includes(t.status)) {
+                teknisiMap[nama].tiketSelesai += 1;
+            }
+        });
+
+        invoices.forEach(inv => {
+            const nama = inv.tiket?.teknisi?.nama || "Belum Ditugaskan";
+            if (teknisiMap[nama]) {
+                teknisiMap[nama].totalOmset += inv.total_biaya;
+            }
+        });
+
+        const ringkasanTeknisi = Object.values(teknisiMap);
+
+        return res.json({
+            summary: {
+                totalInvoices: invoices.length,
+                totalPendapatan,
+                totalJasa,
+                totalSparepart,
+                totalTiketMasuk: tikets.length,
+                tiketSelesai,
+                tiketProses,
+                tiketBatal
+            },
+            ringkasanTeknisi,
+            invoices
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+    }
+}
+
+module.exports = { getAll, create, update, getById, getReport };
+

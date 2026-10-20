@@ -2,14 +2,20 @@ import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
-import { ArrowLeft, Save, User, Phone, MapPin } from "lucide-react";
+import { ArrowLeft, Save, User, Phone, MapPin, Smile, Sparkles } from "lucide-react";
 
 export default function CustomerForm() {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEdit = !!id;
 
-    const [form, setForm] = useState({ nama: "", nomor_telepon: "", alamat: "" });
+    const [form, setForm] = useState({ 
+        nama: "", 
+        nomor_telepon: "", 
+        alamat: "",
+        tipe_kepribadian: "Netral",
+        catatan_khusus: ""
+    });
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(isEdit);
 
@@ -22,6 +28,8 @@ export default function CustomerForm() {
                         nama: res.data.nama,
                         nomor_telepon: res.data.nomor_telepon,
                         alamat: res.data.alamat || "",
+                        tipe_kepribadian: res.data.tipe_kepribadian || "Netral",
+                        catatan_khusus: res.data.catatan_khusus || "",
                     });
                 })
                 .catch(() => toast.error("Customer tidak ditemukan"))
@@ -124,9 +132,62 @@ export default function CustomerForm() {
                         value={form.alamat}
                         onChange={(e) => setForm({ ...form, alamat: e.target.value })}
                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all resize-none placeholder:text-slate-400"
-                        rows={3}
+                        rows={2}
                         placeholder="Detail alamat domisili pelanggan..."
                     />
+                </div>
+
+                {/* Profiling Karakter & Komunikasi Pelanggan */}
+                <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-indigo-600" />
+                            <h3 className="text-sm font-bold text-slate-900">Profil Pelanggan & Gaya Komunikasi</h3>
+                        </div>
+                        <span className="text-[11px] font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
+                            Panduan Adaptasi Pelayanan
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                <Smile className="w-4 h-4 text-slate-400" />
+                                Tipe Kepribadian Pelanggan
+                            </label>
+                            <select
+                                value={form.tipe_kepribadian}
+                                onChange={(e) => setForm({ ...form, tipe_kepribadian: e.target.value })}
+                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                            >
+                                <option value="Netral">Netral (Standar / Belum Teridentifikasi)</option>
+                                <option value="Koleris">Koleris (Tegas, To The Point, Fokus Solusi Cepat)</option>
+                                <option value="Sanguinis">Sanguinis (Ramah, Ceria, Antusias, Suka Cerita)</option>
+                                <option value="Plegmatis">Plegmatis (Tenang, Sabar, Butuh Kenyamanan & Kepastian)</option>
+                                <option value="Melankolis">Melankolis (Rinci, Teliti, Kritis, Paham Teknis)</option>
+                            </select>
+                            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                                {form.tipe_kepribadian === "Koleris" && "Panduan: Beri respon cepat, padat, fokus solusi & kepastian estimasi waktu."}
+                                {form.tipe_kepribadian === "Sanguinis" && "Panduan: Beri sambutan hangat, antusias, apresiasi, dan gaya bahasa ramah bersahabat."}
+                                {form.tipe_kepribadian === "Plegmatis" && "Panduan: Jelaskan dengan sabar, beri rasa aman, dan jangan terkesan mendesak keputusan."}
+                                {form.tipe_kepribadian === "Melankolis" && "Panduan: Jelaskan detail teknis logis, rincian biaya transparan, dan jaminan kualitas."}
+                                {form.tipe_kepribadian === "Netral" && "Panduan: Salam hangat, mendengarkan aktif, dan berikan solusi yang jelas."}
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                Catatan Khusus Pelanggan
+                            </label>
+                            <textarea
+                                value={form.catatan_khusus}
+                                onChange={(e) => setForm({ ...form, catatan_khusus: e.target.value })}
+                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none shadow-sm"
+                                rows={3}
+                                placeholder="Contoh: Sangat menjaga privasi data kantor, minta nota dicetak fisik, hanya bisa dihubungi WA malam hari..."
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-3 pt-4 border-t border-slate-100 mt-8">

@@ -1,12 +1,14 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { ArrowLeft, Save, FileCheck, DollarSign, Info } from "lucide-react";
 
 export default function InvoiceForm() {
     const navigate = useNavigate();
-    const [form, setForm] = useState({ tiket_id: "", biaya_jasa: "" });
+    const [searchParams] = useSearchParams();
+    const queryTiketId = searchParams.get("tiket_id") || "";
+    const [form, setForm] = useState({ tiket_id: queryTiketId, biaya_jasa: "" });
     const [tikets, setTikets] = useState([]);
     const [selectedTiketData, setSelectedTiketData] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -26,13 +28,21 @@ export default function InvoiceForm() {
         api
             .get("/tiket-servis")
             .then((res) => {
-                // Filter tiket yang sudah selesai/diambil dan belum punya invoice
-                // This assumes API doesn't return invoices in this endpoint or we just filter by status for simplicity
-                setTikets(res.data.filter((t) => ["selesai", "diambil"].includes(t.status)));
+                // Filter tiket yang sudah selesai/diambil dan belum memiliki invoice
+                const readyTikets = res.data.filter((t) => ["selesai", "diambil"].includes(t.status) && !t.invoice);
+                // Jika ada tiket_id dari query param tapi sudah punya invoice, tampilkan info
+                setTikets(readyTikets);
+                if (queryTiketId && !readyTikets.some(t => String(t.id) === String(queryTiketId))) {
+                    // Check if selected tiket already has invoice
+                    const currentTiket = res.data.find(t => String(t.id) === String(queryTiketId));
+                    if (currentTiket?.invoice) {
+                        toast("Tiket ini sudah memiliki invoice resmi.", { icon: "ℹ️" });
+                    }
+                }
             })
             .catch(() => toast.error("Gagal memuat data"))
             .finally(() => setFetching(false));
-    }, []);
+    }, [queryTiketId]);
 
     async function handleSubmit(e) {
         e.preventDefault();

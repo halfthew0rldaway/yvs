@@ -2,14 +2,24 @@ import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
-import { ArrowLeft, Save, Package, Hash, DollarSign, Layers, CheckCircle2, XCircle, Search, Plus } from "lucide-react";
+import { ArrowLeft, Save, Package, Hash, DollarSign, Layers, CheckCircle2, XCircle, Search, Plus, Building2, FileText } from "lucide-react";
 
 export default function SparepartForm() {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEdit = !!id;
 
-    const [form, setForm] = useState({ brand_id: "", nama: "", kategori: "Umum", stok: "", harga: "" });
+    const [form, setForm] = useState({ 
+        brand_id: "", 
+        nama: "", 
+        kategori: "Umum", 
+        stok: "", 
+        harga: "", 
+        harga_beli: "",
+        supplier_nama: "",
+        nomor_faktur: "",
+        catatan: ""
+    });
     const [brands, setBrands] = useState([]);
     const [searchBrand, setSearchBrand] = useState("");
     const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
@@ -39,7 +49,8 @@ export default function SparepartForm() {
                             nama: sp.nama, 
                             kategori: sp.kategori || "Umum", 
                             stok: String(sp.stok), 
-                            harga: String(sp.harga) 
+                            harga: String(sp.harga),
+                            harga_beli: sp.harga_beli ? String(sp.harga_beli) : ""
                         });
                     } else {
                         toast.error("Sparepart tidak ditemukan");
@@ -321,21 +332,94 @@ export default function SparepartForm() {
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                            <DollarSign className="w-4 h-4 text-slate-400" />
-                            Harga (Rp) <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="number"
-                            value={form.harga}
-                            onChange={(e) => setForm({ ...form, harga: e.target.value })}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
-                            placeholder="Contoh: 150000"
-                            min="0"
-                            required
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                                <DollarSign className="w-4 h-4 text-slate-400" />
+                                Harga Modal / Beli (HPP) (Rp)
+                            </label>
+                            <input
+                                type="number"
+                                value={form.harga_beli}
+                                onChange={(e) => setForm({ ...form, harga_beli: e.target.value })}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                                placeholder="Contoh: 100000"
+                                min="0"
+                            />
+                            <p className="text-[11px] text-slate-400 mt-1">Harga pokok perolehan dari supplier untuk audit margin.</p>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                                <DollarSign className="w-4 h-4 text-emerald-600" />
+                                Harga Jual (Rp) <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="number"
+                                value={form.harga}
+                                onChange={(e) => setForm({ ...form, harga: e.target.value })}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                                placeholder="Contoh: 150000"
+                                min="0"
+                                required
+                            />
+                            <p className="text-[11px] text-slate-400 mt-1">Harga yang dibebankan ke invoice pelanggan.</p>
+                        </div>
                     </div>
+
+                    {!isEdit && Number(form.stok) > 0 && (
+                        <div className="pt-4 border-t border-slate-100">
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                <div>
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                                        <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                                        Audit Pengadaan Stok Awal (Opsional)
+                                    </h4>
+                                    <p className="text-[11px] text-slate-500 mt-0.5">
+                                        Data ini akan otomatis dicatat ke riwayat log audit pengadaan suku cadang gudang.
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                                            Nama Supplier / Toko Distributor
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={form.supplier_nama}
+                                            onChange={(e) => setForm({ ...form, supplier_nama: e.target.value })}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
+                                            placeholder="Misal: PT Mandiri Sparepart / Toko Bandung"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                                            Nomor Faktur / Invoice Pembelian
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={form.nomor_faktur}
+                                            onChange={(e) => setForm({ ...form, nomor_faktur: e.target.value })}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
+                                            placeholder="Misal: INV-SUP-2026-001"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                                            Catatan Pengadaan
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={form.catatan}
+                                            onChange={(e) => setForm({ ...form, catatan: e.target.value })}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
+                                            placeholder="Catatan tambahan mengenai pembelian atau batch ini"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3 pt-4 border-t border-slate-100 mt-8">

@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { ArrowLeft, Save, AlertTriangle, Lightbulb, DollarSign } from "lucide-react";
@@ -8,20 +8,57 @@ export default function DiagnosisForm() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [form, setForm] = useState({ masalah: "", solusi: "", estimasi_biaya: "" });
+    const [diagnosisId, setDiagnosisId] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
+
+    useEffect(() => {
+        async function fetchExisting() {
+            try {
+                const res = await api.get(`/tiket-servis/${id}`);
+                if (res.data?.diagnosis) {
+                    setForm({
+                        masalah: res.data.diagnosis.masalah || "",
+                        solusi: res.data.diagnosis.solusi || "",
+                        estimasi_biaya: res.data.diagnosis.estimasi_biaya ?? "",
+                    });
+                    setDiagnosisId(res.data.diagnosis.id);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setFetching(false);
+            }
+        }
+        fetchExisting();
+    }, [id]);
 
     async function handleSubmit(e) {
         e.preventDefault();
         setLoading(true);
 
         try {
-            await api.post("/diagnosis", { tiket_id: Number(id), ...form });
+            if (diagnosisId) {
+                await api.put(`/diagnosis/${diagnosisId}`, form);
+                toast.success("Diagnosis berhasil diperbarui!");
+            } else {
+                await api.post("/diagnosis", { tiket_id: Number(id), ...form });
+                toast.success("Diagnosis berhasil disimpan!");
+            }
             navigate(`/tiket-servis/${id}`);
         } catch (err) {
             toast.error(err.response?.data?.message || "Terjadi kesalahan");
         } finally {
             setLoading(false);
         }
+    }
+
+    if (fetching) {
+        return (
+            <div className="flex items-center justify-center min-h-[300px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        );
     }
 
     return (
@@ -35,7 +72,9 @@ export default function DiagnosisForm() {
                     <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Input Hasil Diagnosis</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                        {diagnosisId ? "Edit Hasil Diagnosis" : "Input Hasil Diagnosis"}
+                    </h1>
                     <p className="text-sm text-slate-500">Catat temuan masalah dan solusi perbaikan</p>
                 </div>
             </div>
