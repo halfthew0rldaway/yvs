@@ -60,8 +60,9 @@ export default function Layout({ children }) {
     const [maintenanceDueData, setMaintenanceDueData] = useState({ items: [], total_due: 0, urgent_count: 0 });
     const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
 
-    // Periodic maintenance recall fetch across the app
+    // Periodic maintenance recall fetch across the app (Hanya untuk Admin / Front Office)
     useEffect(() => {
+        if (!isAdmin) return;
         let isMounted = true;
         const fetchMaintenance = async () => {
             try {
@@ -85,7 +86,7 @@ export default function Layout({ children }) {
             isMounted = false;
             clearInterval(interval);
         };
-    }, [location.pathname]);
+    }, [location.pathname, isAdmin]);
 
     // Live ticking timer every second
     useEffect(() => {
@@ -313,17 +314,19 @@ export default function Layout({ children }) {
             {/* In-App SOP Pocket Book Modal */}
             <SopModal isOpen={isSopModalOpen} onClose={() => setIsSopModalOpen(false)} />
 
-            {/* Maintenance Recall Modal */}
-            <MaintenanceRecallModal
-                isOpen={isMaintenanceModalOpen}
-                onClose={() => setIsMaintenanceModalOpen(false)}
-            />
-
-            {/* Global Interactive Draggable 3D Floating CRM Recall Bubble */}
-            <CrmFloatingBubble 
-                maintenanceDueData={maintenanceDueData}
-                onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
-            />
+            {/* Maintenance Recall Modal & Floating CRM Bot (Khusus Admin / Front Office) */}
+            {isAdmin && (
+                <>
+                    <MaintenanceRecallModal
+                        isOpen={isMaintenanceModalOpen}
+                        onClose={() => setIsMaintenanceModalOpen(false)}
+                    />
+                    <CrmFloatingBubble 
+                        maintenanceDueData={maintenanceDueData}
+                        onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
+                    />
+                </>
+            )}
         </div>
     );
 }
