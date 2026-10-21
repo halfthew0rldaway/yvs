@@ -42,7 +42,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           border: Border(
             top: BorderSide(color: AppTheme.border, width: 1),
           ),
@@ -52,29 +52,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           onDestinationSelected: (index) {
             setState(() => _currentIndex = index);
           },
-          backgroundColor: Colors.white,
-          indicatorColor: AppTheme.borderLight,
-          elevation: 0,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined, color: AppTheme.textSecondary),
-              selectedIcon: Icon(Icons.dashboard, color: AppTheme.accent),
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
               label: 'Beranda',
             ),
             NavigationDestination(
-              icon: Icon(Icons.assignment_outlined, color: AppTheme.textSecondary),
-              selectedIcon: Icon(Icons.assignment, color: AppTheme.accent),
+              icon: Icon(Icons.assignment_outlined),
+              selectedIcon: Icon(Icons.assignment),
               label: 'Tiket',
             ),
             NavigationDestination(
-              icon: Icon(Icons.inventory_2_outlined, color: AppTheme.textSecondary),
-              selectedIcon: Icon(Icons.inventory_2, color: AppTheme.accent),
+              icon: Icon(Icons.inventory_2_outlined),
+              selectedIcon: Icon(Icons.inventory_2),
               label: 'Sparepart',
             ),
             NavigationDestination(
-              icon: Icon(Icons.person_outline, color: AppTheme.textSecondary),
-              selectedIcon: Icon(Icons.person, color: AppTheme.accent),
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
               label: 'Profil',
             ),
           ],

@@ -194,7 +194,7 @@ class TicketCard extends StatelessWidget {
                         },
                         borderRadius: BorderRadius.circular(6),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
                             color: const Color(0xFFECFDF5),
                             borderRadius: BorderRadius.circular(6),
@@ -224,7 +224,7 @@ class TicketCard extends StatelessWidget {
                 // Issue summary
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(9),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: AppTheme.background,
                     borderRadius: BorderRadius.circular(8),
@@ -240,13 +240,13 @@ class TicketCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.textSecondary,
-                          height: 1.35,
+                          height: 1.4,
                         ),
                       ),
                       if (ticket.status == 'menunggu_persetujuan' && ticket.diagnosis != null) ...[
                         const SizedBox(height: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: const Color(0xFFEFF6FF),
                             borderRadius: BorderRadius.circular(4),
@@ -257,12 +257,15 @@ class TicketCard extends StatelessWidget {
                             children: [
                               const Icon(Icons.request_quote_outlined, size: 13, color: AppTheme.primary),
                               const SizedBox(width: 4),
-                              Text(
-                                'Estimasi penawaran ${CurrencyFormatter.formatRupiah(ticket.diagnosis!.estimasiBiaya)} (Menunggu ACC)',
-                                style: const TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.primary,
+                              Flexible(
+                                child: Text(
+                                  'Estimasi ${CurrencyFormatter.formatRupiah(ticket.diagnosis!.estimasiBiaya)} (Menunggu ACC)',
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -302,7 +305,7 @@ class TicketCard extends StatelessWidget {
                             onTap: onTakeOver,
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(6),
@@ -334,33 +337,37 @@ class TicketCard extends StatelessWidget {
 
                 // Footer: Date & Technician info
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today_outlined, size: 12, color: AppTheme.textMuted),
-                        const SizedBox(width: 4),
-                        Text(
-                          CurrencyFormatter.formatDateOnly(ticket.createdAt),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppTheme.textMuted,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today_outlined, size: 12, color: AppTheme.textMuted),
+                          const SizedBox(width: 4),
+                          Text(
+                            CurrencyFormatter.formatDateOnly(ticket.createdAt),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.textMuted,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text('•', style: TextStyle(color: AppTheme.border, fontSize: 12)),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.engineering_outlined, size: 13, color: AppTheme.primary),
-                        const SizedBox(width: 4),
-                        Text(
-                          ticket.teknisiNama,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isUnassigned ? AppTheme.textMuted : AppTheme.primary,
+                          const SizedBox(width: 6),
+                          const Text('•', style: TextStyle(color: AppTheme.border, fontSize: 12)),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.engineering_outlined, size: 13, color: AppTheme.primary),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              ticket.teknisiNama,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isUnassigned ? AppTheme.textMuted : AppTheme.primary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const Icon(Icons.chevron_right, size: 16, color: AppTheme.textMuted),
                   ],

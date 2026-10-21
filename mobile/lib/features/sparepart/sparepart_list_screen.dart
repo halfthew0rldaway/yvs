@@ -18,6 +18,13 @@ class SparepartListScreen extends ConsumerStatefulWidget {
 class _SparepartListScreenState extends ConsumerState<SparepartListScreen> {
   String _searchQuery = '';
   String _selectedCategory = 'Semua';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,16 +44,36 @@ class _SparepartListScreenState extends ConsumerState<SparepartListScreen> {
         children: [
           // Search & Filter header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             color: AppTheme.surface,
             child: Column(
               children: [
-                TextField(
-                  onChanged: (val) => setState(() => _searchQuery = val),
-                  decoration: const InputDecoration(
-                    hintText: 'Cari nama sparepart, merk, atau tipe...',
-                    prefixIcon: Icon(Icons.search, size: 20),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                Container(
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: AppTheme.background,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                    decoration: InputDecoration(
+                      hintText: 'Cari nama sparepart, merk, atau tipe...',
+                      hintStyle: const TextStyle(fontSize: 12.5, color: AppTheme.textMuted),
+                      prefixIcon: const Icon(Icons.search, size: 20, color: AppTheme.textSecondary),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 16),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),

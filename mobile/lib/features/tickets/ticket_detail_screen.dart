@@ -419,7 +419,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tiket #${widget.ticketId}'),
+        title: Text(
+          ticketAsync.valueOrNull != null
+              ? '#${ticketAsync.valueOrNull!.nomorTiket}'
+              : 'Tiket #${widget.ticketId}',
+          style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w700, fontSize: 16),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -427,6 +432,13 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
             tooltip: 'Segarkan',
           ),
         ],
+      ),
+      bottomNavigationBar: ticketAsync.whenOrNull(
+        data: (ticket) {
+          final isAssignedToMe = currentUser != null && ticket.teknisiId == currentUser.id;
+          final isUnassigned = ticket.teknisiId == null;
+          return _buildBottomActionBar(ticket, isAssignedToMe, isUnassigned);
+        },
       ),
       body: ticketAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -460,83 +472,241 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Top Bar Summary with WhatsApp Contact
+              // Master Ticket Header Card
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppTheme.border),
                   boxShadow: const [
-                    BoxShadow(color: Color(0x080F172A), blurRadius: 4, offset: Offset(0, 1)),
+                    BoxShadow(color: Color(0x060F172A), blurRadius: 4, offset: Offset(0, 1)),
                   ],
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                '#${ticket.nomorTiket}',
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.primary,
+                    // Top: Ticket No + Badges
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          '#${ticket.nomorTiket}',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            StatusBadge(status: ticket.status),
+                            if (ticket.isOverdue) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.errorBg,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: AppTheme.errorBorder),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.alarm, size: 12, color: AppTheme.error),
+                                    SizedBox(width: 3),
+                                    Text(
+                                      'OVERDUE',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.error,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                            ] else if (ticket.isExpress) ...[
                               const SizedBox(width: 6),
-                              StatusBadge(status: ticket.status),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF3C7),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFFDE68A)),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.bolt, size: 12, color: Color(0xFFD97706)),
+                                    SizedBox(width: 2),
+                                    Text(
+                                      'EXPRESS',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF92400E),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Device Name & Serial Number
+                    Row(
+                      children: [
+                        const Icon(Icons.laptop_chromebook_rounded, size: 17, color: AppTheme.primary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
                             '${ticket.perangkat?.merek ?? ""} ${ticket.perangkat?.model ?? ""}'.trim(),
-                            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
-                    ),
-                    if (ticket.perangkat?.customer != null &&
-                        ticket.perangkat!.customer!.nomorTelepon.isNotEmpty &&
-                        ticket.perangkat!.customer!.nomorTelepon != '-')
-                      InkWell(
-                        onTap: () {
-                          WhatsAppHelper.openChat(
-                            ticket.perangkat!.customer!.nomorTelepon,
-                            message: 'Halo kak ${ticket.perangkat!.customer!.nama}, saya teknisi dari Serv.io Workshop mengenai tiket #${ticket.nomorTiket} (${ticket.perangkat?.merek ?? ""} ${ticket.perangkat?.model ?? ""}).',
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF5),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFA7F3D0)),
+                        ),
+                        if (ticket.perangkat?.serialNumber != null && ticket.perangkat!.serialNumber!.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppTheme.background,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: AppTheme.borderLight),
+                            ),
+                            child: Text(
+                              'SN: ${ticket.perangkat!.serialNumber}',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 10.5,
+                                color: AppTheme.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
-                          child: const Row(
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Customer Row & WhatsApp Action
+                    Row(
+                      children: [
+                        const Icon(Icons.person_outline, size: 16, color: AppTheme.textMuted),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            '${ticket.perangkat?.customer?.nama ?? "-"} (${ticket.perangkat?.customer?.nomorTelepon ?? "-"})',
+                            style: const TextStyle(fontSize: 12.5, color: AppTheme.textSecondary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (ticket.perangkat?.customer != null &&
+                            ticket.perangkat!.customer!.nomorTelepon.isNotEmpty &&
+                            ticket.perangkat!.customer!.nomorTelepon != '-')
+                          InkWell(
+                            onTap: () {
+                              WhatsAppHelper.openChat(
+                                ticket.perangkat!.customer!.nomorTelepon,
+                                message: 'Halo kak ${ticket.perangkat!.customer!.nama}, saya teknisi dari Serv.io Workshop mengenai tiket #${ticket.nomorTiket} (${ticket.perangkat?.merek ?? ""} ${ticket.perangkat?.model ?? ""}).',
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFECFDF5),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFFA7F3D0)),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.chat_bubble_outline_rounded, size: 13, color: Color(0xFF059669)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'WhatsApp',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF047857),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+
+                    const Divider(height: 18),
+
+                    // Dates and Metadata row
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.calendar_today_outlined, size: 12, color: AppTheme.textMuted),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Masuk: ${CurrencyFormatter.formatDateOnly(ticket.createdAt)}',
+                              style: const TextStyle(fontSize: 11.5, color: AppTheme.textMuted),
+                            ),
+                          ],
+                        ),
+                        if (ticket.completedAt != null)
+                          Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.chat_bubble_outline_rounded, size: 14, color: Color(0xFF059669)),
-                              SizedBox(width: 5),
+                              const Icon(Icons.check_circle_outline, size: 12, color: AppTheme.success),
+                              const SizedBox(width: 4),
                               Text(
-                                'WhatsApp',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF047857),
-                                ),
+                                'Selesai: ${CurrencyFormatter.formatDateOnly(ticket.completedAt!)}',
+                                style: const TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
                               ),
                             ],
                           ),
-                        ),
+                        if (ticket.tglDiambil != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.outbox_outlined, size: 12, color: AppTheme.primary),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Diambil: ${CurrencyFormatter.formatDateOnly(ticket.tglDiambil!)}',
+                                style: const TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+
+                    if (ticket.ratingTeknisi != null && ticket.ratingTeknisi! > 0) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: AppTheme.warning, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Rating Pelanggan: ${ticket.ratingTeknisi!.toStringAsFixed(1)} / 5.0',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textPrimary),
+                          ),
+                        ],
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -548,65 +718,6 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
               // Suggested Wiki Knowledge Base
               _buildSuggestedWiki(ticket),
-
-              // Ticket Header Card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          ticket.nomorTiket,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                        StatusBadge(status: ticket.status, fontSize: 12),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Dibuat: ${CurrencyFormatter.formatDate(ticket.createdAt)}',
-                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                    ),
-                    if (ticket.completedAt != null)
-                      Text(
-                        'Selesai: ${CurrencyFormatter.formatDate(ticket.completedAt)}',
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                      ),
-                    if (ticket.tglDiambil != null)
-                      Text(
-                        'Diambil: ${CurrencyFormatter.formatDate(ticket.tglDiambil)}',
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                      ),
-                    if (ticket.ratingTeknisi != null && ticket.ratingTeknisi! > 0) ...[
-                      const Divider(height: 16),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: AppTheme.warning, size: 18),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Rating Customer: ${ticket.ratingTeknisi!.toStringAsFixed(1)} / 5.0',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
 
               // Photos Condition Awal (foto_kondisi)
               if (ticket.fotoKondisiList.isNotEmpty) ...[
@@ -749,7 +860,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                 const SizedBox(height: 16),
               ],
 
-              // Device & Customer Information
+              // Detail Unit & Kredensial Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -765,63 +876,28 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.devices_outlined, size: 18, color: AppTheme.accent),
+                            Icon(Icons.devices_outlined, size: 18, color: AppTheme.primary),
                             SizedBox(width: 8),
-                            Text('Informasi Perangkat', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            Text('Detail Unit & Kredensial', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                           ],
                         ),
-                        if (ticket.perangkat?.customer?.nomorTelepon != null)
-                          IconButton(
-                            icon: const Icon(Icons.chat_outlined, size: 18, color: AppTheme.success),
-                            tooltip: 'Chat WhatsApp Customer',
-                            onPressed: () {
-                              final phone = ticket.perangkat!.customer!.nomorTelepon;
-                              WhatsAppHelper.openUrl('https://wa.me/${phone.replaceAll(RegExp(r'[^0-9]'), '')}');
-                            },
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.primary),
+                          onPressed: () => _editCredentials(ticket),
+                          tooltip: 'Edit Kredensial',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
                       ],
                     ),
-                    const Divider(height: 20),
+                    const Divider(height: 18),
                     _infoRow('Perangkat', '${ticket.perangkat?.merek ?? ''} ${ticket.perangkat?.model ?? ''}'),
                     _infoRow('Jenis & SN', '${ticket.perangkat?.jenisPerangkat ?? '-'} • SN: ${ticket.perangkat?.serialNumber ?? '-'}'),
                     _infoRow('Customer', '${ticket.perangkat?.customer?.nama ?? '-'} (${ticket.perangkat?.customer?.nomorTelepon ?? '-'})'),
                     if (ticket.kelengkapan != null && ticket.kelengkapan!.isNotEmpty)
                       _infoRow('Kelengkapan', ticket.kelengkapan!),
                     _infoRow('Teknisi PJ', ticket.teknisiNama),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Device Vault (PIN / Password / Pattern)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.lock_outline, size: 18, color: AppTheme.indigo),
-                            SizedBox(width: 8),
-                            Text('Kredensial / PIN Unit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          ],
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.accent),
-                          onPressed: () => _editCredentials(ticket),
-                          tooltip: 'Edit Kredensial',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
@@ -834,36 +910,45 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                         children: [
                           Row(
                             children: [
+                              const Icon(Icons.lock_outline, size: 15, color: AppTheme.indigoText),
+                              const SizedBox(width: 6),
                               Text(
-                                '${ticket.tipeKunci ?? 'Tidak Ada'}: ',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.indigoText),
+                                '${ticket.tipeKunci ?? 'Kunci'}: ',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: AppTheme.indigoText),
                               ),
-                              if (ticket.tipeKunci != 'Tidak Ada')
+                              if (ticket.tipeKunci != 'Tidak Ada' && ticket.passwordPerangkat != null)
                                 Text(
-                                  _showPassword ? (ticket.passwordPerangkat ?? '(Kosong)') : '••••••••',
-                                  style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 14),
+                                  _showPassword ? ticket.passwordPerangkat! : '••••••••',
+                                  style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
                                 )
                               else
                                 const Text('Tanpa sandi/kunci', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                             ],
                           ),
-                          if (ticket.tipeKunci != 'Tidak Ada')
+                          if (ticket.tipeKunci != 'Tidak Ada' && ticket.passwordPerangkat != null)
                             Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                IconButton(
-                                  icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility, size: 18),
-                                  onPressed: () => setState(() => _showPassword = !_showPassword),
-                                ),
-                                if (ticket.passwordPerangkat != null)
-                                  IconButton(
-                                    icon: const Icon(Icons.copy, size: 18),
-                                    onPressed: () {
-                                      Clipboard.setData(ClipboardData(text: ticket.passwordPerangkat!));
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Kredensial disalin ke clipboard!')),
-                                      );
-                                    },
+                                InkWell(
+                                  onTap: () => setState(() => _showPassword = !_showPassword),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Icon(_showPassword ? Icons.visibility_off : Icons.visibility, size: 18, color: AppTheme.indigoText),
                                   ),
+                                ),
+                                const SizedBox(width: 4),
+                                InkWell(
+                                  onTap: () {
+                                    Clipboard.setData(ClipboardData(text: ticket.passwordPerangkat!));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Kredensial disalin ke clipboard!')),
+                                    );
+                                  },
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Icon(Icons.copy, size: 16, color: AppTheme.indigoText),
+                                  ),
+                                ),
                               ],
                             ),
                         ],
@@ -1573,6 +1658,103 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget? _buildBottomActionBar(TiketModel ticket, bool isAssignedToMe, bool isUnassigned) {
+    Widget? actionButton;
+
+    if (isUnassigned && ticket.status != 'selesai' && ticket.status != 'diambil' && ticket.status != 'dibatalkan') {
+      actionButton = ElevatedButton.icon(
+        icon: const Icon(Icons.handyman_outlined, size: 18),
+        label: const Text('Ambil Alih Pengerjaan Tiket'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFD97706),
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(48),
+        ),
+        onPressed: _isActionLoading ? null : _takeOverTicket,
+      );
+    } else if (isAssignedToMe && ticket.status == 'dalam_perbaikan') {
+      actionButton = ElevatedButton.icon(
+        icon: const Icon(Icons.verified_outlined, size: 18),
+        label: const Text('Verifikasi QC & Selesaikan Servis'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF059669),
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(48),
+        ),
+        onPressed: _isActionLoading
+            ? null
+            : () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                  builder: (_) => QcVerificationModal(ticket: ticket, onSuccess: _refresh),
+                );
+              },
+      );
+    } else if (isAssignedToMe && ticket.status == 'diterima') {
+      actionButton = ElevatedButton.icon(
+        icon: const Icon(Icons.biotech_outlined, size: 18),
+        label: const Text('Input Hasil Diagnosis & Estimasi'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.primary,
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(48),
+        ),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => DiagnosisModal(ticketId: ticket.id, onSuccess: _refresh),
+          );
+        },
+      );
+    } else if (isAssignedToMe && ticket.status == 'disetujui') {
+      actionButton = ElevatedButton.icon(
+        icon: const Icon(Icons.play_arrow_rounded, size: 20),
+        label: const Text('Mulai Perbaikan Unit'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.indigo,
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(48),
+        ),
+        onPressed: _isActionLoading ? null : () => _updateStatus('dalam_perbaikan'),
+      );
+    } else if (ticket.status == 'selesai') {
+      actionButton = ElevatedButton.icon(
+        icon: const Icon(Icons.check_circle_outline, size: 18),
+        label: const Text('Kirim Notifikasi Siap Diambil (WhatsApp)'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF059669),
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(48),
+        ),
+        onPressed: () {
+          final link = WhatsAppHelper.generateStatusWaLink(ticket);
+          if (link != null) WhatsAppHelper.openUrl(link);
+        },
+      );
+    }
+
+    if (actionButton == null) return null;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        border: Border(top: BorderSide(color: AppTheme.border)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 8,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: actionButton,
     );
   }
 

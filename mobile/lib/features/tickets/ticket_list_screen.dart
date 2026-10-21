@@ -149,7 +149,7 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
               children: [
                 // Search Box
                 Container(
-                  height: 42,
+                  height: 46,
                   decoration: BoxDecoration(
                     color: AppTheme.background,
                     borderRadius: BorderRadius.circular(10),
@@ -157,6 +157,11 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
                   ),
                   child: TextField(
                     controller: _searchController,
+                    onChanged: (val) {
+                      setState(() {});
+                      ref.read(ticketFilterProvider.notifier).state =
+                          filter.copyWith(searchQuery: val.trim());
+                    },
                     decoration: InputDecoration(
                       hintText: 'Cari tiket, customer, perangkat, SN...',
                       hintStyle: const TextStyle(fontSize: 12.5, color: AppTheme.textMuted),
@@ -166,13 +171,14 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
                               icon: const Icon(Icons.clear, size: 16),
                               onPressed: () {
                                 _searchController.clear();
+                                setState(() {});
                                 ref.read(ticketFilterProvider.notifier).state =
                                     filter.copyWith(searchQuery: '');
                               },
                             )
                           : null,
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onSubmitted: (val) {
                       ref.read(ticketFilterProvider.notifier).state =
@@ -453,7 +459,7 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(8),

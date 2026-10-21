@@ -223,6 +223,33 @@ class AppTheme {
         ),
         hintStyle: GoogleFonts.inter(color: textMuted, fontSize: 13),
       ),
+      dividerTheme: const DividerThemeData(
+        color: border,
+        thickness: 1,
+        space: 1,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        height: 64,
+        backgroundColor: surface,
+        indicatorColor: primaryLight,
+        surfaceTintColor: Colors.transparent,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: primary);
+          }
+          return GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500, color: textSecondary);
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: primary, size: 22);
+          }
+          return const IconThemeData(color: textSecondary, size: 22);
+        }),
+      ),
     );
   }
 }
