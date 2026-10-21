@@ -29,11 +29,15 @@ jobs:
             echo "📥 Pulling latest changes from Git..."
             git pull origin main
 
+            if [ ! -f .env ] && [ -f .env.production ]; then
+              cp .env.production .env
+            fi
+
             echo "🐳 Rebuilding and updating Docker containers..."
-            docker compose up -d --build
+            docker compose --env-file .env.production up -d --build
 
             echo "📦 Running database schema sync (Prisma)..."
-            docker compose exec -T backend npx prisma db push
+            docker compose --env-file .env.production exec -T backend npx prisma db push
 
             echo "🧹 Cleaning up unused Docker images..."
             docker image prune -f
