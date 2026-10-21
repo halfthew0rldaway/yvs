@@ -2,6 +2,11 @@
 
 Aplikasi mobile khusus teknisi bengkel servis (Workbench) untuk mengelola tiket pengerjaan servis, scan QR barcode tiket fisik, checklist diagnosis, dan alokasi sparepart.
 
+## Dokumentasi Desain UI/UX & Google Stitch
+
+Spesifikasi lengkap desain antarmuka (Design System, Tokens, Wireframe Prompt, Zero-Overflow Rules, Zero Emojis) untuk **Google Stitch** dan implementasi Flutter tersedia di:
+- [Spesifikasi Desain UI/UX & Google Stitch Prompt Guide](README_STITCH_UI_UX.md)
+
 ## Arsitektur & Struktur Folder
 
 ```

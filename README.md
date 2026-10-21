@@ -705,6 +705,14 @@ Setelah frontend terbuka di browser, gunakan kredensial berikut untuk masuk:
 
 ---
 
+## 📱 Aplikasi Mobile Teknisi (Flutter)
+
+Serv.io dilengkapi aplikasi mobile khusus meja kerja teknisi (Workbench) untuk mempermudah pengerjaan tiket langsung di meja servis, pemindaian label QR tiket fisik, checklist diagnosis, dan alokasi suku cadang:
+- **Panduan Teknis & Arsitektur Mobile**: [mobile/README.md](mobile/README.md)
+- **Spesifikasi UI/UX & Google Stitch Prompts**: [mobile/README_STITCH_UI_UX.md](mobile/README_STITCH_UI_UX.md)
+
+---
+
 ## 🗺️ Roadmap & Peningkatan Mendatang
 
 Rencana pengembangan arsitektur, fitur lanjutan (seperti Cetak SPK & Label Stiker QR Code Thermal, Customer Interactive Approval di Tracking, Sistem DP Invoice, Analitik Laba HPP, dsb.), serta matriks prioritas didokumentasikan secara lengkap pada:
