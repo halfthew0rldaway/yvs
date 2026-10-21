@@ -22,6 +22,7 @@ import SopModal from "./SopModal";
 import api from "../services/api";
 import CrmFloatingBubble from "./CrmFloatingBubble";
 import MaintenanceRecallModal from "./MaintenanceRecallModal";
+import NotificationBell from "./NotificationBell";
 
 const adminMenu = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -285,8 +286,9 @@ export default function Layout({ children }) {
                         </span>
                     </div>
 
-                    {/* Right: Quick Action Button */}
+                    {/* Right: Quick Action Button & Notification Bell */}
                     <div className="flex items-center justify-end gap-2 min-w-0">
+                        <NotificationBell />
                         {isAdmin && (
                             <Link
                                 to="/tiket-servis/tambah"

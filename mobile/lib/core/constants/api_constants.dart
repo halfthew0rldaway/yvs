@@ -28,6 +28,14 @@ class ApiConstants {
   // Sparepart
   static const String sparepart = '/sparepart';
   static const String useSparepart = '/sparepart/use';
+  static String sparepartReminder(int id) => '/sparepart/$id/reminder-restock';
+
+  // Notifications & Internal Memo
+  static const String notifications = '/notifications';
+  static const String notificationUnreadCount = '/notifications/unread-count';
+  static const String sendNotification = '/notifications/send';
+  static const String notificationReadAll = '/notifications/read-all';
+  static String notificationRead(int id) => '/notifications/$id/read';
 
   // Pustaka Wiki Solusi
   static const String repairWiki = '/repair-wiki';

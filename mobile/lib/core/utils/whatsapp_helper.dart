@@ -138,6 +138,14 @@ class WhatsAppHelper {
     return openUrl(url);
   }
 
+  static Future<bool> openCustomMessage({String? phone, required String message}) async {
+    final clean = _formatPhone(phone);
+    final url = clean.isNotEmpty
+        ? 'https://wa.me/$clean?text=${Uri.encodeComponent(message)}'
+        : 'https://wa.me/?text=${Uri.encodeComponent(message)}';
+    return openUrl(url);
+  }
+
   static Future<bool> openUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {

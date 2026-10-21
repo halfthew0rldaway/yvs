@@ -21,6 +21,8 @@ model User {
   activity_logs ActivityLog[]
   restock_logs  RestockLog[]
   repair_wikis  RepairWiki[]
+  notifications_received Notification[] @relation("NotificationRecipient")
+  notifications_sent     Notification[] @relation("NotificationSender")
 }
 
 model Customer {
@@ -239,3 +241,22 @@ model RepairWiki {
   brand             Brand?    @relation(fields: [brand_id], references: [id], onDelete: SetNull)
   user              User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
 }
+
+// Fitur Notifikasi & Memo Kolaborasi Teknisi - Admin
+model Notification {
+  id             Int      @id @default(autoincrement())
+  recipient_role String?  @db.VarChar(50) // admin, teknisi, or null (semua)
+  user_id        Int?     // target spesifik user_id jika ada
+  sender_id      Int?     // pengirim notifikasi
+  sender_nama    String   @db.VarChar(255)
+  tipe           String   @default("info") @db.VarChar(50) // restock_sparepart, tiket, memo, system
+  judul          String   @db.VarChar(255)
+  pesan          String   @db.Text
+  link           String?  @db.VarChar(255)
+  is_read        Boolean  @default(false)
+  created_at     DateTime @default(now())
+
+  user   User? @relation("NotificationRecipient", fields: [user_id], references: [id], onDelete: Cascade)
+  sender User? @relation("NotificationSender", fields: [sender_id], references: [id], onDelete: SetNull)
+}
+

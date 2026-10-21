@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
-import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart } from "lucide-react";
+import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import ConfirmModal from "../../components/ConfirmModal";
 import TableContainer from "../../components/common/TableContainer";
@@ -97,6 +97,18 @@ export default function SparepartList() {
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal menghapus");
             setDeleteTarget(null);
+        }
+    }
+
+    // Reminder Restock untuk Teknisi ke Admin
+    async function handleReminderRestock(sparepart) {
+        try {
+            const res = await api.post(`/sparepart/${sparepart.id}/reminder-restock`);
+            const brand = sparepart.brand?.nama && sparepart.brand.nama.toLowerCase() !== "lainnya" ? `${sparepart.brand.nama} ` : "";
+            const fullName = `${brand}${sparepart.nama}`;
+            toast.success(`Pengingat restock untuk "${fullName}" terkirim ke Admin!`, { duration: 4000 });
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal mengirim pengingat ke Admin");
         }
     }
 
@@ -391,35 +403,65 @@ export default function SparepartList() {
                     <p className="text-xs text-slate-500 mt-1">Total {totalUnitsInStock} unit fisik di gudang</p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between text-slate-500 mb-2">
-                        <span className="text-xs font-semibold uppercase tracking-wider">Nilai Modal Aset (HPP)</span>
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                            <DollarSign className="w-4 h-4" />
+                {isAdmin ? (
+                    <>
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center justify-between text-slate-500 mb-2">
+                                <span className="text-xs font-semibold uppercase tracking-wider">Nilai Modal Aset (HPP)</span>
+                                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                    <DollarSign className="w-4 h-4" />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900">{formatRupiah(totalInventoryValue)}</h3>
+                            <p className="text-xs text-emerald-600 font-medium mt-1">Nilai modal aset tersimpan</p>
                         </div>
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900">{formatRupiah(totalInventoryValue)}</h3>
-                    <p className="text-xs text-emerald-600 font-medium mt-1">Nilai modal aset tersimpan</p>
-                </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between text-slate-500 mb-2">
-                        <span className="text-xs font-semibold uppercase tracking-wider">Potensi Omset Jual</span>
-                        <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                            <TrendingUp className="w-4 h-4" />
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center justify-between text-slate-500 mb-2">
+                                <span className="text-xs font-semibold uppercase tracking-wider">Potensi Omset Jual</span>
+                                <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                    <TrendingUp className="w-4 h-4" />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900">{formatRupiah(totalPotentialRevenue)}</h3>
+                            <p className="text-xs text-slate-500 mt-1">Potensi margin: {formatRupiah(totalPotentialRevenue - totalInventoryValue)}</p>
                         </div>
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900">{formatRupiah(totalPotentialRevenue)}</h3>
-                    <p className="text-xs text-slate-500 mt-1">Potensi margin: {formatRupiah(totalPotentialRevenue - totalInventoryValue)}</p>
-                </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center justify-between text-slate-500 mb-2">
+                                <span className="text-xs font-semibold uppercase tracking-wider">Stok Aman (&gt; 5 Unit)</span>
+                                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                    <CheckCircle className="w-4 h-4" />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900">{spareparts.filter(s => s.stok > 5).length} Jenis</h3>
+                            <p className="text-xs text-emerald-600 font-medium mt-1">Stok siap dipasang teknisi</p>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center justify-between text-slate-500 mb-2">
+                                <span className="text-xs font-semibold uppercase tracking-wider">Stok Menipis (1-5)</span>
+                                <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                                    <AlertTriangle className="w-4 h-4" />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-amber-600">{lowStockCount} Jenis</h3>
+                            <p className="text-xs text-amber-600 font-medium mt-1">Gunakan tombol "Ingatkan Admin"</p>
+                        </div>
+                    </>
+                )}
 
                 <div
-                    onClick={() => setIsRestockManifestOpen(true)}
-                    className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-amber-300 hover:shadow-md transition-all group"
-                    title="Klik untuk membuka Generator Daftar Belanja Supplier"
+                    onClick={() => isAdmin && setIsRestockManifestOpen(true)}
+                    className={`bg-white p-5 rounded-2xl border border-slate-200 shadow-sm ${isAdmin ? "cursor-pointer hover:border-amber-300 hover:shadow-md group" : ""} transition-all`}
+                    title={isAdmin ? "Klik untuk membuka Generator Daftar Belanja Supplier" : undefined}
                 >
                     <div className="flex items-center justify-between text-slate-500 mb-2">
-                        <span className="text-xs font-semibold uppercase tracking-wider group-hover:text-amber-700 transition-colors">Status Restock</span>
+                        <span className="text-xs font-semibold uppercase tracking-wider group-hover:text-amber-700 transition-colors">
+                            {isAdmin ? "Status Restock" : "Kebutuhan Restock"}
+                        </span>
                         <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
                             <AlertTriangle className="w-4 h-4" />
                         </div>
@@ -428,9 +470,8 @@ export default function SparepartList() {
                         <span className="text-xl font-bold text-amber-600">{lowStockCount} Menipis</span>
                         <span className="text-sm font-bold text-red-600">/ {outOfStockCount} Habis</span>
                     </div>
-                    <p className="text-xs text-amber-700 font-medium mt-1 flex items-center gap-1">
-                        <span>Buka Daftar Belanja WhatsApp</span>
-                        <span>&rarr;</span>
+                    <p className="text-xs text-slate-500 mt-1">
+                        {isAdmin ? "Buka Daftar Belanja WhatsApp →" : `${outOfStockCount} item habis tidak dapat dipasang`}
                     </p>
                 </div>
             </div>
@@ -680,17 +721,17 @@ export default function SparepartList() {
                                 <th className="px-6 py-3.5 font-semibold">No</th>
                                 <th className="px-6 py-3.5 font-semibold">Nama Sparepart</th>
                                 <th className="px-6 py-3.5 font-semibold text-right">Stok</th>
-                                <th className="px-6 py-3.5 font-semibold text-right">Harga Modal (HPP)</th>
+                                {isAdmin && <th className="px-6 py-3.5 font-semibold text-right">Harga Modal (HPP)</th>}
                                 <th className="px-6 py-3.5 font-semibold text-right">Harga Jual</th>
-                                <th className="px-6 py-3.5 font-semibold text-right">Margin / Unit</th>
+                                {isAdmin && <th className="px-6 py-3.5 font-semibold text-right">Margin / Unit</th>}
                                 <th className="px-6 py-3.5 font-semibold text-center">Riwayat</th>
-                                {isAdmin && <th className="px-6 py-3.5 font-semibold text-right">Aksi</th>}
+                                <th className="px-6 py-3.5 font-semibold text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {paginatedSpareparts.length === 0 ? (
                                 <tr>
-                                    <td colSpan={isAdmin ? 8 : 7} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={isAdmin ? 8 : 6} className="px-6 py-12 text-center text-slate-500">
                                         Tidak ada data yang cocok dengan pencarian atau filter.
                                     </td>
                                 </tr>
@@ -729,12 +770,14 @@ export default function SparepartList() {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-right text-slate-600 font-mono text-xs">{formatRupiah(hpp)}</td>
+                                            {isAdmin && <td className="px-6 py-4 text-right text-slate-600 font-mono text-xs">{formatRupiah(hpp)}</td>}
                                             <td className="px-6 py-4 text-right font-medium text-slate-900 font-mono text-xs">{formatRupiah(s.harga)}</td>
-                                            <td className="px-6 py-4 text-right">
-                                                <span className="font-semibold text-emerald-600 text-xs">+{formatRupiah(margin)}</span>
-                                                <span className="block text-[10px] text-slate-400">({marginPercent}%)</span>
-                                            </td>
+                                            {isAdmin && (
+                                                <td className="px-6 py-4 text-right">
+                                                    <span className="font-semibold text-emerald-600 text-xs">+{formatRupiah(margin)}</span>
+                                                    <span className="block text-[10px] text-slate-400">({marginPercent}%)</span>
+                                                </td>
+                                            )}
                                             <td className="px-6 py-4 text-center">
                                                 <button
                                                     onClick={() => handleOpenUsageHistory(s)}
@@ -745,8 +788,8 @@ export default function SparepartList() {
                                                     <span>Audit</span>
                                                 </button>
                                             </td>
-                                            {isAdmin && (
-                                                <td className="px-6 py-4 text-right">
+                                            <td className="px-6 py-4 text-right">
+                                                {isAdmin ? (
                                                     <div className="flex items-center justify-end gap-1 transition-opacity">
                                                         <Link
                                                             to={`/sparepart/edit/${s.id}`}
@@ -763,8 +806,24 @@ export default function SparepartList() {
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
                                                     </div>
-                                                </td>
-                                            )}
+                                                ) : (
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        {s.stok <= 5 ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleReminderRestock(s)}
+                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold transition-all shadow-2xs hover:shadow-xs active:scale-95"
+                                                                title="Kirim pengingat restock ke Admin"
+                                                            >
+                                                                <Bell className="w-3.5 h-3.5 text-amber-600" />
+                                                                <span>Ingatkan Admin</span>
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-xs text-slate-400 font-medium">Stok Aman</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </td>
                                         </tr>
                                     );
                                 })

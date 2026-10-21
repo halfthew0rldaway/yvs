@@ -4,7 +4,6 @@ class SparepartModel {
   final String kategori;
   final int stok;
   final double harga;
-  final double hargaBeli;
   final Map<String, dynamic>? brand;
 
   SparepartModel({
@@ -13,7 +12,6 @@ class SparepartModel {
     required this.kategori,
     required this.stok,
     required this.harga,
-    required this.hargaBeli,
     this.brand,
   });
 
@@ -31,7 +29,6 @@ class SparepartModel {
       kategori: json['kategori']?.toString() ?? 'Umum',
       stok: json['stok'] is int ? json['stok'] : int.tryParse(json['stok'].toString()) ?? 0,
       harga: json['harga'] != null ? double.tryParse(json['harga'].toString()) ?? 0.0 : 0.0,
-      hargaBeli: json['harga_beli'] != null ? double.tryParse(json['harga_beli'].toString()) ?? 0.0 : 0.0,
       brand: json['brand'] is Map<String, dynamic> ? json['brand'] : null,
     );
   }

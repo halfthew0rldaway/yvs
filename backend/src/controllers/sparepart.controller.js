@@ -42,6 +42,7 @@ async function getAll(req, res) {
         }
 
         const include = { brand: true };
+        const isTeknisi = req.user?.role === "teknisi";
 
         if (!isPaginated) {
             const spareparts = await prisma.sparepart.findMany({
@@ -49,7 +50,13 @@ async function getAll(req, res) {
                 include,
                 orderBy,
             });
-            return res.json(spareparts);
+            const sanitized = isTeknisi
+                ? spareparts.map(s => {
+                    const { harga_beli, ...rest } = s;
+                    return rest;
+                })
+                : spareparts;
+            return res.json(sanitized);
         }
 
         const [total, spareparts, allForSummary] = await Promise.all([
@@ -73,11 +80,19 @@ async function getAll(req, res) {
             totalNilaiAset += (s.stok || 0) * (s.harga_beli || 0);
         });
 
-        return res.json(buildPaginationResponse(spareparts, total, page, limit, {
-            summary: {
-                totalStok,
-                totalNilaiAset,
-            }
+        const sanitizedList = isTeknisi
+            ? spareparts.map(s => {
+                const { harga_beli, ...rest } = s;
+                return rest;
+            })
+            : spareparts;
+
+        const summary = isTeknisi
+            ? { totalStok }
+            : { totalStok, totalNilaiAset };
+
+        return res.json(buildPaginationResponse(sanitizedList, total, page, limit, {
+            summary
         }));
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
@@ -637,6 +652,69 @@ async function getRestockManifest(req, res) {
     }
 }
 
+// Mengirimkan notifikasi dan pengingat restock sparepart menipis ke Admin
+async function reminderRestock(req, res) {
+    try {
+        const { id } = req.params;
+        const sparepart = await prisma.sparepart.findUnique({
+            where: { id: Number(id) },
+            include: { brand: true }
+        });
+
+        if (!sparepart) {
+            return res.status(404).json({ message: "Sparepart tidak ditemukan" });
+        }
+
+        const brandName = sparepart.brand?.nama ? `${sparepart.brand.nama} ` : "";
+        const fullName = `${brandName}${sparepart.nama}`;
+        const senderNama = req.user?.nama || "Teknisi";
+        const senderId = req.user?.id || null;
+
+        const actionText = `Pengingat Restock: Teknisi ${senderNama} mengingatkan bahwa stok sparepart "${fullName}" menipis (sisa: ${sparepart.stok} unit)`;
+
+        // 1. Simpan ke ActivityLog untuk audit trail
+        await prisma.activityLog.create({
+            data: {
+                user_id: senderId,
+                user_nama: senderNama,
+                action: actionText,
+                entity: "sparepart"
+            }
+        });
+
+        // 2. Simpan ke Notification untuk Admin
+        let notif = null;
+        try {
+            notif = await prisma.notification.create({
+                data: {
+                    recipient_role: "admin",
+                    sender_id: senderId,
+                    sender_nama: senderNama,
+                    tipe: "restock_sparepart",
+                    judul: `Stok Menipis: ${fullName}`,
+                    pesan: `Teknisi ${senderNama} meminta restock untuk suku cadang "${fullName}". Stok saat ini tersisa ${sparepart.stok} unit di gudang.`,
+                    link: "/sparepart"
+                }
+            });
+        } catch (e) {
+            // Silently proceed if table is in sync process
+        }
+
+        const waText = `Halo Admin Serv.io, saya ${senderNama} ingin menginfokan bahwa stok sparepart *${fullName}* saat ini sudah menipis (tersisa *${sparepart.stok} unit*). Mohon bantuan pengadaan / restock suku cadang tersebut. Terima kasih!`;
+
+        return res.json({
+            message: `Pengingat restock untuk ${fullName} berhasil dikirim ke Admin`,
+            sparepart_id: sparepart.id,
+            nama: fullName,
+            stok: sparepart.stok,
+            wa_text: waText,
+            notification: notif
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+    }
+}
+
 module.exports = { 
     getAll, 
     create, 
@@ -648,6 +726,7 @@ module.exports = {
     getUsageHistory, 
     getRestockHistory, 
     getAllRestockLogs,
-    getRestockManifest
+    getRestockManifest,
+    reminderRestock
 };
 

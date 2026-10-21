@@ -3,13 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dio/dio.dart';
+import '../../core/constants/api_constants.dart';
+import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/whatsapp_helper.dart';
 import '../../core/widgets/ticket_card.dart';
 import '../../data/models/sparepart_model.dart';
 import '../../data/providers/auth_provider.dart';
+import '../../data/providers/notification_provider.dart';
 import '../../data/providers/ticket_provider.dart';
 import '../auth/login_screen.dart';
+import '../notifications/notification_screen.dart';
 import '../scanner/qr_scanner_screen.dart';
 import '../sparepart/sparepart_list_screen.dart';
 import '../tickets/ticket_detail_screen.dart';
@@ -134,6 +139,56 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(width: 10),
                   Row(
                     children: [
+                      // Notification Bell with Badge
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final unreadAsync = ref.watch(unreadNotificationCountProvider);
+                          final count = unreadAsync.value ?? 0;
+                          return Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.notifications_outlined, size: 21, color: AppTheme.textPrimary),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: AppTheme.surface,
+                                  shape: const CircleBorder(),
+                                  padding: const EdgeInsets.all(7),
+                                ),
+                                tooltip: 'Notifikasi & Memo',
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                                  );
+                                },
+                              ),
+                              if (count > 0)
+                                Positioned(
+                                  right: 2,
+                                  top: 2,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.error,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                    child: Text(
+                                      count > 99 ? '99+' : '$count',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                         decoration: BoxDecoration(
@@ -860,23 +915,52 @@ class DashboardScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: isZero ? AppTheme.errorBg : const Color(0xFFFFFBEB),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: isZero ? AppTheme.errorBorder : const Color(0xFFFDE68A),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: isZero ? AppTheme.errorBg : const Color(0xFFFFFBEB),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: isZero ? AppTheme.errorBorder : const Color(0xFFFDE68A),
+                                  ),
+                                ),
+                                child: Text(
+                                  '${part.stok} unit',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: isZero ? AppTheme.error : const Color(0xFF92400E),
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              '${part.stok} unit',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: isZero ? AppTheme.error : const Color(0xFF92400E),
+                              const SizedBox(width: 8),
+                              InkWell(
+                                onTap: () => _handleReminderAdmin(context, part),
+                                borderRadius: BorderRadius.circular(6),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryLight,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: AppTheme.border),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.campaign_outlined, size: 14, color: AppTheme.primary),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Ingatkan Admin',
+                                        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ],
                       ),
@@ -886,6 +970,40 @@ class DashboardScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  static Future<void> _handleReminderAdmin(BuildContext context, SparepartModel part) async {
+    final client = ApiClient();
+    try {
+      final res = await client.dio.post(ApiConstants.sparepartReminder(part.id));
+      final waText = res.data['wa_text']?.toString() ??
+          'Halo Admin Serv.io, stok sparepart ${part.displayName} saat ini sisa ${part.stok} unit di gudang. Mohon segera pengadaan / restock. Terima kasih.';
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Notifikasi restock untuk ${part.displayName} terkirim ke Admin!'),
+            backgroundColor: AppTheme.success,
+            action: SnackBarAction(
+              label: 'Kirim WA',
+              textColor: Colors.white,
+              onPressed: () {
+                WhatsAppHelper.openCustomMessage(message: waText);
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal mengirim pengingat ke Admin'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
   }
 }
 

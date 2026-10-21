@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants/api_constants.dart';
+import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/whatsapp_helper.dart';
+import '../../data/models/sparepart_model.dart';
 import '../../data/providers/ticket_provider.dart';
 
 class SparepartListScreen extends ConsumerStatefulWidget {
@@ -210,6 +214,47 @@ class _SparepartListScreenState extends ConsumerState<SparepartListScreen> {
                               ),
                             ],
                           ),
+                          if (isLowStock || isOutOfStock) ...[
+                            const SizedBox(height: 10),
+                            const Divider(height: 1, color: AppTheme.borderLight),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  isOutOfStock ? '⚠️ Stok habis di gudang' : '⚠️ Stok kritis (${part.stok} unit)',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isOutOfStock ? AppTheme.error : const Color(0xFFB45309),
+                                  ),
+                                ),
+                                InkWell(
+                                  onTap: () => _handleReminderAdmin(part),
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryLight,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: AppTheme.border),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.campaign_outlined, size: 14, color: AppTheme.primary),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Ingatkan Admin',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     );
@@ -221,5 +266,39 @@ class _SparepartListScreenState extends ConsumerState<SparepartListScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleReminderAdmin(SparepartModel part) async {
+    final client = ApiClient();
+    try {
+      final res = await client.dio.post(ApiConstants.sparepartReminder(part.id));
+      final waText = res.data['wa_text']?.toString() ??
+          'Halo Admin Serv.io, stok sparepart ${part.displayName} saat ini sisa ${part.stok} unit di gudang. Mohon segera restock. Terima kasih.';
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Notifikasi restock untuk ${part.displayName} terkirim ke Admin!'),
+            backgroundColor: AppTheme.success,
+            action: SnackBarAction(
+              label: 'Kirim WA',
+              textColor: Colors.white,
+              onPressed: () {
+                WhatsAppHelper.openCustomMessage(message: waText);
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal mengirim pengingat ke Admin'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
   }
 }

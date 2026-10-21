@@ -2,7 +2,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate, authorize } = require("../middleware/auth");
-const { getAll, create, update, remove, use, removeUsage, restock, getUsageHistory, getRestockHistory, getAllRestockLogs, getRestockManifest } = require("../controllers/sparepart.controller");
+const { getAll, create, update, remove, use, removeUsage, restock, getUsageHistory, getRestockHistory, getAllRestockLogs, getRestockManifest, reminderRestock } = require("../controllers/sparepart.controller");
 
 const router = express.Router();
 
@@ -32,6 +32,7 @@ router.get("/:id/usage-history", getUsageHistory);
 router.get("/:id/restock-history", getRestockHistory);
 router.post("/", authorize("admin"), sparepartValidation, validate, create);
 router.post("/:id/restock", authorize("admin"), restock);
+router.post("/:id/reminder-restock", authorize("teknisi", "admin"), reminderRestock);
 router.put("/:id", authorize("admin"), update);
 router.delete("/:id", authorize("admin"), remove);
 router.post("/use", authorize("teknisi", "admin"), useValidation, validate, use);
