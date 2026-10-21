@@ -143,14 +143,18 @@ async function adminDashboard(req, res) {
 
         for (const t of activeTiketsForSla) {
             if (t.sla_paket === "express") expressCount++;
-            const sla = getSlaStatus(t);
-            if (sla.is_paused) {
-                pendingApprovalCount++;
-            } else if (sla.is_overdue) {
-                overdueCount++;
-            } else if (sla.is_warning) {
-                warningCount++;
-            } else {
+            try {
+                const sla = getSlaStatus(t);
+                if (sla?.is_paused) {
+                    pendingApprovalCount++;
+                } else if (sla?.is_overdue) {
+                    overdueCount++;
+                } else if (sla?.urgency === "warning" || sla?.is_warning) {
+                    warningCount++;
+                } else {
+                    onTrackCount++;
+                }
+            } catch (err) {
                 onTrackCount++;
             }
         }
@@ -208,7 +212,8 @@ async function teknisiDashboard(req, res) {
             tiketSelesai, 
             tiketBerdasarkanStatus, 
             activeTickets,
-            activeTiketsForSla
+            activeTiketsForSla,
+            sparepartHampirHabis
         ] = await Promise.all([
             prisma.tiketServis.count({
                 where: { 
@@ -263,9 +268,16 @@ async function teknisiDashboard(req, res) {
                     sla_paket: true,
                     target_pengecekan_at: true,
                     target_selesai_at: true,
-                    created_at: true,
-                    status_estimasi: true
+                    disetujui_at: true,
+                    completed_at: true,
+                    created_at: true
                 }
+            }),
+            prisma.sparepart.findMany({
+                where: { stok: { lte: 5 } },
+                include: { brand: true },
+                orderBy: { stok: "asc" },
+                take: 6,
             })
         ]);
 
@@ -278,14 +290,18 @@ async function teknisiDashboard(req, res) {
 
         for (const t of activeTiketsForSla) {
             if (t.sla_paket === "express") expressCount++;
-            const sla = getSlaStatus(t);
-            if (sla.is_paused) {
-                pendingApprovalCount++;
-            } else if (sla.is_overdue) {
-                overdueCount++;
-            } else if (sla.is_warning) {
-                warningCount++;
-            } else {
+            try {
+                const sla = getSlaStatus(t);
+                if (sla?.is_paused) {
+                    pendingApprovalCount++;
+                } else if (sla?.is_overdue) {
+                    overdueCount++;
+                } else if (sla?.urgency === "warning" || sla?.is_warning) {
+                    warningCount++;
+                } else {
+                    onTrackCount++;
+                }
+            } catch (err) {
                 onTrackCount++;
             }
         }
@@ -304,10 +320,19 @@ async function teknisiDashboard(req, res) {
             value: item._count._all
         }));
 
-        const enrichedActiveTickets = activeTickets.map(t => ({
-            ...t,
-            sla_status: getSlaStatus(t)
-        }));
+        const enrichedActiveTickets = activeTickets.map(t => {
+            try {
+                return {
+                    ...t,
+                    sla_status: getSlaStatus(t)
+                };
+            } catch (e) {
+                return {
+                    ...t,
+                    sla_status: null
+                };
+            }
+        });
 
         return res.json({
             tiketDitugaskan,
@@ -319,6 +344,7 @@ async function teknisiDashboard(req, res) {
             activeTickets: enrichedActiveTickets,
             expressCount,
             overdueCount,
+            sparepartHampirHabis,
             slaSummary: {
                 totalActive: totalActiveSla,
                 expressCount,

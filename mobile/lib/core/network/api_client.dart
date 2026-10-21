@@ -32,7 +32,12 @@ class ApiClient {
           }
           return handler.next(options);
         },
-        onError: (DioException e, handler) {
+        onError: (DioException e, handler) async {
+          if (e.response?.statusCode == 401) {
+            _token = null;
+            await _storage.delete(key: 'jwt_token');
+            await _storage.delete(key: 'user_data');
+          }
           return handler.next(e);
         },
       ),

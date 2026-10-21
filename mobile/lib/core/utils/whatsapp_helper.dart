@@ -128,6 +128,16 @@ class WhatsAppHelper {
     return 'https://wa.me/$phone?text=${Uri.encodeComponent(text)}';
   }
 
+  static Future<bool> openChat(String? phone, {String? message}) async {
+    final clean = _formatPhone(phone);
+    if (clean.isEmpty) return false;
+    String url = 'https://wa.me/$clean';
+    if (message != null && message.isNotEmpty) {
+      url += '?text=${Uri.encodeComponent(message)}';
+    }
+    return openUrl(url);
+  }
+
   static Future<bool> openUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/network/api_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/constants/checklist_items.dart';
@@ -15,9 +16,11 @@ import '../../core/widgets/image_viewer_dialog.dart';
 import '../../data/models/tiket_model.dart';
 import '../../data/providers/ticket_provider.dart';
 import '../../data/providers/auth_provider.dart';
+import '../wiki/wiki_detail_screen.dart';
 import 'widgets/diagnosis_modal.dart';
 import 'widgets/add_log_modal.dart';
 import 'widgets/use_sparepart_modal.dart';
+import 'widgets/qc_verification_modal.dart';
 
 class TicketDetailScreen extends ConsumerStatefulWidget {
   final int ticketId;
@@ -457,6 +460,95 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Top Bar Summary with WhatsApp Contact
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.border),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x080F172A), blurRadius: 4, offset: Offset(0, 1)),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                '#${ticket.nomorTiket}',
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              StatusBadge(status: ticket.status),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${ticket.perangkat?.merek ?? ""} ${ticket.perangkat?.model ?? ""}'.trim(),
+                            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (ticket.perangkat?.customer != null &&
+                        ticket.perangkat!.customer!.nomorTelepon.isNotEmpty &&
+                        ticket.perangkat!.customer!.nomorTelepon != '-')
+                      InkWell(
+                        onTap: () {
+                          WhatsAppHelper.openChat(
+                            ticket.perangkat!.customer!.nomorTelepon,
+                            message: 'Halo kak ${ticket.perangkat!.customer!.nama}, saya teknisi dari Serv.io Workshop mengenai tiket #${ticket.nomorTiket} (${ticket.perangkat?.merek ?? ""} ${ticket.perangkat?.model ?? ""}).',
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFECFDF5),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFA7F3D0)),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.chat_bubble_outline_rounded, size: 14, color: Color(0xFF059669)),
+                              SizedBox(width: 5),
+                              Text(
+                                'WhatsApp',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF047857),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // 5-Phase Lifecycle Stepper
+              _buildLifecycleStepper(ticket.status),
+              const SizedBox(height: 12),
+
+              // Suggested Wiki Knowledge Base
+              _buildSuggestedWiki(ticket),
+
               // Ticket Header Card
               Container(
                 padding: const EdgeInsets.all(16),
@@ -1411,49 +1503,23 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
               // Status Change Action Buttons for Technician & Admin
               if (isAssignedToMe && ticket.status == 'dalam_perbaikan') ...[
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.task_alt, size: 20),
-                  label: const Text('Tandai Selesai (Selesaikan Servis)'),
+                  icon: const Icon(Icons.verified_outlined, size: 20),
+                  label: const Text('Verifikasi QC & Selesaikan Servis (8-Point WOW)'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.success,
+                    backgroundColor: const Color(0xFF059669),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   onPressed: _isActionLoading
                       ? null
-                      : () async {
-                          // Validation: Ensure at least one log perbaikan with fase "Perbaikan" exists
-                          final hasRepairLog = ticket.logPerbaikan?.any((l) => l.fase == 'Perbaikan') ?? false;
-                          if (!hasRepairLog) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Wajib mengisi minimal satu Log Perbaikan sebelum menandai selesai!'),
-                                backgroundColor: AppTheme.warning,
-                              ),
-                            );
-                            return;
-                          }
-
-                          final confirm = await showDialog<bool>(
+                      : () {
+                          showModalBottomSheet(
                             context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Konfirmasi Selesai Servis'),
-                              content: const Text(
-                                'Apakah seluruh rangkaian perbaikan telah selesai dan unit telah melalui inspeksi QC?',
-                              ),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.success),
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Ya, Tandai Selesai'),
-                                ),
-                              ],
-                            ),
+                            isScrollControlled: true,
+                            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                            builder: (_) => QcVerificationModal(ticket: ticket, onSuccess: _refresh),
                           );
-
-                          if (confirm == true) {
-                            _updateStatus('selesai');
-                          }
                         },
                 ),
                 const SizedBox(height: 16),
@@ -1507,6 +1573,232 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildLifecycleStepper(String status) {
+    final phases = [
+      ('Diterima', 'diterima'),
+      ('Diagnosis', 'didiagnosis'),
+      ('ACC', 'menunggu_persetujuan'),
+      ('Perbaikan', 'dalam_perbaikan'),
+      ('Selesai', 'selesai'),
+    ];
+
+    int currentStep = 0;
+    if (status == 'didiagnosis') {
+      currentStep = 1;
+    } else if (status == 'menunggu_persetujuan' || status == 'disetujui') {
+      currentStep = 2;
+    } else if (status == 'dalam_perbaikan') {
+      currentStep = 3;
+    } else if (status == 'selesai' || status == 'diambil') {
+      currentStep = 4;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Alur Proses Servis',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+              ),
+              Text(
+                'Fase ${currentStep + 1} dari 5',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(phases.length, (idx) {
+              final isDone = idx < currentStep;
+              final isCurrent = idx == currentStep;
+              final phase = phases[idx];
+
+              Color circleColor;
+              Widget circleChild;
+
+              if (isDone) {
+                circleColor = const Color(0xFF10B981);
+                circleChild = const Icon(Icons.check, size: 13, color: Colors.white);
+              } else if (isCurrent) {
+                circleColor = AppTheme.primary;
+                circleChild = Text(
+                  '${idx + 1}',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                );
+              } else {
+                circleColor = const Color(0xFFF1F5F9);
+                circleChild = Text(
+                  '${idx + 1}',
+                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+                );
+              }
+
+              return Expanded(
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 2,
+                            color: idx == 0
+                                ? Colors.transparent
+                                : (idx <= currentStep ? const Color(0xFF10B981) : AppTheme.borderLight),
+                          ),
+                        ),
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: circleColor,
+                            shape: BoxShape.circle,
+                            border: isCurrent
+                                ? Border.all(color: const Color(0xFFBFDBFE), width: 3)
+                                : null,
+                          ),
+                          child: Center(child: circleChild),
+                        ),
+                        Expanded(
+                          child: Container(
+                            height: 2,
+                            color: idx == phases.length - 1
+                                ? Colors.transparent
+                                : (idx < currentStep ? const Color(0xFF10B981) : AppTheme.borderLight),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      phase.$1,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                        color: isCurrent ? AppTheme.primary : AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestedWiki(TiketModel ticket) {
+    final wikiAsync = ref.watch(
+      suggestedWikiProvider((merek: ticket.perangkat?.merek, model: ticket.perangkat?.model)),
+    );
+
+    return wikiAsync.when(
+      data: (wikis) {
+        if (wikis.isEmpty) return const SizedBox.shrink();
+        final wiki = wikis.first;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.menu_book_rounded, size: 16, color: AppTheme.primary),
+                      SizedBox(width: 6),
+                      Text(
+                        'Pustaka Solusi SOP Toko',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'Rekomendasi Unit',
+                      style: TextStyle(fontSize: 10, color: AppTheme.primary, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => WikiDetailScreen(wiki: wiki)),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.background,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.borderLight),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              wiki.judul,
+                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              '${wiki.tingkatSukses}% Tingkat Sukses • Penulis: ${wiki.authorName}',
+                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 13, color: AppTheme.primary),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 

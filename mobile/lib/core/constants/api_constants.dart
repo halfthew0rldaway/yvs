@@ -1,7 +1,8 @@
 class ApiConstants {
   // Base URLs
-  // Default connects to adb reverse port forwarding (127.0.0.1:5001)
-  static const String baseUrl = 'http://127.0.0.1:5001/api';
+  // Live Production VPS Backend
+  static const String baseUrl = 'https://101.32.127.55.nip.io/api';
+  static const String localUrl = 'http://127.0.0.1:5001/api';
   static const String emulatorUrl = 'http://10.0.2.2:5001/api';
   static const String lanUrl = 'http://192.168.18.131:5001/api';
 
@@ -27,6 +28,11 @@ class ApiConstants {
   // Sparepart
   static const String sparepart = '/sparepart';
   static const String useSparepart = '/sparepart/use';
+
+  // Pustaka Wiki Solusi
+  static const String repairWiki = '/repair-wiki';
+  static const String repairWikiSuggest = '/repair-wiki/suggest';
+  static String repairWikiDetail(int id) => '/repair-wiki/$id';
 
   // Helpers
   static String ticketDetail(int id) => '/tiket-servis/$id';

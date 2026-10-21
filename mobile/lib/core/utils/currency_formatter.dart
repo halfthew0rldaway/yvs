@@ -31,6 +31,19 @@ class CurrencyFormatter {
     }
   }
 
+  static String formatHeaderDateTime(DateTime dt) {
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const monthsFull = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    final dayName = days[dt.weekday - 1];
+    final monthName = monthsFull[dt.month - 1];
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$hour:$minute • $dayName, ${dt.day} $monthName';
+  }
+
   static String formatDateOnly(dynamic date) {
     if (date == null) return '-';
     try {

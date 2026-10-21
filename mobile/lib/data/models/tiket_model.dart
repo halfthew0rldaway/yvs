@@ -245,6 +245,11 @@ class TiketModel {
   final String? tglDiambil;
   final double? ratingTeknisi;
   final String? lastReminderSent;
+  final String? slaPaket;
+  final Map<String, dynamic>? slaStatus;
+  final String? statusEstimasi;
+  final String? targetPengecekanAt;
+  final String? targetSelesaiAt;
 
   TiketModel({
     required this.id,
@@ -275,6 +280,11 @@ class TiketModel {
     this.tglDiambil,
     this.ratingTeknisi,
     this.lastReminderSent,
+    this.slaPaket,
+    this.slaStatus,
+    this.statusEstimasi,
+    this.targetPengecekanAt,
+    this.targetSelesaiAt,
   });
 
   /// Parse foto_kondisi which can be a JSON string, a List, or null
@@ -334,6 +344,12 @@ class TiketModel {
     if (teknisi != null) return teknisi!['nama']?.toString() ?? 'Belum Ditugaskan';
     return 'Belum Ditugaskan';
   }
+
+  bool get isExpress => slaPaket == 'express';
+  bool get isOverdue => slaStatus?['is_overdue'] == true;
+  bool get isWarning => slaStatus?['is_warning'] == true;
+  bool get isPaused => slaStatus?['is_paused'] == true;
+  String? get slaLabel => slaStatus?['label']?.toString();
 
   factory TiketModel.fromJson(Map<String, dynamic> json) {
     List<LogPerbaikanModel>? logs;
@@ -399,6 +415,11 @@ class TiketModel {
       tglDiambil: json['tgl_diambil']?.toString(),
       ratingTeknisi: json['rating_teknisi'] != null ? double.tryParse(json['rating_teknisi'].toString()) : null,
       lastReminderSent: json['last_reminder_sent']?.toString(),
+      slaPaket: json['sla_paket']?.toString(),
+      slaStatus: json['sla_status'] is Map<String, dynamic> ? json['sla_status'] : null,
+      statusEstimasi: json['status_estimasi']?.toString(),
+      targetPengecekanAt: json['target_pengecekan_at']?.toString(),
+      targetSelesaiAt: json['target_selesai_at']?.toString(),
     );
   }
 }

@@ -64,6 +64,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
             await _storage.write(key: 'user_data', value: jsonEncode(freshUser.toJson()));
             state = state.copyWith(user: freshUser);
           }
+        } on DioException catch (e) {
+          if (e.response?.statusCode == 401) {
+            await logout();
+            return;
+          }
         } catch (_) {}
       } else {
         state = state.copyWith(isLoading: false, isAuthenticated: false);
