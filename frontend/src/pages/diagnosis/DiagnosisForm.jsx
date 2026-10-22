@@ -98,18 +98,6 @@ export default function DiagnosisForm() {
                         <p className="text-sm text-slate-500 mt-0.5">Catat temuan masalah, solusi, dan estimasi biaya perbaikan</p>
                     </div>
                 </div>
-
-                {canAdvance && (
-                    <button
-                        type="button"
-                        onClick={() => handleSave(true)}
-                        disabled={loading}
-                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer text-sm"
-                    >
-                        <Send className="w-4 h-4" />
-                        <span>Simpan & Naikkan ke Penawaran (Admin)</span>
-                    </button>
-                )}
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); handleSave(false); }} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-6">
