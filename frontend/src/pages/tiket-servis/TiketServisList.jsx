@@ -15,7 +15,9 @@ import {
     Zap,
     AlertTriangle,
     ShieldAlert,
-    Laptop
+    Laptop,
+    Send,
+    Wrench
 } from "lucide-react";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
@@ -35,7 +37,7 @@ const STATUS_LABELS = {
 };
 
 export default function TiketServisList() {
-    const { isAdmin, user } = useAuth();
+    const { isAdmin, isTeknisi, user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
     const [tikets, setTikets] = useState([]);
     const [filter, setFilter] = useState(() => searchParams.get("status") || "");
@@ -469,7 +471,34 @@ export default function TiketServisList() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end">
+                                        <div className="flex items-center justify-end gap-2">
+                                            {isTeknisi && t.status === "didiagnosis" && (
+                                                t.diagnosis ? (
+                                                    <Link
+                                                        to={`/tiket-servis/${t.id}`}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm"
+                                                    >
+                                                        <Send className="w-3 h-3" />
+                                                        <span>Ajukan Penawaran</span>
+                                                    </Link>
+                                                ) : (
+                                                    <Link
+                                                        to={`/tiket-servis/${t.id}/diagnosis`}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg shadow-sm"
+                                                    >
+                                                        <Search className="w-3 h-3" />
+                                                        <span>Input Diagnosa</span>
+                                                    </Link>
+                                                )
+                                            )}
+                                            {isTeknisi && t.status === "disetujui" && (
+                                                <Link
+                                                    to={`/tiket-servis/${t.id}`}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+                                                >
+                                                    <span>Mulai Kerjakan</span>
+                                                </Link>
+                                            )}
                                             <Link
                                                 to={`/tiket-servis/${t.id}`}
                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-semibold text-xs border border-transparent hover:border-blue-100"

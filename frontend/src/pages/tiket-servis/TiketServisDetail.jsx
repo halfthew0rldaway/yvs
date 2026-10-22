@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
-import { ArrowLeft, Edit, Save, Trash2, CheckCircle2, XCircle, AlertCircle, Phone, MapPin, Search, Plus, Filter, MonitorSmartphone, User, Info, FileText, Wrench, ClipboardList, Send, Package, Camera, ExternalLink, MessageCircle, CheckCircle, ArrowRight, PenTool, FileCheck, AlertTriangle, ShieldCheck, Award, KeyRound, Lock, Eye, EyeOff, History, Calendar, Clock, Copy, Check, ChevronDown, ChevronUp, Shield, Sparkles, Smile, HardDrive, Target, BookOpen, Zap, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Edit, Save, Trash2, CheckCircle2, XCircle, AlertCircle, Phone, MapPin, Search, Plus, Filter, MonitorSmartphone, User, Info, FileText, Wrench, ClipboardList, Send, Package, Camera, ExternalLink, MessageCircle, CheckCircle, ArrowRight, PenTool, FileCheck, AlertTriangle, ShieldCheck, Award, KeyRound, Lock, Eye, EyeOff, History, Calendar, Clock, Copy, Check, ChevronDown, ChevronUp, Shield, Sparkles, Smile, HardDrive, Target, BookOpen, Zap, ShieldAlert, Play } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import SopWaModal from "../../components/SopWaModal";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
@@ -380,17 +380,17 @@ export default function TiketServisDetail() {
         }
     }
 
-    function handleStatusChangeClick() {
-        if (!selectedStatus) return;
+    function handleOpenStatusModal(targetStatus) {
+        setSelectedStatus(targetStatus);
 
-        // Intercept jika transisi ke disetujui atau dalam_perbaikan dan belum di-ACC pelanggan
-        if ((selectedStatus === "disetujui" || selectedStatus === "dalam_perbaikan") && !tiket.disetujui_at) {
-            handleOpenAccModal(selectedStatus);
+        // Intercept jika transisi ke disetujui atau dalam_perbaikan dan belum di-ACC pelanggan (khusus Admin)
+        if ((targetStatus === "disetujui" || targetStatus === "dalam_perbaikan") && !tiket.disetujui_at && isAdmin) {
+            handleOpenAccModal(targetStatus);
             return;
         }
 
         // Feature 2.1: Intercept status transition to selesai or diambil if QC not passed
-        if ((selectedStatus === "selesai" || selectedStatus === "diambil") && !tiket.checklist_qc?.passed_qc) {
+        if ((targetStatus === "selesai" || targetStatus === "diambil") && !tiket.checklist_qc?.passed_qc) {
             const currentQc = tiket.checklist_qc || {};
             setQcModalData({
                 power_test: Boolean(currentQc.power_test ?? currentQc.baterai),
@@ -407,7 +407,13 @@ export default function TiketServisDetail() {
             setIsQcModalOpen(true);
             return;
         }
+
         setIsUpdatingStatus(true);
+    }
+
+    function handleStatusChangeClick() {
+        if (!selectedStatus) return;
+        handleOpenStatusModal(selectedStatus);
     }
 
     async function executeStatusChange() {
@@ -422,6 +428,7 @@ export default function TiketServisDetail() {
                 payload.catatan_admin = catatanAdmin;
             }
             await api.put(`/tiket-servis/${id}`, payload);
+            toast.success(`Status tiket berhasil diubah menjadi "${STATUS_LABELS[selectedStatus]?.label || selectedStatus}"`);
             setCatatanAdmin("");
             fetchTiket();
         } catch (err) {
@@ -686,8 +693,12 @@ export default function TiketServisDetail() {
     const allowedTransitions = STATUS_TRANSITIONS[tiket.status] || [];
     
     // Admin bisa mengubah semua status kapan saja.
-    // Teknisi hanya bisa mengubah status JIKA tiket tersebut sudah di-assign kepadanya.
-    const isAssignedToMe = isTeknisi && tiket.teknisi?.id === user?.id;
+    // Teknisi hanya bisa mengubah status JIKA tiket tersebut sudah di-assign kepadanya atau belum di-assign.
+    const isAssignedToMe = isTeknisi && (
+        Number(tiket.teknisi?.id) === Number(user?.id) || 
+        Number(tiket.teknisi_id) === Number(user?.id) ||
+        !tiket.teknisi_id
+    );
     const canUpdateStatus = isAdmin || isAssignedToMe;
 
     // Hak Akses Staging Teknisi:
@@ -730,16 +741,105 @@ export default function TiketServisDetail() {
                         </p>
                     </div>
                 </div>
-                {isAdmin && (
-                    <button
-                        type="button"
-                        onClick={() => setIsSopWaModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
-                    >
-                        <MessageCircle className="w-4 h-4" />
-                        <span>Pesan WhatsApp Pelanggan</span>
-                    </button>
-                )}
+
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                    {isAdmin && (
+                        <button
+                            type="button"
+                            onClick={() => setIsSopWaModalOpen(true)}
+                            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                        >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>WhatsApp</span>
+                        </button>
+                    )}
+
+                    {/* Stage Action: Diterima (Claim) */}
+                    {isTeknisi && !tiket.teknisi && tiket.status === "diterima" && (
+                        <button
+                            type="button"
+                            onClick={() => setIsTakeOverModalOpen(true)}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-amber-600/20 shrink-0 cursor-pointer"
+                        >
+                            <Wrench className="w-4 h-4" />
+                            <span>Klaim & Mulai Diagnosis</span>
+                        </button>
+                    )}
+
+                    {/* Stage Action: Didiagnosis -> Penawaran */}
+                    {tiket.status === "didiagnosis" && (isAdmin || isAssignedToMe) && (
+                        tiket.diagnosis ? (
+                            <button
+                                type="button"
+                                onClick={() => handleOpenStatusModal("menunggu_persetujuan")}
+                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-extrabold transition-all shadow-md shadow-blue-600/25 shrink-0 cursor-pointer"
+                            >
+                                <Send className="w-4 h-4" />
+                                <span>Selesaikan Diagnosa & Naikkan ke Penawaran</span>
+                            </button>
+                        ) : (
+                            <Link
+                                to={`/tiket-servis/${id}/diagnosis`}
+                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-extrabold transition-all shadow-md shadow-blue-600/25 shrink-0"
+                            >
+                                <Search className="w-4 h-4" />
+                                <span>Input Hasil Diagnosis & Estimasi</span>
+                            </Link>
+                        )
+                    )}
+
+                    {/* Stage Info: Menunggu Persetujuan (Teknisi) */}
+                    {tiket.status === "menunggu_persetujuan" && isTeknisi && (
+                        <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold shrink-0">
+                            <Clock className="w-4 h-4 text-amber-600" />
+                            <span>Tahap Admin: Penawaran (Menunggu ACC)</span>
+                        </div>
+                    )}
+
+                    {/* Stage Action: Menunggu Persetujuan (Admin ACC) */}
+                    {tiket.status === "menunggu_persetujuan" && isAdmin && (
+                        <button
+                            type="button"
+                            onClick={() => handleOpenAccModal("disetujui")}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shrink-0 cursor-pointer"
+                        >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Konfirmasi ACC Pelanggan</span>
+                        </button>
+                    )}
+
+                    {/* Stage Action: Disetujui (Mulai Perbaikan) */}
+                    {tiket.status === "disetujui" && (isAdmin || isAssignedToMe) && (
+                        <button
+                            type="button"
+                            onClick={() => handleOpenStatusModal("dalam_perbaikan")}
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-indigo-600/20 shrink-0 cursor-pointer"
+                        >
+                            <Play className="w-4 h-4" />
+                            <span>Mulai Perbaikan Unit</span>
+                        </button>
+                    )}
+
+                    {/* Stage Action: Dalam Perbaikan (Selesaikan / QC) */}
+                    {tiket.status === "dalam_perbaikan" && (isAdmin || isAssignedToMe) && (
+                        <button
+                            type="button"
+                            onClick={() => handleOpenStatusModal("selesai")}
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-600/20 shrink-0 cursor-pointer"
+                        >
+                            <Award className="w-4 h-4" />
+                            <span>Verifikasi QC & Selesaikan Servis</span>
+                        </button>
+                    )}
+
+                    {/* Stage Info: Selesai */}
+                    {tiket.status === "selesai" && (
+                        <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold shrink-0">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Tahap Kasir / Admin: Siap Diambil</span>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Feature 7: SLA Express Queue & Countdown Alert */}
@@ -748,6 +848,112 @@ export default function TiketServisDetail() {
                 onAccClick={isAdmin ? () => handleOpenAccModal("disetujui") : undefined}
                 onEditSla={isAdmin && ["disetujui", "dalam_perbaikan"].includes(tiket?.status) ? () => handleOpenAccModal(tiket?.status) : undefined}
             />
+
+            {/* Top Stage Action Banner */}
+            {tiket.status === "didiagnosis" && (
+                <div className="bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-blue-500/10 border-2 border-blue-400 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                        <div className="p-3 bg-blue-600 text-white rounded-xl shadow-md shrink-0">
+                            <Search className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 uppercase tracking-wide">
+                                    Tahap Teknisi Saat Ini
+                                </span>
+                                <h3 className="font-bold text-slate-900 text-base">Pemeriksaan & Diagnosis Unit</h3>
+                            </div>
+                            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                                {tiket.diagnosis 
+                                    ? `Diagnosis & estimasi (${formatRupiah(tiket.diagnosis.estimasi_biaya)}) sudah terisi. Naikkan ke tahap Penawaran agar Admin dapat menghubungi pelanggan untuk persetujuan (ACC).` 
+                                    : "Unit sedang berada di meja teknisi. Silakan isi temuan kerusakan dan estimasi biaya perbaikan."}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
+                        {tiket.diagnosis ? (
+                            <button
+                                type="button"
+                                onClick={() => handleOpenStatusModal("menunggu_persetujuan")}
+                                className="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-extrabold shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                            >
+                                <Send className="w-4 h-4" />
+                                <span>Selesaikan Diagnosa & Naikkan ke Penawaran</span>
+                            </button>
+                        ) : (
+                            <Link
+                                to={`/tiket-servis/${id}/diagnosis`}
+                                className="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-extrabold shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all"
+                            >
+                                <Search className="w-4 h-4" />
+                                <span>Input Hasil Diagnosis & Estimasi</span>
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {tiket.status === "menunggu_persetujuan" && (
+                <div className="bg-amber-50/80 border-2 border-amber-300 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                        <div className="p-3 bg-amber-500 text-white rounded-xl shadow-md shrink-0">
+                            <Clock className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 uppercase tracking-wide">
+                                    Tahap Admin
+                                </span>
+                                <h3 className="font-bold text-slate-900 text-base">Menunggu Persetujuan Pelanggan (Penawaran)</h3>
+                            </div>
+                            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                                Estimasi biaya <strong className="text-slate-900">{formatRupiah(tiket.diagnosis?.estimasi_biaya || 0)}</strong> sedang diajukan oleh Admin ke pelanggan. Teknisi akan melanjutkan setelah status di-ACC.
+                            </p>
+                        </div>
+                    </div>
+                    {isAdmin && (
+                        <button
+                            type="button"
+                            onClick={() => handleOpenAccModal("disetujui")}
+                            className="w-full md:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Konfirmasi Persetujuan Pelanggan (ACC)</span>
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {tiket.status === "disetujui" && (
+                <div className="bg-emerald-50/80 border-2 border-emerald-300 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                        <div className="p-3 bg-emerald-600 text-white rounded-xl shadow-md shrink-0">
+                            <CheckCircle2 className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wide">
+                                    Penawaran Telah Disetujui
+                                </span>
+                                <h3 className="font-bold text-slate-900 text-base">Unit Siap Dikerjakan oleh Teknisi</h3>
+                            </div>
+                            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                                Pelanggan telah menyetujui penawaran. Klik tombol di samping untuk memulai proses perbaikan aktif.
+                            </p>
+                        </div>
+                    </div>
+                    {(isAdmin || isAssignedToMe) && (
+                        <button
+                            type="button"
+                            onClick={() => handleOpenStatusModal("dalam_perbaikan")}
+                            className="w-full md:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-extrabold shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                            <Play className="w-4 h-4" />
+                            <span>Mulai Perbaikan Unit</span>
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
