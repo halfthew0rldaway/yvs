@@ -17,13 +17,15 @@ import {
     ShieldAlert,
     Laptop,
     Send,
-    Wrench
+    Wrench,
+    QrCode
 } from "lucide-react";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
 import SlaBadge from "../../components/SlaBadge";
+import TicketQrModal from "../../components/TicketQrModal";
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-100 text-blue-700 border-blue-200" },
@@ -46,6 +48,7 @@ export default function TiketServisList() {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortOrder, setSortOrder] = useState("desc"); // 'desc' | 'asc'
     const [loading, setLoading] = useState(true);
+    const [selectedQrTiket, setSelectedQrTiket] = useState(null);
 
     // Standardized Pagination State
     const [currentPage, setCurrentPage] = useState(1);
@@ -420,7 +423,19 @@ export default function TiketServisList() {
                         <tbody className="divide-y divide-slate-100">
                             {tikets.map((t) => (
                                 <tr key={t.id} className="hover:bg-slate-50/80 transition-colors group">
-                                    <td className="px-6 py-4 font-mono font-bold text-slate-700">{t.nomor_tiket}</td>
+                                    <td className="px-6 py-4 font-mono font-bold text-slate-700">
+                                        <div className="flex items-center gap-2">
+                                            <span>{t.nomor_tiket}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedQrTiket(t)}
+                                                className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                                title="Lihat & Cetak QR Code Label Unit"
+                                            >
+                                                <QrCode className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4 text-slate-600 font-medium">
                                         <div className="flex items-center gap-1.5">
                                             <Calendar className="w-3.5 h-3.5 text-slate-400" />
@@ -487,6 +502,13 @@ export default function TiketServisList() {
                     </table>
                 )}
             </TableContainer>
+
+            {/* QR Code Label Modal */}
+            <TicketQrModal 
+                isOpen={!!selectedQrTiket} 
+                onClose={() => setSelectedQrTiket(null)} 
+                tiket={selectedQrTiket} 
+            />
         </div>
     );
 }
