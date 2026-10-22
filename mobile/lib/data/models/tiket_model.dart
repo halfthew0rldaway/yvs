@@ -244,6 +244,7 @@ class TiketModel {
   final String? catatanAdmin;
   final String? tglDiambil;
   final double? ratingTeknisi;
+  final String? ratingSubmittedAt;
   final String? lastReminderSent;
   final String? slaPaket;
   final Map<String, dynamic>? slaStatus;
@@ -279,6 +280,7 @@ class TiketModel {
     this.catatanAdmin,
     this.tglDiambil,
     this.ratingTeknisi,
+    this.ratingSubmittedAt,
     this.lastReminderSent,
     this.slaPaket,
     this.slaStatus,
@@ -414,6 +416,7 @@ class TiketModel {
       catatanAdmin: json['catatan_admin']?.toString(),
       tglDiambil: json['tgl_diambil']?.toString(),
       ratingTeknisi: json['rating_teknisi'] != null ? double.tryParse(json['rating_teknisi'].toString()) : null,
+      ratingSubmittedAt: json['rating_submitted_at']?.toString(),
       lastReminderSent: json['last_reminder_sent']?.toString(),
       slaPaket: json['sla_paket']?.toString(),
       slaStatus: json['sla_status'] is Map<String, dynamic> ? json['sla_status'] : null,

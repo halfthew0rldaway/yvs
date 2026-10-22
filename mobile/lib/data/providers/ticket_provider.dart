@@ -4,6 +4,7 @@ import '../../core/network/api_client.dart';
 import '../models/tiket_model.dart';
 import '../models/sparepart_model.dart';
 import '../models/wiki_model.dart';
+import 'auth_provider.dart';
 
 class ChartDataItem {
   final String name;
@@ -55,6 +56,9 @@ class DashboardData {
   final int menungguDiagnosis;
   final int dalamPerbaikan;
   final int tiketSelesai;
+  final double rataRataDurasiHari;
+  final double rataRataCsat;
+  final int totalRatedTickets;
   final int expressCount;
   final int overdueCount;
   final List<ChartDataItem> chartData;
@@ -68,6 +72,9 @@ class DashboardData {
     required this.menungguDiagnosis,
     required this.dalamPerbaikan,
     required this.tiketSelesai,
+    this.rataRataDurasiHari = 0.0,
+    this.rataRataCsat = 0.0,
+    this.totalRatedTickets = 0,
     required this.expressCount,
     required this.overdueCount,
     required this.chartData,
@@ -130,6 +137,9 @@ class DashboardData {
       menungguDiagnosis: json['menungguDiagnosis'] is int ? json['menungguDiagnosis'] : int.tryParse(json['menungguDiagnosis']?.toString() ?? '0') ?? 0,
       dalamPerbaikan: json['dalamPerbaikan'] is int ? json['dalamPerbaikan'] : int.tryParse(json['dalamPerbaikan']?.toString() ?? '0') ?? 0,
       tiketSelesai: json['tiketSelesai'] is int ? json['tiketSelesai'] : int.tryParse(json['tiketSelesai']?.toString() ?? '0') ?? 0,
+      rataRataDurasiHari: (json['rataRataDurasiHari'] is num ? (json['rataRataDurasiHari'] as num).toDouble() : double.tryParse(json['rataRataDurasiHari']?.toString() ?? '0')) ?? 0.0,
+      rataRataCsat: (json['rataRataCsat'] is num ? (json['rataRataCsat'] as num).toDouble() : double.tryParse(json['rataRataCsat']?.toString() ?? '0')) ?? 0.0,
+      totalRatedTickets: json['totalRatedTickets'] is int ? json['totalRatedTickets'] : int.tryParse(json['totalRatedTickets']?.toString() ?? '0') ?? 0,
       expressCount: json['expressCount'] is int ? json['expressCount'] : int.tryParse(json['expressCount']?.toString() ?? '0') ?? 0,
       overdueCount: json['overdueCount'] is int ? json['overdueCount'] : int.tryParse(json['overdueCount']?.toString() ?? '0') ?? 0,
       chartData: chartList,
@@ -287,5 +297,25 @@ final suggestedWikiProvider = FutureProvider.family.autoDispose<List<WikiModel>,
       return (response.data as List).map((i) => WikiModel.fromJson(i)).toList();
     }
   } catch (_) {}
+  return [];
+});
+
+// All Tickets Assigned to Technician (including completed & rated history)
+final technicianTicketsProvider = FutureProvider.autoDispose<List<TiketModel>>((ref) async {
+  final client = ApiClient();
+  final user = ref.watch(authProvider).user;
+  final Map<String, dynamic> queryParams = {};
+  if (user != null && user.role != 'admin') {
+    queryParams['teknisi_id'] = user.id;
+  }
+  final response = await client.dio.get(
+    ApiConstants.tickets,
+    queryParameters: queryParams,
+  );
+  if (response.data is List) {
+    return (response.data as List)
+        .map((item) => TiketModel.fromJson(item))
+        .toList();
+  }
   return [];
 });

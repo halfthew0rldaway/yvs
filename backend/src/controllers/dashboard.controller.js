@@ -213,7 +213,9 @@ async function teknisiDashboard(req, res) {
             tiketBerdasarkanStatus, 
             activeTickets,
             activeTiketsForSla,
-            sparepartHampirHabis
+            sparepartHampirHabis,
+            completedWithDates,
+            ratedTickets
         ] = await Promise.all([
             prisma.tiketServis.count({
                 where: { 
@@ -278,8 +280,44 @@ async function teknisiDashboard(req, res) {
                 include: { brand: true },
                 orderBy: { stok: "asc" },
                 take: 6,
+            }),
+            prisma.tiketServis.findMany({
+                where: {
+                    teknisi_id: teknisiId,
+                    status: { in: ["selesai", "diambil"] },
+                    completed_at: { not: null }
+                },
+                select: {
+                    created_at: true,
+                    completed_at: true
+                }
+            }),
+            prisma.tiketServis.findMany({
+                where: {
+                    teknisi_id: teknisiId,
+                    rating_teknisi: { not: null, gt: 0 }
+                },
+                select: {
+                    rating_teknisi: true
+                }
             })
         ]);
+
+        // Hitung Rata-rata Durasi Pengerjaan & CSAT Riil
+        let rataRataDurasiHari = 0;
+        if (completedWithDates && completedWithDates.length > 0) {
+            const totalDays = completedWithDates.reduce((sum, t) => {
+                const diffMs = Math.max(0, new Date(t.completed_at) - new Date(t.created_at));
+                return sum + (diffMs / (1000 * 60 * 60 * 24));
+            }, 0);
+            rataRataDurasiHari = Math.round((totalDays / completedWithDates.length) * 10) / 10;
+        }
+
+        let rataRataCsat = 0;
+        if (ratedTickets && ratedTickets.length > 0) {
+            const totalRating = ratedTickets.reduce((sum, t) => sum + (t.rating_teknisi || 0), 0);
+            rataRataCsat = Math.round((totalRating / ratedTickets.length) * 10) / 10;
+        }
 
         // SLA Analytics Engine for Teknisi
         let expressCount = 0;
@@ -340,6 +378,9 @@ async function teknisiDashboard(req, res) {
             menungguDiagnosis,
             dalamPerbaikan,
             tiketSelesai,
+            rataRataDurasiHari,
+            rataRataCsat,
+            totalRatedTickets: ratedTickets ? ratedTickets.length : 0,
             chartData,
             activeTickets: enrichedActiveTickets,
             expressCount,
