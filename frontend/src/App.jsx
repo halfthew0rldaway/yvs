@@ -22,6 +22,8 @@ import Tracking from "./pages/tracking/Tracking";
 import UserList from "./pages/user/UserList";
 import RepairWikiList from "./pages/wiki/RepairWikiList";
 import RetensiCrm from "./pages/retensi/RetensiCrm";
+import LoanerList from "./pages/loaner/LoanerList";
+import RmaList from "./pages/rma/RmaList";
 
 import { Toaster } from 'react-hot-toast';
 
@@ -70,9 +72,11 @@ export default function App() {
                 <Route path="/tiket-servis/:id/diagnosis" element={<ProtectedRoute><DiagnosisForm /></ProtectedRoute>} />
                 <Route path="/tiket-servis/:id/log" element={<ProtectedRoute><LogPerbaikanList /></ProtectedRoute>} />
                 <Route path="/retensi" element={<ProtectedRoute roles={["admin"]}><RetensiCrm /></ProtectedRoute>} />
+                <Route path="/loaner" element={<ProtectedRoute><LoanerList /></ProtectedRoute>} />
                 <Route path="/sparepart" element={<ProtectedRoute><SparepartList /></ProtectedRoute>} />
                 <Route path="/sparepart/tambah" element={<ProtectedRoute roles={["admin"]}><SparepartForm /></ProtectedRoute>} />
                 <Route path="/sparepart/edit/:id" element={<ProtectedRoute roles={["admin"]}><SparepartForm /></ProtectedRoute>} />
+                <Route path="/rma" element={<ProtectedRoute><RmaList /></ProtectedRoute>} />
                 <Route path="/invoice" element={<ProtectedRoute roles={["admin"]}><InvoiceList /></ProtectedRoute>} />
                 <Route path="/invoice/tambah" element={<ProtectedRoute roles={["admin"]}><InvoiceForm /></ProtectedRoute>} />
                 <Route path="/invoice/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />

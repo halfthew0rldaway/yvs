@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
-import { ArrowLeft, Edit, Save, Trash2, CheckCircle2, XCircle, AlertCircle, Phone, MapPin, Search, Plus, Filter, MonitorSmartphone, User, Info, FileText, Wrench, ClipboardList, Send, Package, Camera, ExternalLink, MessageCircle, CheckCircle, ArrowRight, PenTool, FileCheck, AlertTriangle, ShieldCheck, Award, KeyRound, Lock, Eye, EyeOff, History, Calendar, Clock, Copy, Check, ChevronDown, ChevronUp, Shield, Sparkles, Smile, HardDrive, Target, BookOpen, Zap, ShieldAlert, Play, QrCode, Printer } from "lucide-react";
+import { ArrowLeft, Edit, Save, Trash2, CheckCircle2, XCircle, AlertCircle, Phone, MapPin, Search, Plus, Filter, MonitorSmartphone, User, Info, FileText, Wrench, ClipboardList, Send, Package, Camera, ExternalLink, MessageCircle, CheckCircle, ArrowRight, PenTool, FileCheck, AlertTriangle, ShieldCheck, Award, KeyRound, Lock, Eye, EyeOff, History, Calendar, Clock, Copy, Check, ChevronDown, ChevronUp, Shield, Sparkles, Smile, HardDrive, Target, BookOpen, Zap, ShieldAlert, Play, QrCode, Printer, Laptop, RotateCcw, Layers } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import SopWaModal from "../../components/SopWaModal";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
@@ -720,6 +720,8 @@ export default function TiketServisDetail() {
         filteredTransitions = allowedTransitions.filter(s => allowedCurrent.includes(s));
     }
 
+    const activeLoan = tiket.peminjaman_loaner?.find(p => p.status === "aktif");
+
     return (
         <div className="space-y-6 pb-10">
             {/* Header */}
@@ -860,6 +862,32 @@ export default function TiketServisDetail() {
                 onAccClick={isAdmin ? () => handleOpenAccModal("disetujui") : undefined}
                 onEditSla={isAdmin && ["disetujui", "dalam_perbaikan"].includes(tiket?.status) ? () => handleOpenAccModal(tiket?.status) : undefined}
             />
+
+            {/* Safety Alert: Unit Pinjaman Cadangan Belum Dikembalikan */}
+            {activeLoan && ["selesai", "diambil"].includes(tiket.status) && (
+                <div className="bg-amber-50 border-2 border-amber-500 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-fade-in">
+                    <div className="flex items-start sm:items-center gap-3">
+                        <div className="p-2.5 bg-amber-500 text-white rounded-xl shrink-0">
+                            <AlertTriangle className="w-6 h-6 animate-pulse" />
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-extrabold text-amber-950">
+                                Perhatian: Unit Pinjaman Cadangan Belum Dikembalikan!
+                            </h4>
+                            <p className="text-xs text-amber-900 mt-0.5">
+                                Pelanggan ini meminjam unit <span className="font-bold font-mono">[{activeLoan.loaner_device?.kode_unit}] {activeLoan.loaner_device?.nama}</span>.
+                                Pastikan unit cadangan telah diperiksa dan diterima kembali di rak sebelum menyerahkan perangkat utama kepada pelanggan.
+                            </p>
+                        </div>
+                    </div>
+                    <Link
+                        to="/loaner"
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shrink-0 whitespace-nowrap"
+                    >
+                        Buka Menu Pinjaman →
+                    </Link>
+                </div>
+            )}
 
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1051,6 +1079,54 @@ export default function TiketServisDetail() {
                                                 </div>
                                             </>
                                         )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Feature 6: Unit Pinjaman (Loaner / Backup Device) */}
+                        <div className="flex items-start gap-3 pt-3 border-t border-slate-100">
+                            <Laptop className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                            <div className="w-full">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Unit Pinjaman (Backup)</p>
+                                    {activeLoan ? (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                            Sedang Dipinjam
+                                        </span>
+                                    ) : (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                                            Tidak Ada
+                                        </span>
+                                    )}
+                                </div>
+                                {activeLoan ? (
+                                    <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1 text-xs">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-900 font-mono">[{activeLoan.loaner_device?.kode_unit}] {activeLoan.loaner_device?.nama}</span>
+                                            <Link to="/loaner" className="text-blue-600 font-bold hover:underline text-[11px]">
+                                                Kelola Pinjaman →
+                                            </Link>
+                                        </div>
+                                        <p className="text-slate-600 text-[11px]">
+                                            Dipinjam sejak: {new Date(activeLoan.tanggal_pinjam).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                            {activeLoan.estimasi_kembali ? ` • Batas: ${new Date(activeLoan.estimasi_kembali).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}` : ""}
+                                        </p>
+                                        {activeLoan.deposit_uang > 0 && (
+                                            <p className="text-slate-500 text-[10px]">
+                                                Jaminan: {formatRupiah(activeLoan.deposit_uang)}
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-between gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                                        <span className="text-slate-500 text-xs">Pelanggan belum meminjam unit cadangan.</span>
+                                        <Link
+                                            to="/loaner"
+                                            className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline shrink-0"
+                                        >
+                                            + Pinjamkan Unit
+                                        </Link>
                                     </div>
                                 )}
                             </div>
@@ -1333,9 +1409,7 @@ export default function TiketServisDetail() {
                                             <th className="py-3 px-4 font-semibold text-center">Jumlah</th>
                                             <th className="py-3 px-4 font-semibold text-right">Harga Satuan</th>
                                             <th className="py-3 px-4 font-semibold text-right">Subtotal</th>
-                                            {(isTeknisi || isAdmin) && tiket.status === "dalam_perbaikan" && (
-                                                <th className="py-3 px-4 font-semibold text-center rounded-tr-lg w-16">Aksi</th>
-                                            )}
+                                            <th className="py-3 px-4 font-semibold text-center rounded-tr-lg w-24">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -1345,18 +1419,27 @@ export default function TiketServisDetail() {
                                                 <td className="py-3 px-4 text-center text-slate-600">{ps.jumlah}</td>
                                                 <td className="py-3 px-4 text-right text-slate-600">{formatRupiah(ps.sparepart?.harga)}</td>
                                                 <td className="py-3 px-4 text-right font-semibold text-slate-900">{formatRupiah(ps.sparepart?.harga * ps.jumlah)}</td>
-                                                {(isTeknisi || isAdmin) && tiket.status === "dalam_perbaikan" && (
-                                                    <td className="py-3 px-4 text-center">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleRemoveSparepartUsage(ps.id)}
-                                                            title="Batalkan penggunaan sparepart (kembalikan ke stok)"
-                                                            className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center justify-center"
+                                                <td className="py-3 px-4 text-center">
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Link
+                                                            to="/rma"
+                                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center justify-center"
+                                                            title="Klaim Retur Garansi Distributor (RMA)"
                                                         >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </td>
-                                                )}
+                                                            <RotateCcw className="w-4 h-4" />
+                                                        </Link>
+                                                        {(isTeknisi || isAdmin) && tiket.status === "dalam_perbaikan" && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveSparepartUsage(ps.id)}
+                                                                title="Batalkan penggunaan sparepart (kembalikan ke stok)"
+                                                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center justify-center"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -1366,7 +1449,7 @@ export default function TiketServisDetail() {
                                             <td className="py-3 px-4 text-right text-slate-900">
                                                 {formatRupiah(tiket.penggunaan_sparepart.reduce((acc, ps) => acc + (ps.sparepart?.harga * ps.jumlah), 0))}
                                             </td>
-                                            {(isTeknisi || isAdmin) && tiket.status === "dalam_perbaikan" && <td></td>}
+                                            <td></td>
                                         </tr>
                                     </tfoot>
                                 </table>

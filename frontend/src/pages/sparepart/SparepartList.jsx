@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
-import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw } from "lucide-react";
 import * as XLSX from "xlsx";
 import ConfirmModal from "../../components/ConfirmModal";
 import TableContainer from "../../components/common/TableContainer";
@@ -379,6 +379,13 @@ export default function SparepartList() {
                                 </span>
                             )}
                         </button>
+                        <Link
+                            to="/rma"
+                            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-semibold transition-all shadow-2xs"
+                        >
+                            <RotateCcw className="w-4 h-4 text-blue-600" />
+                            <span>Klaim RMA Supplier</span>
+                        </Link>
                         <Link
                             to="/sparepart/tambah"
                             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"

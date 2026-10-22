@@ -245,6 +245,14 @@ async function getById(req, res) {
                 log_perbaikan: { orderBy: { created_at: "desc" } },
                 penggunaan_sparepart: { include: { sparepart: { include: { brand: true } } } },
                 invoice: true,
+                peminjaman_loaner: {
+                    include: { loaner_device: true },
+                    orderBy: { created_at: "desc" }
+                },
+                supplier_rma: {
+                    include: { sparepart: true },
+                    orderBy: { created_at: "desc" }
+                }
             },
         });
 

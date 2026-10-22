@@ -198,3 +198,4 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
         </div>
     );
 }
+

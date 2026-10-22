@@ -34,7 +34,8 @@ model Customer {
   catatan_khusus   String?  @db.Text
   created_at    DateTime @default(now())
 
-  perangkat Perangkat[]
+  perangkat         Perangkat[]
+  peminjaman_loaner LoanerRecord[]
 }
 
 model Perangkat {
@@ -119,6 +120,8 @@ model TiketServis {
   log_perbaikan     LogPerbaikan[]
   penggunaan_sparepart PenggunaanSparepart[]
   invoice           Invoice?
+  peminjaman_loaner LoanerRecord[]
+  supplier_rma      SupplierRma[]
 }
 
 model Diagnosis {
@@ -165,6 +168,7 @@ model Sparepart {
   brand      Brand?   @relation(fields: [brand_id], references: [id], onDelete: Restrict)
   penggunaan_sparepart PenggunaanSparepart[]
   restock_logs         RestockLog[]
+  supplier_rma         SupplierRma[]
 }
 
 model PenggunaanSparepart {
@@ -258,5 +262,74 @@ model Notification {
 
   user   User? @relation("NotificationRecipient", fields: [user_id], references: [id], onDelete: Cascade)
   sender User? @relation("NotificationSender", fields: [sender_id], references: [id], onDelete: SetNull)
+}
+
+// Feature 6: Unit Pinjaman / Loaner & Backup Device Pool
+model LoanerDevice {
+  id              Int            @id @default(autoincrement())
+  kode_unit       String         @unique @db.VarChar(50) // e.g. "LOAN-01", "TP-T480-A"
+  nama            String         @db.VarChar(150) // e.g. "Lenovo ThinkPad T480"
+  kategori        String         @default("Laptop") // Laptop, Smartphone, Tablet, PC
+  serial_number   String?        @db.VarChar(100)
+  spesifikasi     String?        @db.Text // e.g. "Core i5 8th Gen, RAM 16GB, SSD 256GB"
+  kelengkapan     String?        @db.VarChar(255) // e.g. "Unit + Charger Type-C 65W + Tas"
+  kondisi_fisik   String?        @default("Mulus / Normal") @db.VarChar(255)
+  status          String         @default("tersedia") // tersedia, dipinjam, dalam_perawatan
+  catatan         String?        @db.Text
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  pinjaman        LoanerRecord[]
+}
+
+model LoanerRecord {
+  id                      Int           @id @default(autoincrement())
+  loaner_device_id        Int
+  tiket_id                Int
+  customer_id             Int
+  nomor_peminjaman        String        @unique @db.VarChar(50) // e.g. "LNR-2026-0001"
+  tanggal_pinjam          DateTime      @default(now())
+  estimasi_kembali        DateTime?
+  tanggal_kembali         DateTime?
+  status                  String        @default("aktif") // aktif, dikembalikan
+  deposit_uang            Float         @default(0) // Uang jaminan
+  catatan_kondisi_pinjam  String?       @db.Text
+  catatan_kondisi_kembali String?       @db.Text
+  syarat_ketentuan_acc    Boolean       @default(true)
+  created_by_nama         String?       @db.VarChar(100)
+  diterima_kembali_nama   String?       @db.VarChar(100)
+  created_at              DateTime      @default(now())
+  updated_at              DateTime      @updatedAt
+
+  loaner_device           LoanerDevice  @relation(fields: [loaner_device_id], references: [id], onDelete: Restrict)
+  tiket                   TiketServis   @relation(fields: [tiket_id], references: [id], onDelete: Cascade)
+  customer                Customer      @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+}
+
+// Feature 7: Supplier Part Warranty & RMA Tracker (Klaim Garansi Distributor)
+model SupplierRma {
+  id                  Int          @id @default(autoincrement())
+  nomor_rma           String       @unique @db.VarChar(50) // e.g. "RMA-2026-0001"
+  sparepart_id        Int
+  supplier_nama       String       @db.VarChar(150) // Distributor / Toko (e.g. Toko LCD Bandung, Supplier Mangga Dua)
+  nomor_faktur        String?      @db.VarChar(100) // Nomor nota pembelian awal
+  jumlah              Int          @default(1)
+  alasan_rusak        String       @db.Text // Gejala defek (LCD bergaris, IC short, Baterai drop)
+  foto_kondisi        Json?        // Foto bukti cacat sparepart
+  status              String       @default("diajukan") // diajukan, dikirim, disetujui_ganti, disetujui_refund, ditolak
+  resi_pengiriman     String?      @db.VarChar(100) // Nomor resi kurir
+  kurir_pengiriman    String?      @db.VarChar(100) // JNE, J&T, SiCepat, dll
+  ongkir              Float?       @default(0)
+  solusi_distributor  String?      @db.VarChar(100) // "Ganti Unit Baru", "Refund Dana", "Ditolak / Void"
+  catatan_distributor String?      @db.Text
+  tgl_pengajuan       DateTime     @default(now())
+  tgl_selesai         DateTime?
+  tiket_id            Int?         // Tiket servis sumber ditemukannya defek
+  created_by_nama     String?      @db.VarChar(100)
+  created_at          DateTime     @default(now())
+  updated_at          DateTime     @updatedAt
+
+  sparepart           Sparepart    @relation(fields: [sparepart_id], references: [id], onDelete: Restrict)
+  tiket               TiketServis? @relation(fields: [tiket_id], references: [id], onDelete: SetNull)
 }
 

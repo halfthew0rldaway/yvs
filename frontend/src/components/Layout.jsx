@@ -16,7 +16,9 @@ import {
     User as UserIcon,
     BookOpen,
     Plus,
-    HeartHandshake
+    HeartHandshake,
+    Laptop,
+    RotateCcw
 } from "lucide-react";
 import SopModal from "./SopModal";
 import api from "../services/api";
@@ -29,8 +31,10 @@ const adminMenu = [
     { path: "/customer", label: "Customer", icon: Users },
     { path: "/perangkat", label: "Perangkat", icon: MonitorSmartphone },
     { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
+    { path: "/loaner", label: "Unit Pinjaman", icon: Laptop },
     { path: "/retensi", label: "Retensi & CRM", icon: HeartHandshake },
     { path: "/sparepart", label: "Sparepart", icon: Wrench },
+    { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
     { path: "/invoice", label: "Invoice", icon: FileText },
     { path: "/wiki", label: "Pustaka Wiki", icon: BookOpen },
     { path: "/users", label: "User & Performa", icon: UserCheck },
@@ -39,7 +43,9 @@ const adminMenu = [
 const teknisiMenu = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
+    { path: "/loaner", label: "Unit Pinjaman", icon: Laptop },
     { path: "/sparepart", label: "Sparepart", icon: Wrench },
+    { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
     { path: "/wiki", label: "Pustaka Wiki", icon: BookOpen },
 ];
 

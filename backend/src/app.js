@@ -16,6 +16,8 @@ const brandRoutes = require("./routes/brand.routes");
 const userRoutes = require("./routes/user.routes");
 const repairWikiRoutes = require("./routes/repair-wiki.routes");
 const notificationRoutes = require("./routes/notification.routes");
+const loanerRoutes = require("./routes/loaner.routes");
+const rmaRoutes = require("./routes/rma.routes");
 const activityLogger = require("./middleware/activityLogger");
 
 const app = express();
@@ -45,6 +47,8 @@ app.use("/api/invoice", invoiceRoutes);
 app.use("/api/tracking", trackingRoutes);
 app.use("/api/repair-wiki", repairWikiRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/loaner", loanerRoutes);
+app.use("/api/rma", rmaRoutes);
 
 // Health check
 app.get("/", (req, res) => {
