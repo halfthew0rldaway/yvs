@@ -118,12 +118,15 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     try {
       await _client.dio.put(
         '${ApiConstants.tickets}/${widget.ticketId}',
-        data: {'teknisi_id': currentUser.id},
+        data: {
+          'teknisi_id': currentUser.id,
+          'status': 'didiagnosis',
+        },
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Berhasil mengambil alih tiket perbaikan!'),
+            content: Text('Berhasil mengambil alih tiket! Status kini: Didiagnosis'),
             backgroundColor: AppTheme.success,
           ),
         );
@@ -757,8 +760,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                         padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
                           color: ticket.status == 'dalam_perbaikan'
-                              ? AppTheme.primary.withOpacity(0.12)
-                              : const Color(0xFF16A34A).withOpacity(0.12),
+                              ? AppTheme.primary.withValues(alpha: 0.12)
+                              : const Color(0xFF16A34A).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -1156,7 +1159,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                             Text('Hasil Diagnosis', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                           ],
                         ),
-                        if (ticket.diagnosis == null && isAssignedToMe && ticket.status == 'diterima')
+                        if (ticket.diagnosis == null && isAssignedToMe && (ticket.status == 'diterima' || ticket.status == 'didiagnosis'))
                           TextButton.icon(
                             icon: const Icon(Icons.add, size: 16),
                             label: const Text('Input Diagnosis'),
@@ -1175,16 +1178,63 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       _infoRow('Masalah', ticket.diagnosis!.masalah),
                       _infoRow('Solusi', ticket.diagnosis!.solusi),
                       _infoRow('Estimasi Biaya', CurrencyFormatter.formatRupiah(ticket.diagnosis!.estimasiBiaya)),
+                      if (ticket.status == 'didiagnosis') ...[
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.send_rounded, size: 16),
+                          label: const Text('Selesaikan Diagnosa & Ajukan ke Admin'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accent,
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                          ),
+                          onPressed: _isActionLoading
+                              ? null
+                              : () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      title: const Text('Ajukan Penawaran ke Admin?'),
+                                      content: Text(
+                                        'Hasil diagnosa dan estimasi biaya sebesar ${CurrencyFormatter.formatRupiah(ticket.diagnosis!.estimasiBiaya)} akan diteruskan ke admin untuk proses persetujuan (ACC) pelanggan.',
+                                      ),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+                                          onPressed: () => Navigator.pop(ctx, true),
+                                          child: const Text('Ya, Ajukan ke Admin'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    await _updateStatus('menunggu_persetujuan');
+                                  }
+                                },
+                        ),
+                      ],
                       if (ticket.status == 'menunggu_persetujuan') ...[
                         const SizedBox(height: 10),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.chat, size: 16),
-                          label: const Text('Kirim Hasil Diagnosis via WhatsApp'),
-                          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.success),
-                          onPressed: () {
-                            final link = WhatsAppHelper.generateStatusWaLink(ticket);
-                            if (link != null) WhatsAppHelper.openUrl(link);
-                          },
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFBFDBFE)),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.hourglass_top_rounded, size: 16, color: AppTheme.primary),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Menunggu Konfirmasi & ACC Pelanggan via Admin',
+                                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppTheme.primary),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ] else
@@ -1767,6 +1817,106 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
         ),
         onPressed: _isActionLoading ? null : _takeOverTicket,
       );
+    } else if (isAssignedToMe && (ticket.status == 'diterima' || ticket.status == 'didiagnosis')) {
+      if (ticket.diagnosis == null) {
+        actionButton = ElevatedButton.icon(
+          icon: const Icon(Icons.biotech_outlined, size: 18),
+          label: const Text('Input Hasil Diagnosis & Estimasi'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.primary,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(48),
+          ),
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (_) => DiagnosisModal(ticketId: ticket.id, onSuccess: _refresh),
+            );
+          },
+        );
+      } else {
+        // Diagnosis is already filled! Show button to advance stage to 'menunggu_persetujuan' (Penawaran Admin)
+        actionButton = ElevatedButton.icon(
+          icon: const Icon(Icons.send_rounded, size: 18),
+          label: const Text('Selesaikan Diagnosa & Ajukan ke Admin'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.accent,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(48),
+          ),
+          onPressed: _isActionLoading
+              ? null
+              : () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      title: const Text('Ajukan Penawaran ke Admin?'),
+                      content: Text(
+                        'Hasil diagnosa dan estimasi biaya sebesar ${CurrencyFormatter.formatRupiah(ticket.diagnosis!.estimasiBiaya)} akan diteruskan ke admin untuk proses persetujuan (ACC) pelanggan.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Batal'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Ya, Ajukan ke Admin'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    await _updateStatus('menunggu_persetujuan');
+                  }
+                },
+        );
+      }
+    } else if (isAssignedToMe && ticket.status == 'menunggu_persetujuan') {
+      actionButton = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEFF6FF),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFBFDBFE)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.hourglass_top_rounded, color: AppTheme.primary, size: 18),
+            SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Tahap Penawaran & ACC Admin',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.primary),
+                  ),
+                  Text(
+                    'Admin sedang menghubungi pelanggan untuk konfirmasi biaya. Teknisi akan melanjutkan pengerjaan setelah tiket disetujui.',
+                    style: TextStyle(fontSize: 10.5, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (isAssignedToMe && ticket.status == 'disetujui') {
+      actionButton = ElevatedButton.icon(
+        icon: const Icon(Icons.play_arrow_rounded, size: 20),
+        label: const Text('Mulai Perbaikan Unit'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.indigo,
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(48),
+        ),
+        onPressed: _isActionLoading ? null : () => _updateStatus('dalam_perbaikan'),
+      );
     } else if (isAssignedToMe && ticket.status == 'dalam_perbaikan') {
       actionButton = ElevatedButton.icon(
         icon: const Icon(Icons.verified_outlined, size: 18),
@@ -1787,47 +1937,36 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                 );
               },
       );
-    } else if (isAssignedToMe && ticket.status == 'diterima') {
-      actionButton = ElevatedButton.icon(
-        icon: const Icon(Icons.biotech_outlined, size: 18),
-        label: const Text('Input Hasil Diagnosis & Estimasi'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primary,
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(48),
-        ),
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => DiagnosisModal(ticketId: ticket.id, onSuccess: _refresh),
-          );
-        },
-      );
-    } else if (isAssignedToMe && ticket.status == 'disetujui') {
-      actionButton = ElevatedButton.icon(
-        icon: const Icon(Icons.play_arrow_rounded, size: 20),
-        label: const Text('Mulai Perbaikan Unit'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.indigo,
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(48),
-        ),
-        onPressed: _isActionLoading ? null : () => _updateStatus('dalam_perbaikan'),
-      );
     } else if (ticket.status == 'selesai') {
-      actionButton = ElevatedButton.icon(
-        icon: const Icon(Icons.check_circle_outline, size: 18),
-        label: const Text('Kirim Notifikasi Siap Diambil (WhatsApp)'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF059669),
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(48),
+      actionButton = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0FDF4),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFBBF7D0)),
         ),
-        onPressed: () {
-          final link = WhatsAppHelper.generateStatusWaLink(ticket);
-          if (link != null) WhatsAppHelper.openUrl(link);
-        },
+        child: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 18),
+            SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Perbaikan Selesai (Meja Admin / Kasir)',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF15803D)),
+                  ),
+                  Text(
+                    'Unit telah lulus QC. Penyerahan unit & proses pelunasan kasir dikelola oleh tim admin.',
+                    style: TextStyle(fontSize: 10.5, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       );
     }
 

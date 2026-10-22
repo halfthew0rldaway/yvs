@@ -432,8 +432,11 @@ export default function TiketServisDetail() {
     async function handleTakeOver() {
         if (!user) return;
         try {
-            await api.put(`/tiket-servis/${id}`, { teknisi_id: user.id });
-            toast.success("Berhasil mengambil alih tiket!");
+            await api.put(`/tiket-servis/${id}`, { 
+                teknisi_id: user.id,
+                status: "didiagnosis"
+            });
+            toast.success("Berhasil mengambil alih tiket! Status tiket kini: Didiagnosis");
             setIsTakeOverModalOpen(false);
             fetchTiket();
         } catch (err) {
@@ -687,12 +690,21 @@ export default function TiketServisDetail() {
     const isAssignedToMe = isTeknisi && tiket.teknisi?.id === user?.id;
     const canUpdateStatus = isAdmin || isAssignedToMe;
 
-    // Teknisi hanya boleh mengubah status menjadi "Selesai" (saat tiket sedang "Dalam Perbaikan").
-    // Perubahan status lainnya, seperti "Disetujui" -> "Dalam Perbaikan" harus dilakukan oleh Admin.
+    // Hak Akses Staging Teknisi:
+    // 1. Diterima -> Didiagnosis (via Ambil Alih)
+    // 2. Didiagnosis -> Menunggu Persetujuan (selesaikan diagnosa & teruskan penawaran ke admin)
+    // 3. Disetujui -> Dalam Perbaikan (teknisi mulai eksekusi setelah di-ACC)
+    // 4. Dalam Perbaikan -> Selesai (teknisi verifikasi QC & selesaikan perbaikan)
     let filteredTransitions = allowedTransitions;
     if (isTeknisi && !isAdmin) {
-        const teknisiAllowed = ["selesai"];
-        filteredTransitions = allowedTransitions.filter(s => teknisiAllowed.includes(s));
+        const teknisiAllowedTransitions = {
+            diterima: ["didiagnosis"],
+            didiagnosis: ["menunggu_persetujuan"],
+            disetujui: ["dalam_perbaikan"],
+            dalam_perbaikan: ["selesai"],
+        };
+        const allowedCurrent = teknisiAllowedTransitions[tiket.status] || [];
+        filteredTransitions = allowedTransitions.filter(s => allowedCurrent.includes(s));
     }
 
     return (
@@ -1064,6 +1076,22 @@ export default function TiketServisDetail() {
                             <p className="text-blue-800 font-semibold text-sm">Estimasi Biaya Perbaikan</p>
                             <p className="text-blue-900 font-bold text-xl">{formatRupiah(tiket.diagnosis.estimasi_biaya)}</p>
                         </div>
+                        {tiket.status === "didiagnosis" && (isAdmin || isAssignedToMe) && (
+                            <button
+                                type="button"
+                                onClick={() => handleOpenStatusModal("menunggu_persetujuan")}
+                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <Send className="w-4 h-4" />
+                                <span>Selesaikan Diagnosa & Ajukan Penawaran ke Admin</span>
+                            </button>
+                        )}
+                        {isTeknisi && tiket.status === "menunggu_persetujuan" && (
+                            <div className="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold">
+                                <Clock className="w-4 h-4 text-amber-600" />
+                                <span>Tahap Admin: Menunggu konfirmasi penawaran & persetujuan pelanggan</span>
+                            </div>
+                        )}
                         {isAdmin && tiket.status === "menunggu_persetujuan" && (
                             <button
                                 type="button"
@@ -1072,6 +1100,16 @@ export default function TiketServisDetail() {
                             >
                                 <CheckCircle2 className="w-4 h-4" />
                                 <span>Konfirmasi Persetujuan Pelanggan (ACC)</span>
+                            </button>
+                        )}
+                        {tiket.status === "disetujui" && (isAdmin || isAssignedToMe) && (
+                            <button
+                                type="button"
+                                onClick={() => handleOpenStatusModal("dalam_perbaikan")}
+                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <Play className="w-4 h-4" />
+                                <span>Mulai Perbaikan Unit</span>
                             </button>
                         )}
                     </div>

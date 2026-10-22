@@ -83,12 +83,15 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
     try {
       await _client.dio.put(
         '${ApiConstants.tickets}/${ticket.id}',
-        data: {'teknisi_id': currentUser.id},
+        data: {
+          'teknisi_id': currentUser.id,
+          'status': 'didiagnosis',
+        },
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Tiket #${ticket.nomorTiket} berhasil diambil alih ke meja kerja Anda.'),
+            content: Text('Tiket #${ticket.nomorTiket} berhasil diambil alih! Status: Didiagnosis.'),
             backgroundColor: AppTheme.success,
           ),
         );

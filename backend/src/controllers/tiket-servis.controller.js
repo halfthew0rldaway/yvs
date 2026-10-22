@@ -395,27 +395,36 @@ async function update(req, res) {
                 });
             }
 
-            // RBAC: Teknisi hanya bisa mengubah status menjadi 'selesai' dari 'dalam_perbaikan'
+            // RBAC untuk Teknisi:
+            // 1. diterima -> didiagnosis (ambil alih / claim tiket)
+            // 2. didiagnosis -> menunggu_persetujuan (selesaikan diagnosa & ajukan penawaran ke admin)
+            // 3. disetujui -> dalam_perbaikan (mulai eksekusi perbaikan)
+            // 4. dalam_perbaikan -> selesai (selesaikan perbaikan & verifikasi QC)
             if (req.user.role === "teknisi") {
-                if (status !== "selesai") {
+                const allowedTeknisiTransitions = {
+                    diterima: ["didiagnosis"],
+                    didiagnosis: ["menunggu_persetujuan"],
+                    disetujui: ["dalam_perbaikan"],
+                    dalam_perbaikan: ["selesai"],
+                };
+
+                const allowedForCurrent = allowedTeknisiTransitions[tiket.status] || [];
+                if (!allowedForCurrent.includes(status)) {
                     return res.status(403).json({
-                        message: "Akses ditolak: Teknisi hanya diizinkan memperbarui status ke 'selesai'. Tahap 'dalam_perbaikan' harus dimulai oleh Admin.",
-                    });
-                }
-                if (tiket.status !== "dalam_perbaikan") {
-                    return res.status(403).json({
-                        message: "Akses ditolak: Tiket harus dalam status 'dalam perbaikan' untuk diselesaikan.",
+                        message: `Akses ditolak: Teknisi tidak diizinkan mengubah status dari '${tiket.status}' ke '${status}'. Tahap ini dikelola oleh Admin.`,
                     });
                 }
 
                 // Proteksi: Pastikan teknisi sudah mengisi log perbaikan sebelum menyelesaikan
-                const logPerbaikan = await prisma.logPerbaikan.findFirst({
-                    where: { tiket_id: id, fase: "Perbaikan" }
-                });
-                if (!logPerbaikan) {
-                    return res.status(400).json({
-                        message: "Proteksi: Anda harus menambahkan minimal satu Log Perbaikan sebelum dapat menyelesaikan tiket ini.",
+                if (status === "selesai") {
+                    const logPerbaikan = await prisma.logPerbaikan.findFirst({
+                        where: { tiket_id: id, fase: "Perbaikan" }
                     });
+                    if (!logPerbaikan) {
+                        return res.status(400).json({
+                            message: "Proteksi: Anda harus menambahkan minimal satu Log Perbaikan sebelum dapat menyelesaikan tiket ini.",
+                        });
+                    }
                 }
             }
         }
