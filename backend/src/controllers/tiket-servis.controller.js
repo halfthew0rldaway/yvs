@@ -28,6 +28,7 @@ async function getAll(req, res) {
     try {
         const { status, teknisi_id, search, sortOrder, sla_paket, sla_urgency } = req.query;
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
+        const where = {};
         const andConditions = [];
 
         // Restriksi role Teknisi:
@@ -47,8 +48,12 @@ async function getAll(req, res) {
         }
 
         if (status && status !== "garansi_expiring" && status !== "aktif") {
+            where.status = status;
             andConditions.push({ status });
         } else if (status === "aktif") {
+            where.status = {
+                notIn: ["selesai", "diambil", "dibatalkan"],
+            };
             andConditions.push({
                 status: {
                     notIn: ["selesai", "diambil", "dibatalkan"],
@@ -57,6 +62,10 @@ async function getAll(req, res) {
         } else if (status === "garansi_expiring") {
             const now = new Date();
             const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            where.garansi_berakhir_at = {
+                gte: now,
+                lte: in7days,
+            };
             andConditions.push({
                 garansi_berakhir_at: {
                     gte: now,
@@ -66,6 +75,7 @@ async function getAll(req, res) {
         }
 
         if (sla_paket && sla_paket !== "all") {
+            where.sla_paket = sla_paket;
             andConditions.push({ sla_paket });
         }
 
@@ -75,6 +85,16 @@ async function getAll(req, res) {
             // 2. Fase Pengerjaan: status disetujui/dalam_perbaikan & target_selesai_at < now
             // PENTING: Status 'menunggu_persetujuan' bersifat IDLE/PAUSED (tidak dikenakan penalti overdue)
             const now = new Date();
+            where.OR = [
+                {
+                    status: { in: ["diterima", "didiagnosis"] },
+                    target_pengecekan_at: { lt: now }
+                },
+                {
+                    status: { in: ["disetujui", "dalam_perbaikan"] },
+                    target_selesai_at: { lt: now }
+                }
+            ];
             andConditions.push({
                 OR: [
                     {
@@ -90,6 +110,16 @@ async function getAll(req, res) {
         } else if (sla_urgency === "warning") {
             const now = new Date();
             const in12hours = new Date(Date.now() + 12 * 60 * 60 * 1000);
+            where.OR = [
+                {
+                    status: { in: ["diterima", "didiagnosis"] },
+                    target_pengecekan_at: { gte: now, lte: in12hours }
+                },
+                {
+                    status: { in: ["disetujui", "dalam_perbaikan"] },
+                    target_selesai_at: { gte: now, lte: in12hours }
+                }
+            ];
             andConditions.push({
                 OR: [
                     {
@@ -104,7 +134,19 @@ async function getAll(req, res) {
             });
         }
 
+        if (teknisi_id) {
+            where.teknisi_id = Number(teknisi_id);
+        }
+
         if (search) {
+            where.OR = [
+                { nomor_tiket: { contains: search } },
+                { keluhan: { contains: search } },
+                { perangkat: { customer: { nama: { contains: search } } } },
+                { perangkat: { merek: { contains: search } } },
+                { perangkat: { model: { contains: search } } },
+                { teknisi: { nama: { contains: search } } },
+            ];
             andConditions.push({
                 OR: [
                     { nomor_tiket: { contains: search } },

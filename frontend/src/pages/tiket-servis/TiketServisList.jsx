@@ -243,6 +243,7 @@ export default function TiketServisList() {
                                     : "text-slate-500 hover:text-slate-800"
                             }`}
                         >
+                            Semua Tiket Bengkel
                             Semua (Tugas & Antrean Baru)
                         </button>
                         <button
@@ -257,6 +258,7 @@ export default function TiketServisList() {
                                     : "text-slate-500 hover:text-slate-800"
                             }`}
                         >
+                            Tiket Saya
                             Tiket Saya Saja
                         </button>
                     </div>
