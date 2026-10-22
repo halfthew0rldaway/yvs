@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { 
@@ -47,6 +47,7 @@ const RMA_STATUS_CONFIG = {
 
 export default function RmaList() {
     const { isAdmin, isTeknisi, user } = useAuth();
+    const [searchParams] = useSearchParams();
 
     const [rmaList, setRmaList] = useState([]);
     const [stats, setStats] = useState({ total: 0, diajukan: 0, dikirim: 0, disetujui_ganti: 0, disetujui_refund: 0, ditolak: 0, selesai: 0 });
@@ -96,6 +97,32 @@ export default function RmaList() {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
+    // Reset pagination when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, statusFilter]);
+
+    // Handle deep links from TiketServis or Sparepart catalog
+    useEffect(() => {
+        const action = searchParams.get("action");
+        const sparepartId = searchParams.get("sparepart_id");
+        const tiketId = searchParams.get("tiket_id");
+        const q = searchParams.get("q");
+
+        if (q) {
+            setSearchQuery(q);
+        }
+
+        if (action === "new" || sparepartId || tiketId) {
+            setFormData(prev => ({
+                ...prev,
+                sparepart_id: sparepartId ? String(sparepartId) : prev.sparepart_id,
+                tiket_id: tiketId ? String(tiketId) : prev.tiket_id,
+            }));
+            setIsCreateModalOpen(true);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         fetchRmaList();
@@ -499,6 +526,21 @@ export default function RmaList() {
                         </div>
 
                         <form onSubmit={handleSubmitCreate} className="p-6 space-y-4">
+                            {formData.tiket_id && (
+                                <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs text-blue-800">
+                                    <div className="flex items-center gap-2">
+                                        <Layers className="w-4 h-4 text-blue-600" />
+                                        <span>Terkait dengan Tiket Servis #{formData.tiket_id}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, tiket_id: "" })}
+                                        className="text-blue-600 hover:text-blue-800 font-bold hover:underline cursor-pointer"
+                                    >
+                                        Lepas Kaitan
+                                    </button>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 mb-1">Pilih Suku Cadang yang Rusak *</label>
                                 <select
@@ -857,3 +899,4 @@ export default function RmaList() {
         </div>
     );
 }
+

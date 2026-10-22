@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { 
@@ -39,11 +39,20 @@ function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
 }
 
+function generateLoanWaLink(customer, loanerDevice, record) {
+    if (!customer?.nomor_telepon) return "#";
+    let phone = customer.nomor_telepon.replace(/[^0-9]/g, "");
+    if (phone.startsWith("0")) phone = "62" + phone.substring(1);
+    const text = `Halo Kak ${customer.nama}, kami dari Yangversa Service ingin mengonfirmasi perihal unit pinjaman *[${loanerDevice?.kode_unit}] ${loanerDevice?.nama}* (No. Pinjam: ${record?.nomor_peminjaman || "-"}).\n\nJika ada pertanyaan mengenai unit cadangan atau update progres servis perangkat kakak, silakan hubungi kami ya. Terima kasih!`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
 export default function LoanerList() {
     const { isAdmin, isTeknisi, user } = useAuth();
+    const [searchParams] = useSearchParams();
     
     // Main View Tab: "devices" (Unit Pool) | "records" (Histori & Pinjaman Aktif)
-    const [activeTab, setActiveTab] = useState("devices");
+    const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") === "records" ? "records" : "devices");
 
     // Device Pool States
     const [devices, setDevices] = useState([]);
@@ -119,6 +128,29 @@ export default function LoanerList() {
             fetchRecords();
         }
     }, [activeTab, recordStatusFilter]);
+
+    // Reset pagination to page 1 whenever filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, deviceSearch, deviceStatusFilter, deviceKategoriFilter, recordSearch, recordStatusFilter]);
+
+    // Handle deep links from TiketServisDetail (e.g. /loaner?action=new&tiket_id=12)
+    useEffect(() => {
+        const action = searchParams.get("action");
+        const tiketId = searchParams.get("tiket_id");
+        const tab = searchParams.get("tab");
+        const q = searchParams.get("q");
+
+        if (tab === "records") {
+            setActiveTab("records");
+        }
+        if (q) {
+            setRecordSearch(q);
+        }
+        if (action === "new" || tiketId) {
+            handleOpenLoanModal(null, tiketId);
+        }
+    }, [searchParams]);
 
     async function fetchDevices() {
         setLoadingDevices(true);
@@ -269,14 +301,14 @@ export default function LoanerList() {
     }
 
     // Handle Loan Form
-    function handleOpenLoanModal(device = null) {
+    function handleOpenLoanModal(device = null, targetTiketId = null) {
         setPreselectedDevice(device);
         const estDate = new Date();
         estDate.setDate(estDate.getDate() + 3); // Default 3 hari ke depan
 
         setLoanForm({
             loaner_device_id: device ? String(device.id) : (devices.find(d => d.status === "tersedia")?.id || ""),
-            tiket_id: "",
+            tiket_id: targetTiketId ? String(targetTiketId) : "",
             estimasi_kembali: estDate.toISOString().split("T")[0],
             deposit_uang: "0",
             catatan_kondisi_pinjam: device?.kondisi_fisik || "Fungsi normal, OS siap pakai, tidak ada lecet parah",
@@ -597,10 +629,23 @@ export default function LoanerList() {
                                                         </span>
                                                     ) : d.status === "dipinjam" ? (
                                                         <div>
-                                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                                                <Clock className="w-3.5 h-3.5" />
-                                                                Dipinjam ({activeLoan?.customer?.nama || "Pelanggan"})
-                                                            </span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                                    <Clock className="w-3.5 h-3.5" />
+                                                                    Dipinjam ({activeLoan?.customer?.nama || "Pelanggan"})
+                                                                </span>
+                                                                {activeLoan?.customer?.nomor_telepon && (
+                                                                    <a
+                                                                        href={generateLoanWaLink(activeLoan.customer, d, activeLoan)}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="p-1 rounded-md text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors inline-flex items-center"
+                                                                        title={`Chat WhatsApp (${activeLoan.customer.nomor_telepon})`}
+                                                                    >
+                                                                        <MessageCircle className="w-3.5 h-3.5" />
+                                                                    </a>
+                                                                )}
+                                                            </div>
                                                             {activeLoan?.tiket && (
                                                                 <Link 
                                                                     to={`/tiket-servis/${activeLoan.tiket.id}`} 
@@ -757,7 +802,20 @@ export default function LoanerList() {
                                             </td>
 
                                             <td className="px-6 py-4">
-                                                <div className="font-medium text-slate-900">{r.customer?.nama}</div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-semibold text-slate-900">{r.customer?.nama}</span>
+                                                    {r.customer?.nomor_telepon && (
+                                                        <a
+                                                            href={generateLoanWaLink(r.customer, r.loaner_device, r)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-1 rounded-md text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors inline-flex items-center"
+                                                            title={`Chat WhatsApp (${r.customer.nomor_telepon})`}
+                                                        >
+                                                            <MessageCircle className="w-3.5 h-3.5" />
+                                                        </a>
+                                                    )}
+                                                </div>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     <Link to={`/tiket-servis/${r.tiket?.id}`} className="text-xs text-blue-600 hover:underline font-mono">
                                                         {r.tiket?.nomor_tiket}
@@ -772,9 +830,14 @@ export default function LoanerList() {
                                                         ? `Batas: ${new Date(r.estimasi_kembali).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}`
                                                         : "Tanpa batas waktu"}
                                                 </div>
-                                                <p className="text-slate-500 mt-0.5">
-                                                    Deposit: {r.deposit_uang > 0 ? formatRupiah(r.deposit_uang) : "Tanpa Deposit"}
-                                                </p>
+                                                <div className="flex items-center gap-1.5 text-slate-500 mt-0.5">
+                                                    <span>Deposit: {r.deposit_uang > 0 ? formatRupiah(r.deposit_uang) : "Tanpa Deposit"}</span>
+                                                    {r.deposit_uang > 0 && (
+                                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${r.deposit_dikembalikan ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                            {r.deposit_dikembalikan ? 'Dikembalikan' : 'Ditahan'}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
 
                                             <td className="px-6 py-4">
@@ -1320,3 +1383,4 @@ export default function LoanerList() {
         </div>
     );
 }
+

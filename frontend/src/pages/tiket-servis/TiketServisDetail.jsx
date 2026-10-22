@@ -881,7 +881,7 @@ export default function TiketServisDetail() {
                         </div>
                     </div>
                     <Link
-                        to="/loaner"
+                        to={`/loaner?tab=records&q=${encodeURIComponent(activeLoan?.nomor_peminjaman || '')}`}
                         className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shrink-0 whitespace-nowrap"
                     >
                         Buka Menu Pinjaman →
@@ -1104,7 +1104,10 @@ export default function TiketServisDetail() {
                                     <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1 text-xs">
                                         <div className="flex items-center justify-between">
                                             <span className="font-bold text-slate-900 font-mono">[{activeLoan.loaner_device?.kode_unit}] {activeLoan.loaner_device?.nama}</span>
-                                            <Link to="/loaner" className="text-blue-600 font-bold hover:underline text-[11px]">
+                                            <Link 
+                                                to={`/loaner?tab=records&q=${encodeURIComponent(activeLoan.nomor_peminjaman || '')}`} 
+                                                className="text-blue-600 font-bold hover:underline text-[11px]"
+                                            >
                                                 Kelola Pinjaman →
                                             </Link>
                                         </div>
@@ -1122,7 +1125,7 @@ export default function TiketServisDetail() {
                                     <div className="flex items-center justify-between gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs">
                                         <span className="text-slate-500 text-xs">Pelanggan belum meminjam unit cadangan.</span>
                                         <Link
-                                            to="/loaner"
+                                            to={`/loaner?action=new&tiket_id=${tiket.id}`}
                                             className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline shrink-0"
                                         >
                                             + Pinjamkan Unit
@@ -1422,7 +1425,7 @@ export default function TiketServisDetail() {
                                                 <td className="py-3 px-4 text-center">
                                                     <div className="flex items-center justify-center gap-1">
                                                         <Link
-                                                            to="/rma"
+                                                            to={`/rma?action=new&sparepart_id=${ps.sparepart_id}&tiket_id=${tiket.id}`}
                                                             className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center justify-center"
                                                             title="Klaim Retur Garansi Distributor (RMA)"
                                                         >

@@ -35,32 +35,32 @@ const newGenerationBlock = `
     ];
 
     const kelengkapanList = [
-        "Membawa adaptor original, tas hitam bawaan, dus tidak ada.",
-        "Hanya unit laptop saja.",
-        "Lengkap dengan dus, charger, dan kartu garansi mati.",
-        "Unit PC Desktop beserta kabel power hitam.",
-        "Laptop, charger replacement, softcase abu-abu.",
-        "Unit dan charger original, kabel sedikit terkelupas di ujung.",
-        "PC Desktop lengkap dengan dus (baru dibeli 2 tahun lalu).",
-        "Laptop, charger, dan mouse wireless (dongle menancap)."
-    ];
+            "Membawa adaptor original, tas hitam bawaan, dus tidak ada.",
+            "Hanya unit laptop saja.",
+            "Lengkap dengan dus, charger, dan kartu garansi mati.",
+            "Unit PC Desktop beserta kabel power hitam.",
+            "Laptop, charger replacement, softcase abu-abu.",
+            "Unit dan charger original, kabel sedikit terkelupas di ujung.",
+            "PC Desktop lengkap dengan dus (baru dibeli 2 tahun lalu).",
+            "Laptop, charger, dan mouse wireless (dongle menancap)."
+        ];
 
-    // Buat 15 Tiket secara dinamis
-    for (let i = 0; i < 15; i++) {
-        const statusIdx = Math.floor(Math.random() * statusList.length);
-        const status = statusList[statusIdx];
-        
-        // Diterima bisa tidak ada teknisi
-        let teknisi_id = null;
-        if (status !== "diterima") {
-            teknisi_id = teknisis[Math.floor(Math.random() * teknisis.length)].id;
-        }
+        // Buat 15 Tiket secara dinamis
+        for (let i = 0; i < 15; i++) {
+            const statusIdx = Math.floor(Math.random() * statusList.length);
+            const status = statusList[statusIdx];
+            
+            // Diterima bisa tidak ada teknisi
+            let teknisi_id = null;
+            if (status !== "diterima") {
+                teknisi_id = teknisis[Math.floor(Math.random() * teknisis.length)].id;
+            }
 
-        const perangkat = perangkats[i % perangkats.length];
-        
-        // Dummy photos using Picsum with random seeds
-        const foto_kondisi = JSON.stringify([
-            \`https://picsum.photos/seed/servio_ticket_\${i}_1/800/600\`,
+            const perangkat = perangkats[i % perangkats.length];
+            
+            // Dummy photos using Picsum with random seeds
+            const foto_kondisi = JSON.stringify([
+                \`https://picsum.photos/seed/servio_ticket_\${i}_1/800/600\`,
             \`https://picsum.photos/seed/servio_ticket_\${i}_2/800/600\`
         ]);
 

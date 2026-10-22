@@ -30,3 +30,4 @@ router.post("/records", authorize("admin", "teknisi"), createRecord);
 router.put("/records/:id/return", authorize("admin", "teknisi"), returnRecord);
 
 module.exports = router;
+

@@ -142,34 +142,54 @@ async function create(req, res) {
             return res.status(404).json({ message: "Suku cadang tidak ditemukan" });
         }
 
-        // Generate nomor RMA: RMA-YYYYMM-XXXX
+        // Generate nomor RMA unik & robust: RMA-YYYYMM-XXXX
         const now = new Date();
         const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
-        const countThisMonth = await prisma.supplierRma.count();
-        const nomor_rma = `RMA-${yearMonth}-${String(countThisMonth + 1).padStart(4, "0")}`;
+        const latestRma = await prisma.supplierRma.findFirst({
+            where: { nomor_rma: { startsWith: `RMA-${yearMonth}-` } },
+            orderBy: { id: "desc" }
+        });
+        let nextNum = 1;
+        if (latestRma && latestRma.nomor_rma) {
+            const parts = latestRma.nomor_rma.split("-");
+            const lastSeq = parseInt(parts[parts.length - 1], 10);
+            if (!isNaN(lastSeq)) nextNum = lastSeq + 1;
+        }
+        const nomor_rma = `RMA-${yearMonth}-${String(nextNum).padStart(4, "0")}`;
 
         const initialStatus = resi_pengiriman ? "dikirim" : "diajukan";
+        const qtyKlaim = parseInt(jumlah) || 1;
 
-        const rma = await prisma.supplierRma.create({
-            data: {
-                nomor_rma,
-                sparepart_id: sparepart.id,
-                supplier_nama: supplier_nama.trim(),
-                nomor_faktur: nomor_faktur ? nomor_faktur.trim() : null,
-                jumlah: parseInt(jumlah) || 1,
-                alasan_rusak: alasan_rusak.trim(),
-                foto_kondisi: foto_kondisi ? JSON.stringify(foto_kondisi) : null,
-                status: initialStatus,
-                resi_pengiriman: resi_pengiriman ? resi_pengiriman.trim() : null,
-                kurir_pengiriman: kurir_pengiriman ? kurir_pengiriman.trim() : null,
-                ongkir: parseFloat(ongkir || 0),
-                tiket_id: tiket_id ? parseInt(tiket_id) : null,
-                created_by_nama: req.user.nama
-            },
-            include: {
-                sparepart: { include: { brand: true } },
-                tiket: true
+        // Jika diajukan dari stok gudang (bukan dari tiket servis), pisahkan/kurangi part cacat dari stok aktif
+        const rma = await prisma.$transaction(async (tx) => {
+            if (!tiket_id && sparepart.stok >= qtyKlaim) {
+                await tx.sparepart.update({
+                    where: { id: sparepart.id },
+                    data: { stok: { decrement: qtyKlaim } }
+                });
             }
+
+            return await tx.supplierRma.create({
+                data: {
+                    nomor_rma,
+                    sparepart_id: sparepart.id,
+                    supplier_nama: supplier_nama.trim(),
+                    nomor_faktur: nomor_faktur ? nomor_faktur.trim() : null,
+                    jumlah: qtyKlaim,
+                    alasan_rusak: alasan_rusak.trim(),
+                    foto_kondisi: foto_kondisi ? JSON.stringify(foto_kondisi) : null,
+                    status: initialStatus,
+                    resi_pengiriman: resi_pengiriman ? resi_pengiriman.trim() : null,
+                    kurir_pengiriman: kurir_pengiriman ? kurir_pengiriman.trim() : null,
+                    ongkir: parseFloat(ongkir || 0),
+                    tiket_id: tiket_id ? parseInt(tiket_id) : null,
+                    created_by_nama: req.user.nama
+                },
+                include: {
+                    sparepart: { include: { brand: true } },
+                    tiket: true
+                }
+            });
         });
 
         // Audit Log
@@ -234,13 +254,28 @@ async function update(req, res) {
         const isFinishing = ["disetujui_ganti", "disetujui_refund", "ditolak"].includes(status);
         const tgl_selesai = isFinishing ? (rma.tgl_selesai || new Date()) : null;
 
-        // Jika disetujui ganti unit baru dan restock_otomatis dicentang, tambahkan stok
+        // Jika disetujui ganti unit baru dan restock_otomatis dicentang, tambahkan stok & buat audit log
         let updateStokPromise = null;
+        let createRestockLogPromise = null;
+
         if (status === "disetujui_ganti" && rma.status !== "disetujui_ganti" && restock_otomatis) {
             updateStokPromise = prisma.sparepart.update({
                 where: { id: rma.sparepart_id },
                 data: {
                     stok: { increment: rma.jumlah }
+                }
+            });
+
+            createRestockLogPromise = prisma.restockLog.create({
+                data: {
+                    sparepart_id: rma.sparepart_id,
+                    supplier_nama: supplier_nama || rma.supplier_nama,
+                    jumlah_masuk: rma.jumlah,
+                    harga_beli_pcs: rma.sparepart?.harga_beli || 0,
+                    nomor_faktur: rma.nomor_rma,
+                    catatan: `Penggantian garansi distributor (Klaim RMA: ${rma.nomor_rma})`,
+                    user_id: req.user.id,
+                    user_nama: req.user.nama
                 }
             });
         }
@@ -266,10 +301,11 @@ async function update(req, res) {
             }
         });
 
-        const results = updateStokPromise
-            ? await prisma.$transaction([updateRmaPromise, updateStokPromise])
-            : [await updateRmaPromise];
+        const txPromises = [updateRmaPromise];
+        if (updateStokPromise) txPromises.push(updateStokPromise);
+        if (createRestockLogPromise) txPromises.push(createRestockLogPromise);
 
+        const results = await prisma.$transaction(txPromises);
         const updated = results[0];
 
         // Audit Log
@@ -333,3 +369,4 @@ module.exports = {
     update,
     remove
 };
+

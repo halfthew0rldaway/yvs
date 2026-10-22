@@ -151,6 +151,16 @@ async function updateDevice(req, res) {
             return res.status(404).json({ message: "Unit pinjaman tidak ditemukan" });
         }
 
+        // Cek jika kode_unit diubah, pastikan tidak duplikat
+        if (kode_unit && kode_unit.trim() !== device.kode_unit) {
+            const dup = await prisma.loanerDevice.findUnique({
+                where: { kode_unit: kode_unit.trim() }
+            });
+            if (dup) {
+                return res.status(400).json({ message: `Kode unit "${kode_unit}" sudah digunakan perangkat lain` });
+            }
+        }
+
         // Jika mengubah status ke tersedia padahal masih ada pinjaman aktif
         if (status === "tersedia" && device.status === "dipinjam") {
             const activeLoan = await prisma.loanerRecord.findFirst({
@@ -339,17 +349,33 @@ async function createRecord(req, res) {
             });
         }
 
-        // Generate nomor peminjaman unik: LNR-YYYYMM-XXXX
+        // Generate nomor peminjaman unik & robust: LNR-YYYYMM-XXXX
         const now = new Date();
         const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
-        const countThisMonth = await prisma.loanerRecord.count();
-        const nomor_peminjaman = `LNR-${yearMonth}-${String(countThisMonth + 1).padStart(4, "0")}`;
+        const latestRecord = await prisma.loanerRecord.findFirst({
+            where: { nomor_peminjaman: { startsWith: `LNR-${yearMonth}-` } },
+            orderBy: { id: "desc" }
+        });
+        let nextNum = 1;
+        if (latestRecord && latestRecord.nomor_peminjaman) {
+            const parts = latestRecord.nomor_peminjaman.split("-");
+            const lastSeq = parseInt(parts[parts.length - 1], 10);
+            if (!isNaN(lastSeq)) nextNum = lastSeq + 1;
+        }
+        const nomor_peminjaman = `LNR-${yearMonth}-${String(nextNum).padStart(4, "0")}`;
 
-        // Transaksi simpan record & update status unit
-        const [record] = await prisma.$transaction([
-            prisma.loanerRecord.create({
+        // Transaksi interaktif: verifikasi status unit secara atomik & update status
+        const record = await prisma.$transaction(async (tx) => {
+            const targetDev = await tx.loanerDevice.findUnique({
+                where: { id: device.id }
+            });
+            if (!targetDev || targetDev.status !== "tersedia") {
+                throw new Error(`Unit ${device.kode_unit} sudah tidak tersedia untuk dipinjam.`);
+            }
+
+            const created = await tx.loanerRecord.create({
                 data: {
-                    loaner_device_id: device.id,
+                    loaner_device_id: targetDev.id,
                     tiket_id: tiket.id,
                     customer_id: tiket.perangkat.customer_id,
                     nomor_peminjaman,
@@ -357,7 +383,8 @@ async function createRecord(req, res) {
                     estimasi_kembali: estimasi_kembali ? new Date(estimasi_kembali) : null,
                     status: "aktif",
                     deposit_uang: parseFloat(deposit_uang || 0),
-                    catatan_kondisi_pinjam: catatan_kondisi_pinjam || device.kondisi_fisik || "Normal / Mulus",
+                    deposit_dikembalikan: false,
+                    catatan_kondisi_pinjam: catatan_kondisi_pinjam || targetDev.kondisi_fisik || "Normal / Mulus",
                     syarat_ketentuan_acc: syarat_ketentuan_acc !== false,
                     created_by_nama: req.user.nama
                 },
@@ -366,12 +393,15 @@ async function createRecord(req, res) {
                     customer: true,
                     tiket: true
                 }
-            }),
-            prisma.loanerDevice.update({
-                where: { id: device.id },
+            });
+
+            await tx.loanerDevice.update({
+                where: { id: targetDev.id },
                 data: { status: "dipinjam" }
-            })
-        ]);
+            });
+
+            return created;
+        });
 
         // Audit Log
         await prisma.activityLog.create({
@@ -386,7 +416,7 @@ async function createRecord(req, res) {
         res.status(201).json(record);
     } catch (err) {
         console.error("Gagal membuat peminjaman unit:", err);
-        res.status(500).json({ message: "Gagal membuat peminjaman unit" });
+        res.status(500).json({ message: err.message || "Gagal membuat peminjaman unit" });
     }
 }
 
@@ -426,6 +456,7 @@ async function returnRecord(req, res) {
                 data: {
                     status: "dikembalikan",
                     tanggal_kembali: now,
+                    deposit_dikembalikan: deposit_dikembalikan !== false,
                     catatan_kondisi_kembali: catatan_kondisi_kembali || "Dikembalikan dalam kondisi baik & lengkap",
                     diterima_kembali_nama: req.user.nama
                 },
@@ -469,3 +500,4 @@ module.exports = {
     createRecord,
     returnRecord
 };
+

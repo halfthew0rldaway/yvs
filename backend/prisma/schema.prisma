@@ -293,6 +293,7 @@ model LoanerRecord {
   tanggal_kembali         DateTime?
   status                  String        @default("aktif") // aktif, dikembalikan
   deposit_uang            Float         @default(0) // Uang jaminan
+  deposit_dikembalikan    Boolean       @default(false) // Status pengembalian deposit
   catatan_kondisi_pinjam  String?       @db.Text
   catatan_kondisi_kembali String?       @db.Text
   syarat_ketentuan_acc    Boolean       @default(true)
