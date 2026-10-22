@@ -28,25 +28,45 @@ async function getAll(req, res) {
     try {
         const { status, teknisi_id, search, sortOrder, sla_paket, sla_urgency } = req.query;
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
-        const where = {};
+        const andConditions = [];
+
+        // Restriksi role Teknisi:
+        // Teknisi HANYA boleh melihat:
+        // 1. Tiket yang sedang ditangani oleh dirinya sendiri (teknisi_id === req.user.id)
+        // 2. Tiket baru dengan status 'diterima' yang belum di-assign ke siapapun (status: 'diterima', teknisi_id: null)
+        // Tiket yang ditangani oleh teknisi lain TIDAK PERNAH dimasukkan ke list.
+        if (req.user?.role === "teknisi") {
+            andConditions.push({
+                OR: [
+                    { teknisi_id: req.user.id },
+                    { status: "diterima", teknisi_id: null }
+                ]
+            });
+        } else if (teknisi_id) {
+            andConditions.push({ teknisi_id: Number(teknisi_id) });
+        }
 
         if (status && status !== "garansi_expiring" && status !== "aktif") {
-            where.status = status;
+            andConditions.push({ status });
         } else if (status === "aktif") {
-            where.status = {
-                notIn: ["selesai", "diambil", "dibatalkan"],
-            };
+            andConditions.push({
+                status: {
+                    notIn: ["selesai", "diambil", "dibatalkan"],
+                }
+            });
         } else if (status === "garansi_expiring") {
             const now = new Date();
             const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-            where.garansi_berakhir_at = {
-                gte: now,
-                lte: in7days,
-            };
+            andConditions.push({
+                garansi_berakhir_at: {
+                    gte: now,
+                    lte: in7days,
+                }
+            });
         }
 
         if (sla_paket && sla_paket !== "all") {
-            where.sla_paket = sla_paket;
+            andConditions.push({ sla_paket });
         }
 
         if (sla_urgency === "overdue") {
@@ -55,45 +75,49 @@ async function getAll(req, res) {
             // 2. Fase Pengerjaan: status disetujui/dalam_perbaikan & target_selesai_at < now
             // PENTING: Status 'menunggu_persetujuan' bersifat IDLE/PAUSED (tidak dikenakan penalti overdue)
             const now = new Date();
-            where.OR = [
-                {
-                    status: { in: ["diterima", "didiagnosis"] },
-                    target_pengecekan_at: { lt: now }
-                },
-                {
-                    status: { in: ["disetujui", "dalam_perbaikan"] },
-                    target_selesai_at: { lt: now }
-                }
-            ];
+            andConditions.push({
+                OR: [
+                    {
+                        status: { in: ["diterima", "didiagnosis"] },
+                        target_pengecekan_at: { lt: now }
+                    },
+                    {
+                        status: { in: ["disetujui", "dalam_perbaikan"] },
+                        target_selesai_at: { lt: now }
+                    }
+                ]
+            });
         } else if (sla_urgency === "warning") {
             const now = new Date();
             const in12hours = new Date(Date.now() + 12 * 60 * 60 * 1000);
-            where.OR = [
-                {
-                    status: { in: ["diterima", "didiagnosis"] },
-                    target_pengecekan_at: { gte: now, lte: in12hours }
-                },
-                {
-                    status: { in: ["disetujui", "dalam_perbaikan"] },
-                    target_selesai_at: { gte: now, lte: in12hours }
-                }
-            ];
-        }
-
-        if (teknisi_id) {
-            where.teknisi_id = Number(teknisi_id);
+            andConditions.push({
+                OR: [
+                    {
+                        status: { in: ["diterima", "didiagnosis"] },
+                        target_pengecekan_at: { gte: now, lte: in12hours }
+                    },
+                    {
+                        status: { in: ["disetujui", "dalam_perbaikan"] },
+                        target_selesai_at: { gte: now, lte: in12hours }
+                    }
+                ]
+            });
         }
 
         if (search) {
-            where.OR = [
-                { nomor_tiket: { contains: search } },
-                { keluhan: { contains: search } },
-                { perangkat: { customer: { nama: { contains: search } } } },
-                { perangkat: { merek: { contains: search } } },
-                { perangkat: { model: { contains: search } } },
-                { teknisi: { nama: { contains: search } } },
-            ];
+            andConditions.push({
+                OR: [
+                    { nomor_tiket: { contains: search } },
+                    { keluhan: { contains: search } },
+                    { perangkat: { customer: { nama: { contains: search } } } },
+                    { perangkat: { merek: { contains: search } } },
+                    { perangkat: { model: { contains: search } } },
+                    { teknisi: { nama: { contains: search } } },
+                ]
+            });
         }
+
+        const where = andConditions.length > 0 ? { AND: andConditions } : {};
 
         const orderDirection = sortOrder === "asc" ? "asc" : "desc";
         const orderBy = [{ created_at: orderDirection }, { id: orderDirection }];
@@ -123,6 +147,15 @@ async function getAll(req, res) {
         const now = new Date();
         const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
+        const countBase = req.user?.role === "teknisi"
+            ? {
+                OR: [
+                    { teknisi_id: req.user.id },
+                    { status: "diterima", teknisi_id: null }
+                ]
+            }
+            : {};
+
         const [total, tikets, unassignedCount, expiringWarrantyCount, expressCount, overdueCount] = await Promise.all([
             prisma.tiketServis.count({ where }),
             prisma.tiketServis.findMany({
@@ -135,6 +168,7 @@ async function getAll(req, res) {
             prisma.tiketServis.count({ where: { status: "diterima", teknisi_id: null } }),
             prisma.tiketServis.count({
                 where: {
+                    ...countBase,
                     garansi_berakhir_at: {
                         gte: now,
                         lte: in7days,
@@ -143,12 +177,14 @@ async function getAll(req, res) {
             }),
             prisma.tiketServis.count({
                 where: {
+                    ...countBase,
                     status: { notIn: ["selesai", "diambil", "dibatalkan"] },
                     sla_paket: "express"
                 }
             }),
             prisma.tiketServis.count({
                 where: {
+                    ...countBase,
                     OR: [
                         {
                             status: { in: ["diterima", "didiagnosis"] },
@@ -214,6 +250,18 @@ async function getById(req, res) {
 
         if (!tiket) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        }
+
+        // Restriksi role Teknisi:
+        // Hanya boleh membuka detail tiket yang:
+        // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
+        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        if (req.user?.role === "teknisi") {
+            const isMyTicket = tiket.teknisi_id === req.user.id;
+            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            if (!isMyTicket && !isUnassignedPool) {
+                return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
+            }
         }
 
         return res.json({
@@ -384,6 +432,18 @@ async function update(req, res) {
         const tiket = await prisma.tiketServis.findUnique({ where: { id } });
         if (!tiket) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        }
+
+        // Restriksi role Teknisi:
+        // Hanya boleh membuka detail tiket yang:
+        // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
+        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        if (req.user?.role === "teknisi") {
+            const isMyTicket = tiket.teknisi_id === req.user.id;
+            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            if (!isMyTicket && !isUnassignedPool) {
+                return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
+            }
         }
 
         // Validasi transisi status
@@ -582,6 +642,18 @@ async function updateDefectMap(req, res) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
         }
 
+        // Restriksi role Teknisi:
+        // Hanya boleh membuka detail tiket yang:
+        // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
+        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        if (req.user?.role === "teknisi") {
+            const isMyTicket = tiket.teknisi_id === req.user.id;
+            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            if (!isMyTicket && !isUnassignedPool) {
+                return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
+            }
+        }
+
         const parsedDefectMap = typeof defect_map === 'string' ? JSON.parse(defect_map) : defect_map;
 
         const updated = await prisma.tiketServis.update({
@@ -605,6 +677,18 @@ async function updateReminder(req, res) {
         const tiket = await prisma.tiketServis.findUnique({ where: { id } });
         if (!tiket) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        }
+
+        // Restriksi role Teknisi:
+        // Hanya boleh membuka detail tiket yang:
+        // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
+        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        if (req.user?.role === "teknisi") {
+            const isMyTicket = tiket.teknisi_id === req.user.id;
+            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            if (!isMyTicket && !isUnassignedPool) {
+                return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
+            }
         }
 
         const updated = await prisma.tiketServis.update({
@@ -734,6 +818,18 @@ async function markWarrantyFollowUp(req, res) {
         const tiket = await prisma.tiketServis.findUnique({ where: { id } });
         if (!tiket) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        }
+
+        // Restriksi role Teknisi:
+        // Hanya boleh membuka detail tiket yang:
+        // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
+        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        if (req.user?.role === "teknisi") {
+            const isMyTicket = tiket.teknisi_id === req.user.id;
+            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            if (!isMyTicket && !isUnassignedPool) {
+                return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
+            }
         }
 
         // Catat follow-up ke ActivityLog dan LogPerbaikan tanpa merusak counter pengingat pengambilan barang
@@ -872,6 +968,18 @@ async function markMaintenanceFollowUp(req, res) {
 
         if (!tiket) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        }
+
+        // Restriksi role Teknisi:
+        // Hanya boleh membuka detail tiket yang:
+        // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
+        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        if (req.user?.role === "teknisi") {
+            const isMyTicket = tiket.teknisi_id === req.user.id;
+            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            if (!isMyTicket && !isUnassignedPool) {
+                return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
+            }
         }
 
         await prisma.activityLog.create({
