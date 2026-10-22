@@ -18,6 +18,67 @@ class TicketCard extends StatelessWidget {
     this.onTakeOver,
   });
 
+  String? _getActiveDurationText() {
+    if (ticket.status == 'dalam_perbaikan') {
+      DateTime? startTime;
+      if (ticket.logPerbaikan != null && ticket.logPerbaikan!.isNotEmpty) {
+        final repairLogs =
+            ticket.logPerbaikan!.where((l) => l.fase == 'Perbaikan').toList();
+        if (repairLogs.isNotEmpty && repairLogs.first.createdAt != null) {
+          startTime = DateTime.tryParse(repairLogs.first.createdAt!);
+        }
+      }
+      startTime ??= ticket.createdAt != null
+          ? DateTime.tryParse(ticket.createdAt!)
+          : null;
+
+      if (startTime != null) {
+        final elapsed = DateTime.now().difference(startTime);
+        if (elapsed.inMinutes < 60) {
+          return 'Pengerjaan: ${elapsed.inMinutes} mnt';
+        } else if (elapsed.inHours < 24) {
+          final hours = elapsed.inHours;
+          final mins = elapsed.inMinutes % 60;
+          return 'Pengerjaan: ${hours}j ${mins}m';
+        } else {
+          final days = elapsed.inDays;
+          final hours = elapsed.inHours % 24;
+          return 'Pengerjaan: ${days}h ${hours}j';
+        }
+      }
+    } else if (ticket.status == 'disetujui') {
+      return 'Siap Dieksekusi';
+    }
+    return null;
+  }
+
+  String? _getSlaRemainingText() {
+    if (ticket.targetSelesaiAt == null ||
+        ticket.status == 'selesai' ||
+        ticket.status == 'diambil' ||
+        ticket.status == 'dibatalkan') {
+      return null;
+    }
+    try {
+      final target = DateTime.parse(ticket.targetSelesaiAt!);
+      final diff = target.difference(DateTime.now());
+      if (diff.isNegative) {
+        final overdueMins = diff.inMinutes.abs();
+        if (overdueMins < 60) return 'Terlewat ${overdueMins}m';
+        final overdueHours = diff.inHours.abs();
+        return 'Terlewat ${overdueHours}j';
+      } else {
+        if (diff.inMinutes < 60) return 'Sisa SLA: ${diff.inMinutes}m';
+        final hours = diff.inHours;
+        final mins = diff.inMinutes % 60;
+        if (hours < 24) return 'Sisa SLA: ${hours}j ${mins}m';
+        return 'Sisa SLA: ${diff.inDays}h';
+      }
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final device = ticket.perangkat;
@@ -220,6 +281,69 @@ class TicketCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
+
+                // Active Repair / Ready Duration Banner
+                Builder(
+                  builder: (_) {
+                    final activeDuration = _getActiveDurationText();
+                    final slaRemaining = _getSlaRemainingText();
+                    if (activeDuration == null) return const SizedBox.shrink();
+
+                    final isRepairing = ticket.status == 'dalam_perbaikan';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: isRepairing ? const Color(0xFFEFF6FF) : const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: isRepairing ? const Color(0xFFBFDBFE) : const Color(0xFFBBF7D0),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isRepairing ? Icons.play_circle_outline_rounded : Icons.task_alt_rounded,
+                              size: 13,
+                              color: isRepairing ? AppTheme.primary : const Color(0xFF16A34A),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              activeDuration,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: isRepairing ? AppTheme.primary : const Color(0xFF15803D),
+                              ),
+                            ),
+                            if (slaRemaining != null) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                width: 3,
+                                height: 3,
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.textMuted,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                slaRemaining,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: ticket.isOverdue ? AppTheme.error : AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
 
                 // Issue summary
                 Container(

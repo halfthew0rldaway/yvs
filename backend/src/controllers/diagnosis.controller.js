@@ -24,13 +24,20 @@ async function create(req, res) {
             }
         }
 
-        // Pastikan teknisi sudah mengisi log diagnosis jika role teknisi
+        // Pastikan teknisi memiliki log diagnosis; jika belum ada, otomatis buatkan dari catatan diagnosis
         if (req.user.role === "teknisi") {
             const logDiagnosis = await prisma.logPerbaikan.findFirst({
                 where: { tiket_id: Number(tiket_id), fase: "Diagnosis" }
             });
             if (!logDiagnosis) {
-                return res.status(400).json({ message: "Proteksi: Anda harus menambahkan minimal satu Log Perbaikan (Catatan Diagnosis) terlebih dahulu sebelum menyimpan hasil akhir diagnosis." });
+                const catatanLog = req.body.catatan_diagnosis || `Diagnosa Awal: ${masalah}. Rencana Tindakan: ${solusi}`;
+                await prisma.logPerbaikan.create({
+                    data: {
+                        tiket_id: Number(tiket_id),
+                        fase: "Diagnosis",
+                        catatan: catatanLog,
+                    }
+                });
             }
         }
 

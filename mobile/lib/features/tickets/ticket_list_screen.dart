@@ -29,6 +29,7 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
     {'key': 'diterima', 'label': 'Diterima'},
     {'key': 'didiagnosis', 'label': 'Didiagnosis'},
     {'key': 'menunggu_persetujuan', 'label': 'Menunggu ACC'},
+    {'key': 'disetujui', 'label': 'Siap Dikerjakan'},
     {'key': 'dalam_perbaikan', 'label': 'Perbaikan'},
     {'key': 'selesai', 'label': 'Selesai'},
     {'key': 'diambil', 'label': 'Diambil'},

@@ -3,7 +3,11 @@ const prisma = require("../config/database");
 // Mencatat aktivitas perbaikan
 async function create(req, res) {
     try {
-        const { tiket_id, catatan, foto_url } = req.body;
+        const { tiket_id, catatan } = req.body;
+        let finalFotoUrl = req.body.foto_url || null;
+        if (req.file) {
+            finalFotoUrl = `/uploads/${req.file.filename}`;
+        }
 
         const tiket = await prisma.tiketServis.findUnique({ where: { id: Number(tiket_id) } });
         if (!tiket) {
@@ -25,7 +29,7 @@ async function create(req, res) {
                 tiket_id: Number(tiket_id),
                 fase,
                 catatan,
-                foto_url: foto_url || null,
+                foto_url: finalFotoUrl,
             },
         });
 

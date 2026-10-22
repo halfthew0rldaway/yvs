@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/theme/app_theme.dart';
@@ -21,14 +23,38 @@ class AddLogModal extends StatefulWidget {
 class _AddLogModalState extends State<AddLogModal> {
   final _formKey = GlobalKey<FormState>();
   final _catatanController = TextEditingController();
-  final _fotoUrlController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+
+  XFile? _selectedImage;
   bool _isLoading = false;
 
   @override
   void dispose() {
     _catatanController.dispose();
-    _fotoUrlController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picked = await _picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        setState(() => _selectedImage = picked);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengambil foto: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _submit() async {
@@ -37,24 +63,31 @@ class _AddLogModalState extends State<AddLogModal> {
     setState(() => _isLoading = true);
     try {
       final client = ApiClient();
-      final Map<String, dynamic> body = {
-        'tiket_id': widget.ticketId,
-        'catatan': _catatanController.text.trim(),
-      };
-      if (_fotoUrlController.text.trim().isNotEmpty) {
-        body['foto_url'] = _fotoUrlController.text.trim();
+      final formData = FormData();
+
+      formData.fields.add(MapEntry('tiket_id', widget.ticketId.toString()));
+      formData.fields.add(MapEntry('catatan', _catatanController.text.trim()));
+
+      if (_selectedImage != null) {
+        formData.files.add(MapEntry(
+          'foto',
+          await MultipartFile.fromFile(
+            _selectedImage!.path,
+            filename: _selectedImage!.name,
+          ),
+        ));
       }
 
       await client.dio.post(
         ApiConstants.logPerbaikan,
-        data: body,
+        data: formData,
       );
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Catatan progres perbaikan berhasil disimpan'),
+            content: Text('Catatan progres & foto perbaikan berhasil disimpan'),
             backgroundColor: AppTheme.success,
           ),
         );
@@ -70,10 +103,10 @@ class _AddLogModalState extends State<AddLogModal> {
           SnackBar(content: Text(err), backgroundColor: AppTheme.error),
         );
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Terjadi kesalahan'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text('Terjadi kesalahan: $e'), backgroundColor: AppTheme.error),
         );
       }
     } finally {
@@ -104,13 +137,26 @@ class _AddLogModalState extends State<AddLogModal> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Tambah Catatan Progres',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.timeline_rounded, color: AppTheme.primary, size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Tambah Catatan Progres',
+                        style: TextStyle(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                    ],
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
@@ -118,37 +164,117 @@ class _AddLogModalState extends State<AddLogModal> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              
-              const Text('Catatan Perbaikan *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 14),
+
+              // Catatan
+              const Text('Catatan Pengerjaan *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _catatanController,
-                maxLines: 4,
+                maxLines: 3,
                 decoration: const InputDecoration(
-                  hintText: 'Misal: Selesai re-balling chip VGA / Pembersihan kipas & ganti pasta pendingin...',
+                  hintText: 'Misal: Selesai re-balling IC power, pembersihan korosi jalur baterai, atau pengetesan tegangan...',
                 ),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Catatan wajib diisi' : null,
+                validator: (val) => val == null || val.trim().isEmpty ? 'Catatan perbaikan wajib diisi' : null,
               ),
               const SizedBox(height: 14),
 
-              const Text('URL Foto Dokumentasi (Opsional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              // Foto Dokumentasi
+              const Text('Dokumentasi Foto Fisik (Kamera / Galeri)',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              TextFormField(
-                controller: _fotoUrlController,
-                decoration: const InputDecoration(
-                  hintText: 'https://... atau /uploads/...',
-                  prefixIcon: Icon(Icons.link, size: 20),
+
+              if (_selectedImage != null)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.background,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(_selectedImage!.path),
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _selectedImage!.name,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Foto siap diunggah sebagai bukti pengerjaan',
+                              style: TextStyle(fontSize: 10.5, color: Color(0xFF16A34A)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: AppTheme.error, size: 20),
+                        tooltip: 'Hapus Foto',
+                        onPressed: () => setState(() => _selectedImage = null),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.camera_alt_outlined, size: 18),
+                        label: const Text('Buka Kamera', style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: const BorderSide(color: AppTheme.primary),
+                          foregroundColor: AppTheme.primary,
+                        ),
+                        onPressed: () => _pickImage(ImageSource.camera),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.photo_library_outlined, size: 18),
+                        label: const Text('Pilih Galeri', style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: const BorderSide(color: AppTheme.border),
+                          foregroundColor: AppTheme.textSecondary,
+                        ),
+                        onPressed: () => _pickImage(ImageSource.gallery),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+
               const SizedBox(height: 20),
 
               ElevatedButton(
                 onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
                 child: _isLoading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Simpan Catatan'),
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('Simpan Catatan & Foto', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),

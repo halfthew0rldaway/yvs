@@ -411,6 +411,34 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     return null;
   }
 
+  String _calculateActiveDuration(TiketModel ticket) {
+    DateTime? startTime;
+    if (ticket.logPerbaikan != null && ticket.logPerbaikan!.isNotEmpty) {
+      final repairLogs =
+          ticket.logPerbaikan!.where((l) => l.fase == 'Perbaikan').toList();
+      if (repairLogs.isNotEmpty && repairLogs.first.createdAt != null) {
+        startTime = DateTime.tryParse(repairLogs.first.createdAt!);
+      }
+    }
+    startTime ??= ticket.createdAt != null
+        ? DateTime.tryParse(ticket.createdAt!)
+        : null;
+    if (startTime == null) return '-';
+
+    final diff = DateTime.now().difference(startTime);
+    if (diff.inMinutes < 60) {
+      return '${diff.inMinutes} Menit';
+    } else if (diff.inHours < 24) {
+      final hours = diff.inHours;
+      final mins = diff.inMinutes % 60;
+      return '$hours Jam $mins Menit';
+    } else {
+      final days = diff.inDays;
+      final hours = diff.inHours % 24;
+      return '$days Hari $hours Jam';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ticketAsync = ref.watch(ticketDetailProvider(widget.ticketId));
@@ -711,6 +739,70 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+
+              // Active Workbench Timer Banner
+              if (ticket.status == 'dalam_perbaikan' || ticket.status == 'disetujui') ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: ticket.status == 'dalam_perbaikan' ? const Color(0xFFEFF6FF) : const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: ticket.status == 'dalam_perbaikan' ? const Color(0xFFBFDBFE) : const Color(0xFFBBF7D0),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: ticket.status == 'dalam_perbaikan'
+                              ? AppTheme.primary.withOpacity(0.12)
+                              : const Color(0xFF16A34A).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          ticket.status == 'dalam_perbaikan'
+                              ? Icons.hourglass_top_rounded
+                              : Icons.task_alt_rounded,
+                          color: ticket.status == 'dalam_perbaikan'
+                              ? AppTheme.primary
+                              : const Color(0xFF16A34A),
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              ticket.status == 'dalam_perbaikan'
+                                  ? 'Unit Sedang Dikerjakan di Meja Servis'
+                                  : 'Unit Disetujui Pelanggan (Siap Dieksekusi)',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: ticket.status == 'dalam_perbaikan'
+                                    ? AppTheme.primary
+                                    : const Color(0xFF15803D),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              ticket.status == 'dalam_perbaikan'
+                                  ? 'Durasi pengerjaan aktif: ${_calculateActiveDuration(ticket)}'
+                                  : 'Ketuk tombol di bawah untuk memulai pengerjaan.',
+                              style: const TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
 
               // 5-Phase Lifecycle Stepper
               _buildLifecycleStepper(ticket.status),
