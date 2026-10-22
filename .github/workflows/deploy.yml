@@ -36,6 +36,17 @@ jobs:
             echo "🐳 Rebuilding and updating Docker containers..."
             docker compose --env-file .env.production up -d --build
 
+            echo "⏳ Waiting for backend container to be healthy and running..."
+            for i in $(seq 1 30); do
+              STATUS=$(docker compose --env-file .env.production ps --format '{{.State}}' backend 2>/dev/null || true)
+              if [ "$STATUS" = "running" ]; then
+                echo "✅ Backend container is running."
+                break
+              fi
+              echo "Waiting for backend container (attempt $i/30, current status: $STATUS)..."
+              sleep 2
+            done
+
             echo "📦 Running database schema sync (Prisma)..."
             docker compose --env-file .env.production exec -T backend npx prisma db push
 
