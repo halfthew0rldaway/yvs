@@ -512,6 +512,40 @@ async function update(req, res) {
             }
         }
 
+        // Lock enforcement untuk status selesai / diambil / dibatalkan
+        const isLocked = ["selesai", "diambil", "dibatalkan"].includes(tiket.status);
+        if (isLocked) {
+            const hasTechnicalEdits = 
+                checklist_qc !== undefined ||
+                checklist_intake !== undefined ||
+                izin_bongkar !== undefined ||
+                izin_akses_os !== undefined ||
+                izin_backup_mandiri !== undefined ||
+                batasan_izin !== undefined ||
+                kondisi_fisik !== undefined ||
+                spesifikasi_awal !== undefined ||
+                prioritas_pelanggan !== undefined ||
+                tipe_kunci !== undefined ||
+                password_perangkat !== undefined ||
+                defect_map !== undefined ||
+                keluhan !== undefined ||
+                kelengkapan_detail !== undefined;
+
+            const isTransitioningToDiambil = tiket.status === "selesai" && status === "diambil";
+
+            if (hasTechnicalEdits && !isTransitioningToDiambil) {
+                return res.status(400).json({
+                    message: "Data checklist, protokol layanan, dan data teknis unit telah dikunci karena servis telah selesai/diambil."
+                });
+            }
+
+            if (["diambil", "dibatalkan"].includes(tiket.status) && (status_part_bekas !== undefined || catatan_part_bekas !== undefined)) {
+                return res.status(400).json({
+                    message: "Status serah terima suku cadang bekas telah final dan tidak dapat diubah lagi."
+                });
+            }
+        }
+
         const updateData = {
             status: status || undefined,
             teknisi_id: teknisi_id !== undefined ? (teknisi_id ? Number(teknisi_id) : null) : undefined,
@@ -705,6 +739,10 @@ async function updateDefectMap(req, res) {
             if (!isMyTicket && !isUnassignedPool) {
                 return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
             }
+        }
+
+        if (["selesai", "diambil", "dibatalkan"].includes(tiket.status)) {
+            return res.status(400).json({ message: "Peta cacat fisik telah dikunci karena servis telah selesai/diambil." });
         }
 
         const parsedDefectMap = typeof defect_map === 'string' ? JSON.parse(defect_map) : defect_map;

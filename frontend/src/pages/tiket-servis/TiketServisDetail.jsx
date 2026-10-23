@@ -173,6 +173,9 @@ export default function TiketServisDetail() {
     const [durasiGaransi, setDurasiGaransi] = useState("1 Bulan");
     const [isSavingWarrantyConfig, setIsSavingWarrantyConfig] = useState(false);
 
+    // Kunci data checklist & teknis jika status sudah selesai / diambil / dibatalkan
+    const isLocked = ["selesai", "diambil", "dibatalkan"].includes(tiket?.status);
+
     // Feature 4: Device Credential Vault State
     const [showVaultPassword, setShowVaultPassword] = useState(false);
     const [isEditingVault, setIsEditingVault] = useState(false);
@@ -240,6 +243,10 @@ export default function TiketServisDetail() {
     const [isSavingToWiki, setIsSavingToWiki] = useState(false);
 
     async function handleSaveDefectMap(newMap) {
+        if (isLocked) {
+            toast.error("Peta cacat fisik telah dikunci karena servis telah selesai/diambil.");
+            return;
+        }
         try {
             setIsSavingDefectMap(true);
             await api.patch(`/tiket-servis/${id}/defect-map`, { defect_map: newMap });
@@ -470,6 +477,10 @@ export default function TiketServisDetail() {
     }
 
     async function handleSavePartBekas() {
+        if (["diambil", "dibatalkan"].includes(tiket?.status)) {
+            toast.error("Status serah terima part bekas sudah final dan tidak dapat diubah.");
+            return;
+        }
         setIsSavingPartBekas(true);
         try {
             await api.put(`/tiket-servis/${id}`, {
@@ -571,6 +582,10 @@ export default function TiketServisDetail() {
     }
 
     async function handleSaveVault() {
+        if (isLocked) {
+            toast.error("Kredensial perangkat telah dikunci karena servis telah selesai/diambil.");
+            return;
+        }
         setIsSavingVault(true);
         try {
             await api.put(`/tiket-servis/${id}`, {
@@ -588,6 +603,10 @@ export default function TiketServisDetail() {
     }
 
     async function handleSaveSopPermissions() {
+        if (isLocked) {
+            toast.error("Protokol layanan unit telah dikunci karena servis telah selesai/diambil.");
+            return;
+        }
         setIsSavingSopPermissions(true);
         try {
             await api.put(`/tiket-servis/${id}`, {
@@ -635,6 +654,10 @@ export default function TiketServisDetail() {
     }
 
     async function handleToggleQCChecklist(key, value) {
+        if (isLocked) {
+            toast.error("Checklist QC telah dikunci karena servis telah selesai/diambil.");
+            return;
+        }
         const currentQC = tiket.checklist_qc || {};
         const updatedQC = {
             ...currentQC,
@@ -655,6 +678,10 @@ export default function TiketServisDetail() {
     }
 
     async function handleApproveAllQC() {
+        if (isLocked) {
+            toast.error("QC telah dikunci karena servis telah selesai/diambil.");
+            return;
+        }
         const finalQc = {
             power_test: true,
             display_test: true,
@@ -1121,9 +1148,9 @@ export default function TiketServisDetail() {
                                     <button
                                         type="button"
                                         onClick={() => setIsDefectModalOpen(true)}
-                                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline shrink-0"
+                                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline shrink-0 cursor-pointer"
                                     >
-                                        {(isAdmin || isAssignedToMe) ? "Buka / Edit Peta" : "Lihat Blueprint"}
+                                        {(isAdmin || isAssignedToMe) && !isLocked ? "Buka / Edit Peta" : "Lihat Blueprint"}
                                     </button>
                                 </div>
                             </div>
@@ -1140,14 +1167,18 @@ export default function TiketServisDetail() {
                                             {tiket.tipe_kunci || "Tidak Ada"}
                                         </span>
                                     </div>
-                                    {(isAdmin || isAssignedToMe) && !isEditingVault && (
+                                    {isLocked ? (
+                                        <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                                            <Lock className="w-3 h-3 text-slate-400" /> Terkunci
+                                        </span>
+                                    ) : (isAdmin || isAssignedToMe) && !isEditingVault && (
                                         <button 
                                             onClick={() => {
                                                 setVaultTipeKunci(tiket.tipe_kunci || "Tidak Ada");
                                                 setVaultPassword(tiket.password_perangkat || "");
                                                 setIsEditingVault(true);
                                             }}
-                                            className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 hover:underline"
+                                            className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
                                         >
                                             <Edit className="w-3 h-3" /> Edit
                                         </button>
@@ -1574,16 +1605,16 @@ export default function TiketServisDetail() {
             )}
 
             {/* 2. Workbench Utama: Log Perbaikan & Penggunaan Sparepart / Invoice */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[650px] mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-start">
                 {/* Log Perbaikan */}
-                <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full">
+                <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col max-h-[720px]">
                     <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-100">
                         <div className="flex items-center gap-2">
                             <PenTool className="w-5 h-5 text-slate-700" />
                             <h2 className="text-base font-bold text-slate-900">Log Perbaikan</h2>
                         </div>
                         <div className="flex items-center gap-3">
-                            {(isAdmin || isAssignedToMe) && (tiket.status === "dalam_perbaikan" || tiket.status === "diterima" || tiket.status === "didiagnosis") && (
+                            {(isAdmin || isAssignedToMe) && !isLocked && (tiket.status === "dalam_perbaikan" || tiket.status === "diterima" || tiket.status === "didiagnosis") && (
                                 <Link to={`/tiket-servis/${id}/log`} className="text-emerald-600 text-sm font-semibold hover:text-emerald-700 hover:underline flex items-center gap-1">
                                     <PenTool className="w-4 h-4" />
                                     Tambah Log
@@ -1655,16 +1686,16 @@ export default function TiketServisDetail() {
                     </div>
                 </div>
 
-                <div className="lg:col-span-2 flex flex-col gap-6 h-full">
+                <div className="lg:col-span-2 flex flex-col gap-6">
                     {/* Penggunaan Sparepart */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col flex-1 min-h-0">
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col min-h-0">
                         <div className="flex items-center gap-2 mb-5 pb-4 border-b border-slate-100">
                             <Package className="w-5 h-5 text-indigo-500" />
                             <h2 className="text-base font-bold text-slate-900">Penggunaan Sparepart</h2>
                         </div>
 
                         {tiket.penggunaan_sparepart?.length > 0 ? (
-                            <div className="flex-1 overflow-auto mb-6 custom-scrollbar min-h-0">
+                            <div className="overflow-auto mb-6 custom-scrollbar max-h-72">
                                 <table className="w-full text-sm whitespace-nowrap">
                                     <thead>
                                         <tr className="text-left text-slate-500 border-b border-slate-200 bg-slate-50/50">
@@ -1752,7 +1783,7 @@ export default function TiketServisDetail() {
                                 <p className="text-[11px] text-slate-500 mb-3">
                                     SOP Transparansi Toko: Seluruh komponen lama yang diganti wajib ditunjukkan dan diserahkan kembali kepada pelanggan saat serah terima unit, kecuali jika pelanggan menitipkannya untuk dibuang.
                                 </p>
-                                {(isAdmin || isAssignedToMe) && ["dalam_perbaikan", "selesai", "diambil"].includes(tiket.status) && (
+                                {(isAdmin || isAssignedToMe) && ["dalam_perbaikan", "selesai"].includes(tiket.status) ? (
                                     <div className="flex flex-col sm:flex-row items-center gap-2">
                                         <select
                                             value={partBekasStatus}
@@ -1779,6 +1810,13 @@ export default function TiketServisDetail() {
                                             {isSavingPartBekas ? "Menyimpan..." : "Simpan Status Part"}
                                         </button>
                                     </div>
+                                ) : (
+                                    (tiket.catatan_part_bekas || partBekasCatatan) && (
+                                        <div className="text-xs text-slate-600 italic bg-white p-2.5 rounded-lg border border-slate-200/80">
+                                            <span className="font-semibold text-slate-700 not-italic">Catatan Penyerahan: </span>
+                                            {partBekasCatatan || tiket.catatan_part_bekas}
+                                        </div>
+                                    )
                                 )}
                             </div>
                         )}
@@ -2254,7 +2292,12 @@ export default function TiketServisDetail() {
                                 </span>
                             )}
 
-                            {(isAdmin || isAssignedToMe) && !isEditingSopPermissions && (
+                            {isLocked ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                    <Lock className="w-3 h-3 text-slate-400" />
+                                    <span>Terkunci</span>
+                                </span>
+                            ) : (isAdmin || isAssignedToMe) && !isEditingSopPermissions && (
                                 <button
                                     type="button"
                                     onClick={(e) => {
@@ -2262,7 +2305,7 @@ export default function TiketServisDetail() {
                                         setIsSopOpen(true);
                                         setIsEditingSopPermissions(true);
                                     }}
-                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs"
+                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs cursor-pointer"
                                 >
                                     <Edit className="w-3.5 h-3.5 text-slate-500" />
                                     <span>Edit</span>
@@ -2764,14 +2807,19 @@ export default function TiketServisDetail() {
                                 </span>
                             )}
 
-                            {(isAdmin || isAssignedToMe) && (
+                            {isLocked ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold border border-slate-200">
+                                    <Lock className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>Terkunci</span>
+                                </span>
+                            ) : (isAdmin || isAssignedToMe) && (
                                 <button
                                     type="button"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleApproveAllQC();
                                     }}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
                                 >
                                     <Sparkles className="w-3.5 h-3.5" />
                                     <span>Luluskan Semua</span>
@@ -2795,14 +2843,17 @@ export default function TiketServisDetail() {
                                     );
                                     const ItemIcon = item.Icon;
                                     return (
-                                        <label key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all cursor-pointer select-none ${
+                                        <label key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all select-none ${
+                                            isLocked ? "cursor-not-allowed opacity-85" : "cursor-pointer"
+                                        } ${
                                             isChecked ? "bg-emerald-50/70 border-emerald-300 text-emerald-950 font-semibold shadow-2xs" : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100/70"
                                         }`}>
                                             <input
                                                 type="checkbox"
                                                 checked={isChecked}
+                                                disabled={isLocked}
                                                 onChange={(e) => handleToggleQCChecklist(item.key, e.target.checked)}
-                                                className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer mt-0.5 shrink-0"
+                                                className={`w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 mt-0.5 shrink-0 ${isLocked ? "cursor-not-allowed" : "cursor-pointer"}`}
                                             />
                                             <div className="space-y-0.5 min-w-0">
                                                 <div className="flex items-center gap-1.5">
@@ -2816,13 +2867,22 @@ export default function TiketServisDetail() {
                                 })}
 
                                 {/* Final QC Passed Toggle */}
-                                <label className={`flex items-center justify-between gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none col-span-full ${
+                                <label className={`flex items-center justify-between gap-3 p-3.5 rounded-xl border-2 transition-all select-none col-span-full ${
+                                    isLocked ? "cursor-not-allowed opacity-90" : "cursor-pointer"
+                                } ${
                                     Boolean(tiket.checklist_qc?.passed_qc) ? "bg-emerald-100/90 border-emerald-400 text-emerald-950 font-bold" : "bg-amber-50/80 border-amber-300 text-amber-900"
                                 }`}>
                                     <div className="flex items-center gap-2.5">
                                         <Award className={`w-5 h-5 shrink-0 ${Boolean(tiket.checklist_qc?.passed_qc) ? "text-emerald-700" : "text-amber-600"}`} />
                                         <div>
-                                            <span className="text-sm">Quality Control PASSED (Final Approval Pra-Penyerahan)</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm">Quality Control PASSED (Final Approval Pra-Penyerahan)</span>
+                                                {isLocked && (
+                                                    <span className="text-[10px] font-semibold bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                                        <Lock className="w-3 h-3 text-slate-500" /> Terkunci
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="text-xs font-normal opacity-85">
                                                 Menyatakan perangkat telah memenuhi standar uji fungsional dan siap diserahkan kepada pelanggan.
                                             </p>
@@ -2831,8 +2891,9 @@ export default function TiketServisDetail() {
                                     <input
                                         type="checkbox"
                                         checked={Boolean(tiket.checklist_qc?.passed_qc)}
+                                        disabled={isLocked}
                                         onChange={(e) => handleToggleQCChecklist("passed_qc", e.target.checked)}
-                                        className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer shrink-0"
+                                        className={`w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 shrink-0 ${isLocked ? "cursor-not-allowed" : "cursor-pointer"}`}
                                     />
                                 </label>
                             </div>
@@ -3079,7 +3140,7 @@ export default function TiketServisDetail() {
                 onClose={() => setIsDefectModalOpen(false)}
                 value={tiket?.defect_map}
                 onChange={handleSaveDefectMap}
-                readOnly={!(isAdmin || isAssignedToMe)}
+                readOnly={!(isAdmin || isAssignedToMe) || isLocked}
                 title={`Peta Cacat Fisik: ${tiket?.perangkat?.merek || ""} ${tiket?.perangkat?.model || ""}`}
             />
 
