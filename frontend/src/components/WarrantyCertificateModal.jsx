@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
-import { X, Printer, ShieldCheck, Check, Award, AlertTriangle, Clock, QrCode } from "lucide-react";
+import React from "react";
+import { X, Printer, ShieldCheck, Check, Award, AlertTriangle, Clock, Laptop, User, Package, Calendar, Wrench, Shield, CheckCircle2 } from "lucide-react";
 
 export default function WarrantyCertificateModal({
     isOpen,
@@ -25,14 +25,12 @@ export default function WarrantyCertificateModal({
         serial_number: tiket.serial_number || "-"
     };
 
-    const invoice = propInvoice || tiket.invoice;
-
     // Tracking & QR Verification URL
     const trackingUrl = typeof window !== "undefined"
         ? `${window.location.origin}/tracking?nomor_tiket=${tiket.nomor_tiket}`
         : `https://yangversacomputer.com/tracking?nomor_tiket=${tiket.nomor_tiket}`;
 
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&margin=2&data=${encodeURIComponent(trackingUrl)}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=1&data=${encodeURIComponent(trackingUrl)}`;
 
     // Dates & Status
     const isDiambil = tiket.status === "diambil";
@@ -51,17 +49,17 @@ export default function WarrantyCertificateModal({
 
     const tglMulaiFormatted = tglMulai.toLocaleDateString("id-ID", {
         day: "numeric",
-        month: "long",
+        month: "short",
         year: "numeric"
     });
 
     const tglBerakhirFormatted = garansiBerakhirDate
         ? garansiBerakhirDate.toLocaleDateString("id-ID", {
             day: "numeric",
-            month: "long",
+            month: "short",
             year: "numeric"
         })
-        : "Saat unit diserahterimakan";
+        : "Saat serah terima unit";
 
     // Spareparts
     const spareparts = tiket.penggunaan_sparepart || [];
@@ -72,8 +70,12 @@ export default function WarrantyCertificateModal({
 
     return (
         <div className="fixed inset-0 z-[999] overflow-y-auto flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm">
-            {/* Inline Print Styles */}
+            {/* Inline Print Styles (Landscape Orientation) */}
             <style>{`
+                @page {
+                    size: landscape;
+                    margin: 8mm;
+                }
                 @media print {
                     body * {
                         visibility: hidden !important;
@@ -82,16 +84,18 @@ export default function WarrantyCertificateModal({
                         visibility: visible !important;
                     }
                     #warranty-certificate-document {
-                        position: absolute !important;
-                        left: 0 !important;
-                        top: 0 !important;
-                        width: 100% !important;
+                        position: fixed !important;
+                        left: 50% !important;
+                        top: 50% !important;
+                        transform: translate(-50%, -50%) !important;
+                        width: 270mm !important;
+                        max-width: 100% !important;
                         margin: 0 !important;
-                        padding: 10mm 15mm !important;
+                        padding: 7mm 9mm !important;
                         background: #ffffff !important;
                         box-shadow: none !important;
-                        border: 1px solid #e2e8f0 !important;
-                        border-radius: 0 !important;
+                        border: 1px solid #cbd5e1 !important;
+                        border-radius: 14px !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
@@ -101,290 +105,284 @@ export default function WarrantyCertificateModal({
                 }
             `}</style>
 
-            {/* Modal Dialog Card */}
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-slate-200">
+            {/* Modal Dialog Card (Landscape Max-Width) */}
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-slate-200">
                 {/* Control Action Bar (Screen Only) */}
-                <div className="no-print px-5 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+                <div className="no-print px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
-                            <ShieldCheck className="w-5 h-5" />
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
+                            <ShieldCheck className="w-4 h-4" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-sm sm:text-base text-white">Sertifikat Garansi Digital</h3>
-                            <p className="text-xs text-slate-400">Tiket #{tiket.nomor_tiket} &bull; Yangversa Computer Service</p>
+                            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                                <span>Kartu Garansi Digital Resmi</span>
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                                    #{tiket.nomor_tiket}
+                                </span>
+                            </h3>
+                            <p className="text-[11px] text-slate-400">Yangversa Computer &bull; Service & Hardware Protection Pass</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
                             title="Cetak atau Simpan PDF"
                         >
-                            <Printer className="w-4 h-4" />
-                            <span className="hidden sm:inline">Cetak / Simpan PDF</span>
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>Cetak / PDF</span>
                         </button>
                         <button
                             onClick={onClose}
-                            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
                         >
                             <X className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
-                {/* Scrollable Printable Document Container */}
-                <div className="overflow-y-auto p-4 sm:p-8 bg-slate-100/60 custom-scrollbar flex justify-center">
+                {/* Printable Document Area */}
+                <div className="overflow-y-auto p-4 sm:p-7 bg-slate-100/70 custom-scrollbar flex justify-center items-center">
                     <div
                         id="warranty-certificate-document"
-                        className="bg-white w-full max-w-[760px] p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden text-slate-800 font-sans"
+                        className="bg-white w-full max-w-[940px] rounded-2xl border border-slate-200/90 shadow-sm relative overflow-hidden text-slate-800 font-sans"
                     >
-                        {/* Elegant Watermark Seal */}
-                        <div className="absolute right-6 top-24 pointer-events-none opacity-[0.03] select-none">
-                            <Award className="w-80 h-80 text-blue-900" />
+                        {/* Top Gradient Stripe */}
+                        <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500" />
+
+                        {/* Subtle Background Watermark */}
+                        <div className="absolute right-4 bottom-4 pointer-events-none opacity-[0.03] select-none">
+                            <Award className="w-72 h-72 text-blue-900" />
                         </div>
 
-                        {/* Top Letterhead */}
-                        <div className="border-b-2 border-slate-900 pb-4 mb-6">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <div>
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-sm">
-                                            YVS
-                                        </div>
-                                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight uppercase">
-                                            Yangversa Computer
-                                        </h1>
+                        <div className="p-5 sm:p-7">
+                            {/* Header Row */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm tracking-tight shadow-xs shrink-0">
+                                        YVS
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-1 font-medium">
-                                        Pusat Spesialis Reparasi Laptop, PC Desktop, & Hardware Komputer
-                                    </p>
-                                    <p className="text-[11px] text-slate-400 mt-0.5">
-                                        Jl. Babakan Tengah No. 23, Bogor &bull; WhatsApp: 0812-3456-7890 &bull; Website: yangversacomputer.com
-                                    </p>
-                                </div>
-
-                                <div className="sm:text-right shrink-0">
-                                    <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase block">
-                                        Nomor Sertifikat
-                                    </span>
-                                    <span className="text-sm font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md inline-block mt-0.5 border border-slate-200">
-                                        CERT-YVS-{tiket.nomor_tiket}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Certificate Title Badge */}
-                        <div className="text-center my-6">
-                            <span className="px-3.5 py-1 bg-blue-50 text-blue-800 border border-blue-200/80 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 mb-2">
-                                <Award className="w-3.5 h-3.5 text-blue-600" />
-                                Sertifikat Jaminan Garansi Resmi
-                            </span>
-                            <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                                Official Warranty & Service Protection
-                            </h2>
-                            <p className="text-xs text-slate-500 max-w-lg mx-auto mt-1">
-                                Dokumen ini menyatakan perlindungan garansi purnajual atas perbaikan teknis dan suku cadang yang telah teruji melalui tahapan Quality Control.
-                            </p>
-                        </div>
-
-                        {/* Status Garansi Banner */}
-                        <div className={`p-4 rounded-xl border mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
-                            isExpired 
-                                ? "bg-rose-50/70 border-rose-200 text-rose-900"
-                                : (isDiambil || isCompleted
-                                    ? "bg-emerald-50/80 border-emerald-200 text-emerald-950"
-                                    : "bg-blue-50/70 border-blue-200 text-blue-900")
-                        }`}>
-                            <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                                    isExpired 
-                                        ? "bg-rose-100 text-rose-700" 
-                                        : (isDiambil || isCompleted ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700")
-                                }`}>
-                                    {isExpired ? <AlertTriangle className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold uppercase tracking-wider">
-                                            Status Perlindungan:
-                                        </span>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                            isExpired 
-                                                ? "bg-rose-200 text-rose-800" 
-                                                : (isDiambil ? "bg-emerald-200 text-emerald-900" : "bg-blue-200 text-blue-900")
-                                        }`}>
-                                            {isExpired ? "Kedaluwarsa" : (isDiambil ? "Garansi Aktif" : "Garansi Disiapkan")}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs font-semibold mt-0.5">
-                                        {isExpired 
-                                            ? `Masa garansi berakhir pada ${tglBerakhirFormatted}.` 
-                                            : `Garansi berlaku ${durasi} hingga ${tglBerakhirFormatted}.`}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="text-left sm:text-right shrink-0">
-                                <span className="text-[10px] uppercase font-bold text-slate-500 block">Durasi Masa Garansi</span>
-                                <span className="text-base font-black tracking-tight">{durasi}</span>
-                            </div>
-                        </div>
-
-                        {/* Info Grid: Customer & Device */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs mb-6">
-                            {/* Pelanggan */}
-                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-                                <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b border-slate-200 pb-1.5 flex items-center justify-between">
-                                    <span>Identitas Pemilik</span>
-                                    <span className="text-slate-400 font-mono text-[10px]">#TIKET-{tiket.nomor_tiket}</span>
-                                </p>
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Nama Pelanggan:</span>
-                                        <strong className="text-slate-800">{customer.nama}</strong>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Nomor Kontak:</span>
-                                        <span className="font-mono text-slate-700">{customer.nomor_telepon}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Tanggal Serah Terima:</span>
-                                        <span className="text-slate-700">{tglMulaiFormatted}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Perangkat */}
-                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-                                <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b border-slate-200 pb-1.5">
-                                    Detail Perangkat
-                                </p>
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Kategori / Unit:</span>
-                                        <strong className="text-slate-800">{perangkat.jenis_perangkat || "Perangkat"}</strong>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Merek & Tipe Model:</span>
-                                        <strong className="text-slate-800">{perangkat.merek} {perangkat.model}</strong>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Nomor Seri (Serial No):</span>
-                                        <span className="font-mono text-slate-700">{perangkat.serial_number || "-"}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Cakupan Garansi / Scope of Coverage */}
-                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 mb-6 text-xs">
-                            <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b border-slate-200 pb-1.5 mb-2.5">
-                                Cakupan Pekerjaan & Suku Cadang Terlindungi:
-                            </p>
-                            <div className="space-y-2 text-slate-700">
-                                <div className="flex items-start gap-2">
-                                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                                     <div>
-                                        <strong className="text-slate-900">Jasa Perbaikan & Rekayasa Teknis:</strong>
-                                        <p className="text-slate-600 mt-0.5">
-                                            {tiket.diagnosis?.solusi || tiket.keluhan || "Servis dan perbaikan sesuai laporan pemeriksaan teknis workshop."}
+                                        <div className="flex items-center gap-2">
+                                            <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight uppercase">
+                                                Yangversa Computer
+                                            </h1>
+                                            <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-slate-300" />
+                                            <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline-block">
+                                                Pusat Reparasi Laptop & PC
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-blue-700 font-bold uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
+                                            <Shield className="w-3 h-3 text-blue-600" />
+                                            <span>Official Warranty & Service Protection Pass</span>
                                         </p>
                                     </div>
                                 </div>
 
-                                {spareparts.length > 0 ? (
-                                    <div className="flex items-start gap-2 pt-1 border-t border-slate-200/60">
-                                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                                        <div>
-                                            <strong className="text-slate-900">Suku Cadang Baru Terpasang:</strong>
-                                            <div className="flex flex-wrap gap-1.5 mt-1">
-                                                {spareparts.map((p, idx) => (
-                                                    <span key={idx} className="bg-white border border-slate-200 px-2.5 py-1 rounded-md text-[11px] font-medium text-slate-800 shadow-2xs">
-                                                        {p.sparepart?.nama || p.nama} ({p.jumlah} unit)
+                                <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+                                    <div className="text-right">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">No. Tiket</span>
+                                        <span className="font-mono font-bold text-xs text-slate-800">
+                                            #{tiket.nomor_tiket}
+                                        </span>
+                                    </div>
+                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border shrink-0 ${
+                                        isExpired 
+                                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                                            : (isDiambil || isCompleted
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                : "bg-blue-50 text-blue-700 border-blue-200")
+                                    }`}>
+                                        {isExpired ? (
+                                            <>
+                                                <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                                                <span>Kedaluwarsa</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                                <span>{isDiambil ? "Garansi Aktif" : "Garansi Disiapkan"}</span>
+                                            </>
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Hero 3-Stat Metric Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+                                {/* Durasi */}
+                                <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200">
+                                        <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-800/80">Durasi Garansi</p>
+                                        <p className="text-lg font-black text-emerald-950 truncate">{durasi}</p>
+                                        <p className="text-[11px] text-emerald-700 font-medium truncate">
+                                            {isExpired ? "Telah Berakhir" : tiket.warranty_status?.sisaHari !== undefined ? `Sisa ${tiket.warranty_status.sisaHari} hari lagi` : "Perlindungan Purnajual"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Periode */}
+                                <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200/80 flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 border border-blue-200">
+                                        <Calendar className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-800/80">Periode Perlindungan</p>
+                                        <p className="text-xs font-bold text-blue-950 truncate mt-0.5">
+                                            {tglMulaiFormatted} — {tglBerakhirFormatted}
+                                        </p>
+                                        <p className="text-[11px] text-blue-700/90 font-medium truncate">
+                                            Dihitung sejak unit diserahterimakan
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Layanan */}
+                                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 border border-slate-300">
+                                        <Wrench className="w-5 h-5 text-slate-600" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Kategori Servis</p>
+                                        <p className="text-xs font-bold text-slate-900 truncate mt-0.5">
+                                            {tiket.kategori_perbaikan || "Servis Hardware / Komponen"}
+                                        </p>
+                                        <p className="text-[11px] text-slate-500 font-medium truncate">
+                                            {tiket.diagnosis?.solusi ? tiket.diagnosis.solusi : "Sesuai standar QC Workshop"}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Main Content Grid: Left (Specs & Parts) vs Right (QR Verification) */}
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4 items-stretch">
+                                {/* Left Side: Unit & Owner Specs + Covered Parts (7 cols) */}
+                                <div className="lg:col-span-8 flex flex-col justify-between gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                        {/* Unit Info */}
+                                        <div className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80">
+                                            <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-slate-200/60 font-bold text-slate-800 uppercase text-[11px]">
+                                                <Laptop className="w-3.5 h-3.5 text-blue-600" />
+                                                <span>Data Perangkat</span>
+                                            </div>
+                                            <div className="space-y-1 text-slate-700">
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-slate-400">Unit:</span>
+                                                    <span className="font-bold text-slate-900 truncate text-right">
+                                                        {perangkat.merek} {perangkat.model}
                                                     </span>
-                                                ))}
+                                                </div>
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-slate-400">Kategori:</span>
+                                                    <span className="font-medium text-slate-800">{perangkat.jenis_perangkat || "Laptop"}</span>
+                                                </div>
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-slate-400">No. Seri:</span>
+                                                    <span className="font-mono text-slate-800">{perangkat.serial_number || "-"}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Owner Info */}
+                                        <div className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80">
+                                            <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-slate-200/60 font-bold text-slate-800 uppercase text-[11px]">
+                                                <User className="w-3.5 h-3.5 text-emerald-600" />
+                                                <span>Data Pelanggan</span>
+                                            </div>
+                                            <div className="space-y-1 text-slate-700">
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-slate-400">Nama:</span>
+                                                    <span className="font-bold text-slate-900 truncate text-right">
+                                                        {customer.nama}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-slate-400">Kontak:</span>
+                                                    <span className="font-mono text-slate-800">{customer.nomor_telepon}</span>
+                                                </div>
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-slate-400">Tgl Selesai:</span>
+                                                    <span className="font-medium text-slate-800">{tglMulaiFormatted}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="flex items-start gap-2 pt-1 border-t border-slate-200/60">
-                                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                                        <div>
-                                            <strong className="text-slate-900">Perbaikan Hardware / IC:</strong>
-                                            <p className="text-slate-600 mt-0.5">
-                                                Perbaikan motherboard / komponen modular tanpa penggantian sparepart baru.
-                                            </p>
+
+                                    {/* Covered Spareparts */}
+                                    <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/80 text-xs">
+                                        <div className="flex items-center gap-1.5 pb-1.5 mb-2 border-b border-slate-200/60 font-bold text-slate-800 uppercase text-[11px]">
+                                            <Package className="w-3.5 h-3.5 text-indigo-600" />
+                                            <span>Komponen / Suku Cadang Terlindungi:</span>
                                         </div>
+                                        {spareparts.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {spareparts.map((p, idx) => (
+                                                    <span 
+                                                        key={idx} 
+                                                        className="inline-flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-800 shadow-2xs"
+                                                    >
+                                                        <Check className="w-3 h-3 text-emerald-600" />
+                                                        <span>{(p.sparepart?.brand?.nama && p.sparepart.brand.nama.toLowerCase() !== "lainnya" ? p.sparepart.brand.nama + " " : "") + (p.sparepart?.nama || p.nama)} ({p.jumlah} unit)</span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-[11px] text-slate-600 italic">
+                                                Perbaikan motherboard / modul komponen tanpa penggantian suku cadang baru (terlindungi jaminan fungsi).
+                                            </p>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Syarat & Ketentuan Klaim (SOP Workshop) */}
-                        <div className="mb-6 text-xs text-slate-600">
-                            <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px] mb-2">
-                                Syarat & Ketentuan Klaim Garansi Resmi:
-                            </p>
-                            <ol className="list-decimal list-inside space-y-1 text-[11px] leading-relaxed text-slate-600">
-                                <li>
-                                    <strong className="text-slate-700">Cakupan Masalah:</strong> Garansi berlaku atas kendala fungsi yang sama atau kerusakan pada suku cadang yang diganti dalam perbaikan ini.
-                                </li>
-                                <li>
-                                    <strong className="text-slate-700">Integritas Segel:</strong> Segel garansi resmi Yangversa pada unit harus utuh, tidak sobek, dan tidak pernah dibongkar pihak lain.
-                                </li>
-                                <li>
-                                    <strong className="text-slate-700">Batasan Kelalaian:</strong> Tidak berlaku untuk kerusakan akibat kelalaian pemakaian setelah penyerahan (terkena air, terjatuh, lonjakan listrik, force majeure).
-                                </li>
-                                <li>
-                                    <strong className="text-slate-700">Kemudahan Klaim:</strong> Cukup tunjukkan kartu/sertifikat digital ini atau sebutkan nomor tiket <strong className="text-blue-700 font-mono">#{tiket.nomor_tiket}</strong> kepada customer service kami.
-                                </li>
-                                <li>
-                                    <strong className="text-slate-700">Penanganan Prioritas:</strong> Unit yang masuk dalam periode klaim garansi akan mendapat prioritas pengerjaan utama oleh Teknisi Ahli.
-                                </li>
-                            </ol>
-                        </div>
-
-                        {/* Signatures, Stamp & QR Code */}
-                        <div className="pt-4 border-t-2 border-slate-900 flex flex-row items-end justify-between gap-4 text-xs">
-                            {/* QR Code Verification */}
-                            <div className="flex items-center gap-3">
-                                <div className="p-1 bg-white border border-slate-300 rounded-xl shadow-2xs">
-                                    <img
-                                        src={qrCodeUrl}
-                                        alt="QR Verifikasi Tiket"
-                                        className="w-16 h-16 sm:w-20 sm:h-20"
-                                        onError={(e) => {
-                                            e.target.style.display = "none";
-                                        }}
-                                    />
                                 </div>
-                                <div>
-                                    <p className="font-bold text-slate-900 text-xs sm:text-sm">Scan Verifikasi Digital</p>
-                                    <p className="text-slate-500 text-[10px] sm:text-[11px] mt-0.5 max-w-[150px] leading-tight">
-                                        Pindai QR ini untuk melacak keaslian dokumen & status garansi real-time.
+
+                                {/* Right Side: QR Code Verification Card (4 cols) */}
+                                <div className="lg:col-span-4 bg-slate-50/80 rounded-xl border border-slate-200/80 p-4 flex flex-col items-center justify-center text-center">
+                                    <div className="p-1.5 bg-white border border-slate-200 rounded-xl shadow-2xs mb-2">
+                                        <img
+                                            src={qrCodeUrl}
+                                            alt="QR Verifikasi Tiket"
+                                            className="w-24 h-24 object-contain"
+                                            onError={(e) => {
+                                                e.target.style.display = "none";
+                                            }}
+                                        />
+                                    </div>
+                                    <p className="font-bold text-slate-900 text-xs flex items-center gap-1 justify-center">
+                                        <span>Scan Verifikasi Resmi</span>
+                                        <Award className="w-3.5 h-3.5 text-blue-600" />
                                     </p>
+                                    <p className="text-[10px] text-slate-500 leading-tight mt-1 max-w-[200px]">
+                                        Pindai QR untuk melacak keaslian garansi & status perbaikan secara online.
+                                    </p>
+                                    <span className="mt-2 text-[10px] font-mono font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                        CERT-YVS-{tiket.nomor_tiket}
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Customer Signature */}
-                            <div className="text-center min-w-[110px] sm:min-w-[130px]">
-                                <p className="text-slate-400 text-[11px] mb-10 sm:mb-12">Penerima / Pelanggan</p>
-                                <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 text-[11px] sm:text-xs truncate">
-                                    {customer.nama}
-                                </p>
-                            </div>
-
-                            {/* Workshop Stamp & Signature */}
-                            <div className="text-center min-w-[120px] sm:min-w-[150px] relative">
-                                <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none -top-2">
-                                    <Award className="w-16 h-16 text-blue-900" />
+                            {/* Bottom Strip: Essential Warranty Terms (No Wall of Text!) */}
+                            <div className="p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-600 font-medium">
+                                    <span className="flex items-center gap-1 text-slate-800">
+                                        <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                        <strong>Segel Utuh:</strong> Segel workshop wajib tidak sobek/dibongkar.
+                                    </span>
+                                    <span className="flex items-center gap-1 text-slate-800">
+                                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                        <strong>Bebas Human Error:</strong> Tidak terkena air/jatuh/konslet.
+                                    </span>
+                                    <span className="flex items-center gap-1 text-slate-800">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                        <strong>Klaim Mudah:</strong> Cukup tunjukkan kartu ini / nomor tiket.
+                                    </span>
                                 </div>
-                                <p className="text-slate-400 text-[11px] mb-10 sm:mb-12">Yangversa Computer</p>
-                                <p className="font-bold text-blue-900 border-t border-slate-300 pt-1 text-[11px] sm:text-xs">
-                                    Service Excellence
-                                </p>
+
+                                <div className="text-[11px] font-semibold text-slate-400 shrink-0 sm:text-right">
+                                    Yangversa Quality Certified &bull; Service Excellence
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -393,4 +391,3 @@ export default function WarrantyCertificateModal({
         </div>
     );
 }
-
