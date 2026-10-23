@@ -5,12 +5,25 @@ import api from "../../services/api";
 import { 
     ArrowLeft, Save, MonitorSmartphone, User, MessageSquare, Package, Camera, 
     ClipboardCheck, KeyRound, Lock, Eye, EyeOff, ShieldCheck, Shield, AlertTriangle, 
-    Sparkles, Smile, History, HardDrive, CheckCircle2, Clock, Zap, Laptop
+    Sparkles, Smile, History, HardDrive, CheckCircle2, Clock, Zap, Laptop,
+    Search, Filter, Plus, Phone, RotateCcw, X, Check, ChevronRight, Printer, Box
 } from "lucide-react";
 import { CHECKLIST_ITEMS } from "../../utils/checklistItems";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import { SLA_PENGECEKAN_PACKAGES } from "../../components/SlaBadge";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
+
+const POPULAR_BRANDS = ["Asus", "Lenovo", "HP", "Acer", "Dell", "Apple", "MSI", "Toshiba"];
+const DEVICE_CATEGORIES = ["Laptop", "Desktop PC", "Printer", "Penyimpanan (HDD/SSD)", "Aksesoris (Mouse/Keyboard)", "Lainnya"];
+
+function getDeviceIcon(jenis) {
+    const j = (jenis || "").toLowerCase();
+    if (j.includes("laptop")) return Laptop;
+    if (j.includes("desktop") || j.includes("pc")) return MonitorSmartphone;
+    if (j.includes("printer")) return Printer;
+    if (j.includes("hdd") || j.includes("ssd") || j.includes("penyimpanan")) return HardDrive;
+    return Laptop;
+}
 
 export default function TiketServisForm() {
     const navigate = useNavigate();
@@ -49,11 +62,36 @@ export default function TiketServisForm() {
     const [selectedPerangkatDetail, setSelectedPerangkatDetail] = useState(null);
     const [loadingPerangkatDetail, setLoadingPerangkatDetail] = useState(false);
 
+    // Smart Search & Filter State
+    const [searchQuery, setSearchQuery] = useState("");
+    const [categoryFilter, setCategoryFilter] = useState("Semua");
+
+    // Quick Registration Modal State
+    const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+    const [quickIsExistingCustomer, setQuickIsExistingCustomer] = useState(false);
+    const [existingCustomers, setExistingCustomers] = useState([]);
+    const [selectedExistingCustId, setSelectedExistingCustId] = useState("");
+    const [quickForm, setQuickForm] = useState({
+        nama: "",
+        nomor_telepon: "",
+        tipe_kepribadian: "Netral",
+        jenis_perangkat: "Laptop",
+        merek: "",
+        model: "",
+        serial_number: ""
+    });
+    const [savingQuick, setSavingQuick] = useState(false);
+
     useEffect(() => {
-        Promise.all([api.get("/perangkat"), api.get("/dashboard/teknisi-list")])
-            .then(([perangkatRes, teknisiRes]) => {
-                setPerangkats(perangkatRes.data);
-                setTeknisis(teknisiRes.data);
+        Promise.all([
+            api.get("/perangkat"), 
+            api.get("/dashboard/teknisi-list"),
+            api.get("/customer")
+        ])
+            .then(([perangkatRes, teknisiRes, customerRes]) => {
+                setPerangkats(perangkatRes.data || []);
+                setTeknisis(teknisiRes.data || []);
+                setExistingCustomers(customerRes.data || []);
             })
             .catch(() => toast.error("Gagal memuat data"))
             .finally(() => setFetching(false));
@@ -71,8 +109,97 @@ export default function TiketServisForm() {
             .finally(() => setLoadingPerangkatDetail(false));
     }, [form.perangkat_id]);
 
+    function handleOpenQuickAdd() {
+        let prefillPhone = "";
+        let prefillName = "";
+        const cleanQ = searchQuery.trim();
+        if (/^[0-9+\-\s]+$/.test(cleanQ) && cleanQ.length >= 4) {
+            prefillPhone = cleanQ.replace(/[\s\-]/g, "");
+        } else if (cleanQ.length >= 2) {
+            prefillName = cleanQ;
+        }
+
+        setQuickForm({
+            nama: prefillName,
+            nomor_telepon: prefillPhone,
+            tipe_kepribadian: "Netral",
+            jenis_perangkat: categoryFilter !== "Semua" ? categoryFilter : "Laptop",
+            merek: "",
+            model: "",
+            serial_number: ""
+        });
+        setQuickIsExistingCustomer(false);
+        setSelectedExistingCustId("");
+        setIsQuickAddOpen(true);
+    }
+
+    async function handleQuickRegister(e) {
+        e.preventDefault();
+        setSavingQuick(true);
+        try {
+            let customerId = selectedExistingCustId;
+            let customerData = null;
+
+            if (!quickIsExistingCustomer || !customerId) {
+                if (!quickForm.nama.trim() || !quickForm.nomor_telepon.trim()) {
+                    toast.error("Nama dan nomor WhatsApp pelanggan wajib diisi");
+                    setSavingQuick(false);
+                    return;
+                }
+                const custRes = await api.post("/customer", {
+                    nama: quickForm.nama.trim(),
+                    nomor_telepon: quickForm.nomor_telepon.trim(),
+                    tipe_kepribadian: quickForm.tipe_kepribadian || "Netral"
+                });
+                customerId = custRes.data?.data?.id;
+                customerData = custRes.data?.data;
+                if (customerData) {
+                    setExistingCustomers(prev => [customerData, ...prev]);
+                }
+            } else {
+                customerData = existingCustomers.find(c => Number(c.id) === Number(customerId));
+            }
+
+            if (!quickForm.merek.trim() || !quickForm.model.trim()) {
+                toast.error("Merek dan model perangkat wajib diisi");
+                setSavingQuick(false);
+                return;
+            }
+
+            const devRes = await api.post("/perangkat", {
+                customer_id: Number(customerId),
+                jenis_perangkat: quickForm.jenis_perangkat || "Laptop",
+                merek: quickForm.merek.trim(),
+                model: quickForm.model.trim(),
+                serial_number: quickForm.serial_number ? quickForm.serial_number.trim() : null
+            });
+
+            const newPerangkat = {
+                ...devRes.data?.data,
+                customer: customerData,
+                _count: { tiket_servis: 0 }
+            };
+
+            setPerangkats(prev => [newPerangkat, ...prev]);
+            setForm(prev => ({ ...prev, perangkat_id: newPerangkat.id }));
+            setIsQuickAddOpen(false);
+            setSearchQuery("");
+            toast.success("Pelanggan & perangkat berhasil didaftarkan dan langsung terpilih!");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal mendaftarkan perangkat");
+        } finally {
+            setSavingQuick(false);
+        }
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
+
+        if (!form.perangkat_id) {
+            toast.error("Silakan pilih atau daftarkan perangkat servis terlebih dahulu");
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -130,6 +257,62 @@ export default function TiketServisForm() {
         );
     }
 
+    const categoryCounts = {
+        Semua: perangkats.length,
+        Laptop: perangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("laptop")).length,
+        "Desktop PC": perangkats.filter(p => {
+            const j = (p.jenis_perangkat || "").toLowerCase();
+            return j.includes("desktop") || j.includes("pc");
+        }).length,
+        Printer: perangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("printer")).length,
+        Penyimpanan: perangkats.filter(p => {
+            const j = (p.jenis_perangkat || "").toLowerCase();
+            return j.includes("hdd") || j.includes("ssd") || j.includes("penyimpanan");
+        }).length,
+        Lainnya: perangkats.filter(p => {
+            const j = (p.jenis_perangkat || "").toLowerCase();
+            return !j.includes("laptop") && !j.includes("desktop") && !j.includes("pc") && !j.includes("printer") && !j.includes("hdd") && !j.includes("ssd");
+        }).length,
+    };
+
+    const filteredPerangkats = perangkats.filter(p => {
+        // 1. Category Filter
+        if (categoryFilter !== "Semua") {
+            const jenis = (p.jenis_perangkat || "").toLowerCase();
+            if (categoryFilter === "Laptop" && !jenis.includes("laptop")) return false;
+            if (categoryFilter === "Desktop PC" && !jenis.includes("desktop") && !jenis.includes("pc")) return false;
+            if (categoryFilter === "Printer" && !jenis.includes("printer")) return false;
+            if (categoryFilter === "Penyimpanan" && !jenis.includes("hdd") && !jenis.includes("ssd") && !jenis.includes("penyimpanan")) return false;
+            if (categoryFilter === "Lainnya" && (jenis.includes("laptop") || jenis.includes("desktop") || jenis.includes("pc") || jenis.includes("printer") || jenis.includes("hdd") || jenis.includes("ssd"))) return false;
+        }
+
+        // 2. Search Query (WhatsApp, Nama, Merek, Model, Serial No)
+        if (searchQuery.trim()) {
+            const qDigits = searchQuery.replace(/[\s\-]/g, "").toLowerCase();
+            const rawQ = searchQuery.toLowerCase().trim();
+
+            const phone = (p.customer?.nomor_telepon || "").replace(/[\s\-]/g, "").toLowerCase();
+            const name = (p.customer?.nama || "").toLowerCase();
+            const brand = (p.merek || "").toLowerCase();
+            const model = (p.model || "").toLowerCase();
+            const serial = (p.serial_number || "").toLowerCase();
+            const jenis = (p.jenis_perangkat || "").toLowerCase();
+
+            const matchPhone = qDigits.length >= 3 && phone.includes(qDigits);
+            const matchName = name.includes(rawQ);
+            const matchBrand = brand.includes(rawQ);
+            const matchModel = model.includes(rawQ);
+            const matchSerial = serial.includes(rawQ);
+            const matchJenis = jenis.includes(rawQ);
+
+            return matchPhone || matchName || matchBrand || matchModel || matchSerial || matchJenis;
+        }
+
+        return true;
+    });
+
+    const selectedPerangkat = perangkats.find(p => Number(p.id) === Number(form.perangkat_id));
+
     return (
         <div className="w-full space-y-6 pb-10">
             {/* Header */}
@@ -148,23 +331,212 @@ export default function TiketServisForm() {
 
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-6">
                 <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <MonitorSmartphone className="w-4 h-4 text-slate-400" />
-                        Perangkat <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        value={form.perangkat_id}
-                        onChange={(e) => setForm({ ...form, perangkat_id: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all"
-                        required
-                    >
-                        <option value="">Pilih Perangkat</option>
-                        {perangkats.map((p) => (
-                            <option key={p.id} value={p.id}>
-                                {p.customer?.nama} - {p.merek} {p.model}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <MonitorSmartphone className="w-4 h-4 text-blue-600" />
+                            <span>Pilih Unit & Pelanggan</span>
+                            <span className="text-red-500">*</span>
+                        </label>
+                        
+                        <button
+                            type="button"
+                            onClick={handleOpenQuickAdd}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-2xs self-start sm:self-auto cursor-pointer"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Daftarkan Unit & Pelanggan Baru</span>
+                        </button>
+                    </div>
+
+                    {/* Hidden input to satisfy form submission check */}
+                    <input type="hidden" name="perangkat_id" value={form.perangkat_id} required />
+
+                    {/* State 1: Perangkat Sudah Terpilih (Rich Selected Card) */}
+                    {selectedPerangkat ? (
+                        <div className="p-4 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50 border border-blue-200/90 rounded-2xl shadow-2xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="flex items-start gap-3 min-w-0">
+                                    <div className="p-3 bg-blue-600 text-white rounded-xl shadow-xs shrink-0 mt-0.5">
+                                        {(() => {
+                                            const IconComp = getDeviceIcon(selectedPerangkat.jenis_perangkat);
+                                            return <IconComp className="w-5 h-5" />;
+                                        })()}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <h3 className="text-base font-black text-slate-900 tracking-tight">
+                                                {selectedPerangkat.merek} {selectedPerangkat.model}
+                                            </h3>
+                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                                                {selectedPerangkat.jenis_perangkat || "Laptop"}
+                                            </span>
+                                            {selectedPerangkat.serial_number && (
+                                                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-white text-slate-600 border border-slate-200">
+                                                    SN: {selectedPerangkat.serial_number}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-3 text-xs text-slate-600 mt-1.5 flex-wrap">
+                                            <span className="inline-flex items-center gap-1 font-semibold text-slate-800">
+                                                <User className="w-3.5 h-3.5 text-slate-500" />
+                                                {selectedPerangkat.customer?.nama}
+                                            </span>
+                                            <span className="inline-flex items-center gap-1 font-mono text-[11px] bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
+                                                <Phone className="w-3 h-3 text-emerald-600" />
+                                                {selectedPerangkat.customer?.nomor_telepon}
+                                            </span>
+                                            {selectedPerangkat._count?.tiket_servis > 0 && (
+                                                <span className="text-[11px] text-slate-500 font-medium">
+                                                    &bull; {selectedPerangkat._count.tiket_servis}x Servis Sebelumnya
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setForm({ ...form, perangkat_id: "" })}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition-all shadow-2xs self-end sm:self-center shrink-0 cursor-pointer"
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                                    <span>Ganti Unit</span>
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        /* State 2: Cari / Filter Perangkat (Smart Search & Category Picker) */
+                        <div className="space-y-3 p-4 bg-slate-50/70 border border-slate-200/90 rounded-2xl">
+                            {/* Search Input Bar */}
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <Search className="h-4 w-4 text-slate-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Cari No. WhatsApp (misal: 0812...), Nama Pelanggan, Merek, Model, atau Serial No..."
+                                    className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-2xs"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Category Filter Chips */}
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+                                {["Semua", "Laptop", "Desktop PC", "Printer", "Penyimpanan", "Lainnya"].map(cat => {
+                                    const count = categoryCounts[cat] || 0;
+                                    const isActive = categoryFilter === cat;
+                                    return (
+                                        <button
+                                            key={cat}
+                                            type="button"
+                                            onClick={() => setCategoryFilter(cat)}
+                                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                                isActive 
+                                                    ? "bg-blue-600 text-white shadow-2xs" 
+                                                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                                            }`}
+                                        >
+                                            <span>{cat}</span>
+                                            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                                                isActive ? "bg-blue-500/80 text-white" : "bg-slate-100 text-slate-500"
+                                            }`}>
+                                                {count}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Search Results / Device Selection List */}
+                            <div className="max-h-64 overflow-y-auto space-y-2 pr-1 custom-scrollbar pt-1">
+                                {filteredPerangkats.length > 0 ? (
+                                    filteredPerangkats.map(p => {
+                                        const DevIcon = getDeviceIcon(p.jenis_perangkat);
+                                        return (
+                                            <div
+                                                key={p.id}
+                                                onClick={() => {
+                                                    setForm({ ...form, perangkat_id: p.id });
+                                                    setSearchQuery("");
+                                                }}
+                                                className="group p-3 bg-white hover:bg-blue-50/60 border border-slate-200 hover:border-blue-300 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 shadow-2xs"
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className="p-2.5 bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700 rounded-lg transition-colors shrink-0">
+                                                        <DevIcon className="w-4 h-4" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-blue-900">
+                                                                {p.merek} {p.model}
+                                                            </span>
+                                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                                                {p.jenis_perangkat || "Laptop"}
+                                                            </span>
+                                                            {p.serial_number && (
+                                                                <span className="text-[10px] font-mono text-slate-400">
+                                                                    SN: {p.serial_number}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2.5 text-xs text-slate-500 mt-0.5 flex-wrap">
+                                                            <span className="font-semibold text-slate-700 flex items-center gap-1">
+                                                                <User className="w-3 h-3 text-slate-400" />
+                                                                {p.customer?.nama}
+                                                            </span>
+                                                            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                                                <Phone className="w-2.5 h-2.5 text-emerald-600" />
+                                                                {p.customer?.nomor_telepon}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-[11px] font-medium text-slate-400 hidden sm:inline">
+                                                        {p._count?.tiket_servis ? `${p._count.tiket_servis}x Servis` : "Unit Baru"}
+                                                    </span>
+                                                    <span className="px-2.5 py-1 bg-slate-50 group-hover:bg-blue-600 group-hover:text-white text-slate-600 rounded-lg text-xs font-semibold border border-slate-200 group-hover:border-blue-600 transition-all flex items-center gap-1">
+                                                        <span>Pilih</span>
+                                                        <ChevronRight className="w-3.5 h-3.5" />
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="p-6 bg-white rounded-xl border border-dashed border-slate-300 text-center space-y-2">
+                                        <MonitorSmartphone className="w-8 h-8 text-slate-300 mx-auto" />
+                                        <p className="text-xs font-bold text-slate-800">
+                                            Tidak ditemukan unit yang cocok {searchQuery && `dengan "${searchQuery}"`}
+                                        </p>
+                                        <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+                                            Pelanggan baru datang atau membawa unit yang belum pernah terdaftar?
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={handleOpenQuickAdd}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer mt-1"
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                            <span>Daftarkan Unit & Pelanggan Sekarang</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Kenali Riwayat Pelanggan & Unit Sebelumnya */}
                     {loadingPerangkatDetail ? (
@@ -671,6 +1043,217 @@ export default function TiketServisForm() {
                 onChange={setDefectMap}
                 title="Tandai Cacat Fisik Perangkat (2D Defect Map)"
             />
+
+            {/* Quick Registration Modal: Pelanggan & Perangkat Baru */}
+            {isQuickAddOpen && (
+                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-6">
+                        {/* Header */}
+                        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl border border-blue-200">
+                                    <Plus className="w-5 h-5 text-blue-600" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 text-base">Registrasi Kilat Unit & Pelanggan</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">Daftarkan pemilik dan perangkat langsung tanpa keluar halaman</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsQuickAddOpen(false)}
+                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Form Body */}
+                        <form onSubmit={handleQuickRegister} className="p-6 space-y-4 text-xs">
+                            {/* Switch Mode: Pelanggan Baru vs Pelanggan Terdaftar */}
+                            <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                                <button
+                                    type="button"
+                                    onClick={() => setQuickIsExistingCustomer(false)}
+                                    className={`flex-1 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                                        !quickIsExistingCustomer ? "bg-white text-blue-700 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                                    }`}
+                                >
+                                    + Pelanggan Baru (Walk-In)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setQuickIsExistingCustomer(true)}
+                                    className={`flex-1 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                                        quickIsExistingCustomer ? "bg-white text-blue-700 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                                    }`}
+                                >
+                                    Pelanggan Terdaftar
+                                </button>
+                            </div>
+
+                            {/* Section A: Customer Details */}
+                            {!quickIsExistingCustomer ? (
+                                <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-3">
+                                    <div className="flex items-center gap-1.5 font-bold text-slate-800 text-[11px] uppercase tracking-wider pb-1 border-b border-slate-200/60">
+                                        <User className="w-3.5 h-3.5 text-blue-600" />
+                                        <span>Identitas Pelanggan</span>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
+                                            <input
+                                                type="text"
+                                                value={quickForm.nama}
+                                                onChange={(e) => setQuickForm({ ...quickForm, nama: e.target.value })}
+                                                placeholder="Nama pelanggan..."
+                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                                required={!quickIsExistingCustomer}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block font-semibold text-slate-700 mb-1">No. WhatsApp *</label>
+                                            <input
+                                                type="text"
+                                                value={quickForm.nomor_telepon}
+                                                onChange={(e) => setQuickForm({ ...quickForm, nomor_telepon: e.target.value })}
+                                                placeholder="Contoh: 081234567890"
+                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                                required={!quickIsExistingCustomer}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block font-semibold text-slate-700 mb-1">Tipe Kepribadian (Gaya Komunikasi)</label>
+                                        <select
+                                            value={quickForm.tipe_kepribadian}
+                                            onChange={(e) => setQuickForm({ ...quickForm, tipe_kepribadian: e.target.value })}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 font-medium"
+                                        >
+                                            <option value="Netral">Netral (Standar Ramah & Terstruktur)</option>
+                                            <option value="Koleris">Koleris (Tegas, Lugas, Target Solusi Cepat)</option>
+                                            <option value="Sanguinis">Sanguinis (Ekspresif, Ramah, Komunikasi Hangat)</option>
+                                            <option value="Plegmatis">Plegmatis (Tenang, Sabar, Mengutamakan Rasa Aman)</option>
+                                            <option value="Melankolis">Melankolis (Kritis, Teliti, Penjelasan Teknis Rinci)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-2">
+                                    <label className="block font-semibold text-slate-700">Pilih Pelanggan Terdaftar *</label>
+                                    <select
+                                        value={selectedExistingCustId}
+                                        onChange={(e) => setSelectedExistingCustId(e.target.value)}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 font-semibold"
+                                        required={quickIsExistingCustomer}
+                                    >
+                                        <option value="">-- Pilih Pelanggan --</option>
+                                        {existingCustomers.map(c => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.nama} ({c.nomor_telepon})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* Section B: Device Details */}
+                            <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-3">
+                                <div className="flex items-center gap-1.5 font-bold text-slate-800 text-[11px] uppercase tracking-wider pb-1 border-b border-slate-200/60">
+                                    <Laptop className="w-3.5 h-3.5 text-indigo-600" />
+                                    <span>Data Perangkat Baru</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block font-semibold text-slate-700 mb-1">Kategori Perangkat *</label>
+                                        <select
+                                            value={quickForm.jenis_perangkat}
+                                            onChange={(e) => setQuickForm({ ...quickForm, jenis_perangkat: e.target.value })}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 font-semibold"
+                                            required
+                                        >
+                                            {DEVICE_CATEGORIES.map(cat => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block font-semibold text-slate-700 mb-1">Merek Perangkat *</label>
+                                        <input
+                                            type="text"
+                                            value={quickForm.merek}
+                                            onChange={(e) => setQuickForm({ ...quickForm, merek: e.target.value })}
+                                            placeholder="Contoh: Asus, Lenovo, HP..."
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Quick Brand Suggestion Chips */}
+                                <div className="flex items-center gap-1 flex-wrap">
+                                    <span className="text-[10px] text-slate-400 font-medium mr-1">Rekomendasi:</span>
+                                    {POPULAR_BRANDS.map(brand => (
+                                        <button
+                                            key={brand}
+                                            type="button"
+                                            onClick={() => setQuickForm({ ...quickForm, merek: brand })}
+                                            className="px-2 py-0.5 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-[10px] font-semibold text-slate-600 transition-colors cursor-pointer"
+                                        >
+                                            {brand}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block font-semibold text-slate-700 mb-1">Tipe / Model Perangkat *</label>
+                                        <input
+                                            type="text"
+                                            value={quickForm.model}
+                                            onChange={(e) => setQuickForm({ ...quickForm, model: e.target.value })}
+                                            placeholder="Contoh: Vivobook A1404, TUF F15..."
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 font-semibold text-slate-800"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block font-semibold text-slate-700 mb-1">Nomor Seri / Serial No (Opsional)</label>
+                                        <input
+                                            type="text"
+                                            value={quickForm.serial_number}
+                                            onChange={(e) => setQuickForm({ ...quickForm, serial_number: e.target.value })}
+                                            placeholder="Serial number casing..."
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer Buttons */}
+                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsQuickAddOpen(false)}
+                                    className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-xl border border-slate-200 text-xs transition-colors cursor-pointer"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={savingQuick}
+                                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                                >
+                                    <Check className="w-4 h-4" />
+                                    <span>{savingQuick ? "Mendaftarkan..." : "Simpan & Pilih Unit Ini"}</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
