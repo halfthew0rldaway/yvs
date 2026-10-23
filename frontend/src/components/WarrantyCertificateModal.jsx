@@ -107,35 +107,37 @@ export default function WarrantyCertificateModal({
 
             {/* Modal Dialog Card (Landscape Max-Width) */}
             <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-slate-200">
-                {/* Control Action Bar (Screen Only) */}
-                <div className="no-print px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+                {/* Control Action Bar (Screen Only - Clean Light Modern Header) */}
+                <div className="no-print px-6 py-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
-                            <ShieldCheck className="w-4 h-4" />
+                        <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl border border-emerald-200">
+                            <ShieldCheck className="w-5 h-5" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
                                 <span>Kartu Garansi Digital Resmi</span>
-                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                                <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                                     #{tiket.nomor_tiket}
                                 </span>
                             </h3>
-                            <p className="text-[11px] text-slate-400">Yangversa Computer &bull; Service & Hardware Protection Pass</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Yangversa Computer &bull; Service & Hardware Protection Pass</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <button
+                            type="button"
                             onClick={handlePrint}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer"
                             title="Cetak atau Simpan PDF"
                         >
-                            <Printer className="w-3.5 h-3.5" />
+                            <Printer className="w-4 h-4" />
                             <span>Cetak / PDF</span>
                         </button>
                         <button
+                            type="button"
                             onClick={onClose}
-                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
                         >
                             <X className="w-5 h-5" />
                         </button>
