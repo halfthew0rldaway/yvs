@@ -4,12 +4,11 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { 
     ArrowLeft, Save, MonitorSmartphone, User, MessageSquare, Package, Camera, 
-    ClipboardCheck, KeyRound, Lock, Eye, EyeOff, ShieldCheck, Shield, AlertTriangle, 
+    KeyRound, Lock, Eye, EyeOff, ShieldCheck, Shield, AlertTriangle, 
     Sparkles, Smile, History, HardDrive, CheckCircle2, Clock, Zap, Laptop,
     Search, Filter, Plus, Phone, RotateCcw, X, Check, ChevronRight, Printer, Box
 } from "lucide-react";
-import { CHECKLIST_ITEMS } from "../../utils/checklistItems";
-import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
+import DefectMapperModal from "../../components/DefectMapperModal";
 import { SLA_PENGECEKAN_PACKAGES } from "../../components/SlaBadge";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
 
@@ -50,9 +49,6 @@ export default function TiketServisForm() {
     const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
-    const [checklist, setChecklist] = useState(
-        Object.fromEntries(CHECKLIST_ITEMS.map(item => [item.key, false]))
-    );
     const [fotos, setFotos] = useState([]);
     const [perangkats, setPerangkats] = useState([]);
     const [teknisis, setTeknisis] = useState([]);
@@ -208,7 +204,6 @@ export default function TiketServisForm() {
             if (form.teknisi_id) formData.append("teknisi_id", form.teknisi_id);
             formData.append("keluhan", form.keluhan);
             if (form.kelengkapan) formData.append("kelengkapan", form.kelengkapan);
-            formData.append("checklist_intake", JSON.stringify(checklist));
             formData.append("tipe_kunci", form.tipe_kunci);
             if (form.password_perangkat) formData.append("password_perangkat", form.password_perangkat);
             
@@ -972,34 +967,6 @@ export default function TiketServisForm() {
                             placeholder="Contoh: Jangan buka partisi D:/Kerja atau folder foto pribadi..."
                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all shadow-sm"
                         />
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <ClipboardCheck className="w-4 h-4 text-slate-400" />
-                        Checklist Kondisi Perangkat (Inspeksi Awal)
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
-                        {CHECKLIST_ITEMS.map(item => {
-                            const ItemIcon = item.Icon;
-                            return (
-                                <label key={item.key} className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
-                                    checklist[item.key] 
-                                        ? "bg-emerald-50/60 border-emerald-200 text-emerald-900 font-semibold" 
-                                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-                                }`}>
-                                    <input
-                                        type="checkbox"
-                                        checked={Boolean(checklist[item.key])}
-                                        onChange={(e) => setChecklist({ ...checklist, [item.key]: e.target.checked })}
-                                        className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
-                                    />
-                                    <ItemIcon className="w-3.5 h-3.5 shrink-0" />
-                                    <span>{item.label}</span>
-                                </label>
-                            );
-                        })}
                     </div>
                 </div>
 
