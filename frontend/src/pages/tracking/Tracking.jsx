@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import api from "../../services/api";
-import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle } from "lucide-react";
+import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2 } from "lucide-react";
 import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS } from "../../utils/checklistItems";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
 import SlaBadge, { SlaCountdownCard } from "../../components/SlaBadge";
@@ -329,9 +330,61 @@ function AccessoriesChecklist({ kelengkapanDetail, kelengkapanText }) {
     );
 }
 
-function TrackingDetail({ t, onBack }) {
+function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
+    const [t, setT] = useState(initialTicket);
     const [isWarrantyModalOpen, setIsWarrantyModalOpen] = useState(false);
     const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
+
+    // Interactive Customer Approval Modal State
+    const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+    const [approvalAction, setApprovalAction] = useState("approve"); // "approve" | "reject"
+    const [phoneLast4, setPhoneLast4] = useState("");
+    const [alasanBatal, setAlasanBatal] = useState("Biaya melebihi estimasi / budget");
+    const [catatanBatal, setCatatanBatal] = useState("");
+    const [submittingApproval, setSubmittingApproval] = useState(false);
+
+    const handleOpenApprovalModal = (action) => {
+        setApprovalAction(action);
+        setPhoneLast4("");
+        setCatatanBatal("");
+        setIsApprovalModalOpen(true);
+    };
+
+    const handleSubmitApproval = async (e) => {
+        e.preventDefault();
+        if (!phoneLast4 || phoneLast4.trim().length < 4) {
+            toast.error("Harap masukkan 4 digit terakhir nomor telepon yang terdaftar!");
+            return;
+        }
+
+        setSubmittingApproval(true);
+        try {
+            const res = await api.post("/tracking/respond", {
+                nomorTiket: t.nomor_tiket,
+                action: approvalAction,
+                phone_last4: phoneLast4.trim(),
+                alasan_batal: approvalAction === "reject" ? alasanBatal : undefined,
+                catatan: approvalAction === "reject" ? catatanBatal : undefined,
+            });
+
+            toast.success(res.data.message);
+            const updatedTicket = {
+                ...t,
+                status: res.data.status,
+                disetujui_at: res.data.tiket?.disetujui_at || t.disetujui_at,
+                target_selesai_at: res.data.tiket?.target_selesai_at || t.target_selesai_at,
+                alasan_batal: res.data.tiket?.alasan_batal || t.alasan_batal,
+                catatan_batal: res.data.tiket?.catatan_batal || t.catatan_batal,
+            };
+            setT(updatedTicket);
+            if (onUpdateTicket) onUpdateTicket(updatedTicket);
+            setIsApprovalModalOpen(false);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memproses persetujuan");
+        } finally {
+            setSubmittingApproval(false);
+        }
+    };
 
     return (
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-200 overflow-hidden w-full flex flex-col w-full mx-auto">
@@ -564,6 +617,74 @@ function TrackingDetail({ t, onBack }) {
                                 <span className="text-blue-600 font-medium text-sm sm:text-base">Estimasi Biaya Awal</span>
                                 <span className="text-blue-700 font-semibold text-lg">{formatRupiah(t.diagnosis.estimasi_biaya)}</span>
                             </div>
+
+                            {/* Feature 4: Interactive Customer Approval Banner */}
+                            {t.status === "menunggu_persetujuan" && (
+                                <div className="md:col-span-2 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-5 sm:p-6 shadow-md mt-4 animate-fade-in">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div className="flex items-start gap-3.5">
+                                            <div className="p-3 bg-amber-500 text-white rounded-xl shadow-md shrink-0 mt-0.5">
+                                                <Clock className="w-6 h-6 animate-pulse" />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200/90 text-amber-900 border border-amber-300">
+                                                        Tahap Konfirmasi Pelanggan
+                                                    </span>
+                                                </div>
+                                                <h4 className="font-extrabold text-slate-900 text-base sm:text-lg">
+                                                    Persetujuan Estimasi Biaya & Tindakan Perbaikan
+                                                </h4>
+                                                <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                                                    Pemeriksaan awal selesai! Teknisi kami siap melakukan perbaikan dengan estimasi biaya di atas. Silakan pilih persetujuan Anda:
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 mt-5 pt-4 border-t border-amber-200/70">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenApprovalModal("reject")}
+                                            className="px-5 py-3 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                                        >
+                                            <X className="w-4 h-4" />
+                                            <span>Tolak & Batalkan Servis</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenApprovalModal("approve")}
+                                            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                                        >
+                                            <Check className="w-4 h-4" />
+                                            <span>Setujui Estimasi Biaya & Kerjakan Sekarang</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Cancellation Reason Banner */}
+                            {t.status === "dibatalkan" && (
+                                <div className="md:col-span-2 bg-rose-50 border border-rose-200 rounded-2xl p-5 mt-4 text-xs sm:text-sm text-rose-900 shadow-xs">
+                                    <div className="flex items-start gap-3">
+                                        <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                                        <div>
+                                            <h5 className="font-bold text-rose-950 text-sm">Servis Ini Telah Dibatalkan</h5>
+                                            {t.alasan_batal && (
+                                                <p className="mt-1 text-rose-800">
+                                                    <span className="font-semibold text-rose-900">Alasan:</span> {t.alasan_batal}
+                                                </p>
+                                            )}
+                                            {t.catatan_batal && (
+                                                <p className="mt-0.5 text-rose-700">{t.catatan_batal}</p>
+                                            )}
+                                            <p className="mt-2 text-rose-800 text-xs">
+                                                Unit Anda telah dirapikan kembali dan siap diambil di meja penyerahan toko kami.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             {t.invoice && (
                                 <div className="md:col-span-2 bg-emerald-50 p-5 sm:p-6 rounded-2xl border border-emerald-200 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
                                     <div className="flex flex-col gap-1">
@@ -724,6 +845,113 @@ function TrackingDetail({ t, onBack }) {
                 readOnly={true}
                 title={`Peta Cacat Fisik: ${t.perangkat}`}
             />
+
+            {/* Feature 4: Interactive Approval / Rejection Verification Modal */}
+            {isApprovalModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-auto">
+                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+                            <div className="flex items-center gap-2.5">
+                                <div className={`p-2 rounded-xl ${approvalAction === "approve" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                                    {approvalAction === "approve" ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+                                </div>
+                                <h3 className="font-bold text-slate-900 text-base">
+                                    {approvalAction === "approve" ? "Konfirmasi Persetujuan Perbaikan" : "Konfirmasi Pembatalan Servis"}
+                                </h3>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsApprovalModalOpen(false)}
+                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmitApproval} className="p-6 space-y-4 text-xs sm:text-sm">
+                            {approvalAction === "approve" ? (
+                                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900">
+                                    <p className="font-semibold">Anda menyetujui estimasi biaya sebesar:</p>
+                                    <p className="text-xl font-black text-emerald-800 mt-1">{formatRupiah(t.diagnosis?.estimasi_biaya || 0)}</p>
+                                    <p className="text-xs text-emerald-700 mt-1.5 leading-relaxed">
+                                        Setelah dikonfirmasi, teknisi akan segera mengeksekusi perbaikan fisik unit dan SLA pengerjaan akan mulai berjalan.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 text-xs">
+                                        <p className="font-semibold">Anda memilih membatalkan perbaikan unit ini.</p>
+                                        <p className="mt-0.5 text-rose-700">Unit Anda akan dirapikan kembali ke kondisi semula tanpa biaya perbaikan fisik.</p>
+                                    </div>
+                                    <div>
+                                        <label className="block font-semibold text-slate-700 mb-1">Alasan Pembatalan:</label>
+                                        <select
+                                            value={alasanBatal}
+                                            onChange={(e) => setAlasanBatal(e.target.value)}
+                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 text-xs outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                                        >
+                                            <option value="Biaya melebihi estimasi / budget">Biaya melebihi estimasi / budget</option>
+                                            <option value="Ingin ganti perangkat baru">Ingin ganti perangkat baru</option>
+                                            <option value="Perangkat buru-buru ingin dipakai">Perangkat buru-buru ingin dipakai</option>
+                                            <option value="Lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-semibold text-slate-700 mb-1">Catatan Tambahan (Opsional):</label>
+                                        <textarea
+                                            value={catatanBatal}
+                                            onChange={(e) => setCatatanBatal(e.target.value)}
+                                            placeholder="Tuliskan catatan Anda jika ada..."
+                                            rows={2}
+                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Verifikasi 4 digit terakhir nomor telepon */}
+                            <div className="pt-3 border-t border-slate-100">
+                                <label className="block font-bold text-slate-800 mb-1">
+                                    Verifikasi Nomor WhatsApp Pelanggan:
+                                </label>
+                                <p className="text-xs text-slate-500 mb-2 leading-relaxed">
+                                    Demi keamanan pemilik perangkat, masukkan <strong>4 digit terakhir</strong> nomor telepon yang terdaftar pada tiket ini (contoh: jika nomor Anda 08123456<span className="text-blue-600 font-bold font-mono">7890</span>, masukkan <span className="font-mono font-bold text-blue-600">7890</span>):
+                                </p>
+                                <input
+                                    type="text"
+                                    required
+                                    maxLength={4}
+                                    value={phoneLast4}
+                                    onChange={(e) => setPhoneLast4(e.target.value.replace(/\D/g, ""))}
+                                    placeholder="4 Digit Terakhir"
+                                    className="w-full text-center tracking-widest text-lg font-mono font-bold px-4 py-3 bg-slate-50 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:bg-white outline-none"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsApprovalModalOpen(false)}
+                                    className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={submittingApproval || phoneLast4.length < 4}
+                                    className={`px-5 py-2 text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                                        approvalAction === "approve"
+                                            ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20"
+                                            : "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20"
+                                    }`}
+                                >
+                                    {submittingApproval ? "Memproses..." : approvalAction === "approve" ? "Konfirmasi Setuju" : "Konfirmasi Tolak"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -807,32 +1035,49 @@ function RatingSection({ ticket }) {
 }
 
 export default function Tracking() {
+    const [searchParams] = useSearchParams();
+    const queryTiket = searchParams.get("nomor_tiket") || searchParams.get("tiket") || "";
     const [trackMethod, setTrackMethod] = useState("tiket");
     const [nomorTelepon, setNomorTelepon] = useState("");
-    const [nomorTiket, setNomorTiket] = useState("");
+    const [nomorTiket, setNomorTiket] = useState(queryTiket);
     const [results, setResults] = useState(null);
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    async function handleTrack(e) {
-        e.preventDefault();
+    useEffect(() => {
+        if (queryTiket) {
+            setNomorTiket(queryTiket);
+            executeTrack({ nomorTiket: queryTiket });
+        }
+    }, [queryTiket]);
+
+    async function executeTrack(payload) {
         setError("");
         setResults(null);
         setSelectedTicket(null);
         setLoading(true);
 
         try {
-            const res = await api.post("/tracking", {
-                nomorTelepon: trackMethod === "telepon" ? nomorTelepon : undefined,
-                nomorTiket: trackMethod === "tiket" ? nomorTiket : undefined,
-            });
+            const res = await api.post("/tracking", payload);
             setResults(res.data);
+            if (res.data && res.data.length === 1) {
+                setSelectedTicket(res.data[0]);
+            }
         } catch (err) {
             setError(err.response?.data?.message || "Gagal melacak servis");
         } finally {
             setLoading(false);
         }
+    }
+
+    async function handleTrack(e) {
+        e.preventDefault();
+        const payload = {
+            nomorTelepon: trackMethod === "telepon" ? nomorTelepon : undefined,
+            nomorTiket: trackMethod === "tiket" ? nomorTiket : undefined,
+        };
+        await executeTrack(payload);
     }
 
     return (
@@ -978,7 +1223,14 @@ export default function Tracking() {
 
                 {selectedTicket && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 max-w-none w-full">
-                        <TrackingDetail t={selectedTicket} onBack={() => setSelectedTicket(null)} />
+                        <TrackingDetail 
+                            t={selectedTicket} 
+                            onBack={() => setSelectedTicket(null)} 
+                            onUpdateTicket={(updated) => {
+                                setSelectedTicket(updated);
+                                setResults(prev => prev ? prev.map(item => item.id === updated.id ? { ...item, ...updated } : item) : [updated]);
+                            }}
+                        />
                     </div>
                 )}
 

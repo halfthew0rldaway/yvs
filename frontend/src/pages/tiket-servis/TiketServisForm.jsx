@@ -106,11 +106,15 @@ export default function TiketServisForm() {
             // Feature 7: SLA Express Service Package
             formData.append("sla_paket", slaPaket);
 
-            await api.post("/tiket-servis", formData, {
+            const res = await api.post("/tiket-servis", formData, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
             toast.success("Tiket servis berhasil dibuat!");
-            navigate("/tiket-servis");
+            if (res.data?.id) {
+                navigate(`/tiket-servis/${res.data.id}`);
+            } else {
+                navigate("/tiket-servis");
+            }
         } catch (err) {
             toast.error(err.response?.data?.message || "Terjadi kesalahan");
         } finally {

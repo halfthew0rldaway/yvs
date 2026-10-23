@@ -433,7 +433,12 @@ async function update(req, res) {
             sla_paket,
             target_pengecekan_at,
             target_selesai_at,
-            disetujui_at
+            disetujui_at,
+            alasan_batal,
+            catatan_batal,
+            biaya_pembatalan,
+            status_part_bekas,
+            catatan_part_bekas
         } = req.body;
         const id = Number(req.params.id);
 
@@ -526,6 +531,11 @@ async function update(req, res) {
             kondisi_fisik: kondisi_fisik !== undefined ? kondisi_fisik : undefined,
             spesifikasi_awal: spesifikasi_awal !== undefined ? spesifikasi_awal : undefined,
             prioritas_pelanggan: prioritas_pelanggan !== undefined ? prioritas_pelanggan : undefined,
+            alasan_batal: alasan_batal !== undefined ? alasan_batal : undefined,
+            catatan_batal: catatan_batal !== undefined ? catatan_batal : undefined,
+            biaya_pembatalan: biaya_pembatalan !== undefined ? (biaya_pembatalan ? Number(biaya_pembatalan) : 0) : undefined,
+            status_part_bekas: status_part_bekas !== undefined ? status_part_bekas : undefined,
+            catatan_part_bekas: catatan_part_bekas !== undefined ? catatan_part_bekas : undefined,
         };
 
         if (defect_map !== undefined) {
@@ -601,6 +611,34 @@ async function update(req, res) {
                     message: "Proteksi QC: Unit wajib melewati Checklist QC Pra-Penyerahan (passed_qc: true) sebelum status dapat diubah menjadi 'diambil'.",
                 });
             }
+
+            // Proteksi Unit Pinjaman: Status diambil wajib memastikan seluruh unit pinjaman sudah dikembalikan
+            const activeLoan = await prisma.loanerRecord.findFirst({
+                where: {
+                    tiket_id: id,
+                    status: "aktif"
+                },
+                include: { loaner_device: true }
+            });
+            if (activeLoan) {
+                return res.status(400).json({
+                    message: `Proteksi Unit Pinjaman: Pelanggan masih meminjam unit cadangan [${activeLoan.loaner_device?.kode_unit || 'LOAN'} - ${activeLoan.loaner_device?.nama || 'Unit Pinjaman'}]. Harap proses pengembalian unit pinjaman di menu Pinjaman sebelum menyerahkan unit utama.`,
+                });
+            }
+        }
+
+        // Catat log pembatalan jika tiket dibatalkan
+        if (status === "dibatalkan" && tiket.status !== "dibatalkan") {
+            const reason = alasan_batal || tiket.alasan_batal || "Dibatalkan";
+            const note = catatan_batal || tiket.catatan_batal || "";
+            const fee = biaya_pembatalan !== undefined ? Number(biaya_pembatalan) : (tiket.biaya_pembatalan || 0);
+            await prisma.logPerbaikan.create({
+                data: {
+                    tiket_id: id,
+                    fase: "Pembatalan",
+                    catatan: `[Tiket Dibatalkan] Alasan: ${reason}${note ? ' - ' + note : ''}${fee > 0 ? ` (Biaya Cek Batal: Rp ${fee.toLocaleString('id-ID')})` : ''}`,
+                },
+            });
         }
 
         // Jika status diubah menjadi diambil atau durasi_garansi diubah saat sudah diambil

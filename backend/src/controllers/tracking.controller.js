@@ -1,5 +1,5 @@
 const prisma = require("../config/database");
-const { getWarrantyStatus, getSlaStatus } = require("../utils/tiket");
+const { getWarrantyStatus, getSlaStatus, calculateSlaPengerjaanTarget } = require("../utils/tiket");
 
 // Customer melacak status servis tanpa login
 async function track(req, res) {
@@ -90,6 +90,9 @@ async function track(req, res) {
             tips_perawatan: t.tips_perawatan,
             rating_teknisi: t.rating_teknisi,
             rating_submitted_at: t.rating_submitted_at,
+            alasan_batal: t.alasan_batal,
+            catatan_batal: t.catatan_batal,
+            status_part_bekas: t.status_part_bekas,
             checklist_intake: t.checklist_intake,
             checklist_qc: t.checklist_qc,
             googleMapsUrl: "https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"
@@ -136,4 +139,126 @@ async function submitRating(req, res) {
     }
 }
 
-module.exports = { track, submitRating };
+// Pelanggan menyetujui atau menolak estimasi diagnosis secara online (Public with 4-digit verification)
+async function respondDiagnosisApproval(req, res) {
+    try {
+        const { nomorTiket, action, phone_last4, alasan_batal, catatan } = req.body;
+        if (!nomorTiket || !action || !phone_last4) {
+            return res.status(400).json({ message: "Nomor tiket, aksi (approve/reject), dan 4 digit terakhir nomor telepon wajib diisi." });
+        }
+
+        if (!["approve", "reject"].includes(action)) {
+            return res.status(400).json({ message: "Aksi tidak valid. Pilih 'approve' atau 'reject'." });
+        }
+
+        const tiket = await prisma.tiketServis.findUnique({
+            where: { nomor_tiket: nomorTiket },
+            include: {
+                perangkat: { include: { customer: true } },
+                diagnosis: true,
+                teknisi: true
+            }
+        });
+
+        if (!tiket) {
+            return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        }
+
+        if (tiket.status !== "menunggu_persetujuan") {
+            return res.status(400).json({ message: `Tiket ini sedang dalam status '${tiket.status}', bukan 'menunggu_persetujuan'.` });
+        }
+
+        // Verifikasi 4 digit terakhir nomor HP customer
+        const rawCustomerPhone = (tiket.perangkat?.customer?.nomor_telepon || "").replace(/\D/g, "");
+        const cleanInputPhone = String(phone_last4).replace(/\D/g, "");
+
+        if (!rawCustomerPhone.endsWith(cleanInputPhone) || cleanInputPhone.length < 4) {
+            return res.status(403).json({ message: "Verifikasi gagal: 4 digit terakhir nomor telepon tidak cocok dengan nomor yang terdaftar." });
+        }
+
+        if (action === "approve") {
+            const approvalDate = new Date();
+            const slaPaket = tiket.sla_paket || "reguler";
+            const targetSelesai = calculateSlaPengerjaanTarget(approvalDate, slaPaket);
+
+            const updated = await prisma.tiketServis.update({
+                where: { id: tiket.id },
+                data: {
+                    status: "disetujui",
+                    disetujui_at: approvalDate,
+                    target_selesai_at: targetSelesai
+                }
+            });
+
+            // Catat log perbaikan
+            const formattedBiaya = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(tiket.diagnosis?.estimasi_biaya || 0);
+            await prisma.logPerbaikan.create({
+                data: {
+                    tiket_id: tiket.id,
+                    fase: "Persetujuan Pelanggan",
+                    catatan: `[ACC Online Portal] Pelanggan menyetujui estimasi biaya (${formattedBiaya}) melalui web tracking.`
+                }
+            });
+
+            // Notifikasi ke teknisi & admin
+            await prisma.notification.create({
+                data: {
+                    recipient_role: "teknisi",
+                    user_id: tiket.teknisi_id || undefined,
+                    sender_nama: tiket.perangkat?.customer?.nama || "Pelanggan",
+                    tipe: "tiket",
+                    judul: `Penawaran Disetujui: ${tiket.nomor_tiket}`,
+                    pesan: `Pelanggan telah menyetujui estimasi perbaikan untuk unit ${tiket.perangkat?.merek} ${tiket.perangkat?.model}. Pengerjaan fisik dapat segera dimulai.`,
+                    link: `/tiket-servis/${tiket.id}`
+                }
+            });
+
+            return res.json({
+                message: "Terima kasih! Persetujuan Anda telah diterima. Teknisi kami akan segera memproses perbaikan unit Anda.",
+                status: "disetujui",
+                tiket: updated
+            });
+        } else {
+            // Reject / Batal
+            const updated = await prisma.tiketServis.update({
+                where: { id: tiket.id },
+                data: {
+                    status: "dibatalkan",
+                    alasan_batal: alasan_batal || "Ditolak pelanggan melalui portal tracking",
+                    catatan_batal: catatan || "Pelanggan memilih membatalkan perbaikan setelah menerima penawaran estimasi biaya."
+                }
+            });
+
+            // Catat log perbaikan
+            await prisma.logPerbaikan.create({
+                data: {
+                    tiket_id: tiket.id,
+                    fase: "Pembatalan",
+                    catatan: `[Ditolak Online Portal] Pelanggan menolak estimasi perbaikan melalui web tracking. Alasan: ${alasan_batal || "Tidak disebutkan"}${catatan ? ` (${catatan})` : ""}`
+                }
+            });
+
+            // Notifikasi ke admin
+            await prisma.notification.create({
+                data: {
+                    recipient_role: "admin",
+                    sender_nama: tiket.perangkat?.customer?.nama || "Pelanggan",
+                    tipe: "tiket",
+                    judul: `Penawaran Ditolak: ${tiket.nomor_tiket}`,
+                    pesan: `Pelanggan menolak estimasi biaya untuk tiket ${tiket.nomor_tiket}. Alasan: ${alasan_batal || "Tidak disebutkan"}. Unit siap dirapikan untuk pengembalian.`,
+                    link: `/tiket-servis/${tiket.id}`
+                }
+            });
+
+            return res.json({
+                message: "Pembatalan perbaikan telah dicatat. Anda dapat mengambil kembali unit Anda di toko kami.",
+                status: "dibatalkan",
+                tiket: updated
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+    }
+}
+
+module.exports = { track, submitRating, respondDiagnosisApproval };

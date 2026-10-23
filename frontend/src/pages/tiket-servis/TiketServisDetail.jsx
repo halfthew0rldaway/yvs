@@ -8,6 +8,7 @@ import ConfirmModal from "../../components/ConfirmModal";
 import SopWaModal from "../../components/SopWaModal";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
 import TicketQrModal from "../../components/TicketQrModal";
+import BpbsPrintModal from "../../components/BpbsPrintModal";
 import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS } from "../../utils/checklistItems";
 import SlaBadge, { SlaCountdownCard, SLA_PENGERJAAN_PACKAGES } from "../../components/SlaBadge";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
@@ -284,6 +285,17 @@ export default function TiketServisDetail() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isTakeOverModalOpen, setIsTakeOverModalOpen] = useState(false);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+    const [isBpbsModalOpen, setIsBpbsModalOpen] = useState(false);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [batalForm, setBatalForm] = useState({
+        alasan_batal: "Biaya melebihi budget pelanggan",
+        catatan_batal: "",
+        biaya_pembatalan: 0
+    });
+    const [isSubmittingBatal, setIsSubmittingBatal] = useState(false);
+    const [partBekasStatus, setPartBekasStatus] = useState("belum_diserahkan");
+    const [partBekasCatatan, setPartBekasCatatan] = useState("");
+    const [isSavingPartBekas, setIsSavingPartBekas] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
 
     // Sparepart use form
@@ -316,6 +328,15 @@ export default function TiketServisDetail() {
             setSopPrioritasPelanggan(res.data.prioritas_pelanggan || "Standar");
             setSopKondisiFisik(res.data.kondisi_fisik || "Bersih");
             setSopSpesifikasiAwal(res.data.spesifikasi_awal || "");
+            setPartBekasStatus(res.data.status_part_bekas || "belum_diserahkan");
+            setPartBekasCatatan(res.data.catatan_part_bekas || "");
+            if (res.data.alasan_batal) {
+                setBatalForm({
+                    alasan_batal: res.data.alasan_batal || "Biaya melebihi budget pelanggan",
+                    catatan_batal: res.data.catatan_batal || "",
+                    biaya_pembatalan: res.data.biaya_pembatalan || 0
+                });
+            }
 
             // Fetch Wiki hardware suggestions
             if (res.data?.perangkat) {
@@ -387,6 +408,12 @@ export default function TiketServisDetail() {
     function handleOpenStatusModal(targetStatus) {
         setSelectedStatus(targetStatus);
 
+        // Intercept jika status dibatalkan
+        if (targetStatus === "dibatalkan") {
+            setIsCancelModalOpen(true);
+            return;
+        }
+
         // Intercept jika transisi ke disetujui atau dalam_perbaikan dan belum di-ACC pelanggan (khusus Admin)
         if ((targetStatus === "disetujui" || targetStatus === "dalam_perbaikan") && !tiket.disetujui_at && isAdmin) {
             handleOpenAccModal(targetStatus);
@@ -420,6 +447,42 @@ export default function TiketServisDetail() {
         }
 
         setIsUpdatingStatus(true);
+    }
+
+    async function handleExecuteCancel(e) {
+        e.preventDefault();
+        setIsSubmittingBatal(true);
+        try {
+            await api.put(`/tiket-servis/${id}`, {
+                status: "dibatalkan",
+                alasan_batal: batalForm.alasan_batal,
+                catatan_batal: batalForm.catatan_batal,
+                biaya_pembatalan: Number(batalForm.biaya_pembatalan || 0)
+            });
+            toast.success("Tiket servis berhasil dibatalkan.");
+            setIsCancelModalOpen(false);
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal membatalkan tiket");
+        } finally {
+            setIsSubmittingBatal(false);
+        }
+    }
+
+    async function handleSavePartBekas() {
+        setIsSavingPartBekas(true);
+        try {
+            await api.put(`/tiket-servis/${id}`, {
+                status_part_bekas: partBekasStatus,
+                catatan_part_bekas: partBekasCatatan
+            });
+            toast.success("Status serah terima part bekas berhasil diperbarui.");
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memperbarui status part bekas");
+        } finally {
+            setIsSavingPartBekas(false);
+        }
     }
 
     function handleStatusChangeClick() {
@@ -796,6 +859,16 @@ export default function TiketServisDetail() {
                         <span>QR Tiket</span>
                     </button>
 
+                    <button
+                        type="button"
+                        onClick={() => setIsBpbsModalOpen(true)}
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shrink-0 cursor-pointer"
+                        title="Cetak Surat Tanda Terima Masuk (BPBS)"
+                    >
+                        <Printer className="w-4 h-4 text-emerald-600" />
+                        <span>Cetak BPBS</span>
+                    </button>
+
                     {isAdmin && (
                         <button
                             type="button"
@@ -804,6 +877,18 @@ export default function TiketServisDetail() {
                         >
                             <MessageCircle className="w-4 h-4" />
                             <span>WhatsApp</span>
+                        </button>
+                    )}
+
+                    {isAdmin && ["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui"].includes(tiket.status) && (
+                        <button
+                            type="button"
+                            onClick={() => setIsCancelModalOpen(true)}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-2xs shrink-0 cursor-pointer"
+                            title="Batalkan Tiket Servis Ini"
+                        >
+                            <XCircle className="w-4 h-4 text-rose-500" />
+                            <span className="hidden sm:inline">Batalkan Tiket</span>
                         </button>
                     )}
 
@@ -925,6 +1010,40 @@ export default function TiketServisDetail() {
                     >
                         Buka Menu Pinjaman →
                     </Link>
+                </div>
+            )}
+
+            {/* Status Dibatalkan Alert Banner */}
+            {tiket.status === "dibatalkan" && (
+                <div className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-fade-in">
+                    <div className="flex items-start gap-3.5">
+                        <div className="p-2.5 bg-rose-600 text-white rounded-xl shrink-0 mt-0.5 shadow-sm">
+                            <XCircle className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-200 text-rose-900 border border-rose-300">
+                                    Tiket Dibatalkan
+                                </span>
+                                {tiket.biaya_pembatalan > 0 && (
+                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                        Biaya Cek Batal: {formatRupiah(tiket.biaya_pembatalan)}
+                                    </span>
+                                )}
+                            </div>
+                            <h4 className="text-sm sm:text-base font-extrabold text-rose-950">
+                                Alasan Pembatalan: {tiket.alasan_batal || "Tidak disebutkan"}
+                            </h4>
+                            {tiket.catatan_batal && (
+                                <p className="text-xs sm:text-sm text-rose-800 mt-1 leading-relaxed">
+                                    {tiket.catatan_batal}
+                                </p>
+                            )}
+                            <p className="text-[11px] text-rose-700/80 mt-1.5 italic">
+                                * Unit dapat diserahkan kembali kepada pemilik di meja penyerahan toko.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -1200,14 +1319,26 @@ export default function TiketServisDetail() {
                                     <p className="text-[11px] text-slate-500 font-mono mt-0.5">{tiket.nomor_tiket}</p>
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setIsQrModalOpen(true)}
-                                className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5 shrink-0 cursor-pointer"
-                            >
-                                <Printer className="w-3.5 h-3.5 text-blue-600" />
-                                <span>Cetak Label</span>
-                            </button>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsQrModalOpen(true)}
+                                    className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                                    title="Cetak Stiker Label Thermal 100mm"
+                                >
+                                    <Printer className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>Label</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsBpbsModalOpen(true)}
+                                    className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                                    title="Cetak Surat Tanda Terima Masuk (BPBS A5/A4)"
+                                >
+                                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>BPBS</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex items-start gap-3">
@@ -1591,6 +1722,64 @@ export default function TiketServisDetail() {
                                 <Package className="w-10 h-10 text-slate-300 mb-3" />
                                 <p className="text-sm font-medium text-slate-900">Tidak ada sparepart</p>
                                 <p className="text-xs text-slate-500 mt-1">Belum ada suku cadang yang digunakan untuk perbaikan ini.</p>
+                            </div>
+                        )}
+
+                        {/* Feature 5: Pengembalian Sparepart Bekas / Copotan (SOP Yangversa) */}
+                        {tiket.penggunaan_sparepart?.length > 0 && (
+                            <div className="mb-6 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <RotateCcw className="w-4 h-4 text-indigo-600" />
+                                        <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                                            Status Serah Terima Sparepart Bekas (SOP Yangversa)
+                                        </span>
+                                    </div>
+                                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                                        (partBekasStatus || tiket.status_part_bekas) === "diserahkan_ke_pelanggan"
+                                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                            : (partBekasStatus || tiket.status_part_bekas) === "titip_buang_ewaste"
+                                                ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                                : "bg-slate-200 text-slate-700"
+                                    }`}>
+                                        {(partBekasStatus || tiket.status_part_bekas) === "diserahkan_ke_pelanggan"
+                                            ? "✓ Diserahkan ke Pelanggan"
+                                            : (partBekasStatus || tiket.status_part_bekas) === "titip_buang_ewaste"
+                                                ? "♻ Titip Buang Bengkel (E-Waste)"
+                                                : "Belum Diserahkan"}
+                                    </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 mb-3">
+                                    SOP Transparansi Toko: Seluruh komponen lama yang diganti wajib ditunjukkan dan diserahkan kembali kepada pelanggan saat serah terima unit, kecuali jika pelanggan menitipkannya untuk dibuang.
+                                </p>
+                                {(isAdmin || isAssignedToMe) && ["dalam_perbaikan", "selesai", "diambil"].includes(tiket.status) && (
+                                    <div className="flex flex-col sm:flex-row items-center gap-2">
+                                        <select
+                                            value={partBekasStatus}
+                                            onChange={(e) => setPartBekasStatus(e.target.value)}
+                                            className="w-full sm:w-auto px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                        >
+                                            <option value="belum_diserahkan">Belum Diserahkan</option>
+                                            <option value="diserahkan_ke_pelanggan">Diserahkan ke Pelanggan</option>
+                                            <option value="titip_buang_ewaste">Titip Buang Bengkel (E-Waste)</option>
+                                        </select>
+                                        <input
+                                            type="text"
+                                            value={partBekasCatatan}
+                                            onChange={(e) => setPartBekasCatatan(e.target.value)}
+                                            placeholder="Catatan (misal: LCD lama & baterai ditaruh di box unit)"
+                                            className="w-full sm:flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleSavePartBekas}
+                                            disabled={isSavingPartBekas}
+                                            className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
+                                        >
+                                            {isSavingPartBekas ? "Menyimpan..." : "Simpan Status Part"}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -3121,6 +3310,109 @@ export default function TiketServisDetail() {
                 onClose={() => setIsQrModalOpen(false)} 
                 tiket={tiket} 
             />
+
+            {/* Feature 3: Surat Tanda Terima Masuk (BPBS) Modal */}
+            <BpbsPrintModal
+                isOpen={isBpbsModalOpen}
+                onClose={() => setIsBpbsModalOpen(false)}
+                tiket={tiket}
+            />
+
+            {/* Feature 2.2: Modal Pembatalan Tiket Servis */}
+            {isCancelModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+                    <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden my-auto">
+                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 bg-rose-100 text-rose-700 rounded-xl">
+                                    <XCircle className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 text-base">Batalkan Tiket Servis</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">Catat alasan pembatalan pengerjaan unit</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsCancelModalOpen(false)}
+                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleExecuteCancel} className="p-6 space-y-4 text-xs sm:text-sm">
+                            <div>
+                                <label className="block font-semibold text-slate-700 mb-1">
+                                    Alasan Utama Pembatalan:
+                                </label>
+                                <select
+                                    value={batalForm.alasan_batal}
+                                    onChange={(e) => setBatalForm({ ...batalForm, alasan_batal: e.target.value })}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                                >
+                                    <option value="Biaya melebihi budget pelanggan">Biaya melebihi budget pelanggan</option>
+                                    <option value="Sparepart langka / discontinue / tidak tersedia">Sparepart langka / discontinue / tidak tersedia</option>
+                                    <option value="Kerusakan motherboard / PCB terlalu parah (Mati total tidak tertolong)">Kerusakan motherboard / PCB terlalu parah (Mati total tidak tertolong)</option>
+                                    <option value="Pelanggan membatalkan servis (ingin ganti unit baru)">Pelanggan membatalkan servis (ingin ganti unit baru)</option>
+                                    <option value="Risiko pengerjaan terlalu tinggi">Risiko pengerjaan terlalu tinggi</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-slate-700 mb-1">
+                                    Catatan / Kronologi Pembatalan:
+                                </label>
+                                <textarea
+                                    value={batalForm.catatan_batal}
+                                    onChange={(e) => setBatalForm({ ...batalForm, catatan_batal: e.target.value })}
+                                    placeholder="Jelaskan detail alasan atau instruksi pengembalian unit..."
+                                    rows={3}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-slate-700 mb-1">
+                                    Biaya Pengecekan / Biaya Batal (Opsional):
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400 text-xs">Rp</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={batalForm.biaya_pembatalan}
+                                        onChange={(e) => setBatalForm({ ...batalForm, biaya_pembatalan: e.target.value })}
+                                        className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                                        placeholder="0 jika bebas biaya cek"
+                                    />
+                                </div>
+                                <p className="text-[11px] text-slate-400 mt-1">
+                                    Isi 0 jika toko menerapkan kebijakan gratis biaya pengecekan untuk unit batal.
+                                </p>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCancelModalOpen(false)}
+                                    className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+                                >
+                                    Tutup
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingBatal}
+                                    className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-md shadow-rose-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                >
+                                    {isSubmittingBatal ? "Membatalkan..." : "Konfirmasi Batalkan Tiket"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

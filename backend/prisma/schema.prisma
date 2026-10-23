@@ -116,6 +116,15 @@ model TiketServis {
   target_selesai_at    DateTime? // Batas waktu pengerjaan servis fisik (dihitung setelah disetujui customer)
   disetujui_at         DateTime? // Waktu penawaran di-ACC oleh pelanggan (titik awal SLA servis)
 
+  // Feature SOP: Alasan Pembatalan & Biaya Batal (Bab 3.9)
+  alasan_batal         String?   @db.VarChar(255) // Biaya overbudget, part tidak tersedia, kerusakan parah, dll
+  catatan_batal        String?   @db.Text
+  biaya_pembatalan     Float?    @default(0)
+
+  // Feature SOP: Pengembalian Sparepart Bekas / Copotan
+  status_part_bekas    String?   @default("belum_diserahkan") // belum_diserahkan, diserahkan_ke_pelanggan, titip_buang_ewaste, tidak_ada_pergantian
+  catatan_part_bekas   String?   @db.VarChar(255)
+
   perangkat         Perangkat          @relation(fields: [perangkat_id], references: [id], onDelete: Cascade)
   teknisi           User?              @relation("TeknisiTiket", fields: [teknisi_id], references: [id], onDelete: SetNull)
   diagnosis         Diagnosis?
