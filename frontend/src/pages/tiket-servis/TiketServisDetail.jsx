@@ -12,6 +12,7 @@ import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS } from "../../utils/checklistItems"
 import SlaBadge, { SlaCountdownCard, SLA_PENGERJAAN_PACKAGES } from "../../components/SlaBadge";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import RepairWikiDetailModal from "../wiki/RepairWikiDetailModal";
+import PhotoUploadSection from "../../components/PhotoUploadSection";
 
 
 const STATUS_LABELS = {
@@ -207,6 +208,7 @@ export default function TiketServisDetail() {
         passed_qc: false,
         catatan_qc: ""
     });
+    const [qcPhotos, setQcPhotos] = useState([]);
 
     // Dual-Phase SLA: ACC & Estimasi SLA Pengerjaan Modal State
     const [isAccModalOpen, setIsAccModalOpen] = useState(false);
@@ -406,6 +408,13 @@ export default function TiketServisDetail() {
                 passed_qc: false,
                 catatan_qc: currentQc.catatan_qc || ""
             });
+            let existingSelesaiPhotos = [];
+            if (tiket?.foto_selesai) {
+                try {
+                    existingSelesaiPhotos = typeof tiket.foto_selesai === "string" ? JSON.parse(tiket.foto_selesai) : tiket.foto_selesai;
+                } catch (e) { existingSelesaiPhotos = []; }
+            }
+            setQcPhotos(existingSelesaiPhotos || []);
             setIsQcModalOpen(true);
             return;
         }
@@ -626,6 +635,36 @@ export default function TiketServisDetail() {
             if (catatanAdmin && isAdmin) {
                 payload.catatan_admin = catatanAdmin;
             }
+
+            // Simpan / unggah foto selesai servis jika ada
+            if (qcPhotos && qcPhotos.length > 0) {
+                const formData = new FormData();
+                const existingUrls = [];
+                qcPhotos.forEach(p => {
+                    if (p instanceof File) {
+                        formData.append("foto_selesai", p);
+                    } else if (typeof p === "string") {
+                        existingUrls.push(p);
+                    }
+                });
+                formData.append("replace", "true");
+                const hasNewFiles = qcPhotos.some(p => p instanceof File);
+                if (hasNewFiles) {
+                    try {
+                        const uploadRes = await api.post(`/tiket-servis/${id}/foto-selesai`, formData, {
+                            headers: { "Content-Type": "multipart/form-data" }
+                        });
+                        if (uploadRes.data?.foto_selesai) {
+                            payload.foto_selesai = uploadRes.data.foto_selesai;
+                        }
+                    } catch (uploadErr) {
+                        console.error("Gagal upload foto selesai:", uploadErr);
+                    }
+                } else {
+                    payload.foto_selesai = existingUrls;
+                }
+            }
+
             await api.put(`/tiket-servis/${id}`, payload);
             toast.success(`QC berhasil diverifikasi & status diubah menjadi "${STATUS_LABELS[selectedStatus]?.label}"!`);
             setIsQcModalOpen(false);
@@ -1216,6 +1255,51 @@ export default function TiketServisDetail() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Foto Selesai Servis & QC (Maksimal 15) */}
+                        {tiket.foto_selesai && (
+                            (() => {
+                                let selesaiPhotos = [];
+                                try {
+                                    selesaiPhotos = typeof tiket.foto_selesai === 'string' ? JSON.parse(tiket.foto_selesai) : tiket.foto_selesai;
+                                } catch(e) { selesaiPhotos = []; }
+                                if (!selesaiPhotos || selesaiPhotos.length === 0) return null;
+                                return (
+                                    <div className="flex items-start gap-3 pt-3 border-t border-slate-100">
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                                        <div className="w-full">
+                                            <p className="text-emerald-700 text-xs font-bold uppercase tracking-wider mb-1">
+                                                Foto Selesai Servis & QC ({selesaiPhotos.length})
+                                            </p>
+                                            <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                                                {selesaiPhotos.map((foto, idx) => {
+                                                    const imageUrl = foto.startsWith('http') ? foto : `/${foto.replace(/^\/+/, '')}`;
+                                                    return (
+                                                        <button 
+                                                            key={idx} 
+                                                            onClick={() => setSelectedImage(imageUrl)}
+                                                            className="relative shrink-0 group outline-none focus:ring-4 focus:ring-emerald-500/20 rounded-xl cursor-pointer"
+                                                        >
+                                                            <img 
+                                                                src={imageUrl} 
+                                                                alt={`Selesai Servis ${idx+1}`} 
+                                                                className="w-16 h-16 object-cover rounded-xl border border-emerald-200 shadow-sm transition-transform group-hover:scale-105"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                                                                <Search className="w-4 h-4 text-white" />
+                                                            </div>
+                                                            <span className="absolute bottom-1 right-1 bg-slate-900/80 text-white text-[9px] font-mono px-1 rounded">
+                                                                #{idx + 1}
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()
+                        )}
                         {/* Intake Inspection Checklist Display */}
                         {tiket.checklist_intake && (
                             <div className="pt-3 border-t border-slate-100">
@@ -1296,6 +1380,51 @@ export default function TiketServisDetail() {
                             <p className="text-blue-900 font-bold text-xl">{formatRupiah(tiket.diagnosis.estimasi_biaya)}</p>
                         </div>
                     </div>
+
+                    {/* Foto Temuan & Bukti Diagnosis (Maks 25) */}
+                    {(() => {
+                        let diagPhotos = [];
+                        const raw = tiket.diagnosis?.foto_diagnosis || tiket.foto_diagnosis;
+                        if (raw) {
+                            try { diagPhotos = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch(e) { diagPhotos = []; }
+                        }
+                        if (!diagPhotos || diagPhotos.length === 0) return null;
+                        return (
+                            <div className="mt-5 pt-5 border-t border-slate-100">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Camera className="w-4 h-4 text-blue-600" />
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                                        Foto Temuan & Bukti Diagnosis ({diagPhotos.length})
+                                    </h4>
+                                </div>
+                                <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                                    {diagPhotos.map((foto, idx) => {
+                                        const imageUrl = foto.startsWith('http') ? foto : `/${foto.replace(/^\/+/, '')}`;
+                                        return (
+                                            <button 
+                                                key={idx} 
+                                                type="button"
+                                                onClick={() => setSelectedImage(imageUrl)}
+                                                className="relative shrink-0 group outline-none rounded-xl cursor-pointer"
+                                            >
+                                                <img 
+                                                    src={imageUrl} 
+                                                    alt={`Bukti Diagnosis ${idx + 1}`} 
+                                                    className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-slate-200 shadow-2xs group-hover:scale-105 transition-transform"
+                                                />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                                                    <Search className="w-4 h-4 text-white" />
+                                                </div>
+                                                <span className="absolute bottom-1 right-1 bg-slate-900/80 text-white text-[9px] font-mono px-1 rounded">
+                                                    #{idx + 1}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
             )}
 
@@ -2676,6 +2805,15 @@ export default function TiketServisDetail() {
                                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none shadow-2xs"
                                 />
                             </div>
+
+                            {/* Foto Selesai Servis & Hasil Akhir QC (Maksimal 15) */}
+                            <PhotoUploadSection
+                                label="Foto Selesai Servis & Hasil Akhir (QC)"
+                                sublabel="Dokumentasikan kondisi fisik setelah servis selesai, segel workshop, dan kelengkapan (Maksimal 15 foto)."
+                                maxPhotos={15}
+                                photos={qcPhotos}
+                                onChange={setQcPhotos}
+                            />
 
                             {/* Approval Banner */}
                             <div className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 ${

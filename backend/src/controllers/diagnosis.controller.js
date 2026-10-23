@@ -52,6 +52,20 @@ async function create(req, res) {
             return res.status(400).json({ message: "Estimasi biaya harus berupa angka dan tidak boleh negatif" });
         }
 
+        let uploadedPhotos = [];
+        if (req.body.existing_foto_diagnosis) {
+            try {
+                uploadedPhotos = typeof req.body.existing_foto_diagnosis === 'string' ? JSON.parse(req.body.existing_foto_diagnosis) : req.body.existing_foto_diagnosis;
+            } catch (e) { uploadedPhotos = []; }
+        }
+        if (req.files && req.files.length > 0) {
+            const newUrls = req.files.map(file => `/uploads/${file.filename}`);
+            uploadedPhotos = [...uploadedPhotos, ...newUrls];
+        } else if (req.body.foto_diagnosis && uploadedPhotos.length === 0) {
+            uploadedPhotos = typeof req.body.foto_diagnosis === 'string' ? JSON.parse(req.body.foto_diagnosis) : req.body.foto_diagnosis;
+        }
+        const fotoDiagnosisStr = uploadedPhotos && uploadedPhotos.length > 0 ? JSON.stringify(uploadedPhotos.slice(0, 25)) : null;
+
         const diagnosis = await prisma.$transaction(async (tx) => {
             const created = await tx.diagnosis.create({
                 data: {
@@ -59,13 +73,17 @@ async function create(req, res) {
                     masalah,
                     solusi,
                     estimasi_biaya: estimasi,
+                    foto_diagnosis: fotoDiagnosisStr,
                 },
             });
 
-            // Update status tiket ke didiagnosis secara atomik
+            // Update status tiket ke didiagnosis secara atomik & simpan foto_diagnosis di tiket
             await tx.tiketServis.update({
                 where: { id: Number(tiket_id) },
-                data: { status: "didiagnosis" },
+                data: { 
+                    status: "didiagnosis",
+                    foto_diagnosis: fotoDiagnosisStr || undefined
+                },
             });
 
             return created;
@@ -111,10 +129,37 @@ async function update(req, res) {
             updateData.estimasi_biaya = estimasi;
         }
 
+        let existing = [];
+        if (req.body.existing_foto_diagnosis) {
+            try {
+                existing = typeof req.body.existing_foto_diagnosis === 'string' ? JSON.parse(req.body.existing_foto_diagnosis) : req.body.existing_foto_diagnosis;
+            } catch (e) { existing = []; }
+        } else if (req.body.replace !== 'true' && diagnosis.foto_diagnosis) {
+            try {
+                existing = typeof diagnosis.foto_diagnosis === 'string' ? JSON.parse(diagnosis.foto_diagnosis) : diagnosis.foto_diagnosis;
+            } catch (e) { existing = []; }
+        }
+
+        if (req.files && req.files.length > 0) {
+            const newFiles = req.files.map(file => `/uploads/${file.filename}`);
+            updateData.foto_diagnosis = JSON.stringify([...existing, ...newFiles].slice(0, 25));
+        } else if (req.body.existing_foto_diagnosis !== undefined) {
+            updateData.foto_diagnosis = JSON.stringify(existing.slice(0, 25));
+        } else if (req.body.foto_diagnosis !== undefined) {
+            updateData.foto_diagnosis = typeof req.body.foto_diagnosis === 'string' ? req.body.foto_diagnosis : JSON.stringify(req.body.foto_diagnosis);
+        }
+
         const updated = await prisma.diagnosis.update({
             where: { id },
             data: updateData,
         });
+
+        if (updateData.foto_diagnosis !== undefined) {
+            await prisma.tiketServis.update({
+                where: { id: diagnosis.tiket_id },
+                data: { foto_diagnosis: updateData.foto_diagnosis }
+            });
+        }
 
         return res.json({ message: "Diagnosis berhasil diperbarui", data: updated });
     } catch (error) {

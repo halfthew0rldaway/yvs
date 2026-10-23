@@ -16,7 +16,9 @@ const {
     getMaintenanceDue,
     markMaintenanceFollowUp,
     getUnclaimedDue,
-    markUnclaimedFollowUp
+    markUnclaimedFollowUp,
+    uploadFotoSelesai,
+    uploadFotoDiagnosis
 } = require("../controllers/tiket-servis.controller");
 
 const router = express.Router();
@@ -40,7 +42,9 @@ router.get("/warranty/expiring", getExpiringWarranties);
 router.get("/maintenance/due", getMaintenanceDue);
 router.get("/unclaimed/due", getUnclaimedDue);
 router.get("/:id", getById);
-router.post("/", authorize("admin"), upload.array("foto_kondisi", 5), tiketValidation, validate, create);
+router.post("/", authorize("admin"), upload.array("foto_kondisi", 10), tiketValidation, validate, create);
+router.post("/:id/foto-selesai", authorize("admin", "teknisi"), upload.array("foto_selesai", 15), uploadFotoSelesai);
+router.post("/:id/foto-diagnosis", authorize("admin", "teknisi"), upload.array("foto_diagnosis", 25), uploadFotoDiagnosis);
 router.post("/:id/claim-garansi", authorize("admin"), createWarrantyClaim);
 router.post("/:id/reminder-garansi", authorize("admin", "teknisi"), markWarrantyFollowUp);
 router.post("/:id/reminder-maintenance", authorize("admin", "teknisi"), markMaintenanceFollowUp);

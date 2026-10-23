@@ -58,7 +58,9 @@ model TiketServis {
   teknisi_id     Int?
   keluhan        String   @db.Text
   kelengkapan    String?  @db.Text
-  foto_kondisi   Json?
+  foto_kondisi   Json?    // Foto fisik saat intake tiket (maks 10)
+  foto_diagnosis Json?    // Foto pemeriksaan teknis fase diagnosis (maks 25)
+  foto_selesai   Json?    // Foto hasil akhir pengerjaan / QC (maks 15)
   status         String   @default("diterima") // diterima, didiagnosis, menunggu_persetujuan, disetujui, dalam_perbaikan, selesai, diambil, dibatalkan
   created_at     DateTime @default(now())
   completed_at   DateTime?
@@ -130,6 +132,7 @@ model Diagnosis {
   masalah         String
   solusi          String
   estimasi_biaya  Float
+  foto_diagnosis  Json?    // Foto pemeriksaan teknis fase diagnosis (maks 25)
   created_at      DateTime @default(now())
 
   tiket TiketServis @relation(fields: [tiket_id], references: [id], onDelete: Cascade)

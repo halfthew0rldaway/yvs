@@ -2,6 +2,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate, authorize } = require("../middleware/auth");
+const upload = require("../middleware/upload");
 const { create, update, getByTiketId } = require("../controllers/diagnosis.controller");
 
 const router = express.Router();
@@ -15,8 +16,8 @@ const diagnosisValidation = [
     body("estimasi_biaya").notEmpty().withMessage("Estimasi biaya wajib diisi"),
 ];
 
-router.post("/", authorize("teknisi", "admin"), diagnosisValidation, validate, create);
-router.put("/:id", authorize("teknisi", "admin"), update);
+router.post("/", authorize("teknisi", "admin"), upload.array("foto_diagnosis", 25), diagnosisValidation, validate, create);
+router.put("/:id", authorize("teknisi", "admin"), upload.array("foto_diagnosis", 25), update);
 router.get("/:id", getByTiketId);
 
 module.exports = router;

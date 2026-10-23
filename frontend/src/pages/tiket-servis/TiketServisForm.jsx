@@ -1,17 +1,16 @@
 import toast from 'react-hot-toast';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { 
     ArrowLeft, Save, MonitorSmartphone, User, MessageSquare, Package, Camera, 
     ClipboardCheck, KeyRound, Lock, Eye, EyeOff, ShieldCheck, Shield, AlertTriangle, 
-    Sparkles, Smile, History, HardDrive, CheckCircle2, Clock, Zap, Laptop,
-    Upload, Trash2, X, Plus, ZoomIn, Image as ImageIcon
+    Sparkles, Smile, History, HardDrive, CheckCircle2, Clock, Zap, Laptop
 } from "lucide-react";
 import { CHECKLIST_ITEMS } from "../../utils/checklistItems";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import { SLA_PENGECEKAN_PACKAGES } from "../../components/SlaBadge";
-import CameraCaptureModal from "../../components/CameraCaptureModal";
+import PhotoUploadSection from "../../components/PhotoUploadSection";
 
 export default function TiketServisForm() {
     const navigate = useNavigate();
@@ -42,42 +41,6 @@ export default function TiketServisForm() {
         Object.fromEntries(CHECKLIST_ITEMS.map(item => [item.key, false]))
     );
     const [fotos, setFotos] = useState([]);
-    const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
-    const [previewImage, setPreviewImage] = useState(null);
-    const fileInputRef = useRef(null);
-    const nativeCameraInputRef = useRef(null);
-
-    function handleAddPhoto(newFile) {
-        if (fotos.length >= 5) {
-            toast.error("Maksimal 5 foto!");
-            return;
-        }
-        setFotos(prev => [...prev, newFile]);
-    }
-
-    function handleRemovePhoto(index) {
-        setFotos(prev => prev.filter((_, i) => i !== index));
-    }
-
-    function handleFileSelect(e) {
-        const selectedFiles = Array.from(e.target.files || []);
-        if (selectedFiles.length === 0) return;
-
-        const availableSlots = 5 - fotos.length;
-        if (availableSlots <= 0) {
-            toast.error("Maksimal 5 foto sudah tercapai!");
-            e.target.value = "";
-            return;
-        }
-
-        const filesToAdd = selectedFiles.slice(0, availableSlots);
-        if (selectedFiles.length > availableSlots) {
-            toast.error(`Hanya ${availableSlots} foto yang ditambahkan (Maksimal 5 foto).`);
-        }
-
-        setFotos(prev => [...prev, ...filesToAdd]);
-        e.target.value = "";
-    }
     const [perangkats, setPerangkats] = useState([]);
     const [teknisis, setTeknisis] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -664,151 +627,14 @@ export default function TiketServisForm() {
                     </div>
                 </div>
 
-                {/* Foto Kondisi Fisik Perangkat (Kamera Langsung & Upload File) */}
-                <div className="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                        <div>
-                            <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                <Camera className="w-4 h-4 text-blue-600" />
-                                <span>Foto Kondisi Fisik Perangkat</span>
-                                <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
-                                    fotos.length >= 5 
-                                        ? "bg-amber-100 text-amber-800 border border-amber-200" 
-                                        : "bg-blue-50 text-blue-700 border border-blue-200"
-                                }`}>
-                                    {fotos.length} / 5 Foto
-                                </span>
-                            </label>
-                            <p className="text-xs text-slate-500 mt-0.5">
-                                Dokumentasikan tampak depan, belakang, lecet/retak, dan nomor seri unit.
-                            </p>
-                        </div>
-
-                        {/* Hidden Native File & Camera Inputs */}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleFileSelect}
-                            className="hidden"
-                        />
-                        <input
-                            ref={nativeCameraInputRef}
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handleFileSelect}
-                            className="hidden"
-                        />
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <button
-                                type="button"
-                                disabled={fotos.length >= 5}
-                                onClick={() => setIsCameraModalOpen(true)}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-blue-600/20 disabled:opacity-40 cursor-pointer"
-                                title="Buka Kamera Langsung / Webcam"
-                            >
-                                <Camera className="w-4 h-4" />
-                                <span>Foto Langsung (Kamera)</span>
-                            </button>
-
-                            {/* Mobile Camera Direct Shutter */}
-                            <button
-                                type="button"
-                                disabled={fotos.length >= 5}
-                                onClick={() => nativeCameraInputRef.current?.click()}
-                                className="sm:hidden inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-40 cursor-pointer"
-                                title="Buka Kamera Bawaan HP"
-                            >
-                                <Camera className="w-4 h-4" />
-                                <span>Kamera HP</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                disabled={fotos.length >= 5}
-                                onClick={() => fileInputRef.current?.click()}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition-all shadow-2xs disabled:opacity-40 cursor-pointer"
-                                title="Pilih File dari Komputer / Galeri"
-                            >
-                                <Upload className="w-4 h-4 text-slate-500" />
-                                <span>Pilih File</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Photo Thumbnails Grid */}
-                    {fotos.length === 0 ? (
-                        <div 
-                            onClick={() => setIsCameraModalOpen(true)}
-                            className="border-2 border-dashed border-slate-300 hover:border-blue-400 bg-white hover:bg-blue-50/30 rounded-2xl p-6 text-center transition-all cursor-pointer group"
-                        >
-                            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mx-auto mb-2 group-hover:scale-105 transition-transform">
-                                <Camera className="w-6 h-6" />
-                            </div>
-                            <p className="text-xs font-bold text-slate-700">
-                                Klik untuk Buka Kamera atau Pilih File
-                            </p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
-                                Mendukung foto langsung webcam/HP atau unggah gambar (PNG, JPG hingga 5 foto)
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-1">
-                            {fotos.map((foto, idx) => (
-                                <div 
-                                    key={idx} 
-                                    className="relative group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs aspect-square flex items-center justify-center"
-                                >
-                                    <img 
-                                        src={URL.createObjectURL(foto)} 
-                                        alt={`Foto Kondisi ${idx + 1}`} 
-                                        className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-200"
-                                    />
-                                    <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setPreviewImage(URL.createObjectURL(foto))}
-                                            className="p-1.5 bg-white/90 hover:bg-white text-slate-800 rounded-lg shadow-sm transition-colors cursor-pointer"
-                                            title="Perbesar foto"
-                                        >
-                                            <ZoomIn className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemovePhoto(idx)}
-                                            className="p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm transition-colors cursor-pointer"
-                                            title="Hapus foto ini"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
-                                    <span className="absolute top-1.5 left-1.5 bg-slate-900/75 text-white font-mono font-bold text-[10px] px-1.5 py-0.5 rounded shadow pointer-events-none">
-                                        #{idx + 1}
-                                    </span>
-                                </div>
-                            ))}
-
-                            {/* Add More Slot (if < 5) */}
-                            {fotos.length < 5 && (
-                                <button
-                                    type="button"
-                                    onClick={() => setIsCameraModalOpen(true)}
-                                    className="border-2 border-dashed border-slate-300 hover:border-blue-500 hover:bg-blue-50/40 rounded-xl aspect-square flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-blue-600 transition-all cursor-pointer group"
-                                    title="Tambah foto dari kamera"
-                                >
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
-                                        <Plus className="w-4 h-4" />
-                                    </div>
-                                    <span className="text-[11px] font-bold">Foto Tambahan</span>
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
+                {/* Foto Kondisi Fisik Perangkat (Maks 10) */}
+                <PhotoUploadSection
+                    label="Foto Fisik Intake Perangkat"
+                    sublabel="Dokumentasikan tampak depan, belakang, lecet/retak, dan nomor seri unit (Maksimal 10 foto)."
+                    maxPhotos={10}
+                    photos={fotos}
+                    onChange={setFotos}
+                />
 
                 <div className="flex items-center gap-3 pt-4 border-t border-slate-100 mt-8">
                     <button
@@ -841,39 +667,6 @@ export default function TiketServisForm() {
                 onChange={setDefectMap}
                 title="Tandai Cacat Fisik Perangkat (2D Defect Map)"
             />
-
-            {/* In-Browser Live Camera Capture Modal */}
-            <CameraCaptureModal
-                isOpen={isCameraModalOpen}
-                onClose={() => setIsCameraModalOpen(false)}
-                onCapture={handleAddPhoto}
-                maxPhotos={5}
-                currentPhotos={fotos}
-                onRemovePhoto={handleRemovePhoto}
-            />
-
-            {/* Lightbox Image Preview Modal */}
-            {previewImage && (
-                <div 
-                    onClick={() => setPreviewImage(null)}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in cursor-zoom-out"
-                >
-                    <div className="relative max-w-3xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-                        <img 
-                            src={previewImage} 
-                            alt="Preview Full" 
-                            className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/20"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setPreviewImage(null)}
-                            className="absolute -top-3 -right-3 p-2 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-colors shadow-lg cursor-pointer"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

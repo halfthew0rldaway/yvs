@@ -532,6 +532,13 @@ async function update(req, res) {
             updateData.defect_map = typeof defect_map === 'string' ? JSON.parse(defect_map) : defect_map;
         }
 
+        if (req.body.foto_selesai !== undefined) {
+            updateData.foto_selesai = typeof req.body.foto_selesai === 'string' ? req.body.foto_selesai : JSON.stringify(req.body.foto_selesai);
+        }
+        if (req.body.foto_diagnosis !== undefined) {
+            updateData.foto_diagnosis = typeof req.body.foto_diagnosis === 'string' ? req.body.foto_diagnosis : JSON.stringify(req.body.foto_diagnosis);
+        }
+
         const effectiveSlaPaket = sla_paket || tiket.sla_paket || "reguler";
 
         if (sla_paket !== undefined) {
@@ -1159,6 +1166,101 @@ async function markUnclaimedFollowUp(req, res) {
     }
 }
 
+// Upload Foto Selesai / Pengerjaan (Maksimal 15)
+async function uploadFotoSelesai(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const tiket = await prisma.tiketServis.findUnique({ where: { id } });
+        if (!tiket) {
+            return res.status(404).json({ message: "Tiket tidak ditemukan" });
+        }
+
+        let newUrls = [];
+        if (req.files && req.files.length > 0) {
+            newUrls = req.files.map(file => `/uploads/${file.filename}`);
+        }
+
+        let existing = [];
+        if (req.body.replace !== 'true' && tiket.foto_selesai) {
+            try {
+                existing = typeof tiket.foto_selesai === 'string' ? JSON.parse(tiket.foto_selesai) : tiket.foto_selesai;
+            } catch (e) {
+                existing = [];
+            }
+        }
+
+        const combined = [...existing, ...newUrls].slice(0, 15);
+
+        const updated = await prisma.tiketServis.update({
+            where: { id },
+            data: {
+                foto_selesai: JSON.stringify(combined)
+            }
+        });
+
+        return res.json({
+            message: "Foto selesai servis berhasil diunggah",
+            foto_selesai: combined,
+            data: updated
+        });
+    } catch (err) {
+        console.error("Gagal mengunggah foto selesai:", err);
+        return res.status(500).json({ message: "Gagal mengunggah foto selesai", error: err.message });
+    }
+}
+
+// Upload Foto Diagnosis (Maksimal 25)
+async function uploadFotoDiagnosis(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const tiket = await prisma.tiketServis.findUnique({ where: { id }, include: { diagnosis: true } });
+        if (!tiket) {
+            return res.status(404).json({ message: "Tiket tidak ditemukan" });
+        }
+
+        let newUrls = [];
+        if (req.files && req.files.length > 0) {
+            newUrls = req.files.map(file => `/uploads/${file.filename}`);
+        }
+
+        let existing = [];
+        if (req.body.replace !== 'true' && tiket.foto_diagnosis) {
+            try {
+                existing = typeof tiket.foto_diagnosis === 'string' ? JSON.parse(tiket.foto_diagnosis) : tiket.foto_diagnosis;
+            } catch (e) {
+                existing = [];
+            }
+        }
+
+        const combined = [...existing, ...newUrls].slice(0, 25);
+        const stringified = JSON.stringify(combined);
+
+        await prisma.tiketServis.update({
+            where: { id },
+            data: {
+                foto_diagnosis: stringified
+            }
+        });
+
+        if (tiket.diagnosis) {
+            await prisma.diagnosis.update({
+                where: { tiket_id: id },
+                data: {
+                    foto_diagnosis: stringified
+                }
+            });
+        }
+
+        return res.json({
+            message: "Foto diagnosis berhasil diunggah",
+            foto_diagnosis: combined
+        });
+    } catch (err) {
+        console.error("Gagal mengunggah foto diagnosis:", err);
+        return res.status(500).json({ message: "Gagal mengunggah foto diagnosis", error: err.message });
+    }
+}
+
 module.exports = { 
     getAll, 
     getById, 
@@ -1172,5 +1274,7 @@ module.exports = {
     getMaintenanceDue,
     markMaintenanceFollowUp,
     getUnclaimedDue,
-    markUnclaimedFollowUp
+    markUnclaimedFollowUp,
+    uploadFotoSelesai,
+    uploadFotoDiagnosis
 };

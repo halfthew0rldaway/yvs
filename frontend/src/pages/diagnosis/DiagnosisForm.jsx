@@ -3,11 +3,13 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { ArrowLeft, Save, AlertTriangle, Lightbulb, DollarSign, Send, CheckCircle2 } from "lucide-react";
+import PhotoUploadSection from "../../components/PhotoUploadSection";
 
 export default function DiagnosisForm() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [form, setForm] = useState({ masalah: "", solusi: "", estimasi_biaya: "" });
+    const [fotos, setFotos] = useState([]);
     const [diagnosisId, setDiagnosisId] = useState(null);
     const [tiket, setTiket] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -26,6 +28,17 @@ export default function DiagnosisForm() {
                     });
                     setDiagnosisId(res.data.diagnosis.id);
                 }
+
+                let loadedPhotos = [];
+                const rawFotos = res.data?.diagnosis?.foto_diagnosis || res.data?.foto_diagnosis;
+                if (rawFotos) {
+                    try {
+                        loadedPhotos = typeof rawFotos === "string" ? JSON.parse(rawFotos) : rawFotos;
+                    } catch (e) {
+                        loadedPhotos = [];
+                    }
+                }
+                setFotos(loadedPhotos || []);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -43,10 +56,30 @@ export default function DiagnosisForm() {
 
         setLoading(true);
         try {
+            const formData = new FormData();
+            formData.append("tiket_id", String(id));
+            formData.append("masalah", form.masalah);
+            formData.append("solusi", form.solusi);
+            formData.append("estimasi_biaya", String(form.estimasi_biaya));
+
+            const existingUrls = [];
+            fotos.forEach((f) => {
+                if (f instanceof File) {
+                    formData.append("foto_diagnosis", f);
+                } else if (typeof f === "string") {
+                    existingUrls.push(f);
+                }
+            });
+            formData.append("existing_foto_diagnosis", JSON.stringify(existingUrls));
+
             if (diagnosisId) {
-                await api.put(`/diagnosis/${diagnosisId}`, form);
+                await api.put(`/diagnosis/${diagnosisId}`, formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
             } else {
-                await api.post("/diagnosis", { tiket_id: Number(id), ...form });
+                await api.post("/diagnosis", formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
             }
 
             if (advanceToApproval) {
@@ -149,6 +182,15 @@ export default function DiagnosisForm() {
                         Biaya ini adalah perkiraan awal dan akan diajukan ke pelanggan untuk disetujui (ACC).
                     </p>
                 </div>
+
+                {/* Foto Temuan & Hasil Diagnosis (Maks 25) */}
+                <PhotoUploadSection
+                    label="Foto Temuan & Hasil Diagnosis"
+                    sublabel="Dokumentasikan bukti kerusakan IC, korosi, komponen terbakar, atau hasil pengukuran teknis (Maksimal 25 foto)."
+                    maxPhotos={25}
+                    photos={fotos}
+                    onChange={setFotos}
+                />
 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-slate-100 mt-8">
                     <button
