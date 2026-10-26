@@ -875,47 +875,54 @@ export default function TiketServisDetail() {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-                    <button
-                        type="button"
-                        onClick={() => setIsQrModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shrink-0 cursor-pointer"
-                        title="Lihat & Cetak QR Code Label Unit"
-                    >
-                        <QrCode className="w-4 h-4 text-blue-600" />
-                        <span>QR Tiket</span>
-                    </button>
-
+                <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
+                    {/* Utilitas Dokumen Cetak */}
                     <button
                         type="button"
                         onClick={() => setIsBpbsModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shrink-0 cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs hover:border-slate-300 shrink-0 cursor-pointer"
                         title="Cetak Surat Tanda Terima Masuk (BPBS)"
                     >
                         <Printer className="w-4 h-4 text-emerald-600" />
                         <span>Cetak BPBS</span>
                     </button>
 
+                    <button
+                        type="button"
+                        onClick={() => setIsQrModalOpen(true)}
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs hover:border-slate-300 shrink-0 cursor-pointer"
+                        title="Lihat & Cetak QR Code Label Unit"
+                    >
+                        <QrCode className="w-4 h-4 text-blue-600" />
+                        <span>QR Tiket</span>
+                    </button>
+
+                    {/* Komunikasi Pelanggan */}
                     {isAdmin && (
                         <button
                             type="button"
                             onClick={() => setIsSopWaModalOpen(true)}
-                            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-emerald-50/80 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs shrink-0 cursor-pointer"
+                            title="Kirim Pesan WhatsApp SOP ke Pelanggan"
                         >
-                            <MessageCircle className="w-4 h-4" />
+                            <MessageCircle className="w-4 h-4 text-emerald-600" />
                             <span>WhatsApp</span>
                         </button>
                     )}
 
+                    {/* Pembatas Visual Antara Dokumen/Kontak dan Aksi Status Tiket */}
+                    <div className="hidden sm:block h-6 w-px bg-slate-200 shrink-0 mx-0.5" />
+
+                    {/* Aksi Destruktif (Batalkan Tiket) */}
                     {isAdmin && ["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui"].includes(tiket.status) && (
                         <button
                             type="button"
                             onClick={() => setIsCancelModalOpen(true)}
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-2xs shrink-0 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 hover:border-rose-300 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs shrink-0 cursor-pointer"
                             title="Batalkan Tiket Servis Ini"
                         >
                             <XCircle className="w-4 h-4 text-rose-500" />
-                            <span className="hidden sm:inline">Batalkan Tiket</span>
+                            <span>Batalkan Tiket</span>
                         </button>
                     )}
 
@@ -966,7 +973,7 @@ export default function TiketServisDetail() {
                         <button
                             type="button"
                             onClick={() => handleOpenAccModal("disetujui")}
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shrink-0 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 px-4.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-600/25 shrink-0 cursor-pointer"
                         >
                             <CheckCircle2 className="w-4 h-4" />
                             <span>Konfirmasi ACC Pelanggan</span>
