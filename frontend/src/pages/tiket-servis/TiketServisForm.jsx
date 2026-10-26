@@ -297,7 +297,7 @@ export default function TiketServisForm() {
         }
     }
 
-    const categoryCounts = {
+    const categoryCounts = useMemo(() => ({
         Semua: perangkats.length,
         Laptop: perangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("laptop")).length,
         "Desktop PC": perangkats.filter(p => {
@@ -313,50 +313,77 @@ export default function TiketServisForm() {
             const j = (p.jenis_perangkat || "").toLowerCase();
             return !j.includes("laptop") && !j.includes("desktop") && !j.includes("pc") && !j.includes("printer") && !j.includes("hdd") && !j.includes("ssd");
         }).length,
-    };
+    }), [perangkats]);
 
-    const brandCounts = useMemo(() => {
-        const counts = { Semua: perangkats.length };
-        perangkats.forEach(p => {
-            const m = (p.merek || "").trim().toLowerCase();
-            POPULAR_BRANDS.forEach(b => {
-                if (m.includes(b.toLowerCase())) {
-                    counts[b] = (counts[b] || 0) + 1;
-                }
-            });
-        });
-        return counts;
-    }, [perangkats]);
-
-    const availableBrands = useMemo(() => {
-        const list = ["Semua"];
-        POPULAR_BRANDS.forEach(b => {
-            if ((brandCounts[b] || 0) > 0) {
-                list.push(b);
-            }
-        });
-        return list;
-    }, [brandCounts]);
-
-    const filteredPerangkats = useMemo(() => {
+    // 1. Filter perangkat berdasarkan kategori aktif
+    const categoryDevices = useMemo(() => {
+        if (categoryFilter === "Semua") return perangkats;
         return perangkats.filter(p => {
-            // 1. Category Filter
-            if (categoryFilter !== "Semua") {
-                const jenis = (p.jenis_perangkat || "").toLowerCase();
-                if (categoryFilter === "Laptop" && !jenis.includes("laptop")) return false;
-                if (categoryFilter === "Desktop PC" && !jenis.includes("desktop") && !jenis.includes("pc")) return false;
-                if (categoryFilter === "Printer" && !jenis.includes("printer")) return false;
-                if (categoryFilter === "Penyimpanan" && !jenis.includes("hdd") && !jenis.includes("ssd") && !jenis.includes("penyimpanan")) return false;
-                if (categoryFilter === "Lainnya" && (jenis.includes("laptop") || jenis.includes("desktop") || jenis.includes("pc") || jenis.includes("printer") || jenis.includes("hdd") || jenis.includes("ssd"))) return false;
+            const j = (p.jenis_perangkat || "").toLowerCase();
+            if (categoryFilter === "Laptop") return j.includes("laptop");
+            if (categoryFilter === "Desktop PC") return j.includes("desktop") || j.includes("pc");
+            if (categoryFilter === "Printer") return j.includes("printer");
+            if (categoryFilter === "Penyimpanan") return j.includes("hdd") || j.includes("ssd") || j.includes("penyimpanan");
+            if (categoryFilter === "Lainnya") {
+                return !j.includes("laptop") && !j.includes("desktop") && !j.includes("pc") && !j.includes("printer") && !j.includes("hdd") && !j.includes("ssd");
+            }
+            return true;
+        });
+    }, [perangkats, categoryFilter]);
+
+    // 2. Ekstrak merek secara dinamis HANYA dari perangkat yang ada di kategori terpilih
+    const { availableBrands, brandCounts } = useMemo(() => {
+        const counts = { Semua: categoryDevices.length };
+        const rawBrandMap = new Map(); // cleanLower -> Display String
+
+        categoryDevices.forEach(p => {
+            const raw = (p.merek || "").trim();
+            if (!raw) return;
+            const lower = raw.toLowerCase();
+
+            if (!rawBrandMap.has(lower)) {
+                if (lower.length <= 3) {
+                    rawBrandMap.set(lower, raw.toUpperCase());
+                } else {
+                    const titleCased = raw.charAt(0).toUpperCase() + raw.slice(1);
+                    rawBrandMap.set(lower, titleCased);
+                }
             }
 
-            // 2. Brand Filter
+            const displayName = rawBrandMap.get(lower);
+            counts[displayName] = (counts[displayName] || 0) + 1;
+        });
+
+        // Urutkan merek berdasarkan kuantitas terbanyak, lalu alfabetis
+        const sortedBrands = Array.from(new Set(rawBrandMap.values())).sort((a, b) => {
+            const diff = (counts[b] || 0) - (counts[a] || 0);
+            if (diff !== 0) return diff;
+            return a.localeCompare(b);
+        });
+
+        return {
+            availableBrands: ["Semua", ...sortedBrands],
+            brandCounts: counts
+        };
+    }, [categoryDevices]);
+
+    // Auto-reset brand filter jika merek yang dipilih sebelumnya tidak ada di kategori yang baru
+    useEffect(() => {
+        if (brandFilter !== "Semua" && !availableBrands.includes(brandFilter)) {
+            setBrandFilter("Semua");
+        }
+    }, [availableBrands, brandFilter]);
+
+    // 3. Filter akhir dari categoryDevices dengan brandFilter dan searchQuery
+    const filteredPerangkats = useMemo(() => {
+        return categoryDevices.filter(p => {
+            // Brand Filter
             if (brandFilter !== "Semua") {
                 const brand = (p.merek || "").toLowerCase();
                 if (!brand.includes(brandFilter.toLowerCase())) return false;
             }
 
-            // 3. Search Query (WhatsApp, Nama, Merek, Model, Serial No)
+            // Search Query (WhatsApp, Nama, Merek, Model, Serial No)
             if (searchQuery.trim()) {
                 const qDigits = searchQuery.replace(/[\s\-]/g, "").toLowerCase();
                 const rawQ = searchQuery.toLowerCase().trim();
@@ -380,7 +407,7 @@ export default function TiketServisForm() {
 
             return true;
         });
-    }, [perangkats, categoryFilter, brandFilter, searchQuery]);
+    }, [categoryDevices, brandFilter, searchQuery]);
 
     // Keyboard navigation: Enter untuk pilih unit teratas atau daftarkan jika baru
     function handleSearchKeyDown(e) {
@@ -562,74 +589,102 @@ export default function TiketServisForm() {
                                 </div>
                             )}
 
-                            {/* Category Filter Chips */}
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-                                {["Semua", "Laptop", "Desktop PC", "Printer", "Penyimpanan", "Lainnya"].map(cat => {
-                                    const count = categoryCounts[cat] || 0;
-                                    const isActive = categoryFilter === cat;
-                                    return (
-                                        <button
-                                            key={cat}
-                                            type="button"
-                                            onClick={() => setCategoryFilter(cat)}
-                                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                                                isActive 
-                                                    ? "bg-blue-600 text-white shadow-2xs" 
-                                                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80"
-                                            }`}
-                                        >
-                                            <span>{cat}</span>
-                                            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                                                isActive ? "bg-blue-500/80 text-white" : "bg-slate-100 text-slate-500"
-                                            }`}>
-                                                {count}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            {/* Filter Section: Kategori & Merek */}
+                            <div className="bg-white/90 border border-slate-200/90 rounded-xl p-2.5 space-y-2.5 shadow-2xs">
+                                {/* Baris 1: Kategori Perangkat */}
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-16 shrink-0 uppercase tracking-wider">
+                                        <Laptop className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                        <span>Tipe</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar flex-1">
+                                        {["Semua", "Laptop", "Desktop PC", "Printer", "Penyimpanan", "Lainnya"].map(cat => {
+                                            const count = categoryCounts[cat] || 0;
+                                            const isActive = categoryFilter === cat;
+                                            const isEmpty = count === 0 && cat !== "Semua";
 
-                            {/* Brand Filter Chips */}
-                            {availableBrands.length > 1 && (
-                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-                                    <span className="text-[11px] font-semibold text-slate-400 shrink-0 mr-1 flex items-center gap-1">
-                                        <Tag className="w-3 h-3" />
-                                        Merek:
-                                    </span>
-                                    {availableBrands.map(brand => {
-                                        const count = brandCounts[brand] || 0;
-                                        const isActive = brandFilter === brand;
-                                        return (
-                                            <button
-                                                key={brand}
-                                                type="button"
-                                                onClick={() => setBrandFilter(brandFilter === brand ? "Semua" : brand)}
-                                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
-                                                    isActive
-                                                        ? "bg-slate-800 text-white shadow-2xs"
-                                                        : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                                                }`}
-                                            >
-                                                <span>{brand}</span>
-                                                <span className={`text-[10px] px-1 rounded-full ${
-                                                    isActive ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-500"
-                                                }`}>
-                                                    {count}
-                                                </span>
-                                            </button>
-                                        );
-                                    })}
-                                    {brandFilter !== "Semua" && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setBrandFilter("Semua")}
-                                            className="text-[11px] text-slate-500 hover:text-slate-700 underline ml-1 cursor-pointer whitespace-nowrap"
-                                        >
-                                            Reset Merek
-                                        </button>
-                                    )}
+                                            return (
+                                                <button
+                                                    key={cat}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setCategoryFilter(cat);
+                                                        setBrandFilter("Semua");
+                                                    }}
+                                                    disabled={isEmpty}
+                                                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                                        isActive 
+                                                            ? "bg-blue-600 text-white shadow-2xs" 
+                                                            : isEmpty
+                                                                ? "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed"
+                                                                : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
+                                                    }`}
+                                                >
+                                                    <span>{cat}</span>
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                                        isActive 
+                                                            ? "bg-blue-500/80 text-white" 
+                                                            : isEmpty
+                                                                ? "bg-slate-100 text-slate-300"
+                                                                : "bg-slate-100 text-slate-600"
+                                                    }`}>
+                                                        {count}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            )}
+
+                                {/* Baris 2: Merek (Hanya tampil jika ada pilihan merek di kategori ini) */}
+                                {availableBrands.length > 1 && (
+                                    <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-16 shrink-0 uppercase tracking-wider">
+                                            <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                            <span>Merek</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar flex-1">
+                                            {availableBrands.map(brand => {
+                                                const count = brandCounts[brand] || 0;
+                                                const isActive = brandFilter === brand;
+
+                                                return (
+                                                    <button
+                                                        key={brand}
+                                                        type="button"
+                                                        onClick={() => setBrandFilter(brandFilter === brand ? "Semua" : brand)}
+                                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                                            isActive
+                                                                ? "bg-slate-800 text-white shadow-2xs"
+                                                                : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
+                                                        }`}
+                                                    >
+                                                        <span>{brand}</span>
+                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                                            isActive 
+                                                                ? "bg-slate-700 text-white" 
+                                                                : "bg-slate-100 text-slate-600"
+                                                        }`}>
+                                                            {count}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+
+                                            {brandFilter !== "Semua" && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setBrandFilter("Semua")}
+                                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-lg transition-colors cursor-pointer shrink-0 ml-1"
+                                                >
+                                                    <RotateCcw className="w-3 h-3" />
+                                                    <span>Reset Merek</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Search Results / Device Selection List */}
                             <div className="max-h-64 overflow-y-auto space-y-2 pr-1 custom-scrollbar pt-1">
