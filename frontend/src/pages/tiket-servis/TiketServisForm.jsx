@@ -1,12 +1,13 @@
 import toast from 'react-hot-toast';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { 
     ArrowLeft, Save, MonitorSmartphone, User, MessageSquare, Package, Camera, 
     KeyRound, Lock, Eye, EyeOff, ShieldCheck, Shield, AlertTriangle, 
     Sparkles, Smile, History, HardDrive, CheckCircle2, Clock, Zap, Laptop,
-    Search, Filter, Plus, Phone, RotateCcw, X, Check, ChevronRight, Printer, Box
+    Search, Filter, Plus, Phone, RotateCcw, X, Check, ChevronRight, Printer, Box,
+    Tag, CornerDownLeft, UserPlus
 } from "lucide-react";
 import DefectMapperModal from "../../components/DefectMapperModal";
 import { SLA_PENGECEKAN_PACKAGES } from "../../components/SlaBadge";
@@ -14,6 +15,49 @@ import PhotoUploadSection from "../../components/PhotoUploadSection";
 
 const POPULAR_BRANDS = ["Asus", "Lenovo", "HP", "Acer", "Dell", "Apple", "MSI", "Toshiba"];
 const DEVICE_CATEGORIES = ["Laptop", "Desktop PC", "Printer", "Penyimpanan (HDD/SSD)", "Aksesoris (Mouse/Keyboard)", "Lainnya"];
+const ACTIVE_STATUSES = ["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui", "dalam_perbaikan", "selesai"];
+
+function HighlightText({ text, query }) {
+    if (!text) return null;
+    if (!query || !query.trim()) return <>{text}</>;
+
+    const cleanQ = query.trim().replace(/[\s\-]/g, "");
+    const cleanText = String(text).replace(/[\s\-]/g, "");
+    const isDigitsOnly = /^[0-9]+$/.test(cleanQ);
+
+    try {
+        const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escaped})`, "gi");
+        if (regex.test(text)) {
+            const parts = String(text).split(regex);
+            return (
+                <>
+                    {parts.map((part, i) =>
+                        regex.test(part) ? (
+                            <mark key={i} className="bg-amber-200/90 text-amber-950 font-bold px-0.5 rounded">
+                                {part}
+                            </mark>
+                        ) : (
+                            part
+                        )
+                    )}
+                </>
+            );
+        }
+
+        if (isDigitsOnly && cleanText.includes(cleanQ)) {
+            return (
+                <mark className="bg-amber-200/90 text-amber-950 font-bold px-0.5 rounded">
+                    {text}
+                </mark>
+            );
+        }
+    } catch (e) {
+        return <>{text}</>;
+    }
+
+    return <>{text}</>;
+}
 
 function getDeviceIcon(jenis) {
     const j = (jenis || "").toLowerCase();
@@ -61,6 +105,15 @@ export default function TiketServisForm() {
     // Smart Search & Filter State
     const [searchQuery, setSearchQuery] = useState("");
     const [categoryFilter, setCategoryFilter] = useState("Semua");
+    const [brandFilter, setBrandFilter] = useState("Semua");
+    const searchInputRef = useRef(null);
+
+    // Auto-focus search box saat pertama kali buka atau saat ganti unit
+    useEffect(() => {
+        if (!form.perangkat_id && searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, [form.perangkat_id]);
 
     // Quick Registration Modal State
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
@@ -120,7 +173,7 @@ export default function TiketServisForm() {
             nomor_telepon: prefillPhone,
             tipe_kepribadian: "Netral",
             jenis_perangkat: categoryFilter !== "Semua" ? categoryFilter : "Laptop",
-            merek: "",
+            merek: brandFilter !== "Semua" ? brandFilter : "",
             model: "",
             serial_number: ""
         });
@@ -270,41 +323,90 @@ export default function TiketServisForm() {
         }).length,
     };
 
-    const filteredPerangkats = perangkats.filter(p => {
-        // 1. Category Filter
-        if (categoryFilter !== "Semua") {
-            const jenis = (p.jenis_perangkat || "").toLowerCase();
-            if (categoryFilter === "Laptop" && !jenis.includes("laptop")) return false;
-            if (categoryFilter === "Desktop PC" && !jenis.includes("desktop") && !jenis.includes("pc")) return false;
-            if (categoryFilter === "Printer" && !jenis.includes("printer")) return false;
-            if (categoryFilter === "Penyimpanan" && !jenis.includes("hdd") && !jenis.includes("ssd") && !jenis.includes("penyimpanan")) return false;
-            if (categoryFilter === "Lainnya" && (jenis.includes("laptop") || jenis.includes("desktop") || jenis.includes("pc") || jenis.includes("printer") || jenis.includes("hdd") || jenis.includes("ssd"))) return false;
+    const brandCounts = useMemo(() => {
+        const counts = { Semua: perangkats.length };
+        perangkats.forEach(p => {
+            const m = (p.merek || "").trim().toLowerCase();
+            POPULAR_BRANDS.forEach(b => {
+                if (m.includes(b.toLowerCase())) {
+                    counts[b] = (counts[b] || 0) + 1;
+                }
+            });
+        });
+        return counts;
+    }, [perangkats]);
+
+    const availableBrands = useMemo(() => {
+        const list = ["Semua"];
+        POPULAR_BRANDS.forEach(b => {
+            if ((brandCounts[b] || 0) > 0) {
+                list.push(b);
+            }
+        });
+        return list;
+    }, [brandCounts]);
+
+    const filteredPerangkats = useMemo(() => {
+        return perangkats.filter(p => {
+            // 1. Category Filter
+            if (categoryFilter !== "Semua") {
+                const jenis = (p.jenis_perangkat || "").toLowerCase();
+                if (categoryFilter === "Laptop" && !jenis.includes("laptop")) return false;
+                if (categoryFilter === "Desktop PC" && !jenis.includes("desktop") && !jenis.includes("pc")) return false;
+                if (categoryFilter === "Printer" && !jenis.includes("printer")) return false;
+                if (categoryFilter === "Penyimpanan" && !jenis.includes("hdd") && !jenis.includes("ssd") && !jenis.includes("penyimpanan")) return false;
+                if (categoryFilter === "Lainnya" && (jenis.includes("laptop") || jenis.includes("desktop") || jenis.includes("pc") || jenis.includes("printer") || jenis.includes("hdd") || jenis.includes("ssd"))) return false;
+            }
+
+            // 2. Brand Filter
+            if (brandFilter !== "Semua") {
+                const brand = (p.merek || "").toLowerCase();
+                if (!brand.includes(brandFilter.toLowerCase())) return false;
+            }
+
+            // 3. Search Query (WhatsApp, Nama, Merek, Model, Serial No)
+            if (searchQuery.trim()) {
+                const qDigits = searchQuery.replace(/[\s\-]/g, "").toLowerCase();
+                const rawQ = searchQuery.toLowerCase().trim();
+
+                const phone = (p.customer?.nomor_telepon || "").replace(/[\s\-]/g, "").toLowerCase();
+                const name = (p.customer?.nama || "").toLowerCase();
+                const brand = (p.merek || "").toLowerCase();
+                const model = (p.model || "").toLowerCase();
+                const serial = (p.serial_number || "").toLowerCase();
+                const jenis = (p.jenis_perangkat || "").toLowerCase();
+
+                const matchPhone = qDigits.length >= 3 && phone.includes(qDigits);
+                const matchName = name.includes(rawQ);
+                const matchBrand = brand.includes(rawQ);
+                const matchModel = model.includes(rawQ);
+                const matchSerial = serial.includes(rawQ);
+                const matchJenis = jenis.includes(rawQ);
+
+                return matchPhone || matchName || matchBrand || matchModel || matchSerial || matchJenis;
+            }
+
+            return true;
+        });
+    }, [perangkats, categoryFilter, brandFilter, searchQuery]);
+
+    // Keyboard navigation: Enter untuk pilih unit teratas atau daftarkan jika baru
+    function handleSearchKeyDown(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            if (filteredPerangkats.length > 0) {
+                const topItem = filteredPerangkats[0];
+                setForm(prev => ({ ...prev, perangkat_id: topItem.id }));
+                setSearchQuery("");
+                toast.success(`Unit ${topItem.merek} ${topItem.model} (${topItem.customer?.nama}) terpilih!`, { icon: "⚡" });
+            } else if (searchQuery.trim().length >= 3) {
+                handleOpenQuickAdd();
+            }
+        } else if (e.key === "Escape") {
+            setSearchQuery("");
+            setBrandFilter("Semua");
         }
-
-        // 2. Search Query (WhatsApp, Nama, Merek, Model, Serial No)
-        if (searchQuery.trim()) {
-            const qDigits = searchQuery.replace(/[\s\-]/g, "").toLowerCase();
-            const rawQ = searchQuery.toLowerCase().trim();
-
-            const phone = (p.customer?.nomor_telepon || "").replace(/[\s\-]/g, "").toLowerCase();
-            const name = (p.customer?.nama || "").toLowerCase();
-            const brand = (p.merek || "").toLowerCase();
-            const model = (p.model || "").toLowerCase();
-            const serial = (p.serial_number || "").toLowerCase();
-            const jenis = (p.jenis_perangkat || "").toLowerCase();
-
-            const matchPhone = qDigits.length >= 3 && phone.includes(qDigits);
-            const matchName = name.includes(rawQ);
-            const matchBrand = brand.includes(rawQ);
-            const matchModel = model.includes(rawQ);
-            const matchSerial = serial.includes(rawQ);
-            const matchJenis = jenis.includes(rawQ);
-
-            return matchPhone || matchName || matchBrand || matchModel || matchSerial || matchJenis;
-        }
-
-        return true;
-    });
+    }
 
     const selectedPerangkat = perangkats.find(p => Number(p.id) === Number(form.perangkat_id));
 
@@ -409,22 +511,56 @@ export default function TiketServisForm() {
                                     <Search className="h-4 w-4 text-slate-400" />
                                 </div>
                                 <input
+                                    ref={searchInputRef}
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={handleSearchKeyDown}
                                     placeholder="Cari No. WhatsApp (misal: 0812...), Nama Pelanggan, Merek, Model, atau Serial No..."
-                                    className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-2xs"
+                                    className="w-full pl-10 pr-24 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-2xs"
                                 />
-                                {searchQuery && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearchQuery("")}
-                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                )}
+                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
+                                    {searchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSearchQuery("")}
+                                            className="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                                            title="Bersihkan pencarian (Esc)"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    <span className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                                        <CornerDownLeft className="w-2.5 h-2.5" /> Enter
+                                    </span>
+                                </div>
                             </div>
+
+                            {/* Deteksi Kilat: Unit / No. HP Belum Terdaftar */}
+                            {searchQuery.trim().length >= 3 && filteredPerangkats.length === 0 && (
+                                <div 
+                                    onClick={handleOpenQuickAdd}
+                                    className="p-3 bg-blue-50/90 hover:bg-blue-100/80 border border-blue-200 rounded-xl flex items-center justify-between gap-3 cursor-pointer transition-all shadow-2xs group"
+                                >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="p-2 bg-blue-600 text-white rounded-lg shrink-0 group-hover:scale-105 transition-transform">
+                                            <UserPlus className="w-4 h-4" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-bold text-blue-900 truncate">
+                                                Pelanggan / Unit "{searchQuery.trim()}" Belum Terdaftar
+                                            </p>
+                                            <p className="text-[11px] text-blue-700">
+                                                Tekan <kbd className="px-1 py-0.5 bg-blue-200/90 text-blue-900 rounded font-bold text-[10px]">Enter ↵</kbd> atau klik di sini untuk registrasi kilat
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-2xs shrink-0 flex items-center gap-1">
+                                        <span>Daftarkan Kilat</span>
+                                        <CornerDownLeft className="w-3 h-3" />
+                                    </span>
+                                </div>
+                            )}
 
                             {/* Category Filter Chips */}
                             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
@@ -453,11 +589,57 @@ export default function TiketServisForm() {
                                 })}
                             </div>
 
+                            {/* Brand Filter Chips */}
+                            {availableBrands.length > 1 && (
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+                                    <span className="text-[11px] font-semibold text-slate-400 shrink-0 mr-1 flex items-center gap-1">
+                                        <Tag className="w-3 h-3" />
+                                        Merek:
+                                    </span>
+                                    {availableBrands.map(brand => {
+                                        const count = brandCounts[brand] || 0;
+                                        const isActive = brandFilter === brand;
+                                        return (
+                                            <button
+                                                key={brand}
+                                                type="button"
+                                                onClick={() => setBrandFilter(brandFilter === brand ? "Semua" : brand)}
+                                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                                                    isActive
+                                                        ? "bg-slate-800 text-white shadow-2xs"
+                                                        : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                                                }`}
+                                            >
+                                                <span>{brand}</span>
+                                                <span className={`text-[10px] px-1 rounded-full ${
+                                                    isActive ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-500"
+                                                }`}>
+                                                    {count}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                    {brandFilter !== "Semua" && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setBrandFilter("Semua")}
+                                            className="text-[11px] text-slate-500 hover:text-slate-700 underline ml-1 cursor-pointer whitespace-nowrap"
+                                        >
+                                            Reset Merek
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Search Results / Device Selection List */}
                             <div className="max-h-64 overflow-y-auto space-y-2 pr-1 custom-scrollbar pt-1">
                                 {filteredPerangkats.length > 0 ? (
-                                    filteredPerangkats.map(p => {
+                                    filteredPerangkats.map((p, idx) => {
                                         const DevIcon = getDeviceIcon(p.jenis_perangkat);
+                                        const latestTicket = p.tiket_servis?.[0];
+                                        const isCurrentlyInService = latestTicket && ACTIVE_STATUSES.includes(latestTicket.status);
+                                        const isTopMatch = idx === 0 && searchQuery.trim().length > 0;
+
                                         return (
                                             <div
                                                 key={p.id}
@@ -465,40 +647,65 @@ export default function TiketServisForm() {
                                                     setForm({ ...form, perangkat_id: p.id });
                                                     setSearchQuery("");
                                                 }}
-                                                className="group p-3 bg-white hover:bg-blue-50/60 border border-slate-200 hover:border-blue-300 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 shadow-2xs"
+                                                className={`group p-3 bg-white hover:bg-blue-50/60 border rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 shadow-2xs ${
+                                                    isTopMatch 
+                                                        ? "border-blue-400 ring-2 ring-blue-500/15" 
+                                                        : "border-slate-200 hover:border-blue-300"
+                                                }`}
                                             >
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="p-2.5 bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700 rounded-lg transition-colors shrink-0">
+                                                    <div className={`p-2.5 rounded-lg transition-colors shrink-0 ${
+                                                        isTopMatch 
+                                                            ? "bg-blue-100 text-blue-700" 
+                                                            : "bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700"
+                                                    }`}>
                                                         <DevIcon className="w-4 h-4" />
                                                     </div>
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2 flex-wrap">
                                                             <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-blue-900">
-                                                                {p.merek} {p.model}
+                                                                <HighlightText text={p.merek} query={searchQuery} />{" "}
+                                                                <HighlightText text={p.model} query={searchQuery} />
                                                             </span>
                                                             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                                                                 {p.jenis_perangkat || "Laptop"}
                                                             </span>
                                                             {p.serial_number && (
                                                                 <span className="text-[10px] font-mono text-slate-400">
-                                                                    SN: {p.serial_number}
+                                                                    SN: <HighlightText text={p.serial_number} query={searchQuery} />
+                                                                </span>
+                                                            )}
+                                                            {isCurrentlyInService ? (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                                    Sedang Diservis ({latestTicket.nomor_tiket})
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                                    Siap Diservis
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <div className="flex items-center gap-2.5 text-xs text-slate-500 mt-0.5 flex-wrap">
                                                             <span className="font-semibold text-slate-700 flex items-center gap-1">
                                                                 <User className="w-3 h-3 text-slate-400" />
-                                                                {p.customer?.nama}
+                                                                <HighlightText text={p.customer?.nama} query={searchQuery} />
                                                             </span>
                                                             <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
                                                                 <Phone className="w-2.5 h-2.5 text-emerald-600" />
-                                                                {p.customer?.nomor_telepon}
+                                                                <HighlightText text={p.customer?.nomor_telepon} query={searchQuery} />
                                                             </span>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <div className="flex items-center gap-2 shrink-0">
+                                                    {isTopMatch && (
+                                                        <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 bg-blue-100/90 rounded border border-blue-200">
+                                                            <CornerDownLeft className="w-2.5 h-2.5" /> Enter
+                                                        </span>
+                                                    )}
                                                     <span className="text-[11px] font-medium text-slate-400 hidden sm:inline">
                                                         {p._count?.tiket_servis ? `${p._count.tiket_servis}x Servis` : "Unit Baru"}
                                                     </span>

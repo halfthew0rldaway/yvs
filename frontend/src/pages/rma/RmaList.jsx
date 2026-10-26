@@ -115,7 +115,7 @@ export default function RmaList() {
         }
 
         if (action === "new" || sparepartId || tiketId) {
-            setFormData(prev => ({
+            setFormData(prev => ({  
                 ...prev,
                 sparepart_id: sparepartId ? String(sparepartId) : prev.sparepart_id,
                 tiket_id: tiketId ? String(tiketId) : prev.tiket_id,

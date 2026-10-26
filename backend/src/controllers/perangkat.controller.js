@@ -24,6 +24,11 @@ async function getAll(req, res) {
             customer: true,
             _count: {
                 select: { tiket_servis: true }
+            },
+            tiket_servis: {
+                select: { id: true, nomor_tiket: true, status: true, created_at: true },
+                orderBy: { id: "desc" },
+                take: 1
             }
         };
 
