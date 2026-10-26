@@ -1,31 +1,34 @@
 import toast from 'react-hot-toast';
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { 
     ArrowLeft, Save, AlertTriangle, Lightbulb, DollarSign, Send, CheckCircle2,
     BatteryCharging, MonitorSmartphone, Keyboard, MousePointer, Usb, Volume2, 
     Camera, Wifi, HardDrive, Cpu, Gauge, Sparkles, Check, X, RotateCcw, 
-    Info, Wand2, ListChecks, ShieldAlert
+    Info, Wand2, ListChecks, ShieldAlert, Plus, Minus, AlignLeft, List
 } from "lucide-react";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
 
 const MAX_TEXT_LIMIT = 5000;
 
-// Daftar Modul Inspeksi Hardware Diagnosa
-const HARDWARE_CHECKLIST_ITEMS = [
-    { key: "power", label: "Daya & Pengisian Baterai", icon: BatteryCharging, defaultSolusi: "Periksa sirkuit charging, adaptor, atau ganti baterai baru" },
-    { key: "display", label: "Layar & GPU Tampilan", icon: MonitorSmartphone, defaultSolusi: "Penggantian panel LCD / re-seat fleksibel eDP / reball GPU" },
-    { key: "keyboard", label: "Keyboard", icon: Keyboard, defaultSolusi: "Penggantian modul keyboard baru / pembersihan jalur tuts" },
-    { key: "touchpad", label: "Touchpad & Klik", icon: MousePointer, defaultSolusi: "Kalibrasi sensor touchpad / perbaikan kabel fleksibel" },
-    { key: "usb_port", label: "Port USB & I/O", icon: Usb, defaultSolusi: "Solder ulang pin konektor / penggantian board port USB" },
-    { key: "audio", label: "Speaker, Mic & Audio Jack", icon: Volume2, defaultSolusi: "Penggantian modul speaker / perbaikan IC audio codec" },
-    { key: "webcam", label: "Kamera / Webcam", icon: Camera, defaultSolusi: "Periksa modul kamera & jalur kabel fleksibel kamera" },
-    { key: "wifi_lan", label: "WiFi & Bluetooth / LAN", icon: Wifi, defaultSolusi: "Penggantian WiFi card / instalasi driver certified" },
-    { key: "storage", label: "Penyimpanan (SSD / HDD)", icon: HardDrive, defaultSolusi: "Upgrade / ganti SSD NVMe/SATA baru & backup data" },
-    { key: "ram", label: "RAM / Memori", icon: Cpu, defaultSolusi: "Ganti atau tambah keping RAM DDR" },
-    { key: "thermal", label: "Fan & Pendingin (Thermal)", icon: Gauge, defaultSolusi: "Deep cleaning heatsink fan & repasta thermal compound premium" },
-    { key: "motherboard", label: "Motherboard & IC Power", icon: ShieldAlert, defaultSolusi: "Tracing skematik jalur tegangan, reball / ganti komponen short" },
+// Daftar Komponen Hardware yang dicek di meja teknisi
+const HARDWARE_ITEMS = [
+    { key: "usb", label: "Port USB", shortName: "port USB", hasQty: true, defaultQty: 2, unit: "port", icon: Usb, defaultSolusi: "Perbaikan pin konektor / ganti board port USB" },
+    { key: "type_c", label: "Port Type-C", shortName: "type C", hasQty: true, defaultQty: 1, unit: "port", icon: Usb, defaultSolusi: "Ganti atau solder ulang konektor Type-C" },
+    { key: "hdmi", label: "Port HDMI", shortName: "HDMI", hasQty: false, icon: MonitorSmartphone, defaultSolusi: "Perbaikan jalur display out HDMI / ganti soket HDMI" },
+    { key: "keyboard", label: "Keyboard", shortName: "keyboard", hasQty: false, icon: Keyboard, defaultSolusi: "Penggantian modul keyboard baru" },
+    { key: "touchpad", label: "Touchpad", shortName: "touchpad", hasQty: false, icon: MousePointer, defaultSolusi: "Perbaikan fleksibel touchpad / modul klik" },
+    { key: "layar", label: "Layar / LCD", shortName: "layar", hasQty: false, icon: MonitorSmartphone, defaultSolusi: "Penggantian panel LCD / re-seat fleksibel eDP" },
+    { key: "webcam", label: "Webcam", shortName: "webcam", hasQty: false, icon: Camera, defaultSolusi: "Ganti modul kamera / periksa kabel fleksibel webcam" },
+    { key: "mic", label: "Mikrofon (Mic)", shortName: "mic", hasQty: false, icon: Volume2, defaultSolusi: "Periksa modul mic internal / IC codec audio" },
+    { key: "speaker", label: "Speaker", shortName: "speaker", hasQty: false, icon: Volume2, defaultSolusi: "Penggantian sepasang speaker internal" },
+    { key: "audio_jack", label: "Audio Jack", shortName: "audio jack", hasQty: false, icon: Volume2, defaultSolusi: "Penggantian soket audio jack 3.5mm" },
+    { key: "wifi_bt", label: "WiFi & Bluetooth", shortName: "WiFi", hasQty: false, icon: Wifi, defaultSolusi: "Ganti modul WiFi card / install driver certified" },
+    { key: "baterai", label: "Baterai", shortName: "baterai", hasQty: false, icon: BatteryCharging, defaultSolusi: "Penggantian baterai baru original / OEM" },
+    { key: "ram", label: "Slot RAM", shortName: "RAM", hasQty: true, defaultQty: 1, unit: "slot", icon: Cpu, defaultSolusi: "Ganti atau tambah keping RAM DDR" },
+    { key: "storage", label: "SSD / Storage", shortName: "SSD", hasQty: true, defaultQty: 1, unit: "slot", icon: HardDrive, defaultSolusi: "Upgrade / ganti SSD NVMe dan migrasi data" },
+    { key: "fan_thermal", label: "Fan & Pendingin", shortName: "fan & pendingin", hasQty: false, icon: Gauge, defaultSolusi: "Deep cleaning fan heatsink & repasta thermal compound" },
 ];
 
 function getStats(text = "") {
@@ -34,51 +37,83 @@ function getStats(text = "") {
     return { chars, words };
 }
 
-function buildChecklistSummary(statusMap) {
-    const checkedKeys = Object.keys(statusMap).filter(k => statusMap[k] === "ok" || statusMap[k] === "issue");
+// Generate teks laporan pengecekan: natural, simpel & unpretentious
+function buildChecklistText(statusMap, formatMode = "paragraph") {
+    const checkedKeys = Object.keys(statusMap).filter(
+        k => statusMap[k]?.status === "ok" || statusMap[k]?.status === "issue"
+    );
     if (checkedKeys.length === 0) return "";
 
-    const lines = checkedKeys.map(k => {
-        const item = HARDWARE_CHECKLIST_ITEMS.find(i => i.key === k);
-        const isOk = statusMap[k] === "ok";
-        const statusText = isOk ? "Normal (OK)" : "Bermasalah / Perlu Penanganan";
-        const symbol = isOk ? "[✓]" : "[✗]";
-        return `${symbol} ${item?.label || k}: ${statusText}`;
+    const okItems = [];
+    const issueItems = [];
+
+    checkedKeys.forEach(k => {
+        const itemDef = HARDWARE_ITEMS.find(i => i.key === k);
+        const data = statusMap[k];
+        const qty = itemDef?.hasQty ? (data.qty || itemDef.defaultQty) : null;
+        const qtyStr = qty && qty > 1 ? ` (${qty} ${itemDef.unit})` : "";
+        const name = `${itemDef?.shortName || k}${qtyStr}`;
+        const note = (data.note || "").trim();
+
+        if (data.status === "ok") {
+            okItems.push({ name, note });
+        } else if (data.status === "issue") {
+            issueItems.push({ name, note });
+        }
     });
 
-    return `--- Hasil Pemeriksaan Hardware ---\n${lines.join("\n")}\n----------------------------------`;
-}
+    if (formatMode === "paragraph") {
+        const parts = [];
 
-function syncChecklistToMasalah(statusMap, currentMasalahText) {
-    const summary = buildChecklistSummary(statusMap);
-    const regex = /--- Hasil Pemeriksaan Hardware ---[\s\S]*?----------------------------------/;
+        // 1. Gabungkan item-item yang OK (cth: "fungsi keyboard, mic, port USB (2 port), speaker, baterai ok.")
+        if (okItems.length > 0) {
+            const okNames = okItems.map(item => item.note ? `${item.name} (${item.note})` : item.name);
+            parts.push(`fungsi ${okNames.join(", ")} ok.`);
+        }
 
-    if (!summary) {
-        return currentMasalahText.replace(regex, "").trim();
-    }
+        // 2. Tuliskan item-item yang bermasalah secara wajar/natural
+        if (issueItems.length > 0) {
+            const issueSentences = issueItems.map(item => {
+                if (item.note) {
+                    const lower = item.note.toLowerCase();
+                    if (
+                        lower.startsWith("tidak") || 
+                        lower.startsWith("rusak") || 
+                        lower.startsWith("mati") || 
+                        lower.startsWith("ada") || 
+                        lower.startsWith("kurang") ||
+                        lower.startsWith("belum")
+                    ) {
+                        return `${item.name} ${item.note}.`;
+                    }
+                    return `${item.name} bermasalah (${item.note}).`;
+                }
+                return `${item.name} tidak fungsi.`;
+            });
+            parts.push(...issueSentences);
+        }
 
-    if (regex.test(currentMasalahText)) {
-        return currentMasalahText.replace(regex, summary).trim();
+        return parts.join(" ");
     } else {
-        if (currentMasalahText.trim()) {
-            return `${currentMasalahText.trim()}\n\n${summary}`;
-        } else {
-            return summary;
-        }
+        // Bullet mode (Poin per baris bersih tanpa dekorasi berlebihan)
+        const lines = [];
+        okItems.forEach(item => {
+            lines.push(item.note ? `• ${item.name} ok (${item.note})` : `• ${item.name} ok`);
+        });
+        issueItems.forEach(item => {
+            if (item.note) {
+                const lower = item.note.toLowerCase();
+                if (lower.startsWith("tidak") || lower.startsWith("rusak") || lower.startsWith("mati") || lower.startsWith("ada")) {
+                    lines.push(`• ${item.name} ${item.note}`);
+                } else {
+                    lines.push(`• ${item.name} bermasalah (${item.note})`);
+                }
+            } else {
+                lines.push(`• ${item.name} tidak fungsi`);
+            }
+        });
+        return lines.join("\n");
     }
-}
-
-function parseChecklistFromText(text = "") {
-    if (!text) return {};
-    const parsed = {};
-    HARDWARE_CHECKLIST_ITEMS.forEach(item => {
-        if (text.includes(`[✓] ${item.label}`)) {
-            parsed[item.key] = "ok";
-        } else if (text.includes(`[✗] ${item.label}`)) {
-            parsed[item.key] = "issue";
-        }
-    });
-    return parsed;
 }
 
 export default function DiagnosisForm() {
@@ -91,9 +126,13 @@ export default function DiagnosisForm() {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
 
-    // Auto-Type Checklist State
+    // Checklist state: { [key]: { status: "ok"|"issue"|null, qty: number, note: string } }
     const [checklistStatus, setChecklistStatus] = useState({});
     const [autoSync, setAutoSync] = useState(true);
+    const [formatMode, setFormatMode] = useState("paragraph"); // "paragraph" | "bullet"
+
+    // Ref untuk melacak string kalimat terakhir yang di-generate agar penggantiannya mulus
+    const lastGeneratedRef = useRef("");
 
     useEffect(() => {
         async function fetchExisting() {
@@ -108,7 +147,6 @@ export default function DiagnosisForm() {
                         estimasi_biaya: res.data.diagnosis.estimasi_biaya ?? "",
                     });
                     setDiagnosisId(res.data.diagnosis.id);
-                    setChecklistStatus(parseChecklistFromText(loadedMasalah));
                 }
 
                 let loadedPhotos = [];
@@ -130,69 +168,143 @@ export default function DiagnosisForm() {
         fetchExisting();
     }, [id]);
 
-    // Handle single item status change
-    function handleToggleItem(key, newStatus) {
-        setChecklistStatus(prev => {
-            const updated = { ...prev };
-            if (updated[key] === newStatus) {
-                delete updated[key]; // toggle off
-            } else {
-                updated[key] = newStatus;
+    // Sinkronisasi teks hasil generate ke kotak form.masalah tanpa menghapus catatan teknisi lainnya
+    function applySyncToMasalah(newText, currentMasalah) {
+        const prev = lastGeneratedRef.current;
+        lastGeneratedRef.current = newText;
+
+        if (!prev) {
+            if (!newText) return currentMasalah;
+            if (!currentMasalah.trim()) return newText;
+            return `${currentMasalah.trim()}\n\n${newText}`;
+        }
+
+        if (currentMasalah.includes(prev)) {
+            if (!newText) {
+                return currentMasalah.replace(prev, "").trim();
             }
+            return currentMasalah.replace(prev, newText);
+        } else {
+            if (!newText) return currentMasalah;
+            if (!currentMasalah.trim()) return newText;
+            return `${currentMasalah.trim()}\n\n${newText}`;
+        }
+    }
+
+    // Toggle status OK / Bermasalah pada komponen
+    function handleToggleStatus(key, targetStatus) {
+        setChecklistStatus(prev => {
+            const itemDef = HARDWARE_ITEMS.find(i => i.key === key);
+            const currentData = prev[key] || { status: null, qty: itemDef?.defaultQty || 1, note: "" };
+            
+            const nextStatus = currentData.status === targetStatus ? null : targetStatus;
+            const updated = {
+                ...prev,
+                [key]: { ...currentData, status: nextStatus }
+            };
 
             if (autoSync) {
-                setForm(f => ({
-                    ...f,
-                    masalah: syncChecklistToMasalah(updated, f.masalah)
-                }));
+                const newGenerated = buildChecklistText(updated, formatMode);
+                setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
             }
 
             return updated;
         });
     }
 
-    // Quick Action: Set Semua Normal
+    // Ubah jumlah slot/port (misal: 2 port, 3 port)
+    function handleQtyChange(key, delta) {
+        setChecklistStatus(prev => {
+            const itemDef = HARDWARE_ITEMS.find(i => i.key === key);
+            const currentData = prev[key] || { status: null, qty: itemDef?.defaultQty || 1, note: "" };
+            const currentQty = currentData.qty || itemDef?.defaultQty || 1;
+            const newQty = Math.max(1, Math.min(8, currentQty + delta));
+
+            const updated = {
+                ...prev,
+                [key]: { ...currentData, qty: newQty }
+            };
+
+            if (autoSync && currentData.status) {
+                const newGenerated = buildChecklistText(updated, formatMode);
+                setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
+            }
+
+            return updated;
+        });
+    }
+
+    // Ubah catatan spesifik komponen (misal: "ada 2 garis vertikal", "klik bawah macet")
+    function handleNoteChange(key, noteText) {
+        setChecklistStatus(prev => {
+            const itemDef = HARDWARE_ITEMS.find(i => i.key === key);
+            const currentData = prev[key] || { status: "ok", qty: itemDef?.defaultQty || 1, note: "" };
+            const updated = {
+                ...prev,
+                [key]: { ...currentData, note: noteText }
+            };
+
+            if (autoSync && currentData.status) {
+                const newGenerated = buildChecklistText(updated, formatMode);
+                setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
+            }
+
+            return updated;
+        });
+    }
+
+    // Ubah mode format (paragraf vs bullet)
+    function handleFormatModeChange(newMode) {
+        setFormatMode(newMode);
+        if (autoSync) {
+            const newGenerated = buildChecklistText(checklistStatus, newMode);
+            setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
+        }
+    }
+
+    // 1-Klik: Set semua komponen menjadi OK
     function handleSetAllOk() {
         const updated = {};
-        HARDWARE_CHECKLIST_ITEMS.forEach(item => {
-            updated[item.key] = "ok";
+        HARDWARE_ITEMS.forEach(item => {
+            const existing = checklistStatus[item.key] || {};
+            updated[item.key] = {
+                status: "ok",
+                qty: existing.qty || item.defaultQty || 1,
+                note: existing.note || ""
+            };
         });
         setChecklistStatus(updated);
         if (autoSync) {
-            setForm(f => ({
-                ...f,
-                masalah: syncChecklistToMasalah(updated, f.masalah)
-            }));
+            const newGenerated = buildChecklistText(updated, formatMode);
+            setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
         }
-        toast.success("Semua 12 komponen ditandai Normal (OK)!");
+        toast.success("Semua komponen ditandai OK!");
     }
 
-    // Quick Action: Reset Checklist
+    // Reset Checklist
     function handleResetChecklist() {
         setChecklistStatus({});
         if (autoSync) {
-            setForm(f => ({
-                ...f,
-                masalah: syncChecklistToMasalah({}, f.masalah)
-            }));
+            setForm(f => ({ ...f, masalah: applySyncToMasalah("", f.masalah) }));
         }
-        toast.success("Checklist pemeriksaan telah direset.");
+        toast.success("Checklist telah direset.");
     }
 
-    // Quick Action: Rekomendasikan Solusi untuk Part Bermasalah
+    // Rekomendasikan solusi otomatis untuk komponen yang bermasalah
     function handleSuggestSolutions() {
-        const issueKeys = Object.keys(checklistStatus).filter(k => checklistStatus[k] === "issue");
+        const issueKeys = Object.keys(checklistStatus).filter(k => checklistStatus[k]?.status === "issue");
         if (issueKeys.length === 0) {
             toast("Tidak ada komponen yang ditandai bermasalah.", { icon: "ℹ️" });
             return;
         }
 
         const solutionLines = issueKeys.map(k => {
-            const item = HARDWARE_CHECKLIST_ITEMS.find(i => i.key === k);
-            return `• ${item?.label}: ${item?.defaultSolusi || "Perbaikan atau penggantian komponen"}`;
+            const item = HARDWARE_ITEMS.find(i => i.key === k);
+            const note = checklistStatus[k]?.note ? ` (${checklistStatus[k].note})` : "";
+            return `• ${item?.label}${note}: ${item?.defaultSolusi || "Pengecekan dan perbaikan teknis"}`;
         });
 
-        const newBlock = `Rencana Solusi Komponen Bermasalah:\n${solutionLines.join("\n")}`;
+        const newBlock = `Rekomendasi Tindakan:\n${solutionLines.join("\n")}`;
 
         setForm(f => {
             const existing = f.solusi.trim();
@@ -203,12 +315,10 @@ export default function DiagnosisForm() {
         toast.success(`${issueKeys.length} rekomendasi solusi berhasil disisipkan!`);
     }
 
-    // Manual Sync button jika autoSync dimatikan
+    // Manual Sync jika autoSync dimatikan
     function handleManualSync() {
-        setForm(f => ({
-            ...f,
-            masalah: syncChecklistToMasalah(checklistStatus, f.masalah)
-        }));
+        const newGenerated = buildChecklistText(checklistStatus, formatMode);
+        setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
         toast.success("Hasil checklist berhasil disinkronkan ke kotak deskripsi!");
     }
 
@@ -273,8 +383,12 @@ export default function DiagnosisForm() {
     const masalahStats = useMemo(() => getStats(form.masalah), [form.masalah]);
     const solusiStats = useMemo(() => getStats(form.solusi), [form.solusi]);
 
-    const checkedCount = Object.keys(checklistStatus).filter(k => checklistStatus[k] === "ok" || checklistStatus[k] === "issue").length;
-    const issueCount = Object.keys(checklistStatus).filter(k => checklistStatus[k] === "issue").length;
+    const checkedCount = Object.keys(checklistStatus).filter(
+        k => checklistStatus[k]?.status === "ok" || checklistStatus[k]?.status === "issue"
+    ).length;
+    const issueCount = Object.keys(checklistStatus).filter(
+        k => checklistStatus[k]?.status === "issue"
+    ).length;
 
     if (fetching) {
         return (
@@ -310,7 +424,7 @@ export default function DiagnosisForm() {
                             )}
                         </div>
                         <p className="text-sm text-slate-500 mt-0.5">
-                            Catat temuan masalah teknis, inspeksi komponen, rekomendasi solusi, dan estimasi biaya perbaikan
+                            Catat temuan masalah teknis, cek fungsi komponen, dan ajukan estimasi penawaran servis
                         </p>
                     </div>
                 </div>
@@ -318,17 +432,17 @@ export default function DiagnosisForm() {
 
             <form onSubmit={(e) => { e.preventDefault(); handleSave(false); }} className="space-y-6">
                 
-                {/* 1. Checklist Inspeksi Hardware & Auto-Type Generator */}
+                {/* 1. Checklist Cek Fungsi Komponen & Auto-Type */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 transition-all">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100">
                         <div>
                             <div className="flex items-center gap-2">
                                 <ListChecks className="w-5 h-5 text-blue-600" />
                                 <h2 className="text-base font-bold text-slate-900">
-                                    Checklist Pengecekan Cepat (Auto-Type)
+                                    Cek Fungsi Komponen (Auto-Type Laporan)
                                 </h2>
                                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                                    {checkedCount}/{HARDWARE_CHECKLIST_ITEMS.length} Diperiksa
+                                    {checkedCount}/{HARDWARE_ITEMS.length} Dicek
                                 </span>
                                 {issueCount > 0 && (
                                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
@@ -337,12 +451,42 @@ export default function DiagnosisForm() {
                                 )}
                             </div>
                             <p className="text-xs text-slate-500 mt-1">
-                                Klik status komponen di bawah. Teks otomatis terketik di kotak deskripsi temuan masalah secara real-time.
+                                Klik OK / Bermasalah pada komponen. Format teks laporan otomatis tersusun di kotak temuan masalah secara natural.
                             </p>
                         </div>
 
-                        {/* Quick Controls */}
+                        {/* Controls & Quick Actions */}
                         <div className="flex flex-wrap items-center gap-2">
+                            {/* Toggle Format: Paragraf vs Bullet */}
+                            <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+                                <button
+                                    type="button"
+                                    onClick={() => handleFormatModeChange("paragraph")}
+                                    className={`flex items-center gap-1 px-2 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                                        formatMode === "paragraph"
+                                            ? "bg-white text-blue-700 shadow-xs"
+                                            : "text-slate-600 hover:text-slate-900"
+                                    }`}
+                                    title="Format kalimat mengalir santai (cth: fungsi port USB, keyboard, baterai ok)"
+                                >
+                                    <AlignLeft className="w-3.5 h-3.5" />
+                                    <span>Paragraf</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleFormatModeChange("bullet")}
+                                    className={`flex items-center gap-1 px-2 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                                        formatMode === "bullet"
+                                            ? "bg-white text-blue-700 shadow-xs"
+                                            : "text-slate-600 hover:text-slate-900"
+                                    }`}
+                                    title="Format poin per baris (cth: • port USB ok)"
+                                >
+                                    <List className="w-3.5 h-3.5" />
+                                    <span>Poin List</span>
+                                </button>
+                            </div>
+
                             <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 cursor-pointer select-none">
                                 <input
                                     type="checkbox"
@@ -350,7 +494,7 @@ export default function DiagnosisForm() {
                                     onChange={(e) => setAutoSync(e.target.checked)}
                                     className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                                 />
-                                <span>Auto-Sync ke Textbox</span>
+                                <span>Auto-Sync</span>
                             </label>
 
                             {!autoSync && (
@@ -368,10 +512,10 @@ export default function DiagnosisForm() {
                                 type="button"
                                 onClick={handleSetAllOk}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg border border-emerald-200 text-xs font-semibold transition-all cursor-pointer"
-                                title="Tandai semua 12 komponen normal"
+                                title="Tandai semua komponen OK"
                             >
                                 <Check className="w-3.5 h-3.5" />
-                                <span>Semua Normal (OK)</span>
+                                <span>Semua OK</span>
                             </button>
 
                             {issueCount > 0 && (
@@ -382,7 +526,7 @@ export default function DiagnosisForm() {
                                     title="Salin rekomendasi perbaikan untuk komponen bermasalah ke kotak Solusi"
                                 >
                                     <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
-                                    <span>Rekomendasikan Solusi ({issueCount})</span>
+                                    <span>Solusi Part Rusak ({issueCount})</span>
                                 </button>
                             )}
 
@@ -391,7 +535,7 @@ export default function DiagnosisForm() {
                                     type="button"
                                     onClick={handleResetChecklist}
                                     className="inline-flex items-center gap-1 px-2 py-1.5 bg-white hover:bg-slate-100 text-slate-500 rounded-lg border border-slate-200 text-xs transition-all cursor-pointer"
-                                    title="Reset semua checklist"
+                                    title="Reset checklist"
                                 >
                                     <RotateCcw className="w-3.5 h-3.5" />
                                 </button>
@@ -400,50 +544,71 @@ export default function DiagnosisForm() {
                     </div>
 
                     {/* Grid Hardware Items */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5">
-                        {HARDWARE_CHECKLIST_ITEMS.map((item) => {
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                        {HARDWARE_ITEMS.map((item) => {
                             const ItemIcon = item.icon;
-                            const currentStatus = checklistStatus[item.key];
-                            const isOk = currentStatus === "ok";
-                            const isIssue = currentStatus === "issue";
+                            const itemData = checklistStatus[item.key] || {};
+                            const isOk = itemData.status === "ok";
+                            const isIssue = itemData.status === "issue";
+                            const qty = itemData.qty || item.defaultQty || 1;
+                            const note = itemData.note || "";
 
                             return (
                                 <div
                                     key={item.key}
-                                    className={`p-3 rounded-xl border transition-all flex flex-col justify-between gap-2.5 ${
+                                    className={`p-3 rounded-xl border transition-all flex flex-col justify-between gap-2 ${
                                         isOk 
-                                            ? "bg-emerald-50/50 border-emerald-200 shadow-2xs" 
+                                            ? "bg-emerald-50/40 border-emerald-300 shadow-2xs" 
                                             : isIssue 
-                                                ? "bg-rose-50/60 border-rose-200 shadow-2xs" 
-                                                : "bg-slate-50/60 border-slate-200 hover:bg-slate-50"
+                                                ? "bg-rose-50/50 border-rose-300 shadow-2xs" 
+                                                : "bg-white border-slate-200 hover:border-slate-300"
                                     }`}
                                 >
-                                    <div className="flex items-center gap-2">
-                                        <div className={`p-1.5 rounded-lg shrink-0 ${
-                                            isOk 
-                                                ? "bg-emerald-100 text-emerald-700" 
-                                                : isIssue 
-                                                    ? "bg-rose-100 text-rose-700" 
-                                                    : "bg-white text-slate-500 border border-slate-200"
-                                        }`}>
-                                            <ItemIcon className="w-4 h-4" />
+                                    {/* Header Komponen & Qty Stepper */}
+                                    <div className="flex items-center justify-between gap-1.5">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <ItemIcon className={`w-4 h-4 shrink-0 ${
+                                                isOk ? "text-emerald-600" : isIssue ? "text-rose-600" : "text-slate-400"
+                                            }`} />
+                                            <span className="text-xs font-bold text-slate-800 truncate">
+                                                {item.label}
+                                            </span>
                                         </div>
-                                        <span className={`text-xs font-semibold leading-tight truncate ${
-                                            isOk ? "text-emerald-950" : isIssue ? "text-rose-950 font-bold" : "text-slate-700"
-                                        }`}>
-                                            {item.label}
-                                        </span>
+
+                                        {item.hasQty && (
+                                            <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 shrink-0 select-none">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleQtyChange(item.key, -1)}
+                                                    className="w-4 h-4 flex items-center justify-center text-slate-600 hover:bg-white rounded cursor-pointer"
+                                                    title="Kurangi slot/port"
+                                                >
+                                                    <Minus className="w-2.5 h-2.5" />
+                                                </button>
+                                                <span className="text-[10px] font-bold px-1 text-slate-700">
+                                                    {qty} {item.unit}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleQtyChange(item.key, 1)}
+                                                    className="w-4 h-4 flex items-center justify-center text-slate-600 hover:bg-white rounded cursor-pointer"
+                                                    title="Tambah slot/port"
+                                                >
+                                                    <Plus className="w-2.5 h-2.5" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Action Chips */}
-                                    <div className="grid grid-cols-2 gap-1.5 pt-1">
+                                    {/* Action Buttons: OK vs Bermasalah */}
+                                    <div className="grid grid-cols-2 gap-1.5">
                                         <button
                                             type="button"
-                                            onClick={() => handleToggleItem(item.key, "ok")}
-                                            className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                                            onClick={() => handleToggleStatus(item.key, "ok")}
+                                            className={`py-1 px-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
                                                 isOk
                                                     ? "bg-emerald-600 text-white shadow-xs"
-                                                    : "bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200"
+                                                    : "bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200"
                                             }`}
                                         >
                                             <Check className="w-3 h-3" />
@@ -452,17 +617,32 @@ export default function DiagnosisForm() {
 
                                         <button
                                             type="button"
-                                            onClick={() => handleToggleItem(item.key, "issue")}
-                                            className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                                            onClick={() => handleToggleStatus(item.key, "issue")}
+                                            className={`py-1 px-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
                                                 isIssue
                                                     ? "bg-rose-600 text-white shadow-xs"
-                                                    : "bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200"
+                                                    : "bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200"
                                             }`}
                                         >
                                             <X className="w-3 h-3" />
-                                            <span>Cacat / Rusak</span>
+                                            <span>Bermasalah</span>
                                         </button>
                                     </div>
+
+                                    {/* Input Catatan Spesifik (cth: ada 2 garis vertikal, klik tidak fungsi, dll.) */}
+                                    <input
+                                        type="text"
+                                        value={note}
+                                        onChange={(e) => handleNoteChange(item.key, e.target.value)}
+                                        placeholder="Catatan (cth: 2 garis vertikal)"
+                                        className={`w-full px-2 py-1 text-[11px] rounded-lg border outline-none transition-all placeholder:text-slate-400 ${
+                                            isIssue 
+                                                ? "bg-white border-rose-200 text-rose-900 focus:border-rose-500" 
+                                                : isOk && note
+                                                    ? "bg-white border-emerald-200 text-emerald-900 focus:border-emerald-500"
+                                                    : "bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-blue-500"
+                                        }`}
+                                    />
                                 </div>
                             );
                         })}
@@ -489,7 +669,7 @@ export default function DiagnosisForm() {
                             onChange={(e) => setForm({ ...form, masalah: e.target.value })}
                             maxLength={MAX_TEXT_LIMIT}
                             rows={6}
-                            placeholder="Tuliskan temuan masalah teknis, pengukuran voltase, gejala kerusakan, atau gunakan checklist di atas untuk auto-type..."
+                            placeholder="Tuliskan spesifikasi unit, kronologi, atau gunakan checklist di atas untuk menyusun laporan pengecekan otomatis..."
                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all resize-y min-h-[140px] text-sm text-slate-900 leading-relaxed font-sans placeholder:text-slate-400"
                             required
                         />
@@ -498,7 +678,7 @@ export default function DiagnosisForm() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs mt-2 text-slate-500">
                             <span className="flex items-center gap-1.5">
                                 <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                Catat temuan komponen secara detail. Maksimal {MAX_TEXT_LIMIT.toLocaleString()} karakter (~750 kata).
+                                Tuliskan rincian hasil pengecekan. Maksimal {MAX_TEXT_LIMIT.toLocaleString()} karakter (~750 kata).
                             </span>
                             <span className={`font-mono font-medium shrink-0 ${
                                 masalahStats.chars > 4750 
@@ -529,7 +709,7 @@ export default function DiagnosisForm() {
                             onChange={(e) => setForm({ ...form, solusi: e.target.value })}
                             maxLength={MAX_TEXT_LIMIT}
                             rows={5}
-                            placeholder="Rincikan tindakan teknis, langkah perbaikan, part yang perlu diganti, atau estimasi waktu pengerjaan..."
+                            placeholder="Rincikan tindakan servis, part yang perlu diganti (misal: cleaning pasta, aktivasi Office, ganti LCD)..."
                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all resize-y min-h-[130px] text-sm text-slate-900 leading-relaxed font-sans placeholder:text-slate-400"
                             required
                         />
@@ -538,7 +718,7 @@ export default function DiagnosisForm() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs mt-2 text-slate-500">
                             <span className="flex items-center gap-1.5">
                                 <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                Tuliskan solusi yang jelas agar mudah dipahami customer saat penawaran harga.
+                                Solusi ini akan dijadikan acuan penawaran ke pelanggan saat disetujui.
                             </span>
                             <span className={`font-mono font-medium shrink-0 ${
                                 solusiStats.chars > 4750 
