@@ -297,14 +297,6 @@ export default function TiketServisForm() {
         }
     }
 
-    if (fetching) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-        );
-    }
-
     const categoryCounts = {
         Semua: perangkats.length,
         Laptop: perangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("laptop")).length,
@@ -409,6 +401,14 @@ export default function TiketServisForm() {
     }
 
     const selectedPerangkat = perangkats.find(p => Number(p.id) === Number(form.perangkat_id));
+
+    if (fetching) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full space-y-6 pb-10">
