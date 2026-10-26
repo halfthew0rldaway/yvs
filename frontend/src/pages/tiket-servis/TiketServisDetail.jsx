@@ -1529,11 +1529,11 @@ export default function TiketServisDetail() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                         <div>
                             <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1.5">Masalah Ditemukan</p>
-                            <p className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 h-[calc(100%-1.5rem)]">{tiket.diagnosis.masalah}</p>
+                            <div className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 min-h-[5rem] whitespace-pre-wrap break-words leading-relaxed font-sans">{tiket.diagnosis.masalah}</div>
                         </div>
                         <div>
                             <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1.5">Solusi yang Ditawarkan</p>
-                            <p className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 h-[calc(100%-1.5rem)]">{tiket.diagnosis.solusi}</p>
+                            <div className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 min-h-[5rem] whitespace-pre-wrap break-words leading-relaxed font-sans">{tiket.diagnosis.solusi}</div>
                         </div>
                     </div>
                     <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">

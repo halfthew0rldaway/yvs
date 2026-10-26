@@ -138,8 +138,8 @@ model TiketServis {
 model Diagnosis {
   id              Int      @id @default(autoincrement())
   tiket_id        Int      @unique
-  masalah         String
-  solusi          String
+  masalah         String   @db.Text
+  solusi          String   @db.Text
   estimasi_biaya  Float
   foto_diagnosis  Json?    // Foto pemeriksaan teknis fase diagnosis (maks 25)
   created_at      DateTime @default(now())
@@ -151,7 +151,7 @@ model LogPerbaikan {
   id         Int      @id @default(autoincrement())
   tiket_id   Int
   fase       String   @default("Diagnosis")
-  catatan    String
+  catatan    String   @db.Text
   foto_url   String?  @db.LongText
   created_at DateTime @default(now())
 
