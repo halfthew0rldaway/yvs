@@ -880,7 +880,7 @@ export default function TiketServisDetail() {
                     <button
                         type="button"
                         onClick={() => setIsBpbsModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs hover:border-slate-300 shrink-0 cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs hover:border-slate-300 shrink-0 cursor-pointer whitespace-nowrap"
                         title="Cetak Surat Tanda Terima Masuk (BPBS)"
                     >
                         <Printer className="w-4 h-4 text-emerald-600" />
@@ -890,7 +890,7 @@ export default function TiketServisDetail() {
                     <button
                         type="button"
                         onClick={() => setIsQrModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs hover:border-slate-300 shrink-0 cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs hover:border-slate-300 shrink-0 cursor-pointer whitespace-nowrap"
                         title="Lihat & Cetak QR Code Label Unit"
                     >
                         <QrCode className="w-4 h-4 text-blue-600" />
@@ -902,7 +902,7 @@ export default function TiketServisDetail() {
                         <button
                             type="button"
                             onClick={() => setIsSopWaModalOpen(true)}
-                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-emerald-50/80 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs shrink-0 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-50/80 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
                             title="Kirim Pesan WhatsApp SOP ke Pelanggan"
                         >
                             <MessageCircle className="w-4 h-4 text-emerald-600" />
@@ -918,7 +918,7 @@ export default function TiketServisDetail() {
                         <button
                             type="button"
                             onClick={() => setIsCancelModalOpen(true)}
-                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 hover:border-rose-300 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs shrink-0 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 hover:border-rose-300 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
                             title="Batalkan Tiket Servis Ini"
                         >
                             <XCircle className="w-4 h-4 text-rose-500" />
@@ -931,7 +931,7 @@ export default function TiketServisDetail() {
                         <button
                             type="button"
                             onClick={() => setIsTakeOverModalOpen(true)}
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-amber-600/20 shrink-0 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-amber-600/20 shrink-0 cursor-pointer whitespace-nowrap"
                         >
                             <Wrench className="w-4 h-4" />
                             <span>Klaim & Mulai Diagnosis</span>
@@ -944,7 +944,7 @@ export default function TiketServisDetail() {
                             <button
                                 type="button"
                                 onClick={() => handleOpenStatusModal("menunggu_persetujuan")}
-                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-extrabold transition-all shadow-md shadow-blue-600/25 shrink-0 cursor-pointer"
+                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-extrabold transition-all shadow-md shadow-blue-600/25 shrink-0 cursor-pointer whitespace-nowrap"
                             >
                                 <Send className="w-4 h-4" />
                                 <span>Selesaikan Diagnosa & Naikkan ke Penawaran</span>
@@ -952,7 +952,7 @@ export default function TiketServisDetail() {
                         ) : (
                             <Link
                                 to={`/tiket-servis/${id}/diagnosis`}
-                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-extrabold transition-all shadow-md shadow-blue-600/25 shrink-0"
+                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-extrabold transition-all shadow-md shadow-blue-600/25 shrink-0 whitespace-nowrap"
                             >
                                 <Search className="w-4 h-4" />
                                 <span>Input Hasil Diagnosis & Estimasi</span>
@@ -962,7 +962,7 @@ export default function TiketServisDetail() {
 
                     {/* Stage Info: Menunggu Persetujuan (Teknisi) */}
                     {tiket.status === "menunggu_persetujuan" && isTeknisi && (
-                        <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold shrink-0">
+                        <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold shrink-0 whitespace-nowrap">
                             <Clock className="w-4 h-4 text-amber-600" />
                             <span>Tahap Admin: Penawaran (Menunggu ACC)</span>
                         </div>
@@ -973,9 +973,9 @@ export default function TiketServisDetail() {
                         <button
                             type="button"
                             onClick={() => handleOpenAccModal("disetujui")}
-                            className="inline-flex items-center justify-center gap-2 px-4.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-600/25 shrink-0 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2.5 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-600/25 shrink-0 cursor-pointer whitespace-nowrap"
                         >
-                            <CheckCircle2 className="w-4 h-4" />
+                            <CheckCircle2 className="w-4 h-4 shrink-0" />
                             <span>Konfirmasi ACC Pelanggan</span>
                         </button>
                     )}
