@@ -382,7 +382,14 @@ export default function UserList() {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {users.map((u) => (
-                                        <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <tr 
+                                            key={u.id} 
+                                            onClick={(e) => {
+                                                if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                                handleOpenEditModal(u);
+                                            }}
+                                            className="hover:bg-blue-50/40 cursor-pointer transition-colors"
+                                        >
                                             <td className="px-6 py-4 font-medium text-slate-900">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm ${

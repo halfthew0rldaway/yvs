@@ -540,7 +540,10 @@ export default function Dashboard() {
                                         {data.sparepartHampirHabis.map((s) => (
                                             <tr 
                                                 key={s.id} 
-                                                onClick={() => navigate('/sparepart')}
+                                                onClick={(e) => {
+                                                    if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                                    navigate('/sparepart');
+                                                }}
                                                 className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer group"
                                                 title="Klik untuk membuka katalog sparepart"
                                             >
@@ -981,8 +984,11 @@ export default function Dashboard() {
                                 {data.activeTickets.map(tiket => (
                                     <tr 
                                         key={tiket.id} 
-                                        onClick={() => navigate(`/tiket-servis/${tiket.id}`)}
-                                        className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                                        onClick={(e) => {
+                                            if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                            navigate(`/tiket-servis/${tiket.id}`);
+                                        }}
+                                        className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
                                         title="Buka detail tiket servis"
                                     >
                                         <td className="py-3 px-4">

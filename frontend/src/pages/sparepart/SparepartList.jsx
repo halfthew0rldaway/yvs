@@ -749,7 +749,14 @@ export default function SparepartList() {
                                     const marginPercent = s.harga > 0 ? Math.round((margin / s.harga) * 100) : 0;
 
                                     return (
-                                        <tr key={s.id} className="hover:bg-slate-50/80 transition-colors group">
+                                        <tr 
+                                            key={s.id} 
+                                            onClick={(e) => {
+                                                if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                                handleOpenUsageHistory(s);
+                                            }}
+                                            className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
+                                        >
                                             <td className="px-6 py-4 text-slate-500">{startIndex + i + 1}</td>
                                             <td className="px-6 py-4">
                                                 <p className="font-medium text-slate-900">{(s.brand?.nama && s.brand.nama.toLowerCase() !== "lainnya" ? s.brand.nama + " " : "") + s.nama}</p>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { 
@@ -39,6 +39,7 @@ const STATUS_LABELS = {
 };
 
 export default function TiketServisList() {
+    const navigate = useNavigate();
     const { isAdmin, isTeknisi, user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
     const [tikets, setTikets] = useState([]);
@@ -422,7 +423,14 @@ export default function TiketServisList() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {tikets.map((t) => (
-                                <tr key={t.id} className="hover:bg-slate-50/80 transition-colors group">
+                                <tr 
+                                    key={t.id} 
+                                    onClick={(e) => {
+                                        if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                        navigate(`/tiket-servis/${t.id}`);
+                                    }}
+                                    className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
+                                >
                                     <td className="px-6 py-4 font-mono font-bold text-slate-700">
                                         <div className="flex items-center gap-2">
                                             <span>{t.nomor_tiket}</span>

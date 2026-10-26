@@ -216,7 +216,14 @@ export default function PerangkatList() {
                                 const rowNumber = (currentPage - 1) * pageSize + i + 1;
 
                                 return (
-                                    <tr key={p.id} className="hover:bg-slate-50/80 transition-colors group">
+                                    <tr 
+                                        key={p.id} 
+                                        onClick={(e) => {
+                                            if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                            setSelectedPerangkatId(p.id);
+                                        }}
+                                        className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
+                                    >
                                         <td className="px-6 py-4 text-slate-400 font-mono text-xs">{rowNumber}</td>
                                         <td className="px-6 py-4">
                                             <button

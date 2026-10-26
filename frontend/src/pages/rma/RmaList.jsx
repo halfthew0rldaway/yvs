@@ -409,7 +409,14 @@ export default function RmaList() {
                                 const statusCfg = RMA_STATUS_CONFIG[item.status] || RMA_STATUS_CONFIG.diajukan;
                                 const StatusIcon = statusCfg.icon;
                                 return (
-                                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                                    <tr 
+                                        key={item.id} 
+                                        onClick={(e) => {
+                                            if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                            handleOpenUpdateModal(item);
+                                        }}
+                                        className="hover:bg-blue-50/40 cursor-pointer transition-colors"
+                                    >
                                         <td className="px-6 py-4">
                                             <p className="font-mono font-bold text-slate-900">{item.nomor_rma}</p>
                                             <p className="text-xs text-slate-500 mt-0.5">

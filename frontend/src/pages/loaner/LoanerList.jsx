@@ -580,7 +580,20 @@ export default function LoanerList() {
                                     {filteredDevices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((d) => {
                                         const activeLoan = d.pinjaman?.[0];
                                         return (
-                                            <tr key={d.id} className="hover:bg-slate-50/80 transition-colors">
+                                            <tr 
+                                                key={d.id} 
+                                                onClick={(e) => {
+                                                    if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                                    if (d.status === "tersedia") {
+                                                        handleOpenLoanModal(d);
+                                                    } else if (d.status === "dipinjam" && activeLoan) {
+                                                        handleOpenReturnModal(activeLoan);
+                                                    } else if (isAdmin) {
+                                                        handleOpenEditDevice(d);
+                                                    }
+                                                }}
+                                                className="hover:bg-blue-50/40 cursor-pointer transition-colors"
+                                            >
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
@@ -783,7 +796,14 @@ export default function LoanerList() {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {filteredRecords.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((r) => (
-                                        <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <tr 
+                                            key={r.id} 
+                                            onClick={(e) => {
+                                                if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                                setPrintTarget(r);
+                                            }}
+                                            className="hover:bg-blue-50/40 cursor-pointer transition-colors"
+                                        >
                                             <td className="px-6 py-4">
                                                 <p className="font-mono font-bold text-slate-900">{r.nomor_peminjaman}</p>
                                                 <p className="text-xs text-slate-500 mt-0.5">

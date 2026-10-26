@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { Plus, FileText, Search, Printer, CheckCircle, TrendingUp, Wrench, User, X } from "lucide-react";
 import TableContainer from "../../components/common/TableContainer";
@@ -12,6 +12,7 @@ function formatRupiah(num) {
 }
 
 export default function InvoiceList() {
+    const navigate = useNavigate();
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -278,7 +279,14 @@ export default function InvoiceList() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {invoices.map((inv) => (
-                                <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
+                                <tr 
+                                    key={inv.id} 
+                                    onClick={(e) => {
+                                        if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                        navigate(`/invoice/${inv.id}`);
+                                    }}
+                                    className="hover:bg-blue-50/40 cursor-pointer transition-colors"
+                                >
                                     <td className="px-6 py-4 font-mono font-bold text-slate-700">{inv.tiket?.nomor_tiket}</td>
                                     <td className="px-6 py-4 font-medium text-slate-900">{inv.tiket?.perangkat?.customer?.nama || "-"}</td>
                                     <td className="px-6 py-4 text-slate-600 text-xs">{inv.tiket?.teknisi?.nama || "-"}</td>

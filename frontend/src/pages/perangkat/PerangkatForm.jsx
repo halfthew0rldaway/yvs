@@ -235,7 +235,14 @@ export default function PerangkatForm() {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {riwayat.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map((tiket) => (
-                                        <tr key={tiket.id} className="hover:bg-slate-50 transition-colors">
+                                        <tr 
+                                            key={tiket.id} 
+                                            onClick={(e) => {
+                                                if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                                navigate(`/tiket-servis/${tiket.id}`);
+                                            }}
+                                            className="hover:bg-blue-50/40 cursor-pointer transition-colors"
+                                        >
                                             <td className="px-6 py-4 font-semibold text-slate-900">{tiket.nomor_tiket}</td>
                                             <td className="px-6 py-4">{new Date(tiket.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
                                             <td className="px-6 py-4 truncate max-w-[200px]" title={tiket.keluhan}>{tiket.keluhan}</td>

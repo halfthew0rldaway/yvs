@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { 
     User, Phone, MapPin, MonitorSmartphone, Plus, ExternalLink, X, 
@@ -44,6 +44,7 @@ function getDeviceIcon(jenis) {
 }
 
 export default function CustomerDetailModal({ customerId, isOpen, onClose, onSelectPerangkat }) {
+    const navigate = useNavigate();
     const [customer, setCustomer] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("perangkat"); // "perangkat" | "riwayat" | "profil"
@@ -395,7 +396,15 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                             const isDueMaintenance = t.status === "diambil" && diffMonths >= 6;
 
                                                             return (
-                                                                <tr key={t.id} className="hover:bg-slate-50/70 transition-colors">
+                                                                <tr 
+                                                                    key={t.id} 
+                                                                    onClick={(e) => {
+                                                                        if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                                                        navigate(`/tiket-servis/${t.id}`);
+                                                                        if (onClose) onClose();
+                                                                    }}
+                                                                    className="hover:bg-blue-50/50 cursor-pointer transition-colors"
+                                                                >
                                                                     <td className="py-3 px-4 font-mono font-bold text-blue-600">
                                                                         <Link to={`/tiket-servis/${t.id}`} className="hover:underline flex items-center gap-1">
                                                                             {t.nomor_tiket}
