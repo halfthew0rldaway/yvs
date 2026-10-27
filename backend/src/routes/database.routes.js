@@ -15,5 +15,8 @@ router.post("/export", databaseController.exportData);
 // POST /api/database/cleanup-logs - Housekeeping old audit logs
 router.post("/cleanup-logs", databaseController.cleanupLogs);
 
+// POST /api/database/seed-dummy - Safely append realistic dummy data on live VPS
+router.post("/seed-dummy", databaseController.seedDummy);
+
 module.exports = router;
 

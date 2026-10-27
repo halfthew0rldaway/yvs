@@ -28,7 +28,8 @@ import {
     BookOpen,
     Activity,
     Check,
-    Info
+    Info,
+    Sparkles
 } from "lucide-react";
 
 export default function DatabaseManagement() {
@@ -53,6 +54,7 @@ export default function DatabaseManagement() {
     ]);
 
     const [isExporting, setIsExporting] = useState(false);
+    const [isSeeding, setIsSeeding] = useState(false);
 
     // Housekeeping modal
     const [isCleanupModalOpen, setIsCleanupModalOpen] = useState(false);
@@ -268,6 +270,22 @@ export default function DatabaseManagement() {
         }
     };
 
+    // Execute Seed Realistic Dummy Data
+    const handleSeedDummy = async () => {
+        setIsSeeding(true);
+        const toastId = toast.loading("Menyuntikkan data dummy realistis ke database...");
+        try {
+            const res = await api.post("/database/seed-dummy");
+            toast.success(res.data.message || "Data realistis berhasil ditambahkan!", { id: toastId, duration: 5000 });
+            fetchStats();
+        } catch (err) {
+            console.error("Gagal seed dummy:", err);
+            toast.error(err.response?.data?.message || "Gagal menambahkan data dummy", { id: toastId });
+        } finally {
+            setIsSeeding(false);
+        }
+    };
+
     return (
         <div className="w-full space-y-6 pb-12">
             {/* Header */}
@@ -286,7 +304,17 @@ export default function DatabaseManagement() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2.5">
+                    <button
+                        type="button"
+                        onClick={handleSeedDummy}
+                        disabled={isSeeding}
+                        className="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                        title="Menambahkan data dummy realistis (pelanggan, perangkat, tiket, invoice, rma, loaner) tanpa menghapus data lama"
+                    >
+                        <Sparkles className={`w-3.5 h-3.5 ${isSeeding ? "animate-spin" : ""}`} />
+                        <span>{isSeeding ? "Menyuntikkan Data..." : "+ Tambah Data Dummy Realistis"}</span>
+                    </button>
                     <button
                         type="button"
                         onClick={fetchStats}

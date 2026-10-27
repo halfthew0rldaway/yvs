@@ -484,9 +484,28 @@ async function cleanupLogs(req, res) {
     }
 }
 
+/**
+ * Seed realistic dummy data across all modules without deleting existing data
+ * POST /api/database/seed-dummy
+ */
+async function seedDummy(req, res) {
+    try {
+        const appendRealisticDummy = require("../../scripts/append_realistic_dummy");
+        const result = await appendRealisticDummy();
+        return res.json({
+            message: `Berhasil menambahkan data realistis baru (${result.ticketsAdded} tiket, ${result.customersAdded} pelanggan & perangkat) tanpa menghapus data lama!`,
+            result
+        });
+    } catch (error) {
+        console.error("Error seedDummy:", error);
+        return res.status(500).json({ message: "Gagal menambahkan data dummy", error: error.message });
+    }
+}
+
 module.exports = {
     getStats,
     exportData,
-    cleanupLogs
+    cleanupLogs,
+    seedDummy
 };
 
