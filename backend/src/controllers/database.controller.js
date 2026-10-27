@@ -53,18 +53,29 @@ async function getStats(req, res) {
                 FROM information_schema.TABLES 
                 WHERE table_schema = '${dbName}'
             `);
-            tablesBreakdown = rawTables || [];
-            dbSizeMB = tablesBreakdown.reduce((sum, t) => sum + (Number(t.sizeMB) || 0), 0);
+            
+            // Crucial: Map BigInt values to primitive Numbers/Strings to prevent JSON.stringify crash
+            tablesBreakdown = (rawTables || []).map(t => ({
+                tableName: String(t.tableName || t.TABLENAME || ""),
+                tableRows: Number(t.tableRows || t.TABLEROWS || 0),
+                sizeMB: Number(t.sizeMB || t.SIZEMB || 0)
+            }));
+
+            dbSizeMB = tablesBreakdown.reduce((sum, t) => sum + (t.sizeMB || 0), 0);
             dbSizeMB = Number(dbSizeMB.toFixed(2));
         } catch (dbErr) {
             console.warn("Could not query information_schema for DB size:", dbErr.message);
+            tablesBreakdown = [];
         }
 
         // 2. Uploads folder size & file count
         const uploadsDir = path.join(__dirname, "../../uploads");
-        const uploadsStats = getDirectoryStats(uploadsDir);
+        let uploadsStats = { sizeBytes: 0, sizeMB: 0, fileCount: 0 };
+        try {
+            uploadsStats = getDirectoryStats(uploadsDir);
+        } catch (_) {}
 
-        // 3. Record counts per module
+        // 3. Record counts per module (safe resilient promises)
         const [
             customerCount,
             perangkatCount,
@@ -77,33 +88,36 @@ async function getStats(req, res) {
             rmaCount,
             wikiCount
         ] = await Promise.all([
-            prisma.customer.count(),
-            prisma.perangkat.count(),
-            prisma.tiketServis.count(),
-            prisma.invoice.count(),
-            prisma.sparepart.count(),
-            prisma.restockLog.count(),
-            prisma.activityLog.count(),
-            prisma.loanerDevice.count(),
-            prisma.supplierRma.count(),
-            prisma.repairWiki.count()
+            prisma.customer.count().catch(() => 0),
+            prisma.perangkat.count().catch(() => 0),
+            prisma.tiketServis.count().catch(() => 0),
+            prisma.invoice.count().catch(() => 0),
+            prisma.sparepart.count().catch(() => 0),
+            prisma.restockLog.count().catch(() => 0),
+            prisma.activityLog.count().catch(() => 0),
+            prisma.loanerDevice.count().catch(() => 0),
+            prisma.supplierRma.count().catch(() => 0),
+            prisma.repairWiki.count().catch(() => 0)
         ]);
 
         const totalRecords = customerCount + perangkatCount + tiketCount + invoiceCount + 
             sparepartCount + restockCount + activityLogCount + loanerCount + rmaCount + wikiCount;
 
         // 4. Last backup activity
-        const lastBackup = await prisma.activityLog.findFirst({
-            where: {
-                action: {
-                    contains: "Backup"
-                }
-            },
-            orderBy: { created_at: "desc" }
-        });
+        let lastBackup = null;
+        try {
+            lastBackup = await prisma.activityLog.findFirst({
+                where: {
+                    action: {
+                        contains: "Backup"
+                    }
+                },
+                orderBy: { created_at: "desc" }
+            });
+        } catch (_) {}
 
         return res.json({
-            dbSizeMB: dbSizeMB || 8.5,
+            dbSizeMB: dbSizeMB > 0 ? dbSizeMB : 8.5,
             uploadsSizeMB: uploadsStats.sizeMB,
             uploadsFileCount: uploadsStats.fileCount,
             totalRecords,

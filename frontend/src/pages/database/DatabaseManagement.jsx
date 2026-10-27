@@ -130,10 +130,12 @@ export default function DatabaseManagement() {
         setLoadingStats(true);
         try {
             const res = await api.get("/database/stats");
-            setStats(res.data);
+            if (res.data) {
+                setStats(res.data);
+            }
         } catch (err) {
-            console.error(err);
-            toast.error("Gagal memuat statistik database");
+            console.error("Gagal memuat statistik database:", err);
+            toast.error(err.response?.data?.message || "Gagal memuat statistik database");
         } finally {
             setLoadingStats(false);
         }
@@ -267,7 +269,7 @@ export default function DatabaseManagement() {
     };
 
     return (
-        <div className="space-y-6 pb-12 max-w-7xl mx-auto">
+        <div className="w-full space-y-6 pb-12">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -568,7 +570,7 @@ export default function DatabaseManagement() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5 pt-2">
                         {moduleOptions.map((mod) => {
                             const isSelected = selectedModules.includes(mod.id);
                             const Icon = mod.icon;
