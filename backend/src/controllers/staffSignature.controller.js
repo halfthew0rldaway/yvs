@@ -1,4 +1,4 @@
-const prisma = require("../utils/prisma");
+const prisma = require("../config/database");
 
 async function getAll(req, res) {
     try {
