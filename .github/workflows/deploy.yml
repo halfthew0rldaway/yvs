@@ -26,8 +26,9 @@ jobs:
             echo "🚀 Starting Deployment on VPS..."
             cd ~/servio
 
-            echo "📥 Pulling latest changes from Git..."
-            git pull origin main
+            echo "📥 Syncing latest changes from Git..."
+            git fetch origin main
+            git reset --hard origin/main
 
             if [ ! -f .env ] && [ -f .env.production ]; then
               cp .env.production .env
