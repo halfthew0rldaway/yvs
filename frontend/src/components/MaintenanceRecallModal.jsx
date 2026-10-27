@@ -7,7 +7,7 @@ import {
     User, Laptop, Wrench, HeartHandshake, ShieldAlert,
     ExternalLink, ArrowRight, RefreshCw, Smartphone
 } from "lucide-react";
-import { PERSONALITY_TYPES } from "../pages/customer/CustomerList";
+import { PERSONALITY_TYPES } from "../constants/personalityTypes";
 
 function formatDate(dateStr) {
     if (!dateStr) return "-";

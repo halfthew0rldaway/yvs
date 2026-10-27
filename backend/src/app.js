@@ -1,6 +1,9 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const compression = require("compression");
+const morgan = require("morgan");
 
 const authRoutes = require("./routes/auth.routes");
 const customerRoutes = require("./routes/customer.routes");
@@ -21,17 +24,44 @@ const rmaRoutes = require("./routes/rma.routes");
 const realtimeRoutes = require("./routes/realtime.routes");
 const databaseRoutes = require("./routes/database.routes");
 const activityLogger = require("./middleware/activityLogger");
+const sanitizeRequest = require("./middleware/sanitizeRequest");
+const errorHandler = require("./middleware/errorHandler");
+const { generalApiLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Trust proxy for Docker / Caddy reverse proxy (essential for correct IP in rate limiter & logs)
+app.set("trust proxy", 1);
+
+// 1. Security Headers (configured to allow cross-origin assets for uploads)
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// 2. HTTP Request Logger (colored concise output in dev, standard combined in prod)
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
+// 3. Response Compression (Gzip / Brotli)
+app.use(compression());
+
+// 4. CORS
 app.use(cors());
+
+// 5. Body Parsers
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+// 6. Global Request Sanitizer (Deep trim, normalize common fields, XSS protection)
+app.use(sanitizeRequest);
+
+// 7. General API Rate Limiter
+app.use("/api", generalApiLimiter);
+
+// 8. Static Uploads
 app.use('/uploads', express.static(require('path').join(__dirname, '../uploads')));
 
-// Activity Logger
+// 9. Activity Logger
 app.use(activityLogger);
 
 // Routes
@@ -56,13 +86,20 @@ app.use("/api/database", databaseRoutes);
 
 // Health check
 app.get("/", (req, res) => {
-    res.json({ message: "Serv.io API - Running" });
+    res.json({ 
+        message: "Serv.io API - Running",
+        environment: process.env.NODE_ENV || "development",
+        status: "healthy"
+    });
 });
 
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ message: "Endpoint tidak ditemukan" });
 });
+
+// Centralized Global Error Handler
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);

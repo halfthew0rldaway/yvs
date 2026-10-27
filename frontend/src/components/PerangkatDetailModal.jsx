@@ -6,7 +6,7 @@ import {
     Calendar, Wrench, ShieldCheck, History, ChevronDown, ChevronUp, 
     MessageCircle, Plus, Edit2, Laptop, Tv, Printer, Smartphone, FileText, AlertCircle 
 } from "lucide-react";
-import { PERSONALITY_TYPES } from "../pages/customer/CustomerList";
+import { PERSONALITY_TYPES } from "../constants/personalityTypes";
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-50 text-blue-700 border-blue-200" },

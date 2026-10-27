@@ -6,7 +6,7 @@ import {
     FileText, Calendar, MessageCircle, Edit2, Wrench, Laptop, Tv, Printer, 
     Smartphone, AlertCircle, HeartHandshake, Sparkles, CheckCircle2 
 } from "lucide-react";
-import { PERSONALITY_TYPES } from "../pages/customer/CustomerList";
+import { PERSONALITY_TYPES } from "../constants/personalityTypes";
 import MaintenanceRecallModal from "./MaintenanceRecallModal";
 
 const STATUS_LABELS = {

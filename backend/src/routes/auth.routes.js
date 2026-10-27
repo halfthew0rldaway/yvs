@@ -2,12 +2,14 @@ const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
+const { authLimiter } = require("../middleware/rateLimiter");
 const { login, logout, me, updateProfile } = require("../controllers/auth.controller");
 
 const router = express.Router();
 
 router.post(
     "/login",
+    authLimiter,
     [
         body("email").notEmpty().withMessage("Email wajib diisi"),
         body("password").notEmpty().withMessage("Password wajib diisi"),

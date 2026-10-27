@@ -36,6 +36,9 @@ model Customer {
 
   perangkat         Perangkat[]
   peminjaman_loaner LoanerRecord[]
+
+  @@index([nomor_telepon])
+  @@index([nama])
 }
 
 model Perangkat {
@@ -49,6 +52,10 @@ model Perangkat {
 
   customer     Customer     @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   tiket_servis TiketServis[]
+
+  @@index([customer_id])
+  @@index([serial_number])
+  @@index([merek])
 }
 
 model TiketServis {
@@ -133,6 +140,11 @@ model TiketServis {
   invoice           Invoice?
   peminjaman_loaner LoanerRecord[]
   supplier_rma      SupplierRma[]
+
+  @@index([status])
+  @@index([created_at])
+  @@index([teknisi_id])
+  @@index([perangkat_id])
 }
 
 model Diagnosis {
@@ -156,6 +168,8 @@ model LogPerbaikan {
   created_at DateTime @default(now())
 
   tiket TiketServis @relation(fields: [tiket_id], references: [id], onDelete: Cascade)
+
+  @@index([tiket_id])
 }
 
 model Brand {
@@ -181,6 +195,9 @@ model Sparepart {
   penggunaan_sparepart PenggunaanSparepart[]
   restock_logs         RestockLog[]
   supplier_rma         SupplierRma[]
+
+  @@index([brand_id])
+  @@index([kategori])
 }
 
 model PenggunaanSparepart {
@@ -210,6 +227,9 @@ model RestockLog {
 
   sparepart      Sparepart @relation(fields: [sparepart_id], references: [id], onDelete: Cascade)
   user           User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([sparepart_id])
+  @@index([created_at])
 }
 
 model Invoice {
@@ -232,6 +252,9 @@ model ActivityLog {
   created_at DateTime @default(now())
 
   user       User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([created_at])
 }
 
 // Feature 6: Internal Repair Wiki & Hardware Knowledge Base
@@ -256,6 +279,9 @@ model RepairWiki {
 
   brand             Brand?    @relation(fields: [brand_id], references: [id], onDelete: SetNull)
   user              User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([brand_id])
+  @@index([kategori])
 }
 
 // Fitur Notifikasi & Memo Kolaborasi Teknisi - Admin
@@ -274,6 +300,10 @@ model Notification {
 
   user   User? @relation("NotificationRecipient", fields: [user_id], references: [id], onDelete: Cascade)
   sender User? @relation("NotificationSender", fields: [sender_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([is_read])
+  @@index([created_at])
 }
 
 // Feature 6: Unit Pinjaman / Loaner & Backup Device Pool
@@ -292,6 +322,9 @@ model LoanerDevice {
   updated_at      DateTime       @updatedAt
 
   pinjaman        LoanerRecord[]
+
+  @@index([status])
+  @@index([kategori])
 }
 
 model LoanerRecord {
@@ -317,6 +350,11 @@ model LoanerRecord {
   loaner_device           LoanerDevice  @relation(fields: [loaner_device_id], references: [id], onDelete: Restrict)
   tiket                   TiketServis   @relation(fields: [tiket_id], references: [id], onDelete: Cascade)
   customer                Customer      @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([tiket_id])
+  @@index([customer_id])
+  @@index([loaner_device_id])
 }
 
 // Feature 7: Supplier Part Warranty & RMA Tracker (Klaim Garansi Distributor)
@@ -344,5 +382,9 @@ model SupplierRma {
 
   sparepart           Sparepart    @relation(fields: [sparepart_id], references: [id], onDelete: Restrict)
   tiket               TiketServis? @relation(fields: [tiket_id], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([sparepart_id])
+  @@index([tiket_id])
 }
 
