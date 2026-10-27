@@ -502,10 +502,29 @@ async function seedDummy(req, res) {
     }
 }
 
+/**
+ * Run safe normalization and deduplication cleanup across all database records
+ * POST /api/database/normalize-existing
+ */
+async function normalizeExisting(req, res) {
+    try {
+        const runNormalization = require("../../scripts/normalize_database");
+        const stats = await runNormalization();
+        return res.json({
+            message: `Normalisasi selesai! ${stats.customersUpdated} data customer dan ${stats.perangkatsUpdated} data perangkat berhasil distandarisasi secara kanonikal.`,
+            stats
+        });
+    } catch (error) {
+        console.error("Error normalizeExisting:", error);
+        return res.status(500).json({ message: "Gagal menormalisasi database", error: error.message });
+    }
+}
+
 module.exports = {
     getStats,
     exportData,
     cleanupLogs,
-    seedDummy
+    seedDummy,
+    normalizeExisting
 };
 

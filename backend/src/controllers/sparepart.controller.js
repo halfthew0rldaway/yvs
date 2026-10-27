@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
+const { normalizeText } = require("../utils/normalize");
 
 // Mengambil seluruh data sparepart
 async function getAll(req, res) {
@@ -99,7 +100,7 @@ async function getAll(req, res) {
     }
 }
 
-// Menambahkan sparepart baru
+// Menambahkan sparepart baru (dengan proteksi duplikasi nama per brand)
 async function create(req, res) {
     try {
         const { nama, kategori, stok, harga, harga_beli, brand_id, supplier_nama, nomor_faktur, tanggal_beli, catatan } = req.body;
@@ -108,12 +109,33 @@ async function create(req, res) {
             return res.status(400).json({ message: "Brand wajib dipilih" });
         }
 
+        const cleanNama = normalizeText(nama);
+        if (!cleanNama) {
+            return res.status(400).json({ message: "Nama sparepart wajib diisi" });
+        }
+
+        // Cek apakah item sparepart ini sudah terdaftar pada brand yang sama
+        const existing = await prisma.sparepart.findFirst({
+            where: {
+                brand_id: Number(brand_id),
+                nama: cleanNama
+            },
+            include: { brand: true }
+        });
+
+        if (existing) {
+            return res.status(409).json({
+                message: `Sparepart "${cleanNama}" untuk brand "${existing.brand?.nama || 'ini'}" sudah terdaftar (ID: #${existing.id}, Stok saat ini: ${existing.stok}). Silakan gunakan fitur 'Restock' untuk menambah stok barang ini tanpa membuat item duplikat.`,
+                data: existing
+            });
+        }
+
         const initialStok = Number(stok) || 0;
         const initialHpp = harga_beli !== undefined ? Number(harga_beli) : Math.round(Number(harga) * 0.7);
 
         const sparepart = await prisma.sparepart.create({
             data: { 
-                nama, 
+                nama: cleanNama, 
                 brand_id: Number(brand_id),
                 kategori: kategori || "Umum", 
                 stok: initialStok, 

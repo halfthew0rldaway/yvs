@@ -1,6 +1,7 @@
 const prisma = require("../config/database");
 const { getWarrantyStatus, getSlaStatus, calculateSlaPengerjaanTarget } = require("../utils/tiket");
 const { broadcast } = require("../utils/sse");
+const { normalizePhone } = require("../utils/normalize");
 
 // Customer melacak status servis tanpa login
 async function track(req, res) {
@@ -14,13 +15,26 @@ async function track(req, res) {
         const where = {};
 
         if (nomorTiket) {
-            where.nomor_tiket = nomorTiket;
+            where.nomor_tiket = nomorTiket.trim();
         }
 
         if (nomorTelepon) {
+            const rawPhone = nomorTelepon.trim();
+            const cleanDigits = rawPhone.replace(/\D/g, "");
+            const normalized08 = normalizePhone(rawPhone);
+            const normalized62 = cleanDigits.startsWith("0") ? "62" + cleanDigits.slice(1) : cleanDigits;
+
+            const phoneVariants = Array.from(new Set([
+                rawPhone,
+                cleanDigits,
+                normalized08,
+                normalized62,
+                `+${normalized62}`
+            ])).filter(Boolean);
+
             where.perangkat = {
                 customer: {
-                    nomor_telepon: nomorTelepon,
+                    nomor_telepon: { in: phoneVariants }
                 },
             };
         }

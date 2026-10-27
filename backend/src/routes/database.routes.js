@@ -18,5 +18,8 @@ router.post("/cleanup-logs", databaseController.cleanupLogs);
 // POST /api/database/seed-dummy - Safely append realistic dummy data on live VPS
 router.post("/seed-dummy", databaseController.seedDummy);
 
+// POST /api/database/normalize-existing - Standardize existing customer & device records
+router.post("/normalize-existing", databaseController.normalizeExisting);
+
 module.exports = router;
 

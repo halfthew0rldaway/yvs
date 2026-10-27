@@ -13,7 +13,7 @@ import DefectMapperModal from "../../components/DefectMapperModal";
 import { SLA_PENGECEKAN_PACKAGES } from "../../components/SlaBadge";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
 
-const POPULAR_BRANDS = ["Asus", "Lenovo", "HP", "Acer", "Dell", "Apple", "MSI", "Toshiba"];
+const POPULAR_BRANDS = ["ASUS", "Lenovo", "HP", "Acer", "Dell", "Apple", "MSI", "Toshiba", "Samsung", "Canon", "Epson"];
 const DEVICE_CATEGORIES = ["Laptop", "Desktop PC", "Printer", "Penyimpanan (HDD/SSD)", "Aksesoris (Mouse/Keyboard)", "Lainnya"];
 const ACTIVE_STATUSES = ["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui", "dalam_perbaikan", "selesai"];
 
@@ -198,12 +198,19 @@ export default function TiketServisForm() {
                 const custRes = await api.post("/customer", {
                     nama: quickForm.nama.trim(),
                     nomor_telepon: quickForm.nomor_telepon.trim(),
-                    tipe_kepribadian: quickForm.tipe_kepribadian || "Netral"
+                    tipe_kepribadian: quickForm.tipe_kepribadian || "Netral",
+                    allow_existing: true
                 });
                 customerId = custRes.data?.data?.id;
                 customerData = custRes.data?.data;
+                if (custRes.data?.isExisting) {
+                    toast.info(`Pelanggan "${customerData.nama}" sudah terdaftar sebelumnya. Riwayat servis dikaitkan otomatis.`);
+                }
                 if (customerData) {
-                    setExistingCustomers(prev => [customerData, ...prev]);
+                    setExistingCustomers(prev => {
+                        const exists = prev.some(c => Number(c.id) === Number(customerData.id));
+                        return exists ? prev : [customerData, ...prev];
+                    });
                 }
             } else {
                 customerData = existingCustomers.find(c => Number(c.id) === Number(customerId));
@@ -220,20 +227,28 @@ export default function TiketServisForm() {
                 jenis_perangkat: quickForm.jenis_perangkat || "Laptop",
                 merek: quickForm.merek.trim(),
                 model: quickForm.model.trim(),
-                serial_number: quickForm.serial_number ? quickForm.serial_number.trim() : null
+                serial_number: quickForm.serial_number ? quickForm.serial_number.trim() : null,
+                allow_existing: true
             });
+
+            if (devRes.data?.isExisting) {
+                toast.info(`Perangkat "${devRes.data.data.merek} ${devRes.data.data.model}" milik customer ini sudah terdaftar. Riwayat unit tetap utuh.`);
+            }
 
             const newPerangkat = {
                 ...devRes.data?.data,
                 customer: customerData,
-                _count: { tiket_servis: 0 }
+                _count: { tiket_servis: devRes.data?.data?._count?.tiket_servis || 0 }
             };
 
-            setPerangkats(prev => [newPerangkat, ...prev]);
+            setPerangkats(prev => {
+                const exists = prev.some(p => Number(p.id) === Number(newPerangkat.id));
+                return exists ? prev : [newPerangkat, ...prev];
+            });
             setForm(prev => ({ ...prev, perangkat_id: newPerangkat.id }));
             setIsQuickAddOpen(false);
             setSearchQuery("");
-            toast.success("Pelanggan & perangkat berhasil didaftarkan dan langsung terpilih!");
+            toast.success("Pelanggan & perangkat siap dan langsung terpilih!");
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal mendaftarkan perangkat");
         } finally {

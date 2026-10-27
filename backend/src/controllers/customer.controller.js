@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
+const { normalizePhone, normalizeName, normalizeText } = require("../utils/normalize");
 
 // Mengambil seluruh data customer dengan pencarian dan paginasi
 async function getAll(req, res) {
@@ -7,14 +8,19 @@ async function getAll(req, res) {
         const { search } = req.query;
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
 
-        const where = search
-            ? {
-                OR: [
-                    { nama: { contains: search } },
-                    { nomor_telepon: { contains: search } },
-                ],
+        let where = {};
+        if (search) {
+            const trimmedSearch = search.trim();
+            const normalizedPhone = normalizePhone(trimmedSearch);
+            const orList = [
+                { nama: { contains: trimmedSearch } },
+                { nomor_telepon: { contains: trimmedSearch } },
+            ];
+            if (normalizedPhone && normalizedPhone !== trimmedSearch) {
+                orList.push({ nomor_telepon: { contains: normalizedPhone } });
             }
-            : {};
+            where = { OR: orList };
+        }
 
         if (!isPaginated) {
             const customers = await prisma.customer.findMany({
@@ -114,22 +120,55 @@ async function getById(req, res) {
     }
 }
 
-// Menambahkan customer baru
+// Menambahkan customer baru (dengan proteksi duplikasi & normalisasi format)
 async function create(req, res) {
     try {
-        const { nama, nomor_telepon, alamat, tipe_kepribadian, catatan_khusus } = req.body;
+        const { nama, nomor_telepon, alamat, tipe_kepribadian, catatan_khusus, allow_existing } = req.body;
+
+        const cleanNama = normalizeName(nama);
+        const cleanPhone = normalizePhone(nomor_telepon);
+        const cleanAlamat = alamat ? normalizeText(alamat) : null;
+
+        if (!cleanNama || !cleanPhone) {
+            return res.status(400).json({ message: "Nama dan nomor telepon wajib diisi" });
+        }
+
+        // Cek proteksi duplikasi: apakah nomor telepon sudah terdaftar
+        const existing = await prisma.customer.findFirst({
+            where: { nomor_telepon: cleanPhone },
+            include: { perangkat: true }
+        });
+
+        if (existing) {
+            // Jika allow_existing = true (misal dari Quick-Register di intake form tiket servis),
+            // gunakan kembali profil pelanggan yang ada tanpa membuat record duplikat.
+            if (allow_existing) {
+                return res.status(200).json({
+                    message: `Customer dengan nomor ${cleanPhone} sudah terdaftar atas nama "${existing.nama}". Data riwayat dikaitkan otomatis.`,
+                    data: existing,
+                    isExisting: true
+                });
+            }
+
+            // Jika diakses dari modul Manajemen Customer standar (tambah manual), berikan notifikasi 409 Conflict
+            return res.status(409).json({
+                message: `Nomor WhatsApp ${cleanPhone} sudah terdaftar atas nama "${existing.nama}" (ID: #${existing.id}). Gunakan data yang ada atau perbarui profil pelanggan tersebut.`,
+                data: existing,
+                isExisting: true
+            });
+        }
 
         const customer = await prisma.customer.create({
             data: { 
-                nama, 
-                nomor_telepon, 
-                alamat,
+                nama: cleanNama, 
+                nomor_telepon: cleanPhone, 
+                alamat: cleanAlamat,
                 tipe_kepribadian: tipe_kepribadian || "Netral",
-                catatan_khusus: catatan_khusus || null
+                catatan_khusus: catatan_khusus ? normalizeText(catatan_khusus) : null
             },
         });
 
-        return res.status(201).json({ message: "Customer berhasil ditambahkan", data: customer });
+        return res.status(201).json({ message: "Customer berhasil ditambahkan", data: customer, isExisting: false });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
     }
@@ -146,14 +185,33 @@ async function update(req, res) {
             return res.status(404).json({ message: "Customer tidak ditemukan" });
         }
 
+        const cleanNama = nama ? normalizeName(nama) : undefined;
+        const cleanPhone = nomor_telepon ? normalizePhone(nomor_telepon) : undefined;
+        const cleanAlamat = alamat !== undefined ? (alamat ? normalizeText(alamat) : null) : undefined;
+
+        // Jika nomor telepon diubah, pastikan tidak bentrok dengan customer lain
+        if (cleanPhone && cleanPhone !== existing.nomor_telepon) {
+            const phoneConflict = await prisma.customer.findFirst({
+                where: {
+                    nomor_telepon: cleanPhone,
+                    id: { not: id }
+                }
+            });
+            if (phoneConflict) {
+                return res.status(409).json({
+                    message: `Nomor telepon ${cleanPhone} sudah digunakan oleh customer "${phoneConflict.nama}" (ID: #${phoneConflict.id}).`
+                });
+            }
+        }
+
         const customer = await prisma.customer.update({
             where: { id },
             data: { 
-                nama, 
-                nomor_telepon, 
-                alamat,
+                nama: cleanNama, 
+                nomor_telepon: cleanPhone, 
+                alamat: cleanAlamat,
                 tipe_kepribadian: tipe_kepribadian !== undefined ? tipe_kepribadian : undefined,
-                catatan_khusus: catatan_khusus !== undefined ? catatan_khusus : undefined
+                catatan_khusus: catatan_khusus !== undefined ? (catatan_khusus ? normalizeText(catatan_khusus) : null) : undefined
             },
         });
 

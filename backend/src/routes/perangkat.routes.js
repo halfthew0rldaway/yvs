@@ -3,6 +3,7 @@ const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate, authorize } = require("../middleware/auth");
 const { getAll, getById, create, update, remove } = require("../controllers/perangkat.controller");
+const { normalizeBrand, normalizeDeviceType, normalizeSerialNumber, normalizeText } = require("../utils/normalize");
 
 const router = express.Router();
 
@@ -12,20 +13,17 @@ const perangkatValidation = [
     body("customer_id").notEmpty().withMessage("Customer wajib dipilih"),
     body("jenis_perangkat")
         .notEmpty().withMessage("Jenis perangkat wajib diisi")
-        .isLength({ max: 50 }).withMessage("Maksimal 50 karakter")
-        .trim(),
+        .customSanitizer(val => normalizeDeviceType(val)),
     body("merek")
         .notEmpty().withMessage("Merek wajib diisi")
-        .isLength({ max: 50 }).withMessage("Maksimal 50 karakter")
-        .trim(),
+        .customSanitizer(val => normalizeBrand(val)),
     body("model")
         .notEmpty().withMessage("Model wajib diisi")
-        .isLength({ max: 50 }).withMessage("Maksimal 50 karakter")
-        .trim(),
+        .customSanitizer(val => normalizeText(val))
+        .isLength({ max: 100 }).withMessage("Maksimal 100 karakter"),
     body("serial_number")
         .optional({ checkFalsy: true })
-        .isLength({ max: 100 }).withMessage("Maksimal 100 karakter")
-        .trim()
+        .customSanitizer(val => normalizeSerialNumber(val))
 ];
 
 router.get("/", getAll);

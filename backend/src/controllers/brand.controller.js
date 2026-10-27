@@ -1,4 +1,5 @@
 const prisma = require("../config/database");
+const { normalizeBrand } = require("../utils/normalize");
 
 async function getAll(req, res) {
     try {
@@ -18,20 +19,21 @@ async function create(req, res) {
             return res.status(400).json({ message: "Nama brand diperlukan" });
         }
 
+        const cleanNama = normalizeBrand(nama);
+
         // Validate uniqueness case-insensitive
         const existing = await prisma.brand.findFirst({
             where: {
-                nama: { equals: nama }
+                nama: cleanNama
             }
         });
 
-        // But MySQL is usually case-insensitive by default. We'll rely on unique constraint or manual check.
         if (existing) {
-            return res.status(400).json({ message: "Brand sudah ada", data: existing });
+            return res.status(400).json({ message: `Brand "${cleanNama}" sudah ada`, data: existing });
         }
 
         const brand = await prisma.brand.create({
-            data: { nama }
+            data: { nama: cleanNama }
         });
 
         return res.status(201).json({ message: "Brand berhasil ditambahkan", data: brand });

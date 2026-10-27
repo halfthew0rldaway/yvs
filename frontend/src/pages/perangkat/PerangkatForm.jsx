@@ -145,12 +145,31 @@ export default function PerangkatForm() {
                         </div>
                         <input
                             type="text"
+                            list="brand-suggestions"
                             value={form.merek}
                             onChange={(e) => setForm({ ...form, merek: e.target.value })}
                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
-                            placeholder="Contoh: ASUS, HP, Lenovo..."
+                            placeholder="Ketik atau pilih (ASUS, HP, Lenovo...)"
                             required
                         />
+                        <datalist id="brand-suggestions">
+                            {["ASUS", "Lenovo", "HP", "Acer", "Dell", "Apple", "MSI", "Toshiba", "Samsung", "Canon", "Epson", "Brother", "Zyrex", "Axioo"].map(b => (
+                                <option key={b} value={b} />
+                            ))}
+                        </datalist>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                            <span className="text-[10px] text-slate-400">Pilihan cepat:</span>
+                            {["ASUS", "HP", "Lenovo", "Acer", "Apple", "Dell", "MSI"].map(brand => (
+                                <button
+                                    key={brand}
+                                    type="button"
+                                    onClick={() => setForm({ ...form, merek: brand })}
+                                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[10px] font-semibold text-slate-600 transition-colors cursor-pointer"
+                                >
+                                    {brand}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

@@ -55,6 +55,7 @@ export default function DatabaseManagement() {
 
     const [isExporting, setIsExporting] = useState(false);
     const [isSeeding, setIsSeeding] = useState(false);
+    const [isNormalizing, setIsNormalizing] = useState(false);
 
     // Housekeeping modal
     const [isCleanupModalOpen, setIsCleanupModalOpen] = useState(false);
@@ -286,6 +287,22 @@ export default function DatabaseManagement() {
         }
     };
 
+    // Execute Normalization & Deduplication Cleanup
+    const handleNormalize = async () => {
+        setIsNormalizing(true);
+        const toastId = toast.loading("Menstandarisasi nomor WhatsApp (08...) & merek kanonikal (ASUS, HP, Lenovo)...");
+        try {
+            const res = await api.post("/database/normalize-existing");
+            toast.success(res.data.message || "Normalisasi database berhasil!", { id: toastId, duration: 6000 });
+            fetchStats();
+        } catch (err) {
+            console.error("Gagal normalisasi database:", err);
+            toast.error(err.response?.data?.message || "Gagal melakukan normalisasi database", { id: toastId });
+        } finally {
+            setIsNormalizing(false);
+        }
+    };
+
     return (
         <div className="w-full space-y-6 pb-12">
             {/* Header */}
@@ -305,6 +322,16 @@ export default function DatabaseManagement() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
+                    <button
+                        type="button"
+                        onClick={handleNormalize}
+                        disabled={isNormalizing}
+                        className="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                        title="Menstandarisasi merek (ASUS, HP, Lenovo), nomor WhatsApp (08...), dan serial number tanpa merusak relasi data"
+                    >
+                        <ShieldCheck className={`w-3.5 h-3.5 ${isNormalizing ? "animate-spin" : ""}`} />
+                        <span>{isNormalizing ? "Menormalisasi..." : "Normalisasi & Rapihkan Data"}</span>
+                    </button>
                     <button
                         type="button"
                         onClick={handleSeedDummy}

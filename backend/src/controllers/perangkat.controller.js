@@ -1,6 +1,7 @@
 const prisma = require("../config/database");
 const { getWarrantyStatus } = require("../utils/tiket");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
+const { normalizeBrand, normalizeDeviceType, normalizeSerialNumber, normalizeText } = require("../utils/normalize");
 
 // Mengambil seluruh data perangkat
 async function getAll(req, res) {
@@ -106,27 +107,81 @@ async function getById(req, res) {
     }
 }
 
-// Menambahkan perangkat baru
+// Menambahkan perangkat baru (dengan proteksi duplikasi & normalisasi)
 async function create(req, res) {
     try {
-        const { customer_id, jenis_perangkat, merek, model, serial_number } = req.body;
+        const { customer_id, jenis_perangkat, merek, model, serial_number, allow_existing } = req.body;
 
-        const customer = await prisma.customer.findUnique({ where: { id: Number(customer_id) } });
+        const custId = Number(customer_id);
+        const customer = await prisma.customer.findUnique({ where: { id: custId } });
         if (!customer) {
             return res.status(404).json({ message: "Customer tidak ditemukan" });
         }
 
+        const cleanMerek = normalizeBrand(merek);
+        const cleanJenis = normalizeDeviceType(jenis_perangkat);
+        const cleanModel = normalizeText(model);
+        const cleanSN = normalizeSerialNumber(serial_number);
+
+        // Proteksi Duplikasi Perangkat untuk Customer yang Sama:
+        // 1. Jika ada Serial Number: Cek apakah customer sudah memiliki perangkat dengan Serial Number tersebut
+        // 2. Jika tanpa Serial Number: Cek apakah customer sudah memiliki perangkat dengan jenis, merek, model yang sama
+        let existingPerangkat = null;
+
+        if (cleanSN) {
+            existingPerangkat = await prisma.perangkat.findFirst({
+                where: {
+                    customer_id: custId,
+                    serial_number: cleanSN
+                },
+                include: { customer: true }
+            });
+        }
+
+        if (!existingPerangkat) {
+            existingPerangkat = await prisma.perangkat.findFirst({
+                where: {
+                    customer_id: custId,
+                    jenis_perangkat: cleanJenis,
+                    merek: cleanMerek,
+                    model: cleanModel,
+                    serial_number: cleanSN || null
+                },
+                include: { customer: true }
+            });
+        }
+
+        if (existingPerangkat) {
+            // Jika allow_existing = true (seperti pada alur Quick-Add Intake Tiket Servis),
+            // jangan buat perangkat baru, melainkan gunakan kembali profil perangkat yang ada agar riwayat servis tetap menyatu!
+            if (allow_existing) {
+                return res.status(200).json({
+                    message: `Perangkat ${cleanMerek} ${cleanModel} milik customer ini sudah terdaftar. Riwayat servis dikaitkan ke unit yang sama.`,
+                    data: existingPerangkat,
+                    isExisting: true
+                });
+            }
+
+            // Jika form manual Tambah Perangkat, beri notifikasi 409 agar admin menyadari unit ini sudah ada
+            return res.status(409).json({
+                message: `Perangkat ${cleanMerek} ${cleanModel} ${cleanSN ? `(SN: ${cleanSN})` : ''} sudah terdaftar untuk customer ini (ID Perangkat: #${existingPerangkat.id}). Silakan gunakan data perangkat yang sudah ada.`,
+                data: existingPerangkat,
+                isExisting: true
+            });
+        }
+
         const perangkat = await prisma.perangkat.create({
             data: {
-                customer_id: Number(customer_id),
-                jenis_perangkat,
-                merek,
-                model,
-                serial_number,
+                customer_id: custId,
+                jenis_perangkat: cleanJenis,
+                merek: cleanMerek,
+                model: cleanModel,
+                serial_number: cleanSN,
             },
+            include: { customer: true }
         });
 
-        return res.status(201).json({ message: "Perangkat berhasil ditambahkan", data: perangkat });
+        return res.status(201).json({ message: "Perangkat berhasil ditambahkan", data: perangkat, isExisting: false });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
     }
@@ -143,15 +198,21 @@ async function update(req, res) {
             return res.status(404).json({ message: "Perangkat tidak ditemukan" });
         }
 
+        const cleanMerek = merek ? normalizeBrand(merek) : undefined;
+        const cleanJenis = jenis_perangkat ? normalizeDeviceType(jenis_perangkat) : undefined;
+        const cleanModel = model ? normalizeText(model) : undefined;
+        const cleanSN = serial_number !== undefined ? normalizeSerialNumber(serial_number) : undefined;
+
         const perangkat = await prisma.perangkat.update({
             where: { id },
             data: {
                 customer_id: customer_id ? Number(customer_id) : undefined,
-                jenis_perangkat,
-                merek,
-                model,
-                serial_number,
+                jenis_perangkat: cleanJenis,
+                merek: cleanMerek,
+                model: cleanModel,
+                serial_number: cleanSN,
             },
+            include: { customer: true }
         });
 
         return res.json({ message: "Perangkat berhasil diperbarui", data: perangkat });
