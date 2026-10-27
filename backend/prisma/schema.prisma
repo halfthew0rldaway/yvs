@@ -233,17 +233,28 @@ model RestockLog {
 }
 
 model Invoice {
-  id              Int       @id @default(autoincrement())
-  tiket_id        Int       @unique
-  biaya_jasa      Float
-  biaya_sparepart Float
-  total_biaya     Float
-  ttd_customer    String?   @db.LongText
-  ttd_customer_at DateTime?
-  ttd_customer_nama String? @db.VarChar(150)
-  created_at      DateTime  @default(now())
+  id                Int       @id @default(autoincrement())
+  tiket_id          Int       @unique
+  biaya_jasa        Float
+  biaya_sparepart   Float
+  total_biaya       Float
+  ttd_customer      String?   @db.LongText
+  ttd_customer_at   DateTime?
+  ttd_customer_nama String?   @db.VarChar(150)
+  ttd_admin         String?   @db.LongText
+  ttd_admin_at      DateTime?
+  ttd_admin_nama    String?   @db.VarChar(150)
+  created_at        DateTime  @default(now())
 
   tiket TiketServis @relation(fields: [tiket_id], references: [id], onDelete: Cascade)
+}
+
+model StaffSignature {
+  id         Int      @id @default(autoincrement())
+  nama       String   @db.VarChar(150)
+  role       String?  @default("Admin Kasir") @db.VarChar(100)
+  signature  String   @db.LongText
+  created_at DateTime @default(now())
 }
 
 model ActivityLog {

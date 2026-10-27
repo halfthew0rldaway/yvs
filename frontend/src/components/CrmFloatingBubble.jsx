@@ -195,7 +195,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                     isDraggingRef.current = false;
                 }, 120);
             }}
-            className="fixed z-[9999] select-none cursor-grab active:cursor-grabbing pointer-events-auto"
+            className="fixed z-[9999] select-none cursor-grab active:cursor-grabbing pointer-events-auto print:hidden"
             style={{ right: 28, bottom: 28, touchAction: "none" }}
             initial={{ opacity: 0, scale: 0.9, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

@@ -409,8 +409,9 @@ export default function WarrantyCertificateModal({
                                         <WorkshopSignatureStamp
                                             isDigital={isDigitalSignature}
                                             onToggle={toggleDigitalSignature}
-                                            role="Stempel Workshop & Paraf"
-                                            name="Yangversa Computer"
+                                            role="Petugas Workshop"
+                                            name={tiket.invoice?.ttd_admin_nama || "Yangversa Computer"}
+                                            signature={tiket.invoice?.ttd_admin}
                                         />
                                     </div>
                                 </div>

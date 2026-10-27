@@ -374,5 +374,59 @@ async function saveCustomerSignature(req, res) {
     }
 }
 
-module.exports = { getAll, create, update, getById, getReport, saveCustomerSignature };
+// Menyimpan tanda tangan digital staf/admin/toko pada invoice
+async function saveAdminSignature(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const { signature, signer_nama } = req.body;
+
+        if (!signature) {
+            return res.status(400).json({ message: "Goresan tanda tangan admin wajib ada" });
+        }
+
+        const invoice = await prisma.invoice.findUnique({
+            where: { id },
+            include: { tiket: true }
+        });
+
+        if (!invoice) {
+            return res.status(404).json({ message: "Invoice tidak ditemukan" });
+        }
+
+        const signerName = signer_nama || req.user?.nama || "Admin Yangversa";
+        const signDate = new Date();
+
+        const updated = await prisma.invoice.update({
+            where: { id },
+            data: {
+                ttd_admin: signature,
+                ttd_admin_at: signDate,
+                ttd_admin_nama: signerName
+            },
+            include: {
+                tiket: {
+                    include: {
+                        perangkat: { include: { customer: true } },
+                        penggunaan_sparepart: { include: { sparepart: true } },
+                        teknisi: { select: { nama: true } },
+                        diagnosis: true
+                    }
+                }
+            }
+        });
+
+        broadcast("invoice:updated", { id: updated.id, tiket_id: updated.tiket_id });
+        broadcast("tiket:updated", { id: updated.tiket_id });
+        broadcast("dashboard:refresh");
+
+        return res.json({
+            message: "Tanda tangan petugas workshop berhasil disimpan",
+            data: updated
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+    }
+}
+
+module.exports = { getAll, create, update, getById, getReport, saveCustomerSignature, saveAdminSignature };
 

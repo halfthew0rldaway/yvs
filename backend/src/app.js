@@ -23,6 +23,7 @@ const loanerRoutes = require("./routes/loaner.routes");
 const rmaRoutes = require("./routes/rma.routes");
 const realtimeRoutes = require("./routes/realtime.routes");
 const databaseRoutes = require("./routes/database.routes");
+const staffSignatureRoutes = require("./routes/staffSignature.routes");
 const activityLogger = require("./middleware/activityLogger");
 const sanitizeRequest = require("./middleware/sanitizeRequest");
 const errorHandler = require("./middleware/errorHandler");
@@ -83,6 +84,7 @@ app.use("/api/loaner", loanerRoutes);
 app.use("/api/rma", rmaRoutes);
 app.use("/api/realtime", realtimeRoutes);
 app.use("/api/database", databaseRoutes);
+app.use("/api/staff-signatures", staffSignatureRoutes);
 
 // Health check
 app.get("/", (req, res) => {

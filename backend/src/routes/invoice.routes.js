@@ -2,7 +2,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate, authorize } = require("../middleware/auth");
-const { getAll, create, update, getById, getReport, saveCustomerSignature } = require("../controllers/invoice.controller");
+const { getAll, create, update, getById, getReport, saveCustomerSignature, saveAdminSignature } = require("../controllers/invoice.controller");
 
 const router = express.Router();
 
@@ -19,5 +19,6 @@ router.get("/:id", authorize("admin", "teknisi"), getById);
 router.post("/", authorize("admin"), invoiceValidation, validate, create);
 router.put("/:id", authorize("admin"), update);
 router.post("/:id/signature", authorize("admin", "teknisi"), saveCustomerSignature);
+router.post("/:id/admin-signature", authorize("admin", "teknisi"), saveAdminSignature);
 
 module.exports = router;

@@ -8,6 +8,7 @@ import {
     DigitalSignatureToggleBar 
 } from "../../components/DigitalSignatureStamp";
 import DigitalSignaturePadModal from "../../components/DigitalSignaturePadModal";
+import AdminSignatureSelectorModal from "../../components/AdminSignatureSelectorModal";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
@@ -84,6 +85,7 @@ export default function InvoiceDetail() {
     const [invoice, setInvoice] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+    const [isAdminSignatureModalOpen, setIsAdminSignatureModalOpen] = useState(false);
     const [savingSignature, setSavingSignature] = useState(false);
     
     // View modes: "invoice" | "garansi" | "both"
@@ -140,6 +142,19 @@ export default function InvoiceDetail() {
             toast.error(err.response?.data?.message || "Gagal menyimpan tanda tangan pelanggan");
         } finally {
             setSavingSignature(false);
+        }
+    }
+
+    async function handleSelectAdminSignature({ signature, signerName }) {
+        try {
+            const res = await api.post(`/invoice/${invoice.id}/admin-signature`, {
+                signature,
+                signer_nama: signerName
+            });
+            setInvoice(res.data.data);
+            toast.success(`Tanda tangan ${signerName} berhasil diterapkan!`);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal menerapkan tanda tangan admin");
         }
     }
 
@@ -228,6 +243,8 @@ export default function InvoiceDetail() {
                     <DigitalSignatureToggleBar
                         isDigital={isDigitalSignature}
                         onToggle={toggleDigitalSignature}
+                        onOpenSelector={() => setIsAdminSignatureModalOpen(true)}
+                        adminName={invoice?.ttd_admin_nama}
                     />
 
                     {/* Customer Signature Action Button */}
@@ -255,9 +272,32 @@ export default function InvoiceDetail() {
                 </div>
             </div>
 
+            {/* Injected Print Stylesheet for Perfect A4 Portrait Document Printing */}
+            <style>{`
+                @media print {
+                    @page {
+                        size: A4 portrait;
+                        margin: 10mm 12mm;
+                    }
+                    html, body, #root, main, .custom-scrollbar {
+                        height: auto !important;
+                        overflow: visible !important;
+                        background: white !important;
+                    }
+                    .print-break-page {
+                        page-break-after: always !important;
+                        break-after: page !important;
+                    }
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                }
+            `}</style>
+
             {/* DOCUMENT 1: INVOICE TAGIHAN */}
             {showInvoice && (
-                <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-12 max-w-4xl mx-auto print:shadow-none print:border-none print:p-0 print:max-w-none print:text-[11px] print:leading-snug ${showGaransi && activeDocTab === "both" ? "print:break-after-page mb-10" : ""}`}>
+                <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-12 max-w-4xl mx-auto print:shadow-none print:border-none print:p-0 print:max-w-none print:text-[11px] print:leading-snug ${showGaransi && activeDocTab === "both" ? "print-break-page print:break-after-page mb-10" : ""}`}>
                     {/* Official Workshop Header */}
                     <div className="flex flex-col md:flex-row print:flex-row justify-between items-start gap-6 border-b-2 border-slate-900 pb-6 print:pb-3">
                         <div>
@@ -372,8 +412,10 @@ export default function InvoiceDetail() {
                             <WorkshopSignatureStamp
                                 isDigital={isDigitalSignature}
                                 onToggle={toggleDigitalSignature}
-                                role="Kasir • Admin Teknis"
-                                name="Yangversa Computer"
+                                role="Petugas Workshop • Kasir"
+                                name={invoice?.ttd_admin_nama || "Yangversa Computer"}
+                                signature={invoice?.ttd_admin}
+                                onOpenSelector={() => setIsAdminSignatureModalOpen(true)}
                             />
                         </div>
                     </div>
@@ -505,12 +547,14 @@ export default function InvoiceDetail() {
                             onOpenModal={() => setIsSignatureModalOpen(true)}
                         />
 
-                        {/* Official Workshop Stamp */}
+                        {/* Official Workshop Signature (Pure Signature, No Stamp) */}
                         <WorkshopSignatureStamp
                             isDigital={isDigitalSignature}
                             onToggle={toggleDigitalSignature}
-                            role="Stempel Resmi Workshop"
-                            name="Yangversa Computer"
+                            role="Petugas Penyerahan Unit"
+                            name={invoice?.ttd_admin_nama || "Yangversa Computer"}
+                            signature={invoice?.ttd_admin}
+                            onOpenSelector={() => setIsAdminSignatureModalOpen(true)}
                         />
                     </div>
                 </div>
@@ -527,6 +571,16 @@ export default function InvoiceDetail() {
                 agreementText="Dengan menandatangani ini, saya menyatakan telah menerima kembali unit dalam kondisi baik, menyetujui rincian biaya perbaikan, dan memahami masa ketentuan garansi yang berlaku."
                 requirePhoneVerify={false}
                 loading={savingSignature}
+            />
+
+            {/* Modal Pemilihan Profil Tanda Tangan Staf / Admin */}
+            <AdminSignatureSelectorModal
+                isOpen={isAdminSignatureModalOpen}
+                onClose={() => setIsAdminSignatureModalOpen(false)}
+                onSelect={handleSelectAdminSignature}
+                currentSignature={invoice?.ttd_admin}
+                currentSignerName={invoice?.ttd_admin_nama}
+                invoiceId={invoice?.id}
             />
         </div>
     );

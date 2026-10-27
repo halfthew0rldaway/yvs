@@ -35,12 +35,9 @@ body {
 }
 
 @media print {
-  @page {
-    size: landscape;
-    margin: 1cm;
-  }
-  
   body {
     background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }
