@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { X, Printer, ShieldCheck, Check, Award, AlertTriangle, Clock, Laptop, User, Package, Calendar, Wrench, Shield, CheckCircle2 } from "lucide-react";
+import { WorkshopSignatureStamp, DigitalSignatureToggleBar } from "./DigitalSignatureStamp";
 
 export default function WarrantyCertificateModal({
     isOpen,
@@ -64,6 +65,26 @@ export default function WarrantyCertificateModal({
     // Spareparts
     const spareparts = tiket.penggunaan_sparepart || [];
 
+    // Digital Signature Toggle State (Synced with localStorage)
+    const [isDigitalSignature, setIsDigitalSignature] = useState(() => {
+        try {
+            const saved = localStorage.getItem("yvs_invoice_digital_signature");
+            return saved !== null ? saved === "true" : true;
+        } catch {
+            return true;
+        }
+    });
+
+    const toggleDigitalSignature = () => {
+        setIsDigitalSignature((prev) => {
+            const next = !prev;
+            try {
+                localStorage.setItem("yvs_invoice_digital_signature", String(next));
+            } catch {}
+            return next;
+        });
+    };
+
     const handlePrint = () => {
         window.print();
     };
@@ -125,6 +146,10 @@ export default function WarrantyCertificateModal({
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <DigitalSignatureToggleBar
+                            isDigital={isDigitalSignature}
+                            onToggle={toggleDigitalSignature}
+                        />
                         <button
                             type="button"
                             onClick={handlePrint}
@@ -340,28 +365,37 @@ export default function WarrantyCertificateModal({
                                     </div>
                                 </div>
 
-                                {/* Right Side: QR Code Verification Card (4 cols) */}
-                                <div className="lg:col-span-4 bg-slate-50/80 rounded-xl border border-slate-200/80 p-4 flex flex-col items-center justify-center text-center">
-                                    <div className="p-1.5 bg-white border border-slate-200 rounded-xl shadow-2xs mb-2">
-                                        <img
-                                            src={qrCodeUrl}
-                                            alt="QR Verifikasi Tiket"
-                                            className="w-24 h-24 object-contain"
-                                            onError={(e) => {
-                                                e.target.style.display = "none";
-                                            }}
+                                {/* Right Side: QR Code Verification Card & Workshop Signature (4 cols) */}
+                                <div className="lg:col-span-4 bg-slate-50/80 rounded-xl border border-slate-200/80 p-3 sm:p-4 flex flex-col items-center justify-between text-center">
+                                    <div className="flex flex-col items-center w-full">
+                                        <div className="p-1.5 bg-white border border-slate-200 rounded-xl shadow-2xs mb-1.5">
+                                            <img
+                                                src={qrCodeUrl}
+                                                alt="QR Verifikasi Tiket"
+                                                className="w-20 h-20 print:w-16 print:h-16 object-contain"
+                                                onError={(e) => {
+                                                    e.target.style.display = "none";
+                                                }}
+                                            />
+                                        </div>
+                                        <p className="font-bold text-slate-900 text-xs flex items-center gap-1 justify-center">
+                                            <span>Scan Verifikasi Resmi</span>
+                                            <Award className="w-3.5 h-3.5 text-blue-600" />
+                                        </p>
+                                        <span className="mt-1 text-[9.5px] font-mono font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                            CERT-YVS-{tiket.nomor_tiket}
+                                        </span>
+                                    </div>
+
+                                    {/* Workshop Official Seal & Signature */}
+                                    <div className="w-full pt-2.5 mt-2.5 border-t border-slate-200/80 flex justify-center">
+                                        <WorkshopSignatureStamp
+                                            isDigital={isDigitalSignature}
+                                            onToggle={toggleDigitalSignature}
+                                            role="Stempel Workshop & Paraf"
+                                            name="Yangversa Computer"
                                         />
                                     </div>
-                                    <p className="font-bold text-slate-900 text-xs flex items-center gap-1 justify-center">
-                                        <span>Scan Verifikasi Resmi</span>
-                                        <Award className="w-3.5 h-3.5 text-blue-600" />
-                                    </p>
-                                    <p className="text-[10px] text-slate-500 leading-tight mt-1 max-w-[200px]">
-                                        Pindai QR untuk melacak keaslian garansi & status perbaikan secara online.
-                                    </p>
-                                    <span className="mt-2 text-[10px] font-mono font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                                        CERT-YVS-{tiket.nomor_tiket}
-                                    </span>
                                 </div>
                             </div>
 

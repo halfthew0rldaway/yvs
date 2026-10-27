@@ -2,6 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { ArrowLeft, Printer, CheckCircle2, ShieldCheck, FileText, QrCode, Award, Wrench, Shield, Check } from "lucide-react";
+import { 
+    WorkshopSignatureStamp, 
+    CustomerSignatureStamp, 
+    DigitalSignatureToggleBar 
+} from "../../components/DigitalSignatureStamp";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
@@ -17,6 +22,26 @@ export default function InvoiceDetail() {
     const [activeDocTab, setActiveDocTab] = useState(
         searchParams.get("view") === "garansi" ? "garansi" : "invoice"
     );
+
+    // Digital vs Physical Signature toggle (persisted in localStorage)
+    const [isDigitalSignature, setIsDigitalSignature] = useState(() => {
+        try {
+            const saved = localStorage.getItem("yvs_invoice_digital_signature");
+            return saved !== null ? saved === "true" : true;
+        } catch {
+            return true;
+        }
+    });
+
+    const toggleDigitalSignature = () => {
+        setIsDigitalSignature(prev => {
+            const next = !prev;
+            try {
+                localStorage.setItem("yvs_invoice_digital_signature", String(next));
+            } catch {}
+            return next;
+        });
+    };
 
     useEffect(() => {
         fetchInvoice();
@@ -113,6 +138,12 @@ export default function InvoiceDetail() {
                             <span>Keduanya</span>
                         </button>
                     </div>
+
+                    {/* Master Digital Signature Toggle */}
+                    <DigitalSignatureToggleBar
+                        isDigital={isDigitalSignature}
+                        onToggle={toggleDigitalSignature}
+                    />
 
                     <button
                         onClick={() => window.print()}
@@ -232,10 +263,12 @@ export default function InvoiceDetail() {
                             <p className="text-slate-500 mt-0.5">Berlaku untuk perbaikan dan komponen yang sama sesuai rincian nota di atas.</p>
                             <p className="text-slate-400 mt-1">Dokumen ini merupakan bukti pembayaran resmi yang sah dari Yangversa Computer.</p>
                         </div>
-                        <div className="text-center min-w-[160px] print:min-w-[120px]">
-                            <p className="text-slate-500 mb-12 print:mb-8">Kasir &bull; Admin Teknis</p>
-                            <p className="font-bold text-slate-900 border-t border-slate-300 pt-1">Yangversa Computer</p>
-                        </div>
+                        <WorkshopSignatureStamp
+                            isDigital={isDigitalSignature}
+                            onToggle={toggleDigitalSignature}
+                            role="Kasir • Admin Teknis"
+                            name="Yangversa Computer"
+                        />
                     </div>
                 </div>
             )}
@@ -359,19 +392,20 @@ export default function InvoiceDetail() {
                         </div>
 
                         {/* Customer Signature */}
-                        <div className="text-center min-w-[130px] print:min-w-[100px]">
-                            <p className="text-slate-500 mb-12 print:mb-8">Tanda Tangan Pelanggan</p>
-                            <p className="font-bold text-slate-900 border-t border-slate-300 pt-1">{customer.nama}</p>
-                        </div>
+                        <CustomerSignatureStamp
+                            isDigital={isDigitalSignature}
+                            onToggle={toggleDigitalSignature}
+                            customerName={customer.nama}
+                            title="Tanda Tangan Pelanggan"
+                        />
 
                         {/* Official Workshop Stamp */}
-                        <div className="text-center min-w-[150px] print:min-w-[120px] relative">
-                            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-                                <Award className="w-20 h-20 text-blue-900" />
-                            </div>
-                            <p className="text-slate-500 mb-12 print:mb-8">Stempel Resmi Workshop</p>
-                            <p className="font-bold text-slate-900 border-t border-slate-300 pt-1">Yangversa Computer</p>
-                        </div>
+                        <WorkshopSignatureStamp
+                            isDigital={isDigitalSignature}
+                            onToggle={toggleDigitalSignature}
+                            role="Stempel Resmi Workshop"
+                            name="Yangversa Computer"
+                        />
                     </div>
                 </div>
             )}
