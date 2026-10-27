@@ -188,8 +188,29 @@ export default function InvoiceList() {
                         placeholder="Cari berdasarkan No Tiket atau Nama Customer..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all text-sm"
+                        onKeyDown={(e) => {
+                            if (e.key === "Escape") {
+                                setSearchQuery("");
+                                setCurrentPage(1);
+                                fetchInvoices("", startDate, endDate, 1);
+                            }
+                        }}
+                        className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all text-sm"
                     />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchQuery("");
+                                setCurrentPage(1);
+                                fetchInvoices("", startDate, endDate, 1);
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors cursor-pointer"
+                            title="Hapus pencarian (Esc)"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    )}
                 </form>
 
                 {/* Date Filter Inputs */}
@@ -261,7 +282,7 @@ export default function InvoiceList() {
                                 : "Belum ada transaksi invoice yang tercatat di sistem bengkel."
                         }
                         actionLabel={searchQuery || startDate || endDate ? "Reset Filter" : "Buat Invoice Pertama"}
-                        onAction={searchQuery || startDate || endDate ? handleResetFilter : () => window.location.assign("/invoice/tambah")}
+                        onAction={searchQuery || startDate || endDate ? handleResetFilter : () => navigate("/invoice/tambah")}
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
@@ -285,10 +306,14 @@ export default function InvoiceList() {
                                         if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
                                         navigate(`/invoice/${inv.id}`);
                                     }}
-                                    className="hover:bg-blue-50/40 cursor-pointer transition-colors"
+                                    className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
                                 >
                                     <td className="px-6 py-4 font-mono font-bold text-slate-700">{inv.tiket?.nomor_tiket}</td>
-                                    <td className="px-6 py-4 font-medium text-slate-900">{inv.tiket?.perangkat?.customer?.nama || "-"}</td>
+                                    <td className="px-6 py-4 font-medium text-slate-900">
+                                        <span className="truncate max-w-[190px] block" title={inv.tiket?.perangkat?.customer?.nama || "-"}>
+                                            {inv.tiket?.perangkat?.customer?.nama || "-"}
+                                        </span>
+                                    </td>
                                     <td className="px-6 py-4 text-slate-600 text-xs">{inv.tiket?.teknisi?.nama || "-"}</td>
                                     <td className="px-6 py-4 text-right text-slate-600 font-mono text-xs">{formatRupiah(inv.biaya_jasa)}</td>
                                     <td className="px-6 py-4 text-right text-slate-600 font-mono text-xs">{formatRupiah(inv.biaya_sparepart)}</td>

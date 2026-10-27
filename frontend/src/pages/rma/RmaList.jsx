@@ -340,31 +340,101 @@ export default function RmaList() {
             </div>
 
             {/* Filter Bar */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="relative w-full sm:w-80">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                        type="text"
-                        placeholder="Cari nomor RMA, part, distributor, resi..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:outline-none transition-colors"
-                    />
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3.5">
+                <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                    {/* Search Input */}
+                    <div className="relative w-full sm:flex-1">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            placeholder="Cari nomor RMA, part, distributor, resi, nomor faktur..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    setSearchQuery("");
+                                    setCurrentPage(1);
+                                }
+                            }}
+                            className="w-full pl-10 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all placeholder:text-slate-400"
+                        />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearchQuery("");
+                                    setCurrentPage(1);
+                                }}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors cursor-pointer"
+                                title="Hapus pencarian (Esc)"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
-                    >
-                        <option value="all">Semua Status Klaim</option>
-                        <option value="diajukan">Menunggu Pengiriman (Draft)</option>
-                        <option value="dikirim">Dalam Proses di Distributor</option>
-                        <option value="disetujui_ganti">Disetujui - Ganti Unit Baru</option>
-                        <option value="disetujui_refund">Disetujui - Refund Dana</option>
-                        <option value="ditolak">Ditolak / Void Garansi</option>
-                    </select>
+                {/* Structured Chip Filter */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-2.5 sm:p-3 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-16 shrink-0 uppercase tracking-wider">
+                            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>Status</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar flex-1 min-w-0">
+                            {[
+                                { key: "all", label: "Semua Klaim", count: stats.total },
+                                { key: "diajukan", label: "Menunggu Pengiriman", count: stats.diajukan },
+                                { key: "dikirim", label: "Di Distributor", count: stats.dikirim },
+                                { key: "disetujui_ganti", label: "Ganti Unit Baru", count: stats.disetujui_ganti },
+                                { key: "disetujui_refund", label: "Refund Dana", count: stats.disetujui_refund },
+                                { key: "ditolak", label: "Ditolak / Void", count: stats.ditolak },
+                            ].map((tab) => {
+                                const isActive = statusFilter === tab.key;
+                                return (
+                                    <button
+                                        key={tab.key}
+                                        type="button"
+                                        onClick={() => {
+                                            setStatusFilter(tab.key);
+                                            setCurrentPage(1);
+                                        }}
+                                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                            isActive
+                                                ? "bg-slate-900 text-white shadow-2xs"
+                                                : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
+                                        }`}
+                                    >
+                                        <span>{tab.label}</span>
+                                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                                            isActive ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-600"
+                                        }`}>
+                                            {tab.count || 0}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+
+                            {(statusFilter !== "all" || searchQuery) && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setStatusFilter("all");
+                                        setSearchQuery("");
+                                        setCurrentPage(1);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-lg transition-colors border border-transparent hover:border-slate-300/60 whitespace-nowrap cursor-pointer ml-auto"
+                                    title="Reset filter & pencarian"
+                                >
+                                    <RotateCcw className="w-3 h-3 text-slate-400" />
+                                    <span>Reset Filter</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -387,10 +457,22 @@ export default function RmaList() {
                 ) : filteredRma.length === 0 ? (
                     <TableEmptyState
                         icon={RotateCcw}
-                        title="Belum Ada Klaim RMA"
-                        description="Tidak ada suku cadang cacat/rusak yang sedang diajukan retur ke distributor."
-                        actionLabel="Ajukan Klaim RMA Baru"
-                        onAction={handleOpenCreateModal}
+                        title={statusFilter !== "all" || searchQuery ? "Klaim RMA Tidak Ditemukan" : "Belum Ada Klaim RMA"}
+                        description={
+                            statusFilter !== "all" || searchQuery
+                                ? "Tidak ada klaim RMA yang cocok dengan filter atau kata kunci pencarian Anda."
+                                : "Tidak ada suku cadang cacat/rusak yang sedang diajukan retur ke distributor."
+                        }
+                        actionLabel={statusFilter !== "all" || searchQuery ? "Reset Filter" : "Ajukan Klaim RMA Baru"}
+                        onAction={
+                            statusFilter !== "all" || searchQuery
+                                ? () => {
+                                      setStatusFilter("all");
+                                      setSearchQuery("");
+                                      setCurrentPage(1);
+                                  }
+                                : handleOpenCreateModal
+                        }
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
@@ -415,7 +497,7 @@ export default function RmaList() {
                                             if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
                                             handleOpenUpdateModal(item);
                                         }}
-                                        className="hover:bg-blue-50/40 cursor-pointer transition-colors"
+                                        className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
                                     >
                                         <td className="px-6 py-4">
                                             <p className="font-mono font-bold text-slate-900">{item.nomor_rma}</p>
@@ -474,10 +556,11 @@ export default function RmaList() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleOpenUpdateModal(item)}
-                                                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-700 hover:text-blue-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-2xs"
                                                     title="Update Status / Resi / Penyelesaian"
                                                 >
-                                                    Update
+                                                    <span>Update</span>
+                                                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform text-slate-400 group-hover:text-blue-600" />
                                                 </button>
 
                                                 <button

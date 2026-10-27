@@ -1,8 +1,8 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import { Search, Plus, Edit2, Trash2, Users, Eye, MonitorSmartphone } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, Users, Eye, MonitorSmartphone, X } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import CustomerDetailModal from "../../components/CustomerDetailModal";
 import PerangkatDetailModal from "../../components/PerangkatDetailModal";
@@ -45,6 +45,7 @@ export const PERSONALITY_TYPES = {
 };
 
 export default function CustomerList() {
+    const navigate = useNavigate();
     const [customers, setCustomers] = useState([]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
@@ -139,36 +140,38 @@ export default function CustomerList() {
 
             {/* Filter & Search Bar */}
             <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 w-full max-w-xl">
+                <form onSubmit={handleSearch} className="flex gap-3 w-full max-w-xl">
                     <div className="relative flex-1 min-w-0">
-                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <Search className="w-4 h-4 text-slate-400" />
-                        </div>
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    handleClearSearch();
+                                }
+                            }}
                             placeholder="Cari nama atau no telepon pelanggan..."
-                            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none text-sm transition-all placeholder:text-slate-400"
+                            className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none text-sm transition-all placeholder:text-slate-400"
                         />
-                    </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <button
-                            type="submit"
-                            className="flex-1 sm:flex-none px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm text-center"
-                        >
-                            Cari
-                        </button>
                         {search && (
                             <button
                                 type="button"
                                 onClick={handleClearSearch}
-                                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-semibold transition-colors text-center"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors cursor-pointer"
+                                title="Hapus pencarian (Esc)"
                             >
-                                Reset
+                                <X className="w-3.5 h-3.5" />
                             </button>
                         )}
                     </div>
+                    <button
+                        type="submit"
+                        className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm shrink-0 cursor-pointer"
+                    >
+                        Cari
+                    </button>
                 </form>
             </div>
 
@@ -202,7 +205,7 @@ export default function CustomerList() {
                                 : "Belum ada data pelanggan yang terdaftar di sistem bengkel."
                         }
                         actionLabel={search ? "Reset Pencarian" : "Tambah Pelanggan Baru"}
-                        onAction={search ? handleClearSearch : () => window.location.assign("/customer/tambah")}
+                        onAction={search ? handleClearSearch : () => navigate("/customer/tambah")}
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">

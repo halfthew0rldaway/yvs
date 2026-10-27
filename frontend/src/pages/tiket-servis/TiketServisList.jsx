@@ -212,6 +212,11 @@ export default function TiketServisList() {
                             placeholder="Cari nomor tiket, customer, perangkat, keluhan, teknisi..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    handleClearSearch();
+                                }
+                            }}
                             className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all text-sm"
                         />
                         {searchTerm && (
@@ -463,12 +468,12 @@ export default function TiketServisList() {
                         icon={Ticket}
                         title="Tidak Ada Tiket Servis"
                         description={
-                            searchTerm || filter || slaFilter
+                            hasActiveFilters
                                 ? "Tidak ada tiket yang cocok dengan filter atau kata kunci pencarian Anda." 
                                 : "Belum ada tiket servis yang dibuat di bengkel."
                         }
-                        actionLabel={searchTerm || filter || slaFilter ? "Reset Filter" : (isAdmin ? "Buat Tiket Baru" : undefined)}
-                        onAction={searchTerm || filter || slaFilter ? () => { setSearchTerm(""); setFilter(""); setSlaFilter(""); setCurrentPage(1); } : () => window.location.assign("/tiket-servis/tambah")}
+                        actionLabel={hasActiveFilters ? "Reset Filter" : (isAdmin ? "Buat Tiket Baru" : undefined)}
+                        onAction={hasActiveFilters ? handleResetAllFilters : () => navigate("/tiket-servis/tambah")}
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
@@ -521,10 +526,16 @@ export default function TiketServisList() {
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 font-medium text-slate-900">{t.perangkat?.customer?.nama || "-"}</td>
+                                    <td className="px-6 py-4 font-medium text-slate-900">
+                                        <span className="truncate max-w-[180px] block" title={t.perangkat?.customer?.nama || "-"}>
+                                            {t.perangkat?.customer?.nama || "-"}
+                                        </span>
+                                    </td>
                                     <td className="px-6 py-4 text-slate-600">
                                         <div className="flex items-center gap-1.5 flex-wrap">
-                                            <span>{t.perangkat?.merek} {t.perangkat?.model}</span>
+                                            <span className="truncate max-w-[200px]" title={`${t.perangkat?.merek || ""} ${t.perangkat?.model || ""}`}>
+                                                {t.perangkat?.merek} {t.perangkat?.model}
+                                            </span>
                                             {t.defect_map?.items?.length > 0 && (
                                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200" title={`${t.defect_map.items.length} cacat fisik tercatat`}>
                                                     <Laptop className="w-2.5 h-2.5" />
@@ -560,10 +571,10 @@ export default function TiketServisList() {
                                         <div className="flex items-center justify-end">
                                             <Link
                                                 to={`/tiket-servis/${t.id}`}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-semibold text-xs border border-transparent hover:border-blue-100"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors font-semibold text-xs border border-transparent hover:border-blue-100"
                                             >
                                                 <span>Detail</span>
-                                                <ArrowRight className="w-3.5 h-3.5" />
+                                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                                             </Link>
                                         </div>
                                     </td>

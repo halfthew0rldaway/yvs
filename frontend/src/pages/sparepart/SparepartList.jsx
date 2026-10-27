@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw } from "lucide-react";
@@ -17,6 +17,7 @@ function formatRupiah(num) {
 }
 
 export default function SparepartList() {
+    const navigate = useNavigate();
     const { isAdmin } = useAuth();
     const [spareparts, setSpareparts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -544,8 +545,23 @@ export default function SparepartList() {
                             placeholder="Cari nama sparepart..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors"
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    setSearchQuery("");
+                                }
+                            }}
+                            className="block w-full pl-9 pr-9 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors"
                         />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors cursor-pointer"
+                                title="Hapus pencarian (Esc)"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
                     </div>
 
                     {/* Filter & Sort Controls Group */}
@@ -719,7 +735,7 @@ export default function SparepartList() {
                         title="Tidak Ada Sparepart"
                         description="Data master sparepart masih kosong di sistem bengkel."
                         actionLabel={isAdmin ? "Tambah Sparepart Baru" : undefined}
-                        onAction={isAdmin ? () => window.location.assign("/sparepart/tambah") : undefined}
+                        onAction={isAdmin ? () => navigate("/sparepart/tambah") : undefined}
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
