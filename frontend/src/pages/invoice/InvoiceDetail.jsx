@@ -4,7 +4,6 @@ import api from "../../services/api";
 import { ArrowLeft, Printer, CheckCircle2, ShieldCheck, FileText, QrCode, Award, Wrench, Shield, Check } from "lucide-react";
 import { 
     WorkshopSignatureStamp, 
-    CustomerSignatureStamp, 
     DigitalSignatureToggleBar 
 } from "../../components/DigitalSignatureStamp";
 
@@ -391,13 +390,20 @@ export default function InvoiceDetail() {
                             </div>
                         </div>
 
-                        {/* Customer Signature */}
-                        <CustomerSignatureStamp
-                            isDigital={isDigitalSignature}
-                            onToggle={toggleDigitalSignature}
-                            customerName={customer.nama}
-                            title="Tanda Tangan Pelanggan"
-                        />
+                        {/* Customer Signature (Fisik / Manual Pen) */}
+                        <div className="flex flex-col items-center justify-end text-center min-w-[130px] print:min-w-[110px]">
+                            <p className="text-slate-500 text-[11px] print:text-[8.5px] font-medium mb-1">
+                                Tanda Tangan Pelanggan
+                            </p>
+                            <div className="h-20 print:h-16 w-full flex items-end justify-center pb-1">
+                                <span className="text-[10px] print:text-[8px] text-slate-300 print:text-slate-200 italic select-none">
+                                    [ Tanda Tangan Fisik ]
+                                </span>
+                            </div>
+                            <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 mt-1 text-xs print:text-[9px] w-full truncate max-w-[150px]">
+                                {customer.nama}
+                            </p>
+                        </div>
 
                         {/* Official Workshop Stamp */}
                         <WorkshopSignatureStamp

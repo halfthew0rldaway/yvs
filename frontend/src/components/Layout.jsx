@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import useRealtimeEvent from "../hooks/useRealtime";
 import {
     LayoutDashboard,
     Users,
@@ -18,7 +19,8 @@ import {
     Plus,
     HeartHandshake,
     Laptop,
-    RotateCcw
+    RotateCcw,
+    Database
 } from "lucide-react";
 import SopModal from "./SopModal";
 import api from "../services/api";
@@ -38,6 +40,7 @@ const adminMenu = [
     { path: "/invoice", label: "Invoice", icon: FileText },
     { path: "/wiki", label: "Pustaka Wiki", icon: BookOpen },
     { path: "/users", label: "User & Performa", icon: UserCheck },
+    { path: "/database", label: "Cadangan Database", icon: Database },
 ];
 
 const teknisiMenu = [
@@ -67,32 +70,32 @@ export default function Layout({ children }) {
     const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
 
     // Periodic maintenance recall fetch across the app (Hanya untuk Admin / Front Office)
-    useEffect(() => {
+    const fetchMaintenance = useCallback(async () => {
         if (!isAdmin) return;
-        let isMounted = true;
-        const fetchMaintenance = async () => {
-            try {
-                const res = await api.get("/tiket-servis/maintenance/due");
-                if (isMounted && res.data) {
-                    setMaintenanceDueData(res.data);
-                }
-            } catch (err) {
-                // Keep default state
+        try {
+            const res = await api.get("/tiket-servis/maintenance/due");
+            if (res.data) {
+                setMaintenanceDueData(res.data);
             }
-        };
+        } catch (_) {}
+    }, [isAdmin]);
 
+    useEffect(() => {
         fetchMaintenance();
+        // Slow fallback (180s)
         const interval = setInterval(() => {
             if (document.visibilityState === "visible") {
                 fetchMaintenance();
             }
-        }, 20000);
+        }, 180000);
 
-        return () => {
-            isMounted = false;
-            clearInterval(interval);
-        };
-    }, [location.pathname, isAdmin]);
+        return () => clearInterval(interval);
+    }, [fetchMaintenance]);
+
+    // Real-Time SSE: Segera perbarui status perawatan jika tiket diperbarui
+    useRealtimeEvent(["tiket:updated", "tiket:created"], () => {
+        fetchMaintenance();
+    });
 
     // Live ticking timer every second
     useEffect(() => {

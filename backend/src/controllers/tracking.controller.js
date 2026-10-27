@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const { getWarrantyStatus, getSlaStatus, calculateSlaPengerjaanTarget } = require("../utils/tiket");
+const { broadcast } = require("../utils/sse");
 
 // Customer melacak status servis tanpa login
 async function track(req, res) {
@@ -213,6 +214,10 @@ async function respondDiagnosisApproval(req, res) {
                 }
             });
 
+            broadcast("tiket:updated", { id: tiket.id, nomor_tiket: tiket.nomor_tiket, status: "disetujui" });
+            broadcast("notification:new", { judul: `Penawaran Disetujui: ${tiket.nomor_tiket}` });
+            broadcast("dashboard:refresh");
+
             return res.json({
                 message: "Terima kasih! Persetujuan Anda telah diterima. Teknisi kami akan segera memproses perbaikan unit Anda.",
                 status: "disetujui",
@@ -249,6 +254,10 @@ async function respondDiagnosisApproval(req, res) {
                     link: `/tiket-servis/${tiket.id}`
                 }
             });
+
+            broadcast("tiket:updated", { id: tiket.id, nomor_tiket: tiket.nomor_tiket, status: "dibatalkan" });
+            broadcast("notification:new", { judul: `Penawaran Ditolak: ${tiket.nomor_tiket}` });
+            broadcast("dashboard:refresh");
 
             return res.json({
                 message: "Pembatalan perbaikan telah dicatat. Anda dapat mengambil kembali unit Anda di toko kami.",

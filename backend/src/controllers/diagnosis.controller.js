@@ -1,4 +1,5 @@
 const prisma = require("../config/database");
+const { broadcast } = require("../utils/sse");
 
 // Input hasil diagnosis
 async function create(req, res) {
@@ -89,6 +90,9 @@ async function create(req, res) {
             return created;
         });
 
+        broadcast("tiket:updated", { id: Number(tiket_id), status: "didiagnosis" });
+        broadcast("dashboard:refresh");
+
         return res.status(201).json({ message: "Diagnosis berhasil disimpan", data: diagnosis });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
@@ -160,6 +164,9 @@ async function update(req, res) {
                 data: { foto_diagnosis: updateData.foto_diagnosis }
             });
         }
+
+        broadcast("tiket:updated", { id: diagnosis.tiket_id });
+        broadcast("dashboard:refresh");
 
         return res.json({ message: "Diagnosis berhasil diperbarui", data: updated });
     } catch (error) {

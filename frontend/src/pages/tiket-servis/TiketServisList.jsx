@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import useRealtimeEvent from "../../hooks/useRealtime";
 import api from "../../services/api";
 import { 
     Plus, 
@@ -76,6 +77,13 @@ export default function TiketServisList() {
     useEffect(() => {
         fetchTikets();
     }, [currentPage, itemsPerPage, filter, slaFilter, sortOrder, scopeFilter]);
+
+    // Real-Time SSE: Otomatis perbarui antrean tiket saat ada tiket baru atau status berubah
+    useRealtimeEvent(["tiket:created", "tiket:updated"], () => {
+        if (document.visibilityState === "visible") {
+            fetchTikets();
+        }
+    });
 
     async function fetchTikets(targetSearch = searchTerm, page = currentPage) {
         setLoading(true);

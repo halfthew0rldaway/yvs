@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import useRealtimeEvent from "../../hooks/useRealtime";
 import api from "../../services/api";
 import {
     Users,
@@ -378,52 +379,48 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
 
-    useEffect(() => {
-        let isMounted = true;
-        let isFirstLoad = true;
-
-        const loadData = async () => {
-            if (isFirstLoad) setLoading(true);
-            try {
-                const endpoint = isAdmin ? "/dashboard/admin" : "/dashboard/teknisi";
-                const res = await api.get(endpoint);
-                
-                // Inject fillColor and shortName into chartData
-                if (res.data.chartData) {
-                    res.data.chartData = res.data.chartData.map(item => ({
-                        ...item,
-                        shortName: SHORT_NAMES[item.name] || item.name,
-                        fillColor: STATUS_COLORS[item.name] || "#93c5fd"
-                    }));
-                }
-                
-                if (isMounted) {
-                    setData(res.data);
-                }
-            } catch (err) {
-                console.error(err);
-            } finally {
-                if (isMounted && isFirstLoad) {
-                    setLoading(false);
-                    isFirstLoad = false;
-                }
+    const loadData = useCallback(async (isInitial = false) => {
+        if (isInitial) setLoading(true);
+        try {
+            const endpoint = isAdmin ? "/dashboard/admin" : "/dashboard/teknisi";
+            const res = await api.get(endpoint);
+            
+            // Inject fillColor and shortName into chartData
+            if (res.data?.chartData) {
+                res.data.chartData = res.data.chartData.map(item => ({
+                    ...item,
+                    shortName: SHORT_NAMES[item.name] || item.name,
+                    fillColor: STATUS_COLORS[item.name] || "#93c5fd"
+                }));
             }
-        };
-
-        loadData();
-
-        // Fitur Real-time Sync (Polling setiap 10 detik dan hanya saat tab aktif)
-        const intervalId = setInterval(() => {
-            if (document.visibilityState === "visible") {
-                loadData();
-            }
-        }, 10000);
-
-        return () => {
-            isMounted = false;
-            clearInterval(intervalId);
-        };
+            
+            setData(res.data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            if (isInitial) setLoading(false);
+        }
     }, [isAdmin]);
+
+    useEffect(() => {
+        loadData(true);
+
+        // Fallback polling lambat (90 detik) sebagai proteksi jika koneksi SSE sempat freeze
+        const fallbackId = setInterval(() => {
+            if (document.visibilityState === "visible") {
+                loadData(false);
+            }
+        }, 90000);
+
+        return () => clearInterval(fallbackId);
+    }, [loadData]);
+
+    // Real-Time EventSource (SSE): Memperbarui dashboard secara instan tanpa delay saat ada perubahan
+    useRealtimeEvent(["dashboard:refresh", "tiket:created", "tiket:updated", "invoice:created"], () => {
+        if (document.visibilityState === "visible") {
+            loadData(false);
+        }
+    });
 
     if (loading) {
         return (

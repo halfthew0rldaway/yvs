@@ -24,6 +24,7 @@ import RepairWikiList from "./pages/wiki/RepairWikiList";
 import RetensiCrm from "./pages/retensi/RetensiCrm";
 import LoanerList from "./pages/loaner/LoanerList";
 import RmaList from "./pages/rma/RmaList";
+import DatabaseManagement from "./pages/database/DatabaseManagement";
 
 import { Toaster } from 'react-hot-toast';
 
@@ -81,6 +82,7 @@ export default function App() {
                 <Route path="/invoice/tambah" element={<ProtectedRoute roles={["admin"]}><InvoiceForm /></ProtectedRoute>} />
                 <Route path="/invoice/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />
                 <Route path="/users" element={<ProtectedRoute roles={["admin"]}><UserList /></ProtectedRoute>} />
+                <Route path="/database" element={<ProtectedRoute roles={["admin"]}><DatabaseManagement /></ProtectedRoute>} />
                 <Route path="/wiki" element={<ProtectedRoute><RepairWikiList /></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

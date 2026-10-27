@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
+const { broadcast } = require("../utils/sse");
 
 // Mengambil seluruh invoice
 async function getAll(req, res) {
@@ -118,6 +119,9 @@ async function create(req, res) {
             },
         });
 
+        broadcast("invoice:created", { id: invoice.id, tiket_id: invoice.tiket_id });
+        broadcast("dashboard:refresh");
+
         return res.status(201).json({ message: "Invoice berhasil dibuat", data: invoice });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
@@ -163,6 +167,9 @@ async function update(req, res) {
                 },
             },
         });
+
+        broadcast("invoice:updated", { id: updated.id, tiket_id: updated.tiket_id });
+        broadcast("dashboard:refresh");
 
         return res.json({ message: "Invoice berhasil diperbarui", data: updated });
     } catch (error) {

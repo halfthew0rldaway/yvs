@@ -10,6 +10,7 @@ const {
     getSlaStatus
 } = require("../utils/tiket");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
+const { broadcast } = require("../utils/sse");
 
 // Validasi transisi status yang diizinkan
 const STATUS_TRANSITIONS = {
@@ -393,6 +394,15 @@ async function create(req, res) {
             }
         }
 
+        // Broadcast real-time SSE event
+        broadcast("tiket:created", { 
+            id: tiket.id, 
+            nomor_tiket: tiket.nomor_tiket, 
+            status: tiket.status,
+            customer_nama: tiket.perangkat?.customer?.nama
+        });
+        broadcast("dashboard:refresh");
+
         return res.status(201).json({ 
             message: "Tiket servis berhasil dibuat", 
             data: {
@@ -705,6 +715,15 @@ async function update(req, res) {
             });
         }
 
+        // Broadcast real-time SSE event
+        broadcast("tiket:updated", { 
+            id: updated.id, 
+            nomor_tiket: updated.nomor_tiket, 
+            status: updated.status,
+            teknisi_id: updated.teknisi_id
+        });
+        broadcast("dashboard:refresh");
+
         return res.json({ 
             message: "Tiket servis berhasil diperbarui", 
             data: {
@@ -861,6 +880,14 @@ async function createWarrantyClaim(req, res) {
                 catatan: `Tiket klaim garansi diterbitkan berdasarkan tiket terdahulu #${parentTiket.nomor_tiket}. ${statusNote}`
             }
         });
+
+        // Broadcast real-time SSE event
+        broadcast("tiket:created", { 
+            id: claimTiket.id, 
+            nomor_tiket: claimTiket.nomor_tiket, 
+            is_garansi_claim: true 
+        });
+        broadcast("dashboard:refresh");
 
         return res.status(201).json({ message: "Tiket klaim garansi berhasil diterbitkan", data: claimTiket });
     } catch (error) {

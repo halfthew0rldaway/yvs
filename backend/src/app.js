@@ -18,6 +18,8 @@ const repairWikiRoutes = require("./routes/repair-wiki.routes");
 const notificationRoutes = require("./routes/notification.routes");
 const loanerRoutes = require("./routes/loaner.routes");
 const rmaRoutes = require("./routes/rma.routes");
+const realtimeRoutes = require("./routes/realtime.routes");
+const databaseRoutes = require("./routes/database.routes");
 const activityLogger = require("./middleware/activityLogger");
 
 const app = express();
@@ -49,6 +51,8 @@ app.use("/api/repair-wiki", repairWikiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/loaner", loanerRoutes);
 app.use("/api/rma", rmaRoutes);
+app.use("/api/realtime", realtimeRoutes);
+app.use("/api/database", databaseRoutes);
 
 // Health check
 app.get("/", (req, res) => {

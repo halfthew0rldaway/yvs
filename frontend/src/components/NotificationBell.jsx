@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import api from "../services/api";
 import { useAuth } from "../hooks/useAuth";
+import useRealtimeEvent from "../hooks/useRealtime";
 import { Bell, CheckCheck, Send, MessageSquare, AlertTriangle, Info, Wrench, X } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -17,7 +18,7 @@ export default function NotificationBell() {
     const dropdownRef = useRef(null);
 
     // Fetch unread count & notifications
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         try {
             const res = await api.get("/notifications");
             if (res.data) {
@@ -25,17 +26,40 @@ export default function NotificationBell() {
                 setUnreadCount(res.data.unreadCount || 0);
             }
         } catch (_) {}
-    };
+    }, []);
 
     useEffect(() => {
         fetchNotifications();
+        // Slow fallback (120s) in case network briefly stalled
         const interval = setInterval(() => {
             if (document.visibilityState === "visible") {
                 fetchNotifications();
             }
-        }, 15000);
+        }, 120000);
         return () => clearInterval(interval);
-    }, []);
+    }, [fetchNotifications]);
+
+    // Real-Time SSE: Langsung terima notifikasi baru atau pembaruan status baca tanpa menunggu polling
+    useRealtimeEvent(["notification:new", "notification:updated"], (data, eventName) => {
+        fetchNotifications();
+        if (eventName === "notification:new" && data?.judul) {
+            toast.custom((t) => (
+                <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-sm w-full bg-white shadow-lg rounded-2xl pointer-events-auto flex ring-1 ring-black/5 p-4 border border-blue-100`}>
+                    <div className="flex-1 w-0">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0 pt-0.5">
+                                <Bell className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div className="ml-3 flex-1">
+                                <p className="text-xs font-bold text-slate-900">{data.judul}</p>
+                                <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">{data.pesan || "Notifikasi baru masuk"}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ), { duration: 4000 });
+        }
+    });
 
     // Close dropdown on outside click
     useEffect(() => {

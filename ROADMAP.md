@@ -21,7 +21,7 @@ Dokumen ini mencakup rekapitulasi fitur yang telah diimplementasikan pada sprint
 | **2** | **Tanda Tangan Digital (E-Signature Canvas)** | Legalitas & SOP | 📋 *Roadmap Prioritas 3* | Tanda tangan serah terima awal (intake) dan pengambilan unit lunas. |
 | **8** | **Gateway Otomatisasi Notifikasi WhatsApp** | Otomasi & CRM | 📋 *Roadmap Prioritas 4* | Direct API webhook / worker background message tanpa perlu klik `wa.me` manual. |
 | **11** | **PWA & Quick Mobile Camera Upload** | Mobile Teknisi | 📋 *Roadmap Prioritas 4* | Kamera ponsel teknisi langsung upload foto kondisi/QC ke tiket. |
-| **12** | **Real-Time Live Push (SSE / WebSocket)** | Kinerja & Real-Time | 📋 *Roadmap Prioritas 5* | Menggantikan interval polling 3 detik pada dashboard dengan push event efisien. |
+| **12** | **Real-Time Live Push (SSE Engine)** | Kinerja & Real-Time | ✅ **Selesai (Sprint Ini)** | Menggantikan interval polling 3-10 detik pada dashboard & tabel tiket dengan Server-Sent Events instan. |
 | **13** | **Export Laporan PDF & Sertifikat Garansi** | Laporan & Dokumen | 📋 *Roadmap Prioritas 5* | Generator PDF resmi siap cetak untuk audit bulanan dan kartu garansi customer. |
 
 ---

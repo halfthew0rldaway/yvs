@@ -1,4 +1,5 @@
 const prisma = require("../config/database");
+const { broadcast } = require("../utils/sse");
 
 // Mengambil daftar notifikasi untuk user yang sedang login
 async function getNotifications(req, res) {
@@ -61,6 +62,7 @@ async function markAsRead(req, res) {
             data: { is_read: true }
         });
 
+        broadcast("notification:updated", { id: notification.id, is_read: true });
         return res.json({ message: "Notifikasi telah dibaca", notification });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
@@ -85,6 +87,7 @@ async function markAllAsRead(req, res) {
             data: { is_read: true }
         });
 
+        broadcast("notification:updated", { all: true });
         return res.json({ message: "Seluruh notifikasi ditandai telah dibaca" });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
@@ -124,6 +127,9 @@ async function sendMemo(req, res) {
                 entity: "notification"
             }
         });
+
+        broadcast("notification:new", notif);
+        broadcast("dashboard:refresh");
 
         return res.status(201).json({
             message: "Memo / notifikasi berhasil dikirim",
