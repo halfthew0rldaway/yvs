@@ -387,8 +387,25 @@ export default function WarrantyCertificateModal({
                                         </span>
                                     </div>
 
-                                    {/* Workshop Official Seal & Signature */}
-                                    <div className="w-full pt-2.5 mt-2.5 border-t border-slate-200/80 flex justify-center">
+                                    {/* Workshop & Customer Signatures */}
+                                    <div className="w-full pt-2.5 mt-2.5 border-t border-slate-200/80 flex items-end justify-center gap-4">
+                                        {tiket.invoice?.ttd_customer && (
+                                            <div className="flex flex-col items-center justify-end text-center min-w-[90px] print:min-w-[80px]">
+                                                <p className="text-slate-500 text-[9.5px] print:text-[7.5px] font-medium mb-0.5">
+                                                    Penerima Garansi
+                                                </p>
+                                                <div className="h-16 print:h-12 w-full flex items-center justify-center">
+                                                    <img 
+                                                        src={tiket.invoice.ttd_customer} 
+                                                        alt="TTD Pelanggan" 
+                                                        className="max-h-12 print:max-h-10 max-w-[90px] object-contain"
+                                                    />
+                                                </div>
+                                                <p className="font-bold text-slate-900 border-t border-slate-300 pt-0.5 mt-0.5 text-[9.5px] print:text-[8px] w-full truncate max-w-[110px]">
+                                                    {tiket.invoice.ttd_customer_nama || tiket.customer_nama || "Pelanggan"}
+                                                </p>
+                                            </div>
+                                        )}
                                         <WorkshopSignatureStamp
                                             isDigital={isDigitalSignature}
                                             onToggle={toggleDigitalSignature}

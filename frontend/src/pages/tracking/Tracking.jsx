@@ -3,11 +3,13 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../../services/api";
-import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2 } from "lucide-react";
+import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2, Play, Video } from "lucide-react";
+import { isVideo } from "../../utils/mediaUtils";
 import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS } from "../../utils/checklistItems";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
 import SlaBadge, { SlaCountdownCard } from "../../components/SlaBadge";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
+import DigitalSignaturePadModal from "../../components/DigitalSignaturePadModal";
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-50 text-blue-700 border-blue-200" },
@@ -112,26 +114,37 @@ function TrackingListItem({ t, onClick }) {
     );
 }
 
-/* ===== Feature 1: Photo Gallery with Lightbox ===== */
-function PhotoGallery({ fotoKondisi, logPerbaikan }) {
+/* ===== Feature 1: Photo & Video Media Gallery with Lightbox ===== */
+function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan }) {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIdx, setLightboxIdx] = useState(0);
 
-    // Collect all photos into categorized array
+    // Collect all media into categorized array
     const allPhotos = [];
 
-    // Initial condition photos
-    let parsedFotos = [];
-    if (fotoKondisi) {
+    // Helper to parse JSON or array
+    function safeParse(val) {
+        if (!val) return [];
         try {
-            parsedFotos = typeof fotoKondisi === 'string' ? JSON.parse(fotoKondisi) : fotoKondisi;
-        } catch(e) { /* ignore */ }
+            return typeof val === 'string' ? JSON.parse(val) : val;
+        } catch (_) {
+            return [];
+        }
     }
-    parsedFotos.forEach((url, i) => {
+
+    // 1. Initial condition photos
+    const intakeUrls = safeParse(fotoKondisi);
+    intakeUrls.forEach((url, i) => {
         allPhotos.push({ url, label: `Kondisi Awal ${i + 1}`, category: 'intake' });
     });
 
-    // Repair log photos
+    // 2. Diagnosis proof photos/videos
+    const diagUrls = safeParse(fotoDiagnosis);
+    diagUrls.forEach((url, i) => {
+        allPhotos.push({ url, label: `Temuan Diagnosis ${i + 1}`, category: 'diagnosis' });
+    });
+
+    // 3. Repair log photos
     if (logPerbaikan && logPerbaikan.length > 0) {
         logPerbaikan.forEach((log) => {
             if (log.foto_url) {
@@ -139,6 +152,12 @@ function PhotoGallery({ fotoKondisi, logPerbaikan }) {
             }
         });
     }
+
+    // 4. Completed & QC photos/videos
+    const selesaiUrls = safeParse(fotoSelesai);
+    selesaiUrls.forEach((url, i) => {
+        allPhotos.push({ url, label: `Hasil Selesai & QC ${i + 1}`, category: 'completed' });
+    });
 
     if (allPhotos.length === 0) return null;
 
@@ -148,79 +167,121 @@ function PhotoGallery({ fotoKondisi, logPerbaikan }) {
     const goNext = () => setLightboxIdx((prev) => (prev + 1) % allPhotos.length);
 
     const intakePhotos = allPhotos.filter(p => p.category === 'intake');
+    const diagPhotos = allPhotos.filter(p => p.category === 'diagnosis');
     const repairPhotos = allPhotos.filter(p => p.category === 'repair');
+    const selesaiPhotos = allPhotos.filter(p => p.category === 'completed');
+
+    function renderThumbnailGrid(items, borderColor, hoverBorder) {
+        return (
+            <div className="flex flex-wrap gap-2.5">
+                {items.map((photo, idx) => {
+                    const globalIdx = allPhotos.indexOf(photo);
+                    const isVid = isVideo(photo.url);
+
+                    return (
+                        <button 
+                            key={idx} 
+                            onClick={() => openLightbox(globalIdx)} 
+                            className={`group relative overflow-hidden rounded-xl border-2 ${borderColor} hover:${hoverBorder} transition-all shadow-sm hover:shadow-lg w-24 h-24 sm:w-28 sm:h-28 bg-slate-900 shrink-0 cursor-pointer`}
+                        >
+                            {isVid ? (
+                                <div className="w-full h-full relative flex items-center justify-center">
+                                    <video src={photo.url} className="w-full h-full object-cover opacity-75" preload="metadata" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center shadow border border-white/20">
+                                            <Play className="w-4 h-4 fill-white ml-0.5" />
+                                        </div>
+                                    </div>
+                                    <span className="absolute top-1.5 right-1.5 bg-purple-600 text-white text-[8px] font-bold px-1 rounded shadow">VIDEO</span>
+                                </div>
+                            ) : (
+                                <img src={photo.url} alt={photo.label} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                                <span className="text-white text-[9px] font-bold truncate">{photo.label}</span>
+                            </div>
+                        </button>
+                    );
+                })}
+            </div>
+        );
+    }
 
     return (
         <>
             <div className="mb-8 pt-6 border-t border-slate-100">
                 <div className="flex items-center gap-2.5 mb-5">
                     <Camera className="w-5 h-5 text-blue-600" />
-                    <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Dokumentasi Foto Perangkat</h5>
-                    <span className="ml-auto text-xs text-slate-400 font-medium">{allPhotos.length} foto</span>
+                    <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Dokumentasi Media Perangkat</h5>
+                    <span className="ml-auto text-xs text-slate-400 font-medium">{allPhotos.length} item</span>
                 </div>
 
                 {intakePhotos.length > 0 && (
                     <div className="mb-4">
                         <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-1.5">
-                            <ImageIcon className="w-3.5 h-3.5" /> Kondisi Awal (Saat Diterima)
+                            <ImageIcon className="w-3.5 h-3.5 text-blue-500" /> Kondisi Awal (Saat Diterima)
                         </p>
-                        <div className="flex flex-wrap gap-2.5">
-                            {intakePhotos.map((photo, idx) => {
-                                const globalIdx = allPhotos.indexOf(photo);
-                                return (
-                                    <button key={idx} onClick={() => openLightbox(globalIdx)} className="group relative overflow-hidden rounded-xl border-2 border-slate-200 hover:border-blue-400 transition-all shadow-sm hover:shadow-lg">
-                                        <img src={photo.url} alt={photo.label} className="w-24 h-24 sm:w-28 sm:h-28 object-cover transition-transform duration-300 group-hover:scale-110" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                                            <span className="text-white text-[9px] font-bold truncate">{photo.label}</span>
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                        {renderThumbnailGrid(intakePhotos, "border-slate-200", "border-blue-400")}
+                    </div>
+                )}
+
+                {diagPhotos.length > 0 && (
+                    <div className="mb-4">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-purple-600 mb-2.5 flex items-center gap-1.5">
+                            <Video className="w-3.5 h-3.5 text-purple-600" /> Temuan & Hasil Diagnosis
+                        </p>
+                        {renderThumbnailGrid(diagPhotos, "border-purple-200", "border-purple-400")}
                     </div>
                 )}
 
                 {repairPhotos.length > 0 && (
-                    <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-1.5">
-                            <Wrench className="w-3.5 h-3.5" /> Proses Perbaikan
+                    <div className="mb-4">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 mb-2.5 flex items-center gap-1.5">
+                            <Wrench className="w-3.5 h-3.5 text-indigo-600" /> Proses Pengerjaan Servis
                         </p>
-                        <div className="flex flex-wrap gap-2.5">
-                            {repairPhotos.map((photo, idx) => {
-                                const globalIdx = allPhotos.indexOf(photo);
-                                return (
-                                    <button key={idx} onClick={() => openLightbox(globalIdx)} className="group relative overflow-hidden rounded-xl border-2 border-slate-200 hover:border-indigo-400 transition-all shadow-sm hover:shadow-lg">
-                                        <img src={photo.url} alt={photo.label} className="w-24 h-24 sm:w-28 sm:h-28 object-cover transition-transform duration-300 group-hover:scale-110" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                                            <span className="text-white text-[9px] font-bold truncate">{photo.label}</span>
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                        {renderThumbnailGrid(repairPhotos, "border-slate-200", "border-indigo-400")}
+                    </div>
+                )}
+
+                {selesaiPhotos.length > 0 && (
+                    <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 mb-2.5 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Hasil Akhir Selesai Servis & QC
+                        </p>
+                        {renderThumbnailGrid(selesaiPhotos, "border-emerald-200", "border-emerald-400")}
                     </div>
                 )}
             </div>
 
-            {/* Lightbox Modal */}
+            {/* Lightbox Modal (Foto & Video) */}
             {lightboxOpen && (
-                <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={closeLightbox}>
+                <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in" onClick={closeLightbox}>
                     <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={closeLightbox} className="absolute -top-2 -right-2 sm:top-2 sm:right-2 z-10 bg-white/10 hover:bg-white/20 p-2.5 rounded-full text-white transition-colors backdrop-blur-sm">
+                        <button onClick={closeLightbox} className="absolute -top-2 -right-2 sm:top-2 sm:right-2 z-10 bg-white/10 hover:bg-white/20 p-2.5 rounded-full text-white transition-colors backdrop-blur-sm cursor-pointer shadow-lg">
                             <X className="w-5 h-5" />
                         </button>
 
                         <div className="relative w-full flex items-center justify-center">
                             {allPhotos.length > 1 && (
-                                <button onClick={goPrev} className="absolute left-0 sm:left-2 z-10 bg-white/10 hover:bg-white/25 p-2.5 sm:p-3 rounded-full text-white transition-all backdrop-blur-sm">
+                                <button onClick={goPrev} className="absolute left-0 sm:left-2 z-10 bg-white/10 hover:bg-white/25 p-2.5 sm:p-3 rounded-full text-white transition-all backdrop-blur-sm cursor-pointer">
                                     <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </button>
                             )}
 
-                            <img src={allPhotos[lightboxIdx].url} alt={allPhotos[lightboxIdx].label} className="max-h-[75vh] max-w-full object-contain rounded-xl shadow-lg" />
+                            {isVideo(allPhotos[lightboxIdx].url) ? (
+                                <video 
+                                    src={allPhotos[lightboxIdx].url} 
+                                    controls 
+                                    autoPlay 
+                                    playsInline 
+                                    className="max-h-[75vh] max-w-full rounded-2xl shadow-2xl bg-black border border-white/20"
+                                />
+                            ) : (
+                                <img src={allPhotos[lightboxIdx].url} alt={allPhotos[lightboxIdx].label} className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl border border-white/20" />
+                            )}
 
                             {allPhotos.length > 1 && (
-                                <button onClick={goNext} className="absolute right-0 sm:right-2 z-10 bg-white/10 hover:bg-white/25 p-2.5 sm:p-3 rounded-full text-white transition-all backdrop-blur-sm">
+                                <button onClick={goNext} className="absolute right-0 sm:right-2 z-10 bg-white/10 hover:bg-white/25 p-2.5 sm:p-3 rounded-full text-white transition-all backdrop-blur-sm cursor-pointer">
                                     <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </button>
                             )}
@@ -234,11 +295,25 @@ function PhotoGallery({ fotoKondisi, logPerbaikan }) {
                         {/* Thumbnail strip */}
                         {allPhotos.length > 1 && (
                             <div className="mt-4 flex gap-2 overflow-x-auto max-w-full pb-2 px-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
-                                {allPhotos.map((photo, idx) => (
-                                    <button key={idx} onClick={() => setLightboxIdx(idx)} className={`shrink-0 rounded-lg overflow-hidden border-2 transition-all ${idx === lightboxIdx ? 'border-blue-400 ring-2 ring-blue-400/30 scale-105' : 'border-white/20 opacity-60 hover:opacity-100'}`}>
-                                        <img src={photo.url} alt="" className="w-14 h-14 sm:w-16 sm:h-16 object-cover" />
-                                    </button>
-                                ))}
+                                {allPhotos.map((photo, idx) => {
+                                    const isVid = isVideo(photo.url);
+                                    return (
+                                        <button 
+                                            key={idx} 
+                                            onClick={() => setLightboxIdx(idx)} 
+                                            className={`shrink-0 rounded-lg overflow-hidden border-2 transition-all relative w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 cursor-pointer ${idx === lightboxIdx ? 'border-blue-400 ring-2 ring-blue-400/30 scale-105' : 'border-white/20 opacity-60 hover:opacity-100'}`}
+                                        >
+                                            {isVid ? (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <video src={photo.url} className="w-full h-full object-cover opacity-60" preload="metadata" />
+                                                    <Play className="w-3.5 h-3.5 text-white fill-white absolute" />
+                                                </div>
+                                            ) : (
+                                                <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -342,6 +417,41 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
     const [alasanBatal, setAlasanBatal] = useState("Biaya melebihi estimasi / budget");
     const [catatanBatal, setCatatanBatal] = useState("");
     const [submittingApproval, setSubmittingApproval] = useState(false);
+
+    // Customer Sign-to-Unlock Modal State
+    const [isSignInvoiceModalOpen, setIsSignInvoiceModalOpen] = useState(false);
+    const [submittingSignInvoice, setSubmittingSignInvoice] = useState(false);
+
+    const handleCustomerSignInvoice = async ({ signature, signerName, phoneLast4: inputPhone4 }) => {
+        setSubmittingSignInvoice(true);
+        try {
+            const res = await api.post("/tracking/sign-invoice", {
+                nomorTiket: t.nomor_tiket,
+                phone_last4: inputPhone4,
+                signature,
+                signer_nama: signerName
+            });
+
+            toast.success(res.data.message || "Tanda tangan berhasil dikonfirmasi!");
+            const updatedTicket = {
+                ...t,
+                invoice: {
+                    ...(t.invoice || {}),
+                    ...(res.data.invoice || {}),
+                    ttd_customer: signature,
+                    ttd_customer_at: res.data.invoice?.ttd_customer_at || new Date().toISOString(),
+                    ttd_customer_nama: signerName
+                }
+            };
+            setT(updatedTicket);
+            if (onUpdateTicket) onUpdateTicket(updatedTicket);
+            setIsSignInvoiceModalOpen(false);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memproses tanda tangan");
+        } finally {
+            setSubmittingSignInvoice(false);
+        }
+    };
 
     const handleOpenApprovalModal = (action) => {
         setApprovalAction(action);
@@ -544,8 +654,13 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 {/* Feature 4: Structured Deposited Accessories Checklist */}
                 <AccessoriesChecklist kelengkapanDetail={t.kelengkapan_detail} kelengkapanText={null} />
 
-                {/* Feature 1: Photo Gallery with Lightbox */}
-                <PhotoGallery fotoKondisi={t.foto_kondisi} logPerbaikan={t.log_perbaikan} />
+                {/* Feature 1: Photo & Video Media Gallery with Lightbox */}
+                <PhotoGallery 
+                    fotoKondisi={t.foto_kondisi} 
+                    fotoDiagnosis={t.foto_diagnosis} 
+                    fotoSelesai={t.foto_selesai} 
+                    logPerbaikan={t.log_perbaikan} 
+                />
 
                 {/* Feature 1: 2D Visual Defect Map for Customer */}
                 {t.defect_map && (
@@ -686,22 +801,94 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                 </div>
                             )}
                             {t.invoice && (
-                                <div className="md:col-span-2 bg-emerald-50 p-5 sm:p-6 rounded-2xl border border-emerald-200 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-emerald-700 font-bold text-sm sm:text-base flex items-center gap-2">Total Biaya Akhir (Real)</span>
-                                        <span className="text-emerald-800 font-black text-2xl">{formatRupiah(t.invoice.total_biaya)}</span>
-                                    </div>
-                                    <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-                                        <button 
-                                            onClick={() => setIsWarrantyModalOpen(true)}
-                                            className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-bold text-sm transition-all shadow-sm shrink-0 w-full sm:w-auto"
-                                        >
-                                            <Award className="w-4 h-4" /> Sertifikat Garansi
-                                        </button>
-                                        <button onClick={() => window.print()} className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 rounded-xl font-bold text-sm transition-all shadow-sm shrink-0 w-full sm:w-auto">
-                                            <Download className="w-4 h-4" /> Cetak Invoice
-                                        </button>
-                                    </div>
+                                <div className="md:col-span-2">
+                                    {t.invoice.ttd_customer ? (
+                                        /* Unlocked State: Already Signed */
+                                        <div className="bg-emerald-50 p-5 sm:p-6 rounded-2xl border border-emerald-200 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+                                            <div className="flex flex-col gap-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-emerald-700 font-bold text-sm sm:text-base">Total Biaya Akhir (Real)</span>
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-300">
+                                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                                        Terverifikasi Digital
+                                                    </span>
+                                                </div>
+                                                <span className="text-emerald-800 font-black text-2xl">{formatRupiah(t.invoice.total_biaya)}</span>
+                                                <div className="flex items-center gap-2 text-xs text-emerald-700 mt-0.5">
+                                                    <div className="w-7 h-7 bg-white rounded-md border border-emerald-200 flex items-center justify-center overflow-hidden shrink-0 p-0.5">
+                                                        <img src={t.invoice.ttd_customer} alt="TTD" className="max-h-full max-w-full object-contain" />
+                                                    </div>
+                                                    <span>
+                                                        Telah ditandatangani oleh <strong>{t.invoice.ttd_customer_nama || t.customer_nama || "Pelanggan"}</strong>
+                                                        {t.invoice.ttd_customer_at && (
+                                                            <> pada {new Date(t.invoice.ttd_customer_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                                                <button 
+                                                    onClick={() => setIsWarrantyModalOpen(true)}
+                                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-bold text-sm transition-all shadow-sm shrink-0 w-full sm:w-auto cursor-pointer"
+                                                >
+                                                    <Award className="w-4 h-4" /> Sertifikat Garansi
+                                                </button>
+                                                <button onClick={() => window.print()} className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 rounded-xl font-bold text-sm transition-all shadow-sm shrink-0 w-full sm:w-auto cursor-pointer">
+                                                    <Download className="w-4 h-4" /> Cetak Invoice
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : ['selesai', 'diambil'].includes(t.status) ? (
+                                        /* Locked State: Service finished, requires Customer Signature to unlock Invoice & Warranty */
+                                        <div className="bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/70 p-5 sm:p-6 rounded-2xl border-2 border-indigo-200/90 mt-2 shadow-sm relative overflow-hidden">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                                                <div className="space-y-2">
+                                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs">
+                                                        <PenTool className="w-3.5 h-3.5" />
+                                                        Sign-to-Unlock: Serah Terima Unit
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-extrabold text-slate-900 text-base sm:text-lg">
+                                                            Tanda Tangani Nota untuk Membuka Dokumen & Garansi
+                                                        </h5>
+                                                        <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl leading-relaxed">
+                                                            Unit perbaikan Anda telah selesai! Silakan bubuhkan tanda tangan penerimaan secara digital langsung dari HP Anda untuk membuka <strong>Invoice Resmi</strong> dan mengaktifkan <strong>Sertifikat Garansi Digital</strong>.
+                                                        </p>
+                                                    </div>
+                                                    <div className="pt-1 flex items-baseline gap-2">
+                                                        <span className="text-xs font-semibold text-slate-500">Total Biaya:</span>
+                                                        <span className="text-slate-900 font-black text-xl">{formatRupiah(t.invoice.total_biaya)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsSignInvoiceModalOpen(true)}
+                                                        className="flex items-center justify-center gap-2 px-5 py-3.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-indigo-600/20 cursor-pointer w-full sm:w-auto"
+                                                    >
+                                                        <PenTool className="w-4 h-4" />
+                                                        Tanda Tangani & Buka Dokumen
+                                                    </button>
+                                                    <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                                                        <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                                                        Aman • Verifikasi 4 Digit No HP
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* Pending State: Service still in progress */
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-slate-600 font-bold text-xs uppercase tracking-wider">Perkiraan Biaya Akhir</span>
+                                                <span className="text-slate-900 font-black text-2xl">{formatRupiah(t.invoice.total_biaya)}</span>
+                                            </div>
+                                            <p className="text-xs text-slate-500 italic max-w-xs sm:text-right">
+                                                Dokumen invoice dan garansi resmi akan dapat diakses dan ditandatangani saat perbaikan telah dinyatakan selesai.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -835,6 +1022,20 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 isOpen={isWarrantyModalOpen}
                 onClose={() => setIsWarrantyModalOpen(false)}
                 tiket={t}
+            />
+
+            {/* Feature Sign-to-Unlock: Digital Signature Pad Modal */}
+            <DigitalSignaturePadModal
+                isOpen={isSignInvoiceModalOpen}
+                onClose={() => setIsSignInvoiceModalOpen(false)}
+                onSave={handleCustomerSignInvoice}
+                defaultName={t.customer_nama || ""}
+                title="Tanda Tangan Penerimaan Unit"
+                description={`Bubuhkan tanda tangan Anda di layar untuk mengonfirmasi penerimaan unit ${t.perangkat}. Invoice resmi dan sertifikat garansi akan terbuka secara instan.`}
+                agreementText="Dengan menandatangani ini, saya menyatakan telah menerima kembali unit perangkat dalam kondisi baik dan menyetujui rincian perbaikan serta masa garansi yang berlaku."
+                requirePhoneVerify={true}
+                expectedPhoneLast4={(t.customer_telepon || "").replace(/\D/g, "")}
+                loading={submittingSignInvoice}
             />
 
             {/* Feature 1: Defect Mapper Read-Only Modal for Customer */}

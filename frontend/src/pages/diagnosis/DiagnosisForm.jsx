@@ -757,13 +757,14 @@ export default function DiagnosisForm() {
                         </p>
                     </div>
 
-                    {/* Foto Temuan & Hasil Diagnosis (Maks 25) */}
+                    {/* Dokumentasi Temuan & Bukti Diagnosis (Foto & Video) */}
                     <PhotoUploadSection
-                        label="Foto Temuan & Hasil Diagnosis"
-                        sublabel="Dokumentasikan bukti kerusakan IC, korosi, komponen terbakar, atau hasil pengukuran teknis (Maksimal 25 foto)."
+                        label="Dokumentasi Temuan & Bukti Diagnosis"
+                        sublabel="Foto atau rekam video bukti kerusakan (layar flicker, korslet, komponen terbakar, dll). Otomatis dikompresi ke format streaming."
                         maxPhotos={25}
                         photos={fotos}
                         onChange={setFotos}
+                        allowVideo={true}
                     />
 
                     {/* Form Action Buttons */}

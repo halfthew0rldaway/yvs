@@ -233,12 +233,15 @@ model RestockLog {
 }
 
 model Invoice {
-  id              Int      @id @default(autoincrement())
-  tiket_id        Int      @unique
+  id              Int       @id @default(autoincrement())
+  tiket_id        Int       @unique
   biaya_jasa      Float
   biaya_sparepart Float
   total_biaya     Float
-  created_at      DateTime @default(now())
+  ttd_customer    String?   @db.LongText
+  ttd_customer_at DateTime?
+  ttd_customer_nama String? @db.VarChar(150)
+  created_at      DateTime  @default(now())
 
   tiket TiketServis @relation(fields: [tiket_id], references: [id], onDelete: Cascade)
 }

@@ -14,6 +14,7 @@ import SlaBadge, { SlaCountdownCard, SLA_PENGERJAAN_PACKAGES } from "../../compo
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import RepairWikiDetailModal from "../wiki/RepairWikiDetailModal";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
+import { isVideo } from "../../utils/mediaUtils";
 
 
 const STATUS_LABELS = {
@@ -1407,13 +1408,23 @@ export default function TiketServisDetail() {
                                                 <button 
                                                     key={idx} 
                                                     onClick={() => setSelectedImage(imageUrl)}
-                                                    className="relative shrink-0 group outline-none focus:ring-4 focus:ring-blue-500/20 rounded-xl"
+                                                    className="relative shrink-0 group outline-none focus:ring-4 focus:ring-blue-500/20 rounded-xl cursor-pointer"
                                                 >
-                                                    <img 
-                                                        src={imageUrl} 
-                                                        alt={`Kondisi ${idx+1}`} 
-                                                        className="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm transition-transform group-hover:scale-105"
-                                                    />
+                                                    {isVideo(imageUrl) ? (
+                                                        <div className="w-16 h-16 bg-slate-900 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex items-center justify-center">
+                                                            <video src={imageUrl} className="w-full h-full object-cover opacity-75" preload="metadata" />
+                                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                                <Play className="w-5 h-5 text-white fill-white drop-shadow" />
+                                                            </div>
+                                                            <span className="absolute bottom-0.5 right-0.5 bg-purple-600 text-white text-[8px] font-bold px-1 rounded">VID</span>
+                                                        </div>
+                                                    ) : (
+                                                        <img 
+                                                            src={imageUrl} 
+                                                            alt={`Kondisi ${idx+1}`} 
+                                                            className="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm transition-transform group-hover:scale-105"
+                                                        />
+                                                    )}
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
                                                         <Search className="w-4 h-4 text-white" />
                                                     </div>
@@ -1449,11 +1460,21 @@ export default function TiketServisDetail() {
                                                             onClick={() => setSelectedImage(imageUrl)}
                                                             className="relative shrink-0 group outline-none focus:ring-4 focus:ring-emerald-500/20 rounded-xl cursor-pointer"
                                                         >
-                                                            <img 
-                                                                src={imageUrl} 
-                                                                alt={`Selesai Servis ${idx+1}`} 
-                                                                className="w-16 h-16 object-cover rounded-xl border border-emerald-200 shadow-sm transition-transform group-hover:scale-105"
-                                                            />
+                                                            {isVideo(imageUrl) ? (
+                                                                <div className="w-16 h-16 bg-slate-900 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden flex items-center justify-center">
+                                                                    <video src={imageUrl} className="w-full h-full object-cover opacity-75" preload="metadata" />
+                                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                                        <Play className="w-5 h-5 text-white fill-white drop-shadow" />
+                                                                    </div>
+                                                                    <span className="absolute bottom-0.5 right-0.5 bg-emerald-600 text-white text-[8px] font-bold px-1 rounded">VID</span>
+                                                                </div>
+                                                            ) : (
+                                                                <img 
+                                                                    src={imageUrl} 
+                                                                    alt={`Selesai Servis ${idx+1}`} 
+                                                                    className="w-16 h-16 object-cover rounded-xl border border-emerald-200 shadow-sm transition-transform group-hover:scale-105"
+                                                                />
+                                                            )}
                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
                                                                 <Search className="w-4 h-4 text-white" />
                                                             </div>
@@ -1576,15 +1597,25 @@ export default function TiketServisDetail() {
                                                 onClick={() => setSelectedImage(imageUrl)}
                                                 className="relative shrink-0 group outline-none rounded-xl cursor-pointer"
                                             >
-                                                <img 
-                                                    src={imageUrl} 
-                                                    alt={`Bukti Diagnosis ${idx + 1}`} 
-                                                    className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-slate-200 shadow-2xs group-hover:scale-105 transition-transform"
-                                                />
+                                                {isVideo(imageUrl) ? (
+                                                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900 rounded-xl border border-slate-200 shadow-2xs relative overflow-hidden flex items-center justify-center">
+                                                        <video src={imageUrl} className="w-full h-full object-cover opacity-75" preload="metadata" />
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <Play className="w-6 h-6 text-white fill-white drop-shadow" />
+                                                        </div>
+                                                        <span className="absolute bottom-1 right-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">VIDEO</span>
+                                                    </div>
+                                                ) : (
+                                                    <img 
+                                                        src={imageUrl} 
+                                                        alt={`Bukti Diagnosis ${idx + 1}`} 
+                                                        className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-slate-200 shadow-2xs group-hover:scale-105 transition-transform"
+                                                    />
+                                                )}
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
                                                     <Search className="w-4 h-4 text-white" />
                                                 </div>
-                                                <span className="absolute bottom-1 right-1 bg-slate-900/80 text-white text-[9px] font-mono px-1 rounded">
+                                                <span className="absolute top-1 left-1 bg-slate-900/80 text-white text-[9px] font-mono px-1 rounded">
                                                     #{idx + 1}
                                                 </span>
                                             </button>
@@ -2936,21 +2967,33 @@ export default function TiketServisDetail() {
                 icon={<Wrench className="w-6 h-6 text-amber-600" />}
             />
 
-            {/* Image Preview Modal (Lightbox) */}
+            {/* Media Preview Modal (Lightbox Foto & Video) */}
             {selectedImage && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 backdrop-blur-sm p-4" onClick={() => setSelectedImage(null)}>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 animate-in fade-in" onClick={() => setSelectedImage(null)}>
                     <button 
-                        className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-md"
+                        className="absolute top-6 right-6 p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-md cursor-pointer shadow-lg"
                         onClick={() => setSelectedImage(null)}
                     >
                         <XCircle className="w-8 h-8" />
                     </button>
-                    <img 
-                        src={selectedImage} 
-                        alt="Preview" 
-                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-lg"
-                        onClick={(e) => e.stopPropagation()} 
-                    />
+                    {isVideo(selectedImage) ? (
+                        <div className="max-w-4xl w-full flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
+                            <video 
+                                src={selectedImage} 
+                                controls 
+                                autoPlay 
+                                playsInline 
+                                className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl bg-black border border-white/20"
+                            />
+                        </div>
+                    ) : (
+                        <img 
+                            src={selectedImage} 
+                            alt="Preview" 
+                            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl border border-white/20"
+                            onClick={(e) => e.stopPropagation()} 
+                        />
+                    )}
                 </div>
             )}
 
@@ -3063,13 +3106,14 @@ export default function TiketServisDetail() {
                                 />
                             </div>
 
-                            {/* Foto Selesai Servis & Hasil Akhir QC (Maksimal 15) */}
+                            {/* Dokumentasi Selesai Servis & Hasil Akhir QC (Foto & Video) */}
                             <PhotoUploadSection
-                                label="Foto Selesai Servis & Hasil Akhir (QC)"
-                                sublabel="Dokumentasikan kondisi fisik setelah servis selesai, segel workshop, dan kelengkapan (Maksimal 15 foto)."
+                                label="Dokumentasi Selesai Servis & Hasil Akhir (QC)"
+                                sublabel="Dokumentasikan foto segel/fisik atau rekam video demo unit sudah normal (Maksimal 15 media, auto-compress)."
                                 maxPhotos={15}
                                 photos={qcPhotos}
                                 onChange={setQcPhotos}
+                                allowVideo={true}
                             />
 
                             {/* Approval Banner */}

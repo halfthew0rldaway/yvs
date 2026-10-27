@@ -1,14 +1,81 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import api from "../../services/api";
-import { ArrowLeft, Printer, CheckCircle2, ShieldCheck, FileText, QrCode, Award, Wrench, Shield, Check } from "lucide-react";
+import { ArrowLeft, Printer, CheckCircle2, ShieldCheck, FileText, QrCode, Award, Wrench, Shield, Check, PenTool, Edit } from "lucide-react";
 import { 
     WorkshopSignatureStamp, 
     DigitalSignatureToggleBar 
 } from "../../components/DigitalSignatureStamp";
+import DigitalSignaturePadModal from "../../components/DigitalSignaturePadModal";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
+}
+
+function CustomerSignatureBlock({ invoice, customerName, onOpenModal }) {
+    if (invoice?.ttd_customer) {
+        return (
+            <div className="flex flex-col items-center justify-end text-center min-w-[130px] print:min-w-[110px] group relative">
+                <div className="flex items-center gap-1 mb-1">
+                    <p className="text-slate-500 text-[11px] print:text-[8.5px] font-medium">
+                        Tanda Tangan Pelanggan
+                    </p>
+                    <span className="print:hidden text-[8px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 rounded-full">
+                        ✓ Digital
+                    </span>
+                </div>
+                <div className="relative h-20 print:h-16 w-full flex items-center justify-center">
+                    <img 
+                        src={invoice.ttd_customer} 
+                        alt="Tanda Tangan Pelanggan" 
+                        className="max-h-16 print:max-h-14 max-w-[130px] object-contain"
+                    />
+                    <button
+                        type="button"
+                        onClick={onOpenModal}
+                        className="print:hidden absolute -top-1 -right-1 p-1 bg-white hover:bg-slate-100 text-slate-500 rounded-full border border-slate-200 shadow-2xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        title="Perbarui Tanda Tangan"
+                    >
+                        <Edit className="w-3 h-3 text-blue-600" />
+                    </button>
+                </div>
+                <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 mt-1 text-xs print:text-[9px] w-full truncate max-w-[150px]">
+                    {invoice.ttd_customer_nama || customerName}
+                </p>
+                {invoice.ttd_customer_at && (
+                    <span className="text-[9px] print:text-[7.5px] text-slate-400 font-mono">
+                        {new Date(invoice.ttd_customer_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                )}
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col items-center justify-end text-center min-w-[130px] print:min-w-[110px]">
+            <p className="text-slate-500 text-[11px] print:text-[8.5px] font-medium mb-1">
+                Tanda Tangan Pelanggan
+            </p>
+            <div className="h-20 print:h-16 w-full flex flex-col items-center justify-center pb-1">
+                <button
+                    type="button"
+                    onClick={onOpenModal}
+                    className="print:hidden inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                    title="Minta tanda tangan pelanggan di kasir"
+                >
+                    <PenTool className="w-3.5 h-3.5 text-blue-600" />
+                    <span>+ TTD Pelanggan</span>
+                </button>
+                <span className="hidden print:inline text-[10px] print:text-[8px] text-slate-300 print:text-slate-200 italic select-none">
+                    [ Tanda Tangan Fisik ]
+                </span>
+            </div>
+            <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 mt-1 text-xs print:text-[9px] w-full truncate max-w-[150px]">
+                {customerName}
+            </p>
+        </div>
+    );
 }
 
 export default function InvoiceDetail() {
@@ -16,6 +83,8 @@ export default function InvoiceDetail() {
     const [searchParams] = useSearchParams();
     const [invoice, setInvoice] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+    const [savingSignature, setSavingSignature] = useState(false);
     
     // View modes: "invoice" | "garansi" | "both"
     const [activeDocTab, setActiveDocTab] = useState(
@@ -54,6 +123,23 @@ export default function InvoiceDetail() {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function handleSaveCustomerSignature({ signature, signerName }) {
+        setSavingSignature(true);
+        try {
+            const res = await api.post(`/invoice/${invoice.id}/signature`, {
+                ttd_customer: signature,
+                ttd_customer_nama: signerName
+            });
+            setInvoice(res.data.data);
+            setIsSignatureModalOpen(false);
+            toast.success("Tanda tangan pelanggan berhasil disimpan!");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal menyimpan tanda tangan pelanggan");
+        } finally {
+            setSavingSignature(false);
         }
     }
 
@@ -144,9 +230,24 @@ export default function InvoiceDetail() {
                         onToggle={toggleDigitalSignature}
                     />
 
+                    {/* Customer Signature Action Button */}
+                    <button
+                        type="button"
+                        onClick={() => setIsSignatureModalOpen(true)}
+                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs select-none ${
+                            invoice?.ttd_customer
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 font-bold"
+                                : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 font-bold"
+                        }`}
+                        title={invoice?.ttd_customer ? "Pelanggan sudah tanda tangan digital (Klik untuk perbarui)" : "Minta tanda tangan pelanggan di kasir"}
+                    >
+                        <PenTool className="w-3.5 h-3.5" />
+                        <span>{invoice?.ttd_customer ? "TTD Pelanggan: Terisi ✓" : "+ TTD Pelanggan"}</span>
+                    </button>
+
                     <button
                         onClick={() => window.print()}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer"
                     >
                         <Printer className="w-4 h-4" />
                         <span>Cetak Dokumen</span>
@@ -262,12 +363,19 @@ export default function InvoiceDetail() {
                             <p className="text-slate-500 mt-0.5">Berlaku untuk perbaikan dan komponen yang sama sesuai rincian nota di atas.</p>
                             <p className="text-slate-400 mt-1">Dokumen ini merupakan bukti pembayaran resmi yang sah dari Yangversa Computer.</p>
                         </div>
-                        <WorkshopSignatureStamp
-                            isDigital={isDigitalSignature}
-                            onToggle={toggleDigitalSignature}
-                            role="Kasir • Admin Teknis"
-                            name="Yangversa Computer"
-                        />
+                        <div className="flex items-end gap-6 print:gap-4">
+                            <CustomerSignatureBlock
+                                invoice={invoice}
+                                customerName={customer.nama}
+                                onOpenModal={() => setIsSignatureModalOpen(true)}
+                            />
+                            <WorkshopSignatureStamp
+                                isDigital={isDigitalSignature}
+                                onToggle={toggleDigitalSignature}
+                                role="Kasir • Admin Teknis"
+                                name="Yangversa Computer"
+                            />
+                        </div>
                     </div>
                 </div>
             )}
@@ -390,20 +498,12 @@ export default function InvoiceDetail() {
                             </div>
                         </div>
 
-                        {/* Customer Signature (Fisik / Manual Pen) */}
-                        <div className="flex flex-col items-center justify-end text-center min-w-[130px] print:min-w-[110px]">
-                            <p className="text-slate-500 text-[11px] print:text-[8.5px] font-medium mb-1">
-                                Tanda Tangan Pelanggan
-                            </p>
-                            <div className="h-20 print:h-16 w-full flex items-end justify-center pb-1">
-                                <span className="text-[10px] print:text-[8px] text-slate-300 print:text-slate-200 italic select-none">
-                                    [ Tanda Tangan Fisik ]
-                                </span>
-                            </div>
-                            <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 mt-1 text-xs print:text-[9px] w-full truncate max-w-[150px]">
-                                {customer.nama}
-                            </p>
-                        </div>
+                        {/* Customer Signature */}
+                        <CustomerSignatureBlock
+                            invoice={invoice}
+                            customerName={customer.nama}
+                            onOpenModal={() => setIsSignatureModalOpen(true)}
+                        />
 
                         {/* Official Workshop Stamp */}
                         <WorkshopSignatureStamp
@@ -415,6 +515,19 @@ export default function InvoiceDetail() {
                     </div>
                 </div>
             )}
+
+            {/* In-Store Customer Digital Signature Pad Modal */}
+            <DigitalSignaturePadModal
+                isOpen={isSignatureModalOpen}
+                onClose={() => setIsSignatureModalOpen(false)}
+                onSave={handleSaveCustomerSignature}
+                defaultName={customer.nama}
+                title="Tanda Tangan Pelanggan di Kasir"
+                description={`Pelanggan (${customer.nama}) dapat menandatangani serah terima unit di layar ini menggunakan jari, stylus, atau mouse.`}
+                agreementText="Dengan menandatangani ini, saya menyatakan telah menerima kembali unit dalam kondisi baik, menyetujui rincian biaya perbaikan, dan memahami masa ketentuan garansi yang berlaku."
+                requirePhoneVerify={false}
+                loading={savingSignature}
+            />
         </div>
     );
 }

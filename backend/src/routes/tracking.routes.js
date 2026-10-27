@@ -8,5 +8,6 @@ router.use(trackingLimiter);
 router.post("/", trackingController.track);
 router.post("/rate", trackingController.submitRating);
 router.post("/respond", trackingController.respondDiagnosisApproval);
+router.post("/sign-invoice", trackingController.signCustomerInvoice);
 
 module.exports = router;

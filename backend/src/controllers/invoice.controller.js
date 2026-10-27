@@ -311,5 +311,68 @@ async function getReport(req, res) {
     }
 }
 
-module.exports = { getAll, create, update, getById, getReport };
+// Simpan Tanda Tangan Pelanggan di Invoice (Kasir / Front Desk)
+async function saveCustomerSignature(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const { ttd_customer, ttd_customer_nama } = req.body;
+
+        if (!ttd_customer) {
+            return res.status(400).json({ message: "Goresan tanda tangan digital wajib ada" });
+        }
+
+        const invoice = await prisma.invoice.findUnique({
+            where: { id },
+            include: { tiket: { include: { perangkat: { include: { customer: true } } } } }
+        });
+
+        if (!invoice) {
+            return res.status(404).json({ message: "Invoice tidak ditemukan" });
+        }
+
+        const signerName = ttd_customer_nama || invoice.tiket?.perangkat?.customer?.nama || "Pelanggan";
+        const signDate = new Date();
+
+        const updated = await prisma.invoice.update({
+            where: { id },
+            data: {
+                ttd_customer,
+                ttd_customer_at: signDate,
+                ttd_customer_nama: signerName
+            },
+            include: {
+                tiket: {
+                    include: {
+                        perangkat: { include: { customer: true } },
+                        penggunaan_sparepart: { include: { sparepart: true } },
+                        teknisi: { select: { nama: true } },
+                        diagnosis: true
+                    }
+                }
+            }
+        });
+
+        // Catat log perbaikan serah terima digital
+        await prisma.logPerbaikan.create({
+            data: {
+                tiket_id: invoice.tiket_id,
+                fase: "Penyerahan Unit",
+                catatan: `[TTD Kasir] Pelanggan (${signerName}) telah menandatangani nota serah terima secara digital.`
+            }
+        });
+
+        broadcast("invoice:updated", { id: updated.id, tiket_id: updated.tiket_id });
+        broadcast("tiket:updated", { id: updated.tiket_id });
+        broadcast("dashboard:refresh");
+
+        return res.json({
+            message: "Tanda tangan pelanggan berhasil disimpan",
+            data: updated
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+    }
+}
+
+module.exports = { getAll, create, update, getById, getReport, saveCustomerSignature };
 

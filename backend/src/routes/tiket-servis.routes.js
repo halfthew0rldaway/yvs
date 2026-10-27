@@ -2,7 +2,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate, authorize } = require("../middleware/auth");
-const upload = require("../middleware/upload");
+const { upload, compressMedia } = require("../middleware/upload");
 const { 
     getAll, 
     getById, 
@@ -42,9 +42,9 @@ router.get("/warranty/expiring", getExpiringWarranties);
 router.get("/maintenance/due", getMaintenanceDue);
 router.get("/unclaimed/due", getUnclaimedDue);
 router.get("/:id", getById);
-router.post("/", authorize("admin"), upload.array("foto_kondisi", 10), tiketValidation, validate, create);
-router.post("/:id/foto-selesai", authorize("admin", "teknisi"), upload.array("foto_selesai", 15), uploadFotoSelesai);
-router.post("/:id/foto-diagnosis", authorize("admin", "teknisi"), upload.array("foto_diagnosis", 25), uploadFotoDiagnosis);
+router.post("/", authorize("admin"), upload.array("foto_kondisi", 10), compressMedia, tiketValidation, validate, create);
+router.post("/:id/foto-selesai", authorize("admin", "teknisi"), upload.array("foto_selesai", 15), compressMedia, uploadFotoSelesai);
+router.post("/:id/foto-diagnosis", authorize("admin", "teknisi"), upload.array("foto_diagnosis", 25), compressMedia, uploadFotoDiagnosis);
 router.post("/:id/claim-garansi", authorize("admin"), createWarrantyClaim);
 router.post("/:id/reminder-garansi", authorize("admin", "teknisi"), markWarrantyFollowUp);
 router.post("/:id/reminder-maintenance", authorize("admin", "teknisi"), markMaintenanceFollowUp);

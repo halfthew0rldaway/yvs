@@ -72,6 +72,8 @@ async function track(req, res) {
             kelengkapan: t.kelengkapan,
             kelengkapan_detail: t.kelengkapan_detail,
             foto_kondisi: t.foto_kondisi,
+            foto_diagnosis: t.foto_diagnosis || t.diagnosis?.foto_diagnosis || null,
+            foto_selesai: t.foto_selesai || null,
             defect_map: t.defect_map,
             sla_paket: t.sla_paket,
             target_pengecekan_at: t.target_pengecekan_at,
@@ -93,7 +95,16 @@ async function track(req, res) {
                 jumlah: ps.jumlah
             })) || [],
             invoice: t.invoice
-                ? { total_biaya: t.invoice.total_biaya }
+                ? { 
+                    id: t.invoice.id,
+                    biaya_jasa: t.invoice.biaya_jasa,
+                    biaya_sparepart: t.invoice.biaya_sparepart,
+                    total_biaya: t.invoice.total_biaya,
+                    ttd_customer: t.invoice.ttd_customer,
+                    ttd_customer_at: t.invoice.ttd_customer_at,
+                    ttd_customer_nama: t.invoice.ttd_customer_nama,
+                    created_at: t.invoice.created_at
+                }
                 : null,
             created_at: t.created_at,
             completed_at: t.completed_at,
@@ -284,4 +295,81 @@ async function respondDiagnosisApproval(req, res) {
     }
 }
 
-module.exports = { track, submitRating, respondDiagnosisApproval };
+// Fitur Sign-to-Unlock: Pelanggan menandatangani nota serah terima secara mandiri via tracking
+async function signCustomerInvoice(req, res) {
+    try {
+        const { nomorTiket, phone_last4, signature, signer_nama } = req.body;
+        if (!nomorTiket || !phone_last4 || !signature) {
+            return res.status(400).json({ message: "Nomor tiket, verifikasi 4 digit no telepon, dan tanda tangan wajib diisi." });
+        }
+
+        const tiket = await prisma.tiketServis.findUnique({
+            where: { nomor_tiket: nomorTiket },
+            include: {
+                perangkat: { include: { customer: true } },
+                invoice: true,
+                teknisi: true
+            }
+        });
+
+        if (!tiket) {
+            return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        }
+
+        if (!tiket.invoice) {
+            return res.status(400).json({ message: "Invoice untuk tiket ini belum diterbitkan oleh kasir." });
+        }
+
+        // Verifikasi 4 digit terakhir nomor HP customer
+        const rawCustomerPhone = (tiket.perangkat?.customer?.nomor_telepon || "").replace(/\D/g, "");
+        const cleanInputPhone = String(phone_last4).replace(/\D/g, "");
+
+        if (!rawCustomerPhone.endsWith(cleanInputPhone) || cleanInputPhone.length < 4) {
+            return res.status(403).json({ message: "Verifikasi gagal: 4 digit terakhir nomor telepon tidak cocok dengan nomor yang terdaftar." });
+        }
+
+        const namaPenandatangan = signer_nama || tiket.perangkat?.customer?.nama || "Pelanggan";
+        const signDate = new Date();
+
+        const updatedInvoice = await prisma.invoice.update({
+            where: { id: tiket.invoice.id },
+            data: {
+                ttd_customer: signature,
+                ttd_customer_at: signDate,
+                ttd_customer_nama: namaPenandatangan
+            }
+        });
+
+        // Catat log serah terima digital
+        await prisma.logPerbaikan.create({
+            data: {
+                tiket_id: tiket.id,
+                fase: "Penyerahan Unit",
+                catatan: `[Self-Sign Tracking] Pelanggan (${namaPenandatangan}) telah memverifikasi & membubuhkan tanda tangan digital melalui portal tracking.`
+            }
+        });
+
+        broadcast("invoice:updated", { id: updatedInvoice.id, tiket_id: tiket.id });
+        broadcast("tiket:updated", { id: tiket.id, nomor_tiket: tiket.nomor_tiket });
+        broadcast("dashboard:refresh");
+
+        return res.json({
+            message: "Tanda tangan berhasil dikonfirmasi! Dokumen Invoice dan Garansi telah terbuka.",
+            invoice: {
+                id: updatedInvoice.id,
+                biaya_jasa: updatedInvoice.biaya_jasa,
+                biaya_sparepart: updatedInvoice.biaya_sparepart,
+                total_biaya: updatedInvoice.total_biaya,
+                ttd_customer: updatedInvoice.ttd_customer,
+                ttd_customer_at: updatedInvoice.ttd_customer_at,
+                ttd_customer_nama: updatedInvoice.ttd_customer_nama,
+                created_at: updatedInvoice.created_at
+            }
+        });
+    } catch (error) {
+        console.error("Gagal menyimpan tanda tangan customer via tracking:", error);
+        return res.status(500).json({ message: "Terjadi kesalahan saat memproses tanda tangan", error: error.message });
+    }
+}
+
+module.exports = { track, submitRating, respondDiagnosisApproval, signCustomerInvoice };
