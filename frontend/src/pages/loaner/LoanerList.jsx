@@ -161,7 +161,9 @@ export default function LoanerList() {
             if (deviceSearch.trim()) params.search = deviceSearch.trim();
 
             const res = await api.get("/loaner/devices", { params });
-            setDevices(res.data || []);
+            const raw = res.data;
+            const list = Array.isArray(raw?.data) ? raw.data : (Array.isArray(raw) ? raw : []);
+            setDevices(list);
         } catch (err) {
             toast.error("Gagal memuat daftar unit pinjaman");
         } finally {
@@ -186,7 +188,9 @@ export default function LoanerList() {
             if (recordSearch.trim()) params.search = recordSearch.trim();
 
             const res = await api.get("/loaner/records", { params });
-            setRecords(res.data || []);
+            const raw = res.data;
+            const list = Array.isArray(raw?.data) ? raw.data : (Array.isArray(raw) ? raw : []);
+            setRecords(list);
         } catch (err) {
             toast.error("Gagal memuat log peminjaman");
         } finally {
@@ -199,7 +203,8 @@ export default function LoanerList() {
         try {
             // Ambil tiket yang aktif berjalan (diterima, didiagnosis, disetujui, dalam_perbaikan)
             const res = await api.get("/tiket-servis?status=aktif&limit=100");
-            const list = res.data?.tikets || res.data || [];
+            const raw = res.data;
+            const list = Array.isArray(raw?.data) ? raw.data : (Array.isArray(raw) ? raw : (Array.isArray(raw?.tikets) ? raw.tikets : []));
             setActiveTickets(list);
         } catch (err) {
             toast.error("Gagal memuat tiket servis aktif");
@@ -208,28 +213,35 @@ export default function LoanerList() {
         }
     }
 
+    // Safe defensive lists
+    const safeDevices = Array.isArray(devices) ? devices : [];
+    const safeRecords = Array.isArray(records) ? records : [];
+    const safeActiveTickets = Array.isArray(activeTickets) ? activeTickets : [];
+
     // Filtered lists
-    const filteredDevices = devices.filter(d => {
+    const filteredDevices = safeDevices.filter(d => {
+        if (!d) return false;
         if (!deviceSearch.trim()) return true;
         const q = deviceSearch.toLowerCase();
         return (
-            d.kode_unit.toLowerCase().includes(q) ||
-            d.nama.toLowerCase().includes(q) ||
+            (d.kode_unit && d.kode_unit.toLowerCase().includes(q)) ||
+            (d.nama && d.nama.toLowerCase().includes(q)) ||
             (d.serial_number && d.serial_number.toLowerCase().includes(q)) ||
             (d.spesifikasi && d.spesifikasi.toLowerCase().includes(q))
         );
     });
 
-    const filteredRecords = records.filter(r => {
+    const filteredRecords = safeRecords.filter(r => {
+        if (!r) return false;
         if (!recordSearch.trim()) return true;
         const q = recordSearch.toLowerCase();
         return (
-            r.nomor_peminjaman.toLowerCase().includes(q) ||
-            r.customer?.nama?.toLowerCase().includes(q) ||
-            r.customer?.nomor_telepon?.toLowerCase().includes(q) ||
-            r.tiket?.nomor_tiket?.toLowerCase().includes(q) ||
-            r.loaner_device?.kode_unit?.toLowerCase().includes(q) ||
-            r.loaner_device?.nama?.toLowerCase().includes(q)
+            (r.nomor_peminjaman && r.nomor_peminjaman.toLowerCase().includes(q)) ||
+            (r.customer?.nama && r.customer.nama.toLowerCase().includes(q)) ||
+            (r.customer?.nomor_telepon && r.customer.nomor_telepon.toLowerCase().includes(q)) ||
+            (r.tiket?.nomor_tiket && r.tiket.nomor_tiket.toLowerCase().includes(q)) ||
+            (r.loaner_device?.kode_unit && r.loaner_device.kode_unit.toLowerCase().includes(q)) ||
+            (r.loaner_device?.nama && r.loaner_device.nama.toLowerCase().includes(q))
         );
     });
 
@@ -343,8 +355,12 @@ export default function LoanerList() {
     }
 
     // Handle Return Form
-    function handleOpenReturnModal(record) {
-        setReturnTarget(record);
+    function handleOpenReturnModal(record, device = null) {
+        if (!record) return;
+        setReturnTarget({
+            ...record,
+            loaner_device: record.loaner_device || device || returnTarget?.loaner_device
+        });
         setReturnForm({
             catatan_kondisi_kembali: "Dikembalikan lengkap, fungsi normal & data customer telah di-reset",
             kondisi_unit_akhir: "tersedia",
@@ -476,7 +492,7 @@ export default function LoanerList() {
                         }`}
                     >
                         <Laptop className="w-4 h-4" />
-                        <span>Daftar Unit Cadangan ({devices.length})</span>
+                        <span>Daftar Unit Cadangan ({safeDevices.length})</span>
                     </button>
 
                     <button
@@ -587,7 +603,7 @@ export default function LoanerList() {
                                                     if (d.status === "tersedia") {
                                                         handleOpenLoanModal(d);
                                                     } else if (d.status === "dipinjam" && activeLoan) {
-                                                        handleOpenReturnModal(activeLoan);
+                                                        handleOpenReturnModal(activeLoan, d);
                                                     } else if (isAdmin) {
                                                         handleOpenEditDevice(d);
                                                     }
@@ -690,7 +706,7 @@ export default function LoanerList() {
                                                         ) : d.status === "dipinjam" && activeLoan ? (
                                                             <button
                                                                 type="button"
-                                                                onClick={() => handleOpenReturnModal(activeLoan)}
+                                                                onClick={() => handleOpenReturnModal(activeLoan, d)}
                                                                 className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-bold transition-colors cursor-pointer"
                                                                 title="Catat pengembalian unit"
                                                             >
@@ -1084,8 +1100,8 @@ export default function LoanerList() {
                                     className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
                                 >
                                     <option value="">-- Pilih Unit Cadangan --</option>
-                                    {devices
-                                        .filter(d => d.status === "tersedia" || (preselectedDevice && d.id === preselectedDevice.id))
+                                    {safeDevices
+                                        .filter(d => d && (d.status === "tersedia" || (preselectedDevice && d.id === preselectedDevice.id)))
                                         .map((d) => (
                                             <option key={d.id} value={d.id}>
                                                 [{d.kode_unit}] {d.nama} ({d.kategori})
@@ -1102,10 +1118,12 @@ export default function LoanerList() {
                                     onChange={(e) => setLoanForm({ ...loanForm, tiket_id: e.target.value })}
                                     className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
                                 >
-                                    <option value="">-- Pilih Tiket Servis Aktif --</option>
-                                    {activeTickets.map((t) => (
+                                    <option value="">
+                                        {loadingTickets ? "-- Sedang memuat tiket aktif... --" : "-- Pilih Tiket Servis Aktif --"}
+                                    </option>
+                                    {safeActiveTickets.map((t) => (
                                         <option key={t.id} value={t.id}>
-                                            {t.nomor_tiket} - {t.perangkat?.customer?.nama} ({t.perangkat?.merek} {t.perangkat?.model})
+                                            {t.nomor_tiket} - {t.perangkat?.customer?.nama || "Pelanggan"} ({t.perangkat?.merek || ""} {t.perangkat?.model || ""})
                                         </option>
                                     ))}
                                 </select>

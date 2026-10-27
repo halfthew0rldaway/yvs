@@ -1033,7 +1033,7 @@ export default function TiketServisDetail() {
                                 Perhatian: Unit Pinjaman Cadangan Belum Dikembalikan!
                             </h4>
                             <p className="text-xs text-amber-900 mt-0.5">
-                                Pelanggan ini meminjam unit <span className="font-bold font-mono">[{activeLoan.loaner_device?.kode_unit}] {activeLoan.loaner_device?.nama}</span>.
+                                Pelanggan ini meminjam unit <span className="font-bold font-mono">[{activeLoan?.loaner_device?.kode_unit || "LOAN"}] {activeLoan?.loaner_device?.nama || "Unit Pinjaman"}</span>.
                                 Pastikan unit cadangan telah diperiksa dan diterima kembali di rak sebelum menyerahkan perangkat utama kepada pelanggan.
                             </p>
                         </div>
@@ -1299,7 +1299,7 @@ export default function TiketServisDetail() {
                                 {activeLoan ? (
                                     <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1 text-xs">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-slate-900 font-mono">[{activeLoan.loaner_device?.kode_unit}] {activeLoan.loaner_device?.nama}</span>
+                                            <span className="font-bold text-slate-900 font-mono">[{activeLoan.loaner_device?.kode_unit || "LOAN"}] {activeLoan.loaner_device?.nama || "Unit Pinjaman"}</span>
                                             <Link 
                                                 to={`/loaner?tab=records&q=${encodeURIComponent(activeLoan.nomor_peminjaman || '')}`} 
                                                 className="text-blue-600 font-bold hover:underline text-[11px]"
@@ -1308,7 +1308,7 @@ export default function TiketServisDetail() {
                                             </Link>
                                         </div>
                                         <p className="text-slate-600 text-[11px]">
-                                            Dipinjam sejak: {new Date(activeLoan.tanggal_pinjam).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                            Dipinjam sejak: {activeLoan.tanggal_pinjam ? new Date(activeLoan.tanggal_pinjam).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "-"}
                                             {activeLoan.estimasi_kembali ? ` • Batas: ${new Date(activeLoan.estimasi_kembali).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}` : ""}
                                         </p>
                                         {activeLoan.deposit_uang > 0 && (
