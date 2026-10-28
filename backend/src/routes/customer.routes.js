@@ -26,8 +26,8 @@ const customerValidation = [
 
 router.get("/", getAll);
 router.get("/:id", getById);
-router.patch("/:id/badges", authorize("admin"), updateBadges);
-router.put("/:id/badges", authorize("admin"), updateBadges);
+router.patch("/:id/badges", authorize("admin", "pimpinan", "teknisi"), updateBadges);
+router.put("/:id/badges", authorize("admin", "pimpinan", "teknisi"), updateBadges);
 router.post("/", authorize("admin"), customerValidation, validate, create);
 router.put("/:id", authorize("admin"), customerValidation, validate, update);
 router.delete("/:id", authorize("admin"), remove);

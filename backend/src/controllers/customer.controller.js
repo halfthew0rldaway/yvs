@@ -280,54 +280,85 @@ async function update(req, res) {
 async function updateBadges(req, res) {
     try {
         const id = Number(req.params.id);
-        const { badges } = req.body; // e.g. ["revisi_acc_risk", "vip_loyal"] or []
+        if (!id || isNaN(id)) {
+            return res.status(400).json({ message: "ID customer tidak valid" });
+        }
 
         const existing = await prisma.customer.findUnique({
-            where: { id },
-            include: {
-                perangkat: {
-                    include: {
-                        tiket_servis: {
-                            select: {
-                                id: true,
-                                status: true,
-                                is_revisi_acc: true,
-                                jml_revisi_acc: true,
-                                invoice: { select: { total_biaya: true } }
-                            }
-                        }
-                    }
-                }
-            }
+            where: { id }
         });
 
         if (!existing) {
             return res.status(404).json({ message: "Customer tidak ditemukan" });
         }
 
-        const validBadgeList = Array.isArray(badges) ? badges : [];
+        const { badges } = req.body;
+        let validBadgeList = null;
+        if (req.body.reset) {
+            validBadgeList = null;
+        } else if (badges !== undefined && badges !== null) {
+            if (Array.isArray(badges)) {
+                validBadgeList = badges;
+            } else if (typeof badges === "string") {
+                try {
+                    validBadgeList = JSON.parse(badges);
+                } catch {
+                    validBadgeList = [badges];
+                }
+            } else {
+                validBadgeList = [];
+            }
+        } else {
+            validBadgeList = [];
+        }
 
-        const updated = await prisma.customer.update({
-            where: { id },
-            data: {
-                custom_badges: validBadgeList
-            },
-            include: {
-                perangkat: {
-                    include: {
-                        tiket_servis: {
-                            select: {
-                                id: true,
-                                status: true,
-                                is_revisi_acc: true,
-                                jml_revisi_acc: true,
-                                invoice: { select: { total_biaya: true } }
+        let updated;
+        try {
+            updated = await prisma.customer.update({
+                where: { id },
+                data: {
+                    custom_badges: validBadgeList
+                },
+                include: {
+                    perangkat: {
+                        include: {
+                            tiket_servis: {
+                                include: {
+                                    invoice: { select: { total_biaya: true } }
+                                }
                             }
                         }
                     }
                 }
+            });
+        } catch (dbErr) {
+            console.warn("Retrying customer badge update with raw column ensure:", dbErr.message);
+            // Defensif: pastikan kolom custom_badges ada jika terjadi mismatch skema lokal
+            try {
+                await prisma.$executeRawUnsafe(`ALTER TABLE Customer ADD COLUMN IF NOT EXISTS custom_badges JSON NULL;`);
+            } catch (rawErr) {
+                try {
+                    await prisma.$executeRawUnsafe(`ALTER TABLE customer ADD COLUMN IF NOT EXISTS custom_badges JSON NULL;`);
+                } catch {}
             }
-        });
+            updated = await prisma.customer.update({
+                where: { id },
+                data: {
+                    custom_badges: validBadgeList
+                },
+                include: {
+                    perangkat: {
+                        include: {
+                            tiket_servis: {
+                                include: {
+                                    invoice: { select: { total_biaya: true } }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         const enriched = enrichCustomerWithBadges(updated);
 
@@ -338,7 +369,7 @@ async function updateBadges(req, res) {
         });
     } catch (error) {
         console.error("Error updateBadges:", error);
-        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+        return res.status(500).json({ message: "Terjadi kesalahan saat menyimpan badge", error: error.message });
     }
 }
 

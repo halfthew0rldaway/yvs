@@ -33,6 +33,27 @@ async function main() {
         console.error("⚠️ [INIT] Peringatan: Prisma db push mengalami kendala:", err.message);
     }
 
+    // 2b. Verifikasi & pastikan kolom custom_badges & is_revisi_acc tersedia
+    try {
+        await prisma.$executeRawUnsafe(`
+            ALTER TABLE Customer ADD COLUMN IF NOT EXISTS custom_badges JSON NULL;
+        `).catch(() => {});
+        await prisma.$executeRawUnsafe(`
+            ALTER TABLE TiketServis ADD COLUMN IF NOT EXISTS is_revisi_acc TINYINT(1) DEFAULT 0;
+        `).catch(() => {});
+        await prisma.$executeRawUnsafe(`
+            ALTER TABLE TiketServis ADD COLUMN IF NOT EXISTS jml_revisi_acc INT DEFAULT 0;
+        `).catch(() => {});
+        await prisma.$executeRawUnsafe(`
+            ALTER TABLE TiketServis ADD COLUMN IF NOT EXISTS alasan_revisi_acc TEXT NULL;
+        `).catch(() => {});
+        await prisma.$executeRawUnsafe(`
+            ALTER TABLE TiketServis ADD COLUMN IF NOT EXISTS tgl_revisi_acc DATETIME NULL;
+        `).catch(() => {});
+    } catch (e) {
+        // Kolom sudah ada atau variasi casing diabaikan
+    }
+
     // 3. Cek apakah database kosong
     try {
         const userCount = await prisma.user.count();

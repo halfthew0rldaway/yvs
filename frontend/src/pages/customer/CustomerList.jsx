@@ -234,7 +234,7 @@ export default function CustomerList() {
                                                 </p>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                                             <CustomerBadges 
                                                 customer={c} 
                                                 variant="icon-only" 

@@ -68,8 +68,9 @@ export default function CustomerBadges({
                                     key={b.id || label}
                                     type="button"
                                     onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         if (allowManage && customer) {
-                                            e.stopPropagation();
                                             setIsManageOpen(true);
                                         }
                                     }}
@@ -93,8 +94,9 @@ export default function CustomerBadges({
                                 key={b.id || label}
                                 type="button"
                                 onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                     if (allowManage && customer) {
-                                        e.stopPropagation();
                                         setIsManageOpen(true);
                                     }
                                 }}
@@ -118,6 +120,7 @@ export default function CustomerBadges({
                         <button
                             type="button"
                             onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 setIsManageOpen(true);
                             }}
@@ -137,6 +140,7 @@ export default function CustomerBadges({
                     <button
                         type="button"
                         onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             setIsManageOpen(true);
                         }}
@@ -151,6 +155,7 @@ export default function CustomerBadges({
                     <button
                         type="button"
                         onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             setIsGuideOpen(true);
                         }}

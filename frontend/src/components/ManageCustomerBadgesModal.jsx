@@ -78,15 +78,25 @@ export default function ManageCustomerBadgesModal({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+        >
             {/* Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity" 
-                onClick={onClose}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClose();
+                }}
             />
 
             {/* Modal Dialog */}
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col overflow-hidden z-10 border border-slate-200 animate-fadeIn my-auto max-h-[90vh]">
+            <div 
+                className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col overflow-hidden z-10 border border-slate-200 animate-fadeIn my-auto max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
@@ -104,7 +114,10 @@ export default function ManageCustomerBadgesModal({
                     </div>
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onClose();
+                        }}
                         disabled={isSaving}
                         className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer disabled:opacity-50 shrink-0 ml-2"
                         title="Tutup dialog"
@@ -124,7 +137,10 @@ export default function ManageCustomerBadgesModal({
                     <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
                         <button
                             type="button"
-                            onClick={handleResetToSystem}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleResetToSystem();
+                            }}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 text-blue-700 hover:text-blue-800 bg-white hover:bg-blue-50 border border-blue-200 rounded-lg text-xs font-semibold transition-all shadow-2xs cursor-pointer"
                             title="Gunakan badge rekomendasi hasil kalkulasi otomatis sistem"
                         >
@@ -133,7 +149,10 @@ export default function ManageCustomerBadgesModal({
                         </button>
                         <button
                             type="button"
-                            onClick={handleClearAll}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleClearAll();
+                            }}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 text-rose-700 hover:text-rose-800 bg-white hover:bg-rose-50 border border-rose-200 rounded-lg text-xs font-semibold transition-all shadow-2xs cursor-pointer"
                             title="Hapus semua badge dari profil pelanggan ini"
                         >
@@ -154,7 +173,20 @@ export default function ManageCustomerBadgesModal({
                             return (
                                 <div
                                     key={badge.id}
-                                    onClick={() => toggleBadge(badge.id)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleBadge(badge.id);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleBadge(badge.id);
+                                        }
+                                    }}
                                     className={`p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-3.5 select-none w-full ${
                                         isSelected 
                                             ? "border-blue-500 bg-blue-50/40 shadow-xs ring-1 ring-blue-500/20" 
@@ -162,7 +194,14 @@ export default function ManageCustomerBadgesModal({
                                     }`}
                                 >
                                     {/* Checkbox box */}
-                                    <div className="pt-0.5 shrink-0">
+                                    <div 
+                                        className="pt-0.5 shrink-0"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleBadge(badge.id);
+                                        }}
+                                    >
                                         <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${
                                             isSelected 
                                                 ? "bg-blue-600 border-blue-600 text-white shadow-2xs" 
