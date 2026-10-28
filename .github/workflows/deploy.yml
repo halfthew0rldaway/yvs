@@ -37,35 +37,33 @@ jobs:
             echo "🐳 Rebuilding and updating Docker containers..."
             docker compose --env-file .env.production up -d --build
 
-            echo "⏳ Waiting for backend container to be healthy and running..."
-            for i in $(seq 1 30); do
-              STATUS=$(docker compose --env-file .env.production ps --format '{{.State}}' backend 2>/dev/null || true)
-              if [ "$STATUS" = "running" ]; then
-                echo "✅ Backend container is running."
+            echo "⏳ Waiting for Serv.io Backend API to initialize and become healthy..."
+            READY=false
+            for i in $(seq 1 45); do
+              HTTP_STATUS=$(docker compose --env-file .env.production exec -T backend node -e "
+                require('http').get('http://127.0.0.1:5000/', (res) => {
+                  process.stdout.write(String(res.statusCode));
+                  process.exit(0);
+                }).on('error', () => {
+                  process.stdout.write('000');
+                  process.exit(0);
+                });
+              " 2>/dev/null || echo "000")
+
+              if [ "$HTTP_STATUS" = "200" ]; then
+                echo "✅ Serv.io Backend API is up, database is synchronized, and responding with HTTP 200 OK."
+                READY=true
                 break
               fi
-              echo "Waiting for backend container (attempt $i/30, current status: $STATUS)..."
+              echo "Waiting for backend API initialization (attempt $i/45, current status: $HTTP_STATUS)..."
               sleep 2
             done
 
-            echo "📦 Running database schema sync (Prisma)..."
-            docker compose --env-file .env.production exec -T backend npx prisma db push --accept-data-loss
-
-            echo "🔍 Testing backend API endpoint..."
-            docker compose --env-file .env.production exec -T backend node -e "
-              require('http').get('http://127.0.0.1:5000/', (res) => {
-                if (res.statusCode === 200) {
-                  console.log('✅ Serv.io Backend API is responding with HTTP 200 OK');
-                  process.exit(0);
-                } else {
-                  console.error('❌ Backend responded with status: ' + res.statusCode);
-                  process.exit(1);
-                }
-              }).on('error', (err) => {
-                console.error('❌ Connection failed: ' + err.message);
-                process.exit(1);
-              });
-            "
+            if [ "$READY" != "true" ]; then
+              echo "❌ Backend failed to become healthy within 90 seconds. Dumping container logs:"
+              docker compose --env-file .env.production logs backend --tail 50
+              exit 1
+            fi
 
             echo "🧹 Cleaning up unused Docker images..."
             docker image prune -f
