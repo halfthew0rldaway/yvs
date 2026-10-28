@@ -776,7 +776,22 @@ export default function SparepartList() {
                                             <td className="px-6 py-4 text-slate-500">{startIndex + i + 1}</td>
                                             <td className="px-6 py-4">
                                                 <p className="font-medium text-slate-900">{(s.brand?.nama && s.brand.nama.toLowerCase() !== "lainnya" ? s.brand.nama + " " : "") + s.nama}</p>
-                                                <p className="text-xs text-slate-500 mt-0.5">{s.kategori}</p>
+                                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                                    <p className="text-xs text-slate-500">{s.kategori}</p>
+                                                    {s.has_garansi_distri && (
+                                                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${
+                                                            s.tipe_garansi_distri === "Lifetime" || s.sistem_perhitungan_garansi === "lifetime"
+                                                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                                                : s.sistem_perhitungan_garansi === "sejak_segel_distri"
+                                                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                        }`}>
+                                                            {s.tipe_garansi_distri === "Lifetime" || s.sistem_perhitungan_garansi === "lifetime" ? "✨ Garansi Lifetime" : `🛡️ Distri: ${s.tipe_garansi_distri || "1 Thn"}`}
+                                                            {s.sistem_perhitungan_garansi === "sejak_segel_distri" && " (Segel)"}
+                                                            {s.sistem_perhitungan_garansi === "sejak_nota_customer" && " (Nota)"}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
@@ -1093,6 +1108,26 @@ export default function SparepartList() {
                                 <strong className="text-emerald-700 text-sm font-mono">{itemRestockLogs.length} Kali</strong>
                             </div>
                         </div>
+
+                        {historyModalTarget.has_garansi_distri && (
+                            <div className="px-6 py-2.5 bg-blue-50/70 border-b border-blue-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-bold text-blue-900">🛡️ Garansi Distri:</span>
+                                    <span className="px-2 py-0.5 rounded-md bg-white border border-blue-200 text-blue-800 font-semibold text-[11px]">
+                                        {historyModalTarget.tipe_garansi_distri || "1 Tahun"}
+                                    </span>
+                                    <span className="text-slate-500 text-[11px]">
+                                        {historyModalTarget.sistem_perhitungan_garansi === "lifetime" ? "(Lifetime Support / Toko Bantu Klaim)" : historyModalTarget.sistem_perhitungan_garansi === "sejak_segel_distri" ? "(Dihitung Sejak Segel Distri)" : "(Dihitung Sejak Nota End-User)"}
+                                    </span>
+                                </div>
+                                {historyModalTarget.distributor_nama && (
+                                    <div className="text-[11px] text-slate-600">
+                                        Distri: <strong className="text-slate-800">{historyModalTarget.distributor_nama}</strong>
+                                        {historyModalTarget.distributor_kontak && ` (${historyModalTarget.distributor_kontak})`}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Sub-tabs */}
                         <div className="flex border-b border-slate-200 bg-white px-6">

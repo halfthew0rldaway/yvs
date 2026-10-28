@@ -183,29 +183,40 @@ model Brand {
 }
 
 model Sparepart {
-  id         Int      @id @default(autoincrement())
-  brand_id   Int?
-  kategori   String   @default("Umum") // Laptop, Desktop, Printer, Umum
-  nama       String
-  stok       Int      @default(0)
-  harga_beli Float    @default(0) // Harga modal / HPP
-  harga      Float    // Harga jual
-  created_at DateTime @default(now())
+  id                         Int      @id @default(autoincrement())
+  brand_id                   Int?
+  kategori                   String   @default("Umum") // Laptop, Desktop, Printer, Umum
+  nama                       String
+  stok                       Int      @default(0)
+  harga_beli                 Float    @default(0) // Harga modal / HPP
+  harga                      Float    // Harga jual
+  
+  // Fitur Garansi Distributor & Skenario Perhitungan
+  has_garansi_distri         Boolean  @default(false)
+  tipe_garansi_distri        String?  @db.VarChar(50) // e.g. "Lifetime", "5 Tahun", "3 Tahun", "2 Tahun", "1 Tahun", "6 Bulan", "3 Bulan", "1 Bulan"
+  sistem_perhitungan_garansi String?  @db.VarChar(50) // "sejak_nota_customer", "sejak_segel_distri", "lifetime", "tidak_ada"
+  distributor_nama           String?  @db.VarChar(150)
+  distributor_kontak         String?  @db.VarChar(100)
+  kebijakan_klaim            String?  @db.Text
 
-  brand      Brand?   @relation(fields: [brand_id], references: [id], onDelete: Restrict)
-  penggunaan_sparepart PenggunaanSparepart[]
-  restock_logs         RestockLog[]
-  supplier_rma         SupplierRma[]
+  created_at                 DateTime @default(now())
+
+  brand                      Brand?   @relation(fields: [brand_id], references: [id], onDelete: Restrict)
+  penggunaan_sparepart       PenggunaanSparepart[]
+  restock_logs               RestockLog[]
+  supplier_rma               SupplierRma[]
 
   @@index([brand_id])
   @@index([kategori])
+  @@index([has_garansi_distri])
 }
 
 model PenggunaanSparepart {
-  id           Int @id @default(autoincrement())
-  tiket_id     Int
-  sparepart_id Int
-  jumlah       Int
+  id            Int     @id @default(autoincrement())
+  tiket_id      Int
+  sparepart_id  Int
+  jumlah        Int
+  serial_number String? @db.VarChar(100)
 
   tiket     TiketServis @relation(fields: [tiket_id], references: [id], onDelete: Cascade)
   sparepart Sparepart   @relation(fields: [sparepart_id], references: [id], onDelete: Cascade)
@@ -374,33 +385,46 @@ model LoanerRecord {
 
 // Feature 7: Supplier Part Warranty & RMA Tracker (Klaim Garansi Distributor)
 model SupplierRma {
-  id                  Int          @id @default(autoincrement())
-  nomor_rma           String       @unique @db.VarChar(50) // e.g. "RMA-2026-0001"
-  sparepart_id        Int
-  supplier_nama       String       @db.VarChar(150) // Distributor / Toko (e.g. Toko LCD Bandung, Supplier Mangga Dua)
-  nomor_faktur        String?      @db.VarChar(100) // Nomor nota pembelian awal
-  jumlah              Int          @default(1)
-  alasan_rusak        String       @db.Text // Gejala defek (LCD bergaris, IC short, Baterai drop)
-  foto_kondisi        Json?        // Foto bukti cacat sparepart
-  status              String       @default("diajukan") // diajukan, dikirim, disetujui_ganti, disetujui_refund, ditolak
-  resi_pengiriman     String?      @db.VarChar(100) // Nomor resi kurir
-  kurir_pengiriman    String?      @db.VarChar(100) // JNE, J&T, SiCepat, dll
-  ongkir              Float?       @default(0)
-  solusi_distributor  String?      @db.VarChar(100) // "Ganti Unit Baru", "Refund Dana", "Ditolak / Void"
-  catatan_distributor String?      @db.Text
-  tgl_pengajuan       DateTime     @default(now())
-  tgl_selesai         DateTime?
-  tiket_id            Int?         // Tiket servis sumber ditemukannya defek
-  created_by_nama     String?      @db.VarChar(100)
-  created_at          DateTime     @default(now())
-  updated_at          DateTime     @updatedAt
+  id                      Int          @id @default(autoincrement())
+  nomor_rma               String       @unique @db.VarChar(50) // e.g. "RMA-2026-0001"
+  sparepart_id            Int
+  tipe_sumber             String       @default("tiket_user") // "tiket_user" (Dari Tiket Servis Customer) vs "stok_toko" (Cacat Stok / Gudang Toko)
+  customer_nama           String?      @db.VarChar(150)
+  customer_kontak         String?      @db.VarChar(50)
+  perangkat_nama          String?      @db.VarChar(150)
+  supplier_nama           String       @db.VarChar(150) // Distributor / Toko (e.g. Toko LCD Bandung, Supplier Mangga Dua)
+  nomor_faktur            String?      @db.VarChar(100) // Nomor nota pembelian awal
+  serial_number_lama      String?      @db.VarChar(100) // SN unit rusak
+  serial_number_baru      String?      @db.VarChar(100) // SN pengganti dari distributor
+  kebijakan_garansi       String?      @db.VarChar(50) // "sejak_nota_customer", "sejak_segel_distri", "lifetime"
+  tgl_pembelian_distri    DateTime?    // Tanggal beli toko ke distri / tanggal segel distri
+  tgl_penjualan_customer  DateTime?    // Tanggal jual ke end-user / tgl servis
+  kondisi_fisik_valid     Boolean      @default(true) // Segel utuh, tidak terbakar/pecah
+  bantuan_klaim_toko      Boolean      @default(true) // Toko bantu fasilitasi klaim garansi
+  biaya_ongkir_ditanggung String?      @default("toko") // "toko", "distributor", "customer"
+  jumlah                  Int          @default(1)
+  alasan_rusak            String       @db.Text // Gejala defek (LCD bergaris, IC short, Baterai drop)
+  foto_kondisi            Json?        // Foto bukti cacat sparepart
+  status                  String       @default("diajukan") // diajukan, dikirim, disetujui_ganti, disetujui_refund, ditolak
+  resi_pengiriman         String?      @db.VarChar(100) // Nomor resi kurir
+  kurir_pengiriman        String?      @db.VarChar(100) // JNE, J&T, SiCepat, dll
+  ongkir                  Float?       @default(0)
+  solusi_distributor      String?      @db.VarChar(100) // "Ganti Unit Baru", "Refund Dana", "Ditolak / Void"
+  catatan_distributor     String?      @db.Text
+  tgl_pengajuan           DateTime     @default(now())
+  tgl_selesai             DateTime?
+  tiket_id                Int?         // Tiket servis sumber ditemukannya defek
+  created_by_nama         String?      @db.VarChar(100)
+  created_at              DateTime     @default(now())
+  updated_at              DateTime     @updatedAt
 
-  sparepart           Sparepart    @relation(fields: [sparepart_id], references: [id], onDelete: Restrict)
-  tiket               TiketServis? @relation(fields: [tiket_id], references: [id], onDelete: SetNull)
+  sparepart               Sparepart    @relation(fields: [sparepart_id], references: [id], onDelete: Restrict)
+  tiket                   TiketServis? @relation(fields: [tiket_id], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([sparepart_id])
   @@index([tiket_id])
+  @@index([tipe_sumber])
 }
 
 // Feature: Standard Operating Procedures (SOP Center)
@@ -429,11 +453,14 @@ model JobPosting {
   departemen    String      @db.VarChar(100) // Teknisi, Frontliner, Operasional, Back Office
   tipe_kerja    String      @default("Full Time") // Full Time, Part Time, Magang, Kontrak
   lokasi        String      @default("Workshop Utama")
+  nomor_kontak  String?     @db.VarChar(50) // WhatsApp HR / Narahubung Rekrutmen
   status        String      @default("Aktif") // Aktif, Ditutup, Draft
   deskripsi     String?     @db.Text
   kualifikasi   String?     @db.Text
   gaji_min      Int?        @default(0)
   gaji_max      Int?        @default(0)
+  external_links Json?      // List of { platform: String, url: String }
+  iklan_template String?    @db.Text
   created_at    DateTime    @default(now())
   updated_at    DateTime    @updatedAt
 

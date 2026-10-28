@@ -103,7 +103,24 @@ async function getAll(req, res) {
 // Menambahkan sparepart baru (dengan proteksi duplikasi nama per brand)
 async function create(req, res) {
     try {
-        const { nama, kategori, stok, harga, harga_beli, brand_id, supplier_nama, nomor_faktur, tanggal_beli, catatan } = req.body;
+        const { 
+            nama, 
+            kategori, 
+            stok, 
+            harga, 
+            harga_beli, 
+            brand_id, 
+            supplier_nama, 
+            nomor_faktur, 
+            tanggal_beli, 
+            catatan,
+            has_garansi_distri,
+            tipe_garansi_distri,
+            sistem_perhitungan_garansi,
+            distributor_nama,
+            distributor_kontak,
+            kebijakan_klaim
+        } = req.body;
 
         if (!brand_id) {
             return res.status(400).json({ message: "Brand wajib dipilih" });
@@ -140,7 +157,13 @@ async function create(req, res) {
                 kategori: kategori || "Umum", 
                 stok: initialStok, 
                 harga: Number(harga),
-                harga_beli: initialHpp
+                harga_beli: initialHpp,
+                has_garansi_distri: Boolean(has_garansi_distri),
+                tipe_garansi_distri: tipe_garansi_distri || null,
+                sistem_perhitungan_garansi: sistem_perhitungan_garansi || null,
+                distributor_nama: distributor_nama ? distributor_nama.trim() : (supplier_nama ? supplier_nama.trim() : null),
+                distributor_kontak: distributor_kontak ? distributor_kontak.trim() : null,
+                kebijakan_klaim: kebijakan_klaim ? kebijakan_klaim.trim() : null
             },
             include: { brand: true }
         });
@@ -172,7 +195,20 @@ async function create(req, res) {
 // Memperbarui data sparepart
 async function update(req, res) {
     try {
-        const { nama, kategori, stok, harga, harga_beli, brand_id } = req.body;
+        const { 
+            nama, 
+            kategori, 
+            stok, 
+            harga, 
+            harga_beli, 
+            brand_id,
+            has_garansi_distri,
+            tipe_garansi_distri,
+            sistem_perhitungan_garansi,
+            distributor_nama,
+            distributor_kontak,
+            kebijakan_klaim
+        } = req.body;
         const id = Number(req.params.id);
 
         const existing = await prisma.sparepart.findUnique({ where: { id } });
@@ -189,6 +225,12 @@ async function update(req, res) {
                 stok: stok !== undefined ? Number(stok) : undefined,
                 harga: harga !== undefined ? Number(harga) : undefined,
                 harga_beli: harga_beli !== undefined ? Number(harga_beli) : undefined,
+                has_garansi_distri: has_garansi_distri !== undefined ? Boolean(has_garansi_distri) : undefined,
+                tipe_garansi_distri: tipe_garansi_distri !== undefined ? tipe_garansi_distri : undefined,
+                sistem_perhitungan_garansi: sistem_perhitungan_garansi !== undefined ? sistem_perhitungan_garansi : undefined,
+                distributor_nama: distributor_nama !== undefined ? (distributor_nama ? distributor_nama.trim() : null) : undefined,
+                distributor_kontak: distributor_kontak !== undefined ? (distributor_kontak ? distributor_kontak.trim() : null) : undefined,
+                kebijakan_klaim: kebijakan_klaim !== undefined ? (kebijakan_klaim ? kebijakan_klaim.trim() : null) : undefined
             },
             include: { brand: true }
         });

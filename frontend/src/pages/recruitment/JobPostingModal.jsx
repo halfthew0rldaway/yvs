@@ -1,11 +1,28 @@
 import { useState, useEffect } from "react";
-import { X, Briefcase, Save, DollarSign, MapPin, Layers, CheckCircle2 } from "lucide-react";
+import { 
+    X, 
+    Briefcase, 
+    Save, 
+    DollarSign, 
+    MapPin, 
+    Layers, 
+    CheckCircle2, 
+    Sparkles, 
+    Plus, 
+    Trash2, 
+    Link2, 
+    Globe,
+    Share2,
+    Phone
+} from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { JOB_PRESETS, generateBroadcastText } from "./jobPresets";
 
 const DEPARTEMEN_OPTIONS = ["Teknisi", "Frontliner", "Operasional", "Back Office"];
 const TIPE_OPTIONS = ["Full Time", "Part Time", "Magang", "Kontrak"];
 const STATUS_OPTIONS = ["Aktif", "Ditutup", "Draft"];
+const PLATFORM_OPTIONS = ["Glints", "Jobstreet", "LinkedIn", "KitaLulus", "Instagram", "Facebook", "Lainnya"];
 
 export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess }) {
     const isEdit = Boolean(jobToEdit);
@@ -14,11 +31,16 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
     const [departemen, setDepartemen] = useState("Teknisi");
     const [tipeKerja, setTipeKerja] = useState("Full Time");
     const [lokasi, setLokasi] = useState("Workshop Utama");
+    const [nomorKontak, setNomorKontak] = useState("0812-3456-7890");
     const [status, setStatus] = useState("Aktif");
     const [gajiMin, setGajiMin] = useState("");
     const [gajiMax, setGajiMax] = useState("");
     const [deskripsi, setDeskripsi] = useState("");
     const [kualifikasi, setKualifikasi] = useState("");
+    
+    // External links state
+    const [externalLinks, setExternalLinks] = useState([]);
+    
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -27,23 +49,59 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
             setDepartemen(jobToEdit.departemen || "Teknisi");
             setTipeKerja(jobToEdit.tipe_kerja || "Full Time");
             setLokasi(jobToEdit.lokasi || "Workshop Utama");
+            setNomorKontak(jobToEdit.nomor_kontak || "0812-3456-7890");
             setStatus(jobToEdit.status || "Aktif");
             setGajiMin(jobToEdit.gaji_min || "");
             setGajiMax(jobToEdit.gaji_max || "");
             setDeskripsi(jobToEdit.deskripsi || "");
             setKualifikasi(jobToEdit.kualifikasi || "");
+
+            // Parse external links
+            if (Array.isArray(jobToEdit.external_links)) {
+                setExternalLinks(jobToEdit.external_links);
+            } else if (typeof jobToEdit.external_links === "string") {
+                try {
+                    setExternalLinks(JSON.parse(jobToEdit.external_links));
+                } catch {
+                    setExternalLinks([]);
+                }
+            } else {
+                setExternalLinks([]);
+            }
         } else {
-            setJudulPosisi("");
-            setDepartemen("Teknisi");
-            setTipeKerja("Full Time");
-            setLokasi("Workshop Utama");
-            setStatus("Aktif");
-            setGajiMin("");
-            setGajiMax("");
-            setDeskripsi("");
-            setKualifikasi("");
+            // Apply default preset 0
+            applyPreset(JOB_PRESETS[0]);
+            setNomorKontak("0812-3456-7890");
+            setExternalLinks([]);
         }
     }, [jobToEdit, isOpen]);
+
+    function applyPreset(preset) {
+        if (!preset) return;
+        setJudulPosisi(preset.label);
+        setDepartemen(preset.departemen);
+        setTipeKerja(preset.tipe_kerja);
+        setLokasi(preset.lokasi);
+        setStatus("Aktif");
+        setGajiMin(preset.gaji_min || "");
+        setGajiMax(preset.gaji_max || "");
+        setDeskripsi(preset.deskripsi || "");
+        setKualifikasi(preset.kualifikasi || "");
+    }
+
+    const handleAddLink = () => {
+        setExternalLinks([...externalLinks, { platform: "Glints", url: "" }]);
+    };
+
+    const handleLinkChange = (index, field, value) => {
+        const next = [...externalLinks];
+        next[index][field] = value;
+        setExternalLinks(next);
+    };
+
+    const handleRemoveLink = (index) => {
+        setExternalLinks(externalLinks.filter((_, i) => i !== index));
+    };
 
     if (!isOpen) return null;
 
@@ -56,16 +114,29 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
 
         try {
             setSubmitting(true);
-            const payload = {
+            const filteredLinks = externalLinks
+                .map(l => ({ platform: l.platform || "Lainnya", url: (l.url || "").trim() }))
+                .filter(l => l.url !== "");
+
+            const simulatedJob = {
                 judul_posisi: judulPosisi.trim(),
                 departemen,
                 tipe_kerja: tipeKerja,
                 lokasi: lokasi.trim(),
-                status,
+                nomor_kontak: nomorKontak.trim(),
                 gaji_min: parseInt(gajiMin) || 0,
                 gaji_max: parseInt(gajiMax) || 0,
                 deskripsi: deskripsi.trim(),
                 kualifikasi: kualifikasi.trim()
+            };
+
+            const autoGeneratedBroadcast = generateBroadcastText(simulatedJob, "KomputerAwet / Yangversa Computer", nomorKontak.trim());
+
+            const payload = {
+                ...simulatedJob,
+                status,
+                external_links: filteredLinks,
+                iklan_template: autoGeneratedBroadcast
             };
 
             if (isEdit) {
@@ -87,7 +158,7 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-            <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+            <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
                 
                 {/* Header */}
                 <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
@@ -107,129 +178,263 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors shrink-0"
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors shrink-0 cursor-pointer"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 sm:p-7 overflow-y-auto space-y-5">
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Judul Posisi Jabatan <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="Contoh: Teknisi Software & OS / Teknisi Hardware"
-                            value={judulPosisi}
-                            onChange={(e) => setJudulPosisi(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                            required
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Departemen
-                            </label>
-                            <select
-                                value={departemen}
-                                onChange={(e) => setDepartemen(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                            >
-                                {DEPARTEMEN_OPTIONS.map(opt => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                            </select>
+                <form onSubmit={handleSubmit} className="p-6 sm:p-7 overflow-y-auto space-y-6">
+                    
+                    {/* Auto-fill Preset Quick Buttons */}
+                    <div className="space-y-2 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Isi Otomatis Dari Standar Posisi KEOS:</span>
+                            </div>
+                            <span className="text-[11px] text-blue-600 font-medium">Klik untuk isi otomatis</span>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tipe Kerja
-                            </label>
-                            <select
-                                value={tipeKerja}
-                                onChange={(e) => setTipeKerja(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                            >
-                                {TIPE_OPTIONS.map(opt => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Status Lowongan
-                            </label>
-                            <select
-                                value={status}
-                                onChange={(e) => setStatus(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                            >
-                                {STATUS_OPTIONS.map(opt => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                            </select>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                            {JOB_PRESETS.map((preset) => (
+                                <button
+                                    key={preset.id}
+                                    type="button"
+                                    onClick={() => applyPreset(preset)}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                                        judulPosisi === preset.label
+                                            ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                                            : "bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:border-blue-300"
+                                    }`}
+                                >
+                                    {preset.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Judul Posisi & Kategori */}
+                    <div className="space-y-4">
+                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                            1. Informasi Jabatan & Departemen
+                        </div>
+
                         <div>
                             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Ekspektasi Gaji Min (Rp)
+                                Judul Posisi Jabatan <span className="text-rose-500">*</span>
                             </label>
                             <input
-                                type="number"
-                                placeholder="2500000"
-                                value={gajiMin}
-                                onChange={(e) => setGajiMin(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
+                                type="text"
+                                placeholder="Contoh: Teknisi Software & OS / Teknisi Hardware"
+                                value={judulPosisi}
+                                onChange={(e) => setJudulPosisi(e.target.value)}
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                required
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Departemen
+                                </label>
+                                <select
+                                    value={departemen}
+                                    onChange={(e) => setDepartemen(e.target.value)}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                >
+                                    {DEPARTEMEN_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Tipe Kerja
+                                </label>
+                                <select
+                                    value={tipeKerja}
+                                    onChange={(e) => setTipeKerja(e.target.value)}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                >
+                                    {TIPE_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Status Lowongan
+                                </label>
+                                <select
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value)}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                >
+                                    {STATUS_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>Lokasi Penempatan</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Contoh: Workshop Utama"
+                                    value={lokasi}
+                                    onChange={(e) => setLokasi(e.target.value)}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                                    <Phone className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>Nomor Kontak / WhatsApp HR <span className="text-rose-500">*</span></span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Contoh: 0812-3456-7890"
+                                    value={nomorKontak}
+                                    onChange={(e) => setNomorKontak(e.target.value)}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
+                                    required
+                                />
+                                <p className="text-[10.5px] text-slate-400 mt-1">Disematkan otomatis pada tautan siaran lowongan untuk pelamar.</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Ekspektasi Gaji Min (Rp)
+                                </label>
+                                <input
+                                    type="number"
+                                    placeholder="2500000"
+                                    value={gajiMin}
+                                    onChange={(e) => setGajiMin(e.target.value)}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Ekspektasi Gaji Max (Rp)
+                                </label>
+                                <input
+                                    type="number"
+                                    placeholder="4000000"
+                                    value={gajiMax}
+                                    onChange={(e) => setGajiMax(e.target.value)}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Deskripsi & Kualifikasi */}
+                    <div className="space-y-4 pt-2 border-t border-slate-100">
+                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                            2. Tanggung Jawab & Syarat Kompetensi
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Tugas & Tanggung Jawab Utama
+                            </label>
+                            <textarea
+                                rows={4}
+                                placeholder="Uraikan fokus pengerjaan harian..."
+                                value={deskripsi}
+                                onChange={(e) => setDeskripsi(e.target.value)}
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all leading-relaxed"
                             />
                         </div>
 
                         <div>
                             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Ekspektasi Gaji Max (Rp)
+                                Kualifikasi & Syarat Kompetensi
                             </label>
-                            <input
-                                type="number"
-                                placeholder="4000000"
-                                value={gajiMax}
-                                onChange={(e) => setGajiMax(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
+                            <textarea
+                                rows={4}
+                                placeholder="Kriteria wajib kandidat..."
+                                value={kualifikasi}
+                                onChange={(e) => setKualifikasi(e.target.value)}
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all leading-relaxed"
                             />
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Tugas & Tanggung Jawab Utama
-                        </label>
-                        <textarea
-                            rows={3}
-                            placeholder="Uraikan fokus pengerjaan harian (contoh: instalasi OS, deep cleaning, diagnosa skematik, melayani pelanggan)..."
-                            value={deskripsi}
-                            onChange={(e) => setDeskripsi(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        />
+                    {/* Simpan Link Platform Eksternal (Glints, Jobstreet, dll) */}
+                    <div className="space-y-3 pt-2 border-t border-slate-100 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <label className="text-xs font-bold text-slate-800">
+                                    Simpan Shortcut Listing Platform Cari Kerja
+                                </label>
+                                <p className="text-[11px] text-slate-500">
+                                    Simpan link postingan loker di Glints, Jobstreet, atau LinkedIn agar mudah dibuka kembali
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddLink}
+                                className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 cursor-pointer"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Tambah Platform</span>
+                            </button>
+                        </div>
+
+                        {externalLinks.length === 0 ? (
+                            <div className="text-[11px] text-slate-400 italic py-1">
+                                Belum ada shortcut link platform eksternal. Klik 'Tambah Platform' jika sudah diposting di Glints/Jobstreet.
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {externalLinks.map((link, idx) => (
+                                    <div key={idx} className="flex items-center gap-2">
+                                        <select
+                                            value={link.platform}
+                                            onChange={(e) => handleLinkChange(idx, "platform", e.target.value)}
+                                            className="px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 shrink-0"
+                                        >
+                                            {PLATFORM_OPTIONS.map(p => (
+                                                <option key={p} value={p}>{p}</option>
+                                            ))}
+                                        </select>
+                                        <input
+                                            type="url"
+                                            placeholder="https://employers.glints.id/... atau link listing"
+                                            value={link.url}
+                                            onChange={(e) => handleLinkChange(idx, "url", e.target.value)}
+                                            className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveLink(idx)}
+                                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer shrink-0"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Kualifikasi & Syarat Kompetensi
-                        </label>
-                        <textarea
-                            rows={3}
-                            placeholder="Kriteria wajib (contoh: SMK TKJ/Elektro, teliti, paham logika troubleshooting, jujur, mematuhi SOP)..."
-                            value={kualifikasi}
-                            onChange={(e) => setKualifikasi(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        />
-                    </div>
-
+                    {/* Footer Actions */}
                     <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
                         <button
                             type="button"

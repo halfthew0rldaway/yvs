@@ -21,7 +21,10 @@ import {
     Building2,
     DollarSign,
     Sparkles,
-    Edit3
+    Edit3,
+    Share2,
+    ExternalLink,
+    Link2
 } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
@@ -31,6 +34,7 @@ import JobPostingModal from "./JobPostingModal";
 import AddApplicantModal from "./AddApplicantModal";
 import ApplicantDetailModal from "./ApplicantDetailModal";
 import HireApplicantModal from "./HireApplicantModal";
+import ShareJobModal from "./ShareJobModal";
 
 const STATUS_TABS = [
     { id: "all", label: "Semua Status" },
@@ -86,6 +90,7 @@ export default function RecruitmentDashboard() {
     const [isAddApplicantOpen, setIsAddApplicantOpen] = useState(false);
     const [activeApplicantDetail, setActiveApplicantDetail] = useState(null);
     const [hireModalApplicant, setHireModalApplicant] = useState(null);
+    const [shareJobTarget, setShareJobTarget] = useState(null);
 
     useEffect(() => {
         fetchStats();
@@ -476,6 +481,26 @@ export default function RecruitmentDashboard() {
                                         <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">
                                             {job.deskripsi || "Tidak ada deskripsi rinci."}
                                         </p>
+
+                                        {/* Platform Shortcuts if saved */}
+                                        {Array.isArray(job.external_links) && job.external_links.length > 0 && (
+                                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                                                {job.external_links.map((link, i) => (
+                                                    <a
+                                                        key={i}
+                                                        href={link.url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
+                                                        title={`Buka di ${link.platform}`}
+                                                    >
+                                                        <span>{link.platform}</span>
+                                                        <ExternalLink className="w-2.5 h-2.5" />
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
@@ -484,17 +509,28 @@ export default function RecruitmentDashboard() {
                                             <span>{job._count?.pelamar || 0} Pelamar Terdaftar</span>
                                         </div>
 
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setJobToEdit(job);
-                                                setIsJobModalOpen(true);
-                                            }}
-                                            className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                                        >
-                                            <Edit3 className="w-3.5 h-3.5" />
-                                            <span>Edit</span>
-                                        </button>
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShareJobTarget(job)}
+                                                className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                                                title="Lihat Format Iklan Loker Siap Copas"
+                                            >
+                                                <Share2 className="w-3.5 h-3.5" />
+                                                <span>Iklan Copas</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setJobToEdit(job);
+                                                    setIsJobModalOpen(true);
+                                                }}
+                                                className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                                            >
+                                                <Edit3 className="w-3.5 h-3.5" />
+                                                <span>Edit</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -549,6 +585,12 @@ export default function RecruitmentDashboard() {
                     fetchApplicants();
                     fetchStats();
                 }}
+            />
+
+            <ShareJobModal
+                isOpen={Boolean(shareJobTarget)}
+                onClose={() => setShareJobTarget(null)}
+                job={shareJobTarget}
             />
 
         </div>

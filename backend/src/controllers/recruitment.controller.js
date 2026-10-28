@@ -129,7 +129,7 @@ async function getJobPostings(req, res) {
 // CREATE job posting
 async function createJobPosting(req, res) {
     try {
-        const { judul_posisi, departemen, tipe_kerja, lokasi, deskripsi, kualifikasi, gaji_min, gaji_max, status } = req.body;
+        const { judul_posisi, departemen, tipe_kerja, lokasi, nomor_kontak, deskripsi, kualifikasi, gaji_min, gaji_max, status, external_links, iklan_template } = req.body;
 
         if (!judul_posisi || !departemen) {
             return res.status(400).json({ success: false, message: "Judul posisi dan departemen wajib diisi" });
@@ -141,10 +141,13 @@ async function createJobPosting(req, res) {
                 departemen: departemen.trim(),
                 tipe_kerja: tipe_kerja || "Full Time",
                 lokasi: lokasi || "Workshop Utama",
+                nomor_kontak: nomor_kontak ? nomor_kontak.trim() : null,
                 deskripsi: deskripsi?.trim() || null,
                 kualifikasi: kualifikasi?.trim() || null,
                 gaji_min: parseInt(gaji_min) || 0,
                 gaji_max: parseInt(gaji_max) || 0,
+                external_links: Array.isArray(external_links) ? external_links : null,
+                iklan_template: iklan_template?.trim() || null,
                 status: status || "Aktif"
             }
         });
@@ -163,7 +166,7 @@ async function createJobPosting(req, res) {
 async function updateJobPosting(req, res) {
     try {
         const id = parseInt(req.params.id);
-        const { judul_posisi, departemen, tipe_kerja, lokasi, deskripsi, kualifikasi, gaji_min, gaji_max, status } = req.body;
+        const { judul_posisi, departemen, tipe_kerja, lokasi, nomor_kontak, deskripsi, kualifikasi, gaji_min, gaji_max, status, external_links, iklan_template } = req.body;
 
         const updated = await prisma.jobPosting.update({
             where: { id },
@@ -172,10 +175,13 @@ async function updateJobPosting(req, res) {
                 ...(departemen && { departemen: departemen.trim() }),
                 ...(tipe_kerja && { tipe_kerja }),
                 ...(lokasi && { lokasi }),
+                ...(nomor_kontak !== undefined && { nomor_kontak: nomor_kontak ? nomor_kontak.trim() : null }),
                 ...(deskripsi !== undefined && { deskripsi: deskripsi?.trim() || null }),
                 ...(kualifikasi !== undefined && { kualifikasi: kualifikasi?.trim() || null }),
                 ...(gaji_min !== undefined && { gaji_min: parseInt(gaji_min) || 0 }),
                 ...(gaji_max !== undefined && { gaji_max: parseInt(gaji_max) || 0 }),
+                ...(external_links !== undefined && { external_links: Array.isArray(external_links) ? external_links : null }),
+                ...(iklan_template !== undefined && { iklan_template: iklan_template?.trim() || null }),
                 ...(status && { status })
             }
         });

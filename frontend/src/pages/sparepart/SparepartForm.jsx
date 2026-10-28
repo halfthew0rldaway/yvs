@@ -2,7 +2,7 @@ import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
-import { ArrowLeft, Save, Package, Hash, DollarSign, Layers, CheckCircle2, XCircle, Search, Plus, Building2, FileText } from "lucide-react";
+import { ArrowLeft, Save, Package, Hash, DollarSign, Layers, CheckCircle2, XCircle, Search, Plus, Building2, FileText, ShieldCheck, HelpCircle, Clock, Sparkles, Check } from "lucide-react";
 
 export default function SparepartForm() {
     const { id } = useParams();
@@ -16,6 +16,12 @@ export default function SparepartForm() {
         stok: "", 
         harga: "", 
         harga_beli: "",
+        has_garansi_distri: false,
+        tipe_garansi_distri: "1 Tahun",
+        sistem_perhitungan_garansi: "sejak_nota_customer",
+        distributor_nama: "",
+        distributor_kontak: "",
+        kebijakan_klaim: "",
         supplier_nama: "",
         nomor_faktur: "",
         catatan: ""
@@ -50,7 +56,16 @@ export default function SparepartForm() {
                             kategori: sp.kategori || "Umum", 
                             stok: String(sp.stok), 
                             harga: String(sp.harga),
-                            harga_beli: sp.harga_beli ? String(sp.harga_beli) : ""
+                            harga_beli: sp.harga_beli ? String(sp.harga_beli) : "",
+                            has_garansi_distri: sp.has_garansi_distri || false,
+                            tipe_garansi_distri: sp.tipe_garansi_distri || "1 Tahun",
+                            sistem_perhitungan_garansi: sp.sistem_perhitungan_garansi || "sejak_nota_customer",
+                            distributor_nama: sp.distributor_nama || "",
+                            distributor_kontak: sp.distributor_kontak || "",
+                            kebijakan_klaim: sp.kebijakan_klaim || "",
+                            supplier_nama: sp.distributor_nama || "",
+                            nomor_faktur: "",
+                            catatan: ""
                         });
                     } else {
                         toast.error("Sparepart tidak ditemukan");
@@ -364,6 +379,220 @@ export default function SparepartForm() {
                                 required
                             />
                             <p className="text-[11px] text-slate-400 mt-1">Harga yang dibebankan ke invoice pelanggan.</p>
+                        </div>
+                    </div>
+
+                    {/* Fitur Garansi Distributor & Skenario Perhitungan */}
+                    <div className="pt-5 border-t border-slate-100">
+                        <div className="bg-slate-50/80 rounded-2xl p-5 border border-slate-200/90 space-y-5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                        <ShieldCheck className="w-4 h-4 text-blue-600" />
+                                        <span>Status & Kebijakan Garansi Distributor</span>
+                                    </h4>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Catat apakah suku cadang ini memiliki garansi supplier/distributor resmi dan metode perhitungannya.
+                                    </p>
+                                </div>
+
+                                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={form.has_garansi_distri}
+                                        onChange={(e) => setForm({ 
+                                            ...form, 
+                                            has_garansi_distri: e.target.checked,
+                                            // default calculation policy when enabled
+                                            sistem_perhitungan_garansi: e.target.checked ? (form.sistem_perhitungan_garansi || "sejak_nota_customer") : "tidak_ada"
+                                        })}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    <span className="ml-2.5 text-xs font-bold text-slate-700">
+                                        {form.has_garansi_distri ? "Ada Garansi Distri" : "Non-Garansi Distri"}
+                                    </span>
+                                </label>
+                            </div>
+
+                            {form.has_garansi_distri && (
+                                <div className="space-y-5 pt-3 border-t border-slate-200/60 animate-fade-in">
+                                    
+                                    {/* Pilihan Durasi Garansi */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-2">
+                                            Durasi Masa Garansi Distributor:
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {[
+                                                { label: "⭐ Lifetime Warranty", value: "Lifetime" },
+                                                { label: "5 Tahun", value: "5 Tahun" },
+                                                { label: "3 Tahun", value: "3 Tahun" },
+                                                { label: "2 Tahun", value: "2 Tahun" },
+                                                { label: "1 Tahun", value: "1 Tahun" },
+                                                { label: "6 Bulan", value: "6 Bulan" },
+                                                { label: "3 Bulan", value: "3 Bulan" },
+                                                { label: "1 Bulan", value: "1 Bulan" },
+                                                { label: "7 Hari (Tes)", value: "7 Hari" }
+                                            ].map((dur) => {
+                                                const isSelected = form.tipe_garansi_distri === dur.value;
+                                                return (
+                                                    <button
+                                                        key={dur.value}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newPolicy = dur.value === "Lifetime" ? "lifetime" : (form.sistem_perhitungan_garansi === "lifetime" ? "sejak_nota_customer" : form.sistem_perhitungan_garansi);
+                                                            setForm({ 
+                                                                ...form, 
+                                                                tipe_garansi_distri: dur.value,
+                                                                sistem_perhitungan_garansi: newPolicy
+                                                            });
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                                                            isSelected
+                                                                ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                                                                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                                                        }`}
+                                                    >
+                                                        {dur.label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Skenario Perhitungan Garansi */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-2">
+                                            Skenario Awal Perhitungan Garansi Distributor:
+                                        </label>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            
+                                            {/* Skenario 1: Sejak Nota Customer */}
+                                            <div
+                                                onClick={() => setForm({ ...form, sistem_perhitungan_garansi: "sejak_nota_customer" })}
+                                                className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                                                    form.sistem_perhitungan_garansi === "sejak_nota_customer"
+                                                        ? "bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20"
+                                                        : "bg-white border-slate-200 hover:border-slate-300"
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        Authorized / Resmi
+                                                    </span>
+                                                    {form.sistem_perhitungan_garansi === "sejak_nota_customer" && (
+                                                        <Check className="w-4 h-4 text-blue-600" />
+                                                    )}
+                                                </div>
+                                                <h5 className="text-xs font-bold text-slate-900 mb-1">
+                                                    Sejak Nota End-User
+                                                </h5>
+                                                <p className="text-[11px] text-slate-500 leading-snug">
+                                                    Hari pertama (Day 1) dihitung sejak nota penjualan toko ke pelanggan. Sesuai standar hukum perlindungan konsumen & distributor resmi dengan grace period.
+                                                </p>
+                                            </div>
+
+                                            {/* Skenario 2: Sejak Segel Distri */}
+                                            <div
+                                                onClick={() => setForm({ ...form, sistem_perhitungan_garansi: "sejak_segel_distri" })}
+                                                className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                                                    form.sistem_perhitungan_garansi === "sejak_segel_distri"
+                                                        ? "bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20"
+                                                        : "bg-white border-slate-200 hover:border-slate-300"
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                                        Distri Independen
+                                                    </span>
+                                                    {form.sistem_perhitungan_garansi === "sejak_segel_distri" && (
+                                                        <Check className="w-4 h-4 text-blue-600" />
+                                                    )}
+                                                </div>
+                                                <h5 className="text-xs font-bold text-slate-900 mb-1">
+                                                    Sejak Segel Distributor
+                                                </h5>
+                                                <p className="text-[11px] text-slate-500 leading-snug">
+                                                    Garansi sudah berjalan sejak stiker distributor ditempel (sejak toko terima barang). Jika mengendap di rak toko, masa garansi sisa ke end-user terpotong.
+                                                </p>
+                                            </div>
+
+                                            {/* Skenario 3: Lifetime Warranty */}
+                                            <div
+                                                onClick={() => setForm({ ...form, sistem_perhitungan_garansi: "lifetime", tipe_garansi_distri: "Lifetime" })}
+                                                className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                                                    form.sistem_perhitungan_garansi === "lifetime"
+                                                        ? "bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20"
+                                                        : "bg-white border-slate-200 hover:border-slate-300"
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                                                        <Sparkles className="w-3 h-3 text-blue-600" />
+                                                        <span>Bantu Klaim Toko</span>
+                                                    </span>
+                                                    {form.sistem_perhitungan_garansi === "lifetime" && (
+                                                        <Check className="w-4 h-4 text-blue-600" />
+                                                    )}
+                                                </div>
+                                                <h5 className="text-xs font-bold text-slate-900 mb-1">
+                                                    Garansi Seumur Hidup
+                                                </h5>
+                                                <p className="text-[11px] text-slate-500 leading-snug">
+                                                    Untuk RAM/Memori. Toko siap membantu proses klaim ke vendor resmi di kemudian hari selama segel utuh dan tipe produk masih didukung vendor.
+                                                </p>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    {/* Info Distributor & Kontak */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                                                <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                                                <span>Nama Distributor / Service Center Vendor</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="Contoh: PT Astrindo / Synnex Metrodata / NJT / Toko LCD"
+                                                value={form.distributor_nama}
+                                                onChange={(e) => setForm({ ...form, distributor_nama: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                                                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                                <span>Kontak CS / Alamat RMA Distributor</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="Contoh: 0812-9988-7766 / Mangga Dua Mall Lt. 4"
+                                                value={form.distributor_kontak}
+                                                onChange={(e) => setForm({ ...form, distributor_kontak: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                                            />
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                                Ketentuan / Syarat Klaim Distributor
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="Contoh: Box asli wajib disimpan, stiker segel utuh, tidak ada korosi/terbakar, toko bantu klaim gratis"
+                                                value={form.kebijakan_klaim}
+                                                onChange={(e) => setForm({ ...form, kebijakan_klaim: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                                            />
+                                        </div>
+                                    </div>
+
+                                </div>
+                            )}
                         </div>
                     </div>
 

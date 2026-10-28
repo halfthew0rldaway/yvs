@@ -127,6 +127,7 @@ async function getAll(req, res) {
             perangkat: { include: { customer: true } },
             teknisi: { select: { id: true, nama: true } },
             invoice: { select: { id: true, total_biaya: true } },
+            penggunaan_sparepart: { include: { sparepart: { include: { brand: true } } } },
         };
 
         if (!isPaginated) {

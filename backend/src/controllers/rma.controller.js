@@ -23,6 +23,10 @@ async function getAll(req, res) {
                 { nomor_faktur: { contains: q } },
                 { resi_pengiriman: { contains: q } },
                 { alasan_rusak: { contains: q } },
+                { customer_nama: { contains: q } },
+                { perangkat_nama: { contains: q } },
+                { serial_number_lama: { contains: q } },
+                { serial_number_baru: { contains: q } },
                 { sparepart: { nama: { contains: q } } },
                 { tiket: { nomor_tiket: { contains: q } } }
             ];
@@ -119,8 +123,19 @@ async function create(req, res) {
     try {
         const {
             sparepart_id,
+            tipe_sumber,
+            customer_nama,
+            customer_kontak,
+            perangkat_nama,
             supplier_nama,
             nomor_faktur,
+            serial_number_lama,
+            kebijakan_garansi,
+            tgl_pembelian_distri,
+            tgl_penjualan_customer,
+            kondisi_fisik_valid,
+            bantuan_klaim_toko,
+            biaya_ongkir_ditanggung,
             jumlah,
             alasan_rusak,
             foto_kondisi,
@@ -143,6 +158,37 @@ async function create(req, res) {
             return res.status(404).json({ message: "Suku cadang tidak ditemukan" });
         }
 
+        // Jika terhubung ke tiket servis, ambil info customer dan perangkat jika belum diset manual
+        let resolvedCustomer = customer_nama || null;
+        let resolvedKontak = customer_kontak || null;
+        let resolvedPerangkat = perangkat_nama || null;
+        let resolvedTglJual = tgl_penjualan_customer ? new Date(tgl_penjualan_customer) : null;
+
+        if (tiket_id) {
+            const ticket = await prisma.tiketServis.findUnique({
+                where: { id: parseInt(tiket_id) },
+                include: {
+                    perangkat: {
+                        include: { customer: true }
+                    }
+                }
+            });
+            if (ticket) {
+                if (!resolvedCustomer && ticket.perangkat?.customer?.nama) {
+                    resolvedCustomer = ticket.perangkat.customer.nama;
+                }
+                if (!resolvedKontak && ticket.perangkat?.customer?.no_hp) {
+                    resolvedKontak = ticket.perangkat.customer.no_hp;
+                }
+                if (!resolvedPerangkat && ticket.perangkat) {
+                    resolvedPerangkat = `${ticket.perangkat.tipe || 'Unit'} ${ticket.perangkat.model || ''}`.trim();
+                }
+                if (!resolvedTglJual) {
+                    resolvedTglJual = ticket.created_at;
+                }
+            }
+        }
+
         // Generate nomor RMA unik & robust: RMA-YYYYMM-XXXX
         const now = new Date();
         const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -163,7 +209,7 @@ async function create(req, res) {
 
         // Jika diajukan dari stok gudang (bukan dari tiket servis), pisahkan/kurangi part cacat dari stok aktif
         const rma = await prisma.$transaction(async (tx) => {
-            if (!tiket_id && sparepart.stok >= qtyKlaim) {
+            if ((!tiket_id || tipe_sumber === "stok_toko") && sparepart.stok >= qtyKlaim) {
                 await tx.sparepart.update({
                     where: { id: sparepart.id },
                     data: { stok: { decrement: qtyKlaim } }
@@ -174,8 +220,19 @@ async function create(req, res) {
                 data: {
                     nomor_rma,
                     sparepart_id: sparepart.id,
+                    tipe_sumber: tipe_sumber || (tiket_id ? "tiket_user" : "stok_toko"),
+                    customer_nama: resolvedCustomer,
+                    customer_kontak: resolvedKontak,
+                    perangkat_nama: resolvedPerangkat,
                     supplier_nama: supplier_nama.trim(),
                     nomor_faktur: nomor_faktur ? nomor_faktur.trim() : null,
+                    serial_number_lama: serial_number_lama ? serial_number_lama.trim() : null,
+                    kebijakan_garansi: kebijakan_garansi || sparepart.sistem_perhitungan_garansi || "sejak_nota_customer",
+                    tgl_pembelian_distri: tgl_pembelian_distri ? new Date(tgl_pembelian_distri) : null,
+                    tgl_penjualan_customer: resolvedTglJual,
+                    kondisi_fisik_valid: kondisi_fisik_valid !== undefined ? Boolean(kondisi_fisik_valid) : true,
+                    bantuan_klaim_toko: bantuan_klaim_toko !== undefined ? Boolean(bantuan_klaim_toko) : true,
+                    biaya_ongkir_ditanggung: biaya_ongkir_ditanggung || "toko",
                     jumlah: qtyKlaim,
                     alasan_rusak: alasan_rusak.trim(),
                     foto_kondisi: foto_kondisi ? JSON.stringify(foto_kondisi) : null,
@@ -188,7 +245,11 @@ async function create(req, res) {
                 },
                 include: {
                     sparepart: { include: { brand: true } },
-                    tiket: true
+                    tiket: {
+                        include: {
+                            perangkat: { include: { customer: true } }
+                        }
+                    }
                 }
             });
         });
@@ -199,7 +260,7 @@ async function create(req, res) {
                 user_id: req.user.id,
                 user_nama: req.user.nama,
                 action: "Pengajuan Klaim RMA Distributor",
-                entity: `No: ${rma.nomor_rma} | Part: ${sparepart.nama} | Supplier: ${rma.supplier_nama}`
+                entity: `No: ${rma.nomor_rma} | Part: ${sparepart.nama} | Sumber: ${rma.tipe_sumber === 'tiket_user' ? 'Tiket Servis' : 'Stok Toko'} | Distri: ${rma.supplier_nama}`
             }
         });
 
@@ -232,6 +293,17 @@ async function update(req, res) {
         const {
             supplier_nama,
             nomor_faktur,
+            serial_number_lama,
+            serial_number_baru,
+            kebijakan_garansi,
+            tgl_pembelian_distri,
+            tgl_penjualan_customer,
+            kondisi_fisik_valid,
+            bantuan_klaim_toko,
+            biaya_ongkir_ditanggung,
+            customer_nama,
+            customer_kontak,
+            perangkat_nama,
             jumlah,
             alasan_rusak,
             status,
@@ -274,7 +346,7 @@ async function update(req, res) {
                     jumlah_masuk: rma.jumlah,
                     harga_beli_pcs: rma.sparepart?.harga_beli || 0,
                     nomor_faktur: rma.nomor_rma,
-                    catatan: `Penggantian garansi distributor (Klaim RMA: ${rma.nomor_rma})`,
+                    catatan: `Penggantian garansi distributor (Klaim RMA: ${rma.nomor_rma}${serial_number_baru ? ` | SN Baru: ${serial_number_baru}` : ''})`,
                     user_id: req.user.id,
                     user_nama: req.user.nama
                 }
@@ -286,6 +358,17 @@ async function update(req, res) {
             data: {
                 ...(supplier_nama && { supplier_nama: supplier_nama.trim() }),
                 nomor_faktur: nomor_faktur !== undefined ? nomor_faktur : undefined,
+                serial_number_lama: serial_number_lama !== undefined ? serial_number_lama : undefined,
+                serial_number_baru: serial_number_baru !== undefined ? serial_number_baru : undefined,
+                kebijakan_garansi: kebijakan_garansi !== undefined ? kebijakan_garansi : undefined,
+                tgl_pembelian_distri: tgl_pembelian_distri !== undefined ? (tgl_pembelian_distri ? new Date(tgl_pembelian_distri) : null) : undefined,
+                tgl_penjualan_customer: tgl_penjualan_customer !== undefined ? (tgl_penjualan_customer ? new Date(tgl_penjualan_customer) : null) : undefined,
+                kondisi_fisik_valid: kondisi_fisik_valid !== undefined ? Boolean(kondisi_fisik_valid) : undefined,
+                bantuan_klaim_toko: bantuan_klaim_toko !== undefined ? Boolean(bantuan_klaim_toko) : undefined,
+                biaya_ongkir_ditanggung: biaya_ongkir_ditanggung !== undefined ? biaya_ongkir_ditanggung : undefined,
+                customer_nama: customer_nama !== undefined ? customer_nama : undefined,
+                customer_kontak: customer_kontak !== undefined ? customer_kontak : undefined,
+                perangkat_nama: perangkat_nama !== undefined ? perangkat_nama : undefined,
                 jumlah: jumlah ? parseInt(jumlah) : undefined,
                 alasan_rusak: alasan_rusak !== undefined ? alasan_rusak : undefined,
                 status: status !== undefined ? status : undefined,
@@ -298,7 +381,11 @@ async function update(req, res) {
             },
             include: {
                 sparepart: { include: { brand: true } },
-                tiket: true
+                tiket: {
+                    include: {
+                        perangkat: { include: { customer: true } }
+                    }
+                }
             }
         });
 
@@ -315,7 +402,7 @@ async function update(req, res) {
                 user_id: req.user.id,
                 user_nama: req.user.nama,
                 action: "Update Klaim RMA Distributor",
-                entity: `No: ${rma.nomor_rma} | Status Baru: ${status || rma.status} | Solusi: ${solusi_distributor || "-"}`
+                entity: `No: ${rma.nomor_rma} | Status Baru: ${status || rma.status} | Solusi: ${solusi_distributor || "-"} | SN Pengganti: ${serial_number_baru || "-"}`
             }
         });
 
