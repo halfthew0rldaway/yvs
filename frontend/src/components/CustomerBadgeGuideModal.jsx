@@ -80,13 +80,19 @@ export default function CustomerBadgeGuideModal({ isOpen, onClose }) {
                                         </span>
                                     </div>
 
-                                    <p className="text-xs text-slate-600 leading-relaxed">
+                                    <p 
+                                        className="text-xs text-slate-600 leading-relaxed whitespace-normal break-words"
+                                        style={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                                    >
                                         {badge.description}
                                     </p>
 
-                                    <div className="pt-2 border-t border-slate-100 flex items-start gap-2 text-xs">
+                                    <div 
+                                        className="pt-2 border-t border-slate-100 flex items-start gap-2 text-xs whitespace-normal break-words"
+                                        style={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                                    >
                                         <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider shrink-0 mt-0.5">SOP Tindakan:</span>
-                                        <span className="text-slate-600">{badge.sopGuidance}</span>
+                                        <span className="text-slate-600 flex-1 min-w-0">{badge.sopGuidance}</span>
                                     </div>
                                 </div>
                             );

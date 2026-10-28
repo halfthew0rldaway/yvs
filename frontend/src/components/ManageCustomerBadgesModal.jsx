@@ -169,7 +169,10 @@ export default function ManageCustomerBadgesModal({
                 </div>
 
                 {/* Body Content */}
-                <div className="overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar px-4 sm:px-6 py-4 whitespace-normal">
+                <div 
+                    className="overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar px-4 sm:px-6 py-4 whitespace-normal"
+                    style={{ whiteSpace: "normal" }}
+                >
                     <div className="space-y-3 pr-0.5">
                         {allBadgeList.map((badge) => {
                             const IconComponent = badge.icon;
@@ -198,6 +201,7 @@ export default function ManageCustomerBadgesModal({
                                             ? "border-blue-500 bg-blue-50/40 shadow-xs ring-1 ring-blue-500/20" 
                                             : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70"
                                     }`}
+                                    style={{ whiteSpace: "normal" }}
                                 >
                                     {/* Checkbox box */}
                                     <div 
@@ -218,7 +222,7 @@ export default function ManageCustomerBadgesModal({
                                     </div>
 
                                     {/* Badge Details */}
-                                    <div className="flex-1 min-w-0 whitespace-normal">
+                                    <div className="flex-1 min-w-0 whitespace-normal" style={{ whiteSpace: "normal" }}>
                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${badge.colorClass}`}>
                                                 <IconComponent className="w-3.5 h-3.5 shrink-0" />
@@ -233,14 +237,20 @@ export default function ManageCustomerBadgesModal({
                                             )}
                                         </div>
 
-                                        <p className="text-xs text-slate-600 leading-relaxed whitespace-normal break-words mt-1">
+                                        <p 
+                                            className="text-xs text-slate-600 leading-relaxed whitespace-normal break-words mt-1"
+                                            style={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                                        >
                                             {badge.description}
                                         </p>
 
                                         {badge.sopGuidance && (
-                                            <div className="mt-2 pt-2 border-t border-slate-100 flex items-start gap-1.5 text-[11px] text-slate-500 whitespace-normal break-words">
+                                            <div 
+                                                className="mt-2 pt-2 border-t border-slate-100 flex items-start gap-1.5 text-[11px] text-slate-500 whitespace-normal break-words"
+                                                style={{ whiteSpace: "normal", wordBreak: "break-word" }}
+                                            >
                                                 <span className="font-bold text-slate-700 uppercase tracking-wider shrink-0 text-[10px]">SOP:</span>
-                                                <span className="leading-snug">{badge.sopGuidance}</span>
+                                                <span className="leading-snug flex-1 min-w-0">{badge.sopGuidance}</span>
                                             </div>
                                         )}
                                     </div>
