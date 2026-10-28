@@ -98,7 +98,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs">
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-xs">
                             <BookOpen className="w-5 h-5" />
                         </div>
                         <div>
@@ -132,7 +132,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                             placeholder="Contoh: Mengatasi Asus TUF FX505 Mati Total Konslet Jalur 19V"
                             value={formData.judul}
                             onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
-                            className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
+                            className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
                         />
                     </div>
 
@@ -147,7 +147,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                                 placeholder="Contoh: Asus, Lenovo, Apple, Acer"
                                 value={formData.merek}
                                 onChange={(e) => setFormData({ ...formData, merek: e.target.value })}
-                                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             />
                         </div>
                         <div>
@@ -159,7 +159,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                                 placeholder="Contoh: TUF FX505, Legion Y540, MacBook Air M1"
                                 value={formData.model_seri}
                                 onChange={(e) => setFormData({ ...formData, model_seri: e.target.value })}
-                                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             />
                         </div>
                     </div>
@@ -173,7 +173,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                             <select
                                 value={formData.kategori}
                                 onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-medium"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium"
                             >
                                 {KATEGORI_OPTIONS.map(opt => (
                                     <option key={opt} value={opt}>{opt}</option>
@@ -187,7 +187,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                             <select
                                 value={formData.tingkat_kesulitan}
                                 onChange={(e) => setFormData({ ...formData, tingkat_kesulitan: e.target.value })}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-medium"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium"
                             >
                                 {DIFFICULTY_OPTIONS.map(opt => (
                                     <option key={opt} value={opt}>{opt}</option>
@@ -203,7 +203,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                                 placeholder="Contoh: 1-2 Jam"
                                 value={formData.estimasi_waktu}
                                 onChange={(e) => setFormData({ ...formData, estimasi_waktu: e.target.value })}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                             />
                         </div>
                         <div>
@@ -216,7 +216,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                                 max="100"
                                 value={formData.tingkat_sukses}
                                 onChange={(e) => setFormData({ ...formData, tingkat_sukses: Number(e.target.value) })}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                             />
                         </div>
                     </div>
@@ -231,7 +231,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                             placeholder="Contoh: IC Power BQ24780S, Kapasitor SMD 10uF 25V, MOSFET AON7408"
                             value={formData.komponen_terkait}
                             onChange={(e) => setFormData({ ...formData, komponen_terkait: e.target.value })}
-                            className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-mono"
+                            className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-mono"
                         />
                     </div>
 
@@ -246,7 +246,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                             placeholder="Jelaskan apa yang terjadi saat laptop dinyalakan (e.g. Lampu indikator mati, tidak merespon saat tombol ditekan, ada bunyi klik perlahan)..."
                             value={formData.gejala}
                             onChange={(e) => setFormData({ ...formData, gejala: e.target.value })}
-                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs leading-relaxed"
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs leading-relaxed"
                         />
                     </div>
 
@@ -260,7 +260,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                             placeholder="Penyebab kerusakan fisik atau kelistrikan (e.g. Kapasitor decoupling short akibat overheating atau lonjakan voltase adaptor)..."
                             value={formData.penyebab}
                             onChange={(e) => setFormData({ ...formData, penyebab: e.target.value })}
-                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs leading-relaxed"
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs leading-relaxed"
                         />
                     </div>
 
@@ -275,7 +275,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                             placeholder="Tulis urutan langkah perbaikan (1, 2, 3...) beserta poin pemeriksaan voltase dan trik khusus..."
                             value={formData.solusi_langkah}
                             onChange={(e) => setFormData({ ...formData, solusi_langkah: e.target.value })}
-                            className="w-full px-3.5 py-2.5 bg-slate-900 text-slate-100 font-mono text-xs border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed"
+                            className="w-full px-3.5 py-2.5 bg-slate-900 text-slate-100 font-mono text-xs border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
                         />
                     </div>
 
@@ -291,7 +291,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
                         >
                             <Save className="w-4 h-4" />
                             <span>{submitting ? "Menyimpan..." : "Simpan ke Pustaka Wiki"}</span>

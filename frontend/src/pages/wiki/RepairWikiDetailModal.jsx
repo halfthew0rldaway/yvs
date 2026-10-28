@@ -31,7 +31,7 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                                     {wiki.merek || "Umum"} {wiki.model_seri ? `• ${wiki.model_seri}` : ""}
                                 </span>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
@@ -69,7 +69,7 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
                             Ditulis oleh: <strong>{wiki.user?.nama || "Teknisi"}</strong>
                         </span>
                         {wiki.sumber_tiket_id && (
-                            <span className="inline-flex items-center gap-1 text-indigo-600 font-medium">
+                            <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
                                 <ExternalLink className="w-3 h-3" />
                                 <span>Dari Tiket Servis #{wiki.sumber_tiket_id}</span>
                             </span>
@@ -106,12 +106,12 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
 
                     {/* Komponen / Sparepart Terkait */}
                     {wiki.komponen_terkait && (
-                        <div className="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-100">
-                            <div className="flex items-center gap-2 mb-1 text-indigo-900 font-semibold text-xs uppercase tracking-wider">
-                                <Tag className="w-3.5 h-3.5 text-indigo-600" />
+                        <div className="p-3.5 rounded-xl bg-blue-50/50 border border-blue-100">
+                            <div className="flex items-center gap-2 mb-1 text-blue-900 font-semibold text-xs uppercase tracking-wider">
+                                <Tag className="w-3.5 h-3.5 text-blue-600" />
                                 <span>Komponen / IC / Sparepart Terkait</span>
                             </div>
-                            <p className="text-indigo-950 font-medium font-mono text-xs">
+                            <p className="text-blue-950 font-medium font-mono text-xs">
                                 {wiki.komponen_terkait}
                             </p>
                         </div>
@@ -120,7 +120,7 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
                     {/* Langkah Solusi & Prosedur Pengerjaan */}
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm">
-                            <Wrench className="w-4 h-4 text-indigo-600" />
+                            <Wrench className="w-4 h-4 text-blue-600" />
                             <span>Langkah-Langkah Solusi & Perbaikan</span>
                         </div>
                         <div className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs whitespace-pre-line leading-relaxed border border-slate-800 shadow-inner overflow-x-auto">

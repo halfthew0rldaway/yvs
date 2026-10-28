@@ -43,10 +43,10 @@ const STATUS_TABS = [
 ];
 
 const STATUS_BADGES = {
-    "Baru Masuk": "bg-sky-50 text-sky-700 border-sky-200",
-    "Screening": "bg-indigo-50 text-indigo-700 border-indigo-200",
+    "Baru Masuk": "bg-slate-100 text-slate-700 border-slate-200",
+    "Screening": "bg-blue-50 text-blue-700 border-blue-200",
     "Tes Logika & Teknis": "bg-amber-50 text-amber-700 border-amber-200",
-    "Wawancara / Trial": "bg-purple-50 text-purple-700 border-purple-200",
+    "Wawancara / Trial": "bg-sky-50 text-sky-700 border-sky-200",
     "Diterima": "bg-emerald-50 text-emerald-700 border-emerald-200",
     "Ditolak": "bg-rose-50 text-rose-700 border-rose-200",
 };
@@ -153,7 +153,7 @@ export default function RecruitmentDashboard() {
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-xs shrink-0">
                         <Users className="w-6 h-6" />
                     </div>
                     <div>
@@ -161,8 +161,8 @@ export default function RecruitmentDashboard() {
                             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
                                 Pusat Rekrutmen & Seleksi Tim
                             </h1>
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                KEOS Talent Acquisition
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                KEOS Standard
                             </span>
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
@@ -175,7 +175,7 @@ export default function RecruitmentDashboard() {
                     <button
                         type="button"
                         onClick={() => setIsAddApplicantOpen(true)}
-                        className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs flex items-center gap-2 transition-colors"
+                        className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs flex items-center gap-2 transition-colors cursor-pointer"
                     >
                         <UserPlus className="w-4 h-4 text-slate-600" />
                         <span>Catat Pelamar Walk-in</span>
@@ -186,7 +186,7 @@ export default function RecruitmentDashboard() {
                             setJobToEdit(null);
                             setIsJobModalOpen(true);
                         }}
-                        className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors"
+                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Buka Lowongan Baru</span>
@@ -203,8 +203,8 @@ export default function RecruitmentDashboard() {
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-sky-600">Screening Awal</div>
-                    <div className="text-xl font-bold text-sky-700 mt-1">{stats.baru_masuk + stats.screening}</div>
+                    <div className="text-[11px] font-semibold text-blue-600">Screening Awal</div>
+                    <div className="text-xl font-bold text-blue-700 mt-1">{stats.baru_masuk + stats.screening}</div>
                     <div className="text-[10px] text-slate-500 mt-0.5">Menunggu review berkas</div>
                 </div>
 
@@ -215,8 +215,8 @@ export default function RecruitmentDashboard() {
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-purple-600">Wawancara & Trial</div>
-                    <div className="text-xl font-bold text-purple-700 mt-1">{stats.trial_wawancara}</div>
+                    <div className="text-[11px] font-semibold text-sky-600">Wawancara & Trial</div>
+                    <div className="text-xl font-bold text-sky-700 mt-1">{stats.trial_wawancara}</div>
                     <div className="text-[10px] text-slate-500 mt-0.5">Trial day di workshop</div>
                 </div>
 
@@ -232,16 +232,16 @@ export default function RecruitmentDashboard() {
                 <button
                     type="button"
                     onClick={() => setActiveTab("pipeline")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                         activeTab === "pipeline"
-                            ? "bg-white text-indigo-600 shadow-xs"
+                            ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
                     <Users className="w-4 h-4" />
                     <span>Pipeline Pelamar</span>
                     <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-semibold ${
-                        activeTab === "pipeline" ? "bg-indigo-100 text-indigo-700" : "bg-slate-300 text-slate-700"
+                        activeTab === "pipeline" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {applicants.length}
                     </span>
@@ -250,16 +250,16 @@ export default function RecruitmentDashboard() {
                 <button
                     type="button"
                     onClick={() => setActiveTab("jobs")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                         activeTab === "jobs"
-                            ? "bg-white text-indigo-600 shadow-xs"
+                            ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
                     <Briefcase className="w-4 h-4" />
                     <span>Daftar Lowongan</span>
                     <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-semibold ${
-                        activeTab === "jobs" ? "bg-indigo-100 text-indigo-700" : "bg-slate-300 text-slate-700"
+                        activeTab === "jobs" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {jobs.length}
                     </span>
@@ -281,7 +281,7 @@ export default function RecruitmentDashboard() {
                                     placeholder="Cari nama kandidat, nomor telepon WhatsApp, atau pendidikan..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                                 {search && (
                                     <button
@@ -301,7 +301,7 @@ export default function RecruitmentDashboard() {
                                 <select
                                     value={selectedJobFilter}
                                     onChange={(e) => setSelectedJobFilter(e.target.value)}
-                                    className="w-full md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="all">Semua Posisi Lowongan</option>
                                     {jobs.map(j => (
@@ -318,7 +318,7 @@ export default function RecruitmentDashboard() {
                                     key={tab.id}
                                     type="button"
                                     onClick={() => setSelectedStatusFilter(tab.id)}
-                                    className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-colors ${
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-colors cursor-pointer ${
                                         selectedStatusFilter === tab.id
                                             ? "bg-slate-900 text-white font-semibold shadow-2xs"
                                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -333,7 +333,7 @@ export default function RecruitmentDashboard() {
                     {/* Applicant Cards / List */}
                     {loadingApplicants ? (
                         <div className="py-16 text-center text-slate-400">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-indigo-600 border-t-transparent mb-2"></div>
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-blue-600 border-t-transparent mb-2"></div>
                             <p className="text-xs">Memuat data kandidat pelamar...</p>
                         </div>
                     ) : applicants.length === 0 ? (
@@ -356,32 +356,32 @@ export default function RecruitmentDashboard() {
                                     <div
                                         key={app.id}
                                         onClick={() => setActiveApplicantDetail(app)}
-                                        className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer flex flex-col justify-between group"
+                                        className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all cursor-pointer flex flex-col justify-between group"
                                     >
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                                <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-100 truncate max-w-[170px]">
                                                     {app.job_posting?.judul_posisi || "Posisi"}
                                                 </span>
-                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${STATUS_BADGES[app.status] || STATUS_BADGES["Baru Masuk"]}`}>
+                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shrink-0 ${STATUS_BADGES[app.status] || STATUS_BADGES["Baru Masuk"]}`}>
                                                     {app.status}
                                                 </span>
                                             </div>
 
                                             <div>
-                                                <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                                <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                                                     {app.nama_lengkap}
                                                 </h3>
                                                 <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                                                    <Phone className="w-3.5 h-3.5 text-slate-400" />
-                                                    <span>{app.nomor_telepon}</span>
+                                                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                    <span className="font-mono">{app.nomor_telepon}</span>
                                                 </div>
                                             </div>
 
                                             <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1 text-xs">
                                                 <div className="flex items-center justify-between text-slate-500">
                                                     <span>Pendidikan:</span>
-                                                    <span className="font-semibold text-slate-700 line-clamp-1">{app.pendidikan || "-"}</span>
+                                                    <span className="font-semibold text-slate-700 truncate max-w-[150px]">{app.pendidikan || "-"}</span>
                                                 </div>
                                                 <div className="flex items-center justify-between text-slate-500">
                                                     <span>Pengalaman:</span>
@@ -391,9 +391,9 @@ export default function RecruitmentDashboard() {
 
                                             {/* Score Preview */}
                                             {hasEvaluation ? (
-                                                <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-indigo-50/60 to-purple-50/60 rounded-xl border border-indigo-100">
-                                                    <span className="text-[11px] font-semibold text-indigo-900 flex items-center gap-1">
-                                                        <Award className="w-3.5 h-3.5 text-indigo-600" />
+                                                <div className="flex items-center justify-between px-3 py-2 bg-blue-50/70 rounded-xl border border-blue-100">
+                                                    <span className="text-[11px] font-semibold text-blue-900 flex items-center gap-1">
+                                                        <Award className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                                                         <span>Skor Evaluasi KEOS:</span>
                                                     </span>
                                                     <span className={`text-xs font-bold ${avgScore >= 75 ? "text-emerald-700" : avgScore >= 60 ? "text-amber-700" : "text-rose-700"}`}>
@@ -411,7 +411,7 @@ export default function RecruitmentDashboard() {
                                             <span className="text-slate-400 text-[11px]">
                                                 {new Date(app.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
                                             </span>
-                                            <span className="text-indigo-600 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                                            <span className="text-blue-600 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
                                                 <span>Review & Nilai</span>
                                                 <ChevronRight className="w-3.5 h-3.5" />
                                             </span>
@@ -431,7 +431,7 @@ export default function RecruitmentDashboard() {
                 <div className="space-y-4">
                     {loadingJobs ? (
                         <div className="py-16 text-center text-slate-400">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-indigo-600 border-t-transparent mb-2"></div>
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-blue-600 border-t-transparent mb-2"></div>
                             <p className="text-xs">Memuat data lowongan...</p>
                         </div>
                     ) : jobs.length === 0 ? (
@@ -468,7 +468,7 @@ export default function RecruitmentDashboard() {
                                         </h3>
 
                                         {job.gaji_min > 0 && (
-                                            <div className="text-xs font-semibold text-emerald-700 bg-emerald-50/70 px-2.5 py-1 rounded-lg border border-emerald-100 inline-block">
+                                            <div className="text-xs font-semibold text-emerald-700 bg-emerald-50/70 px-2.5 py-1 rounded-lg border border-emerald-100 inline-block font-mono">
                                                 {formatRupiah(job.gaji_min)} - {formatRupiah(job.gaji_max)}
                                             </div>
                                         )}
@@ -480,7 +480,7 @@ export default function RecruitmentDashboard() {
 
                                     <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                                         <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
-                                            <Users className="w-3.5 h-3.5 text-indigo-600" />
+                                            <Users className="w-3.5 h-3.5 text-blue-600" />
                                             <span>{job._count?.pelamar || 0} Pelamar Terdaftar</span>
                                         </div>
 
@@ -490,7 +490,7 @@ export default function RecruitmentDashboard() {
                                                 setJobToEdit(job);
                                                 setIsJobModalOpen(true);
                                             }}
-                                            className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors"
+                                            className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                                         >
                                             <Edit3 className="w-3.5 h-3.5" />
                                             <span>Edit</span>
@@ -554,4 +554,3 @@ export default function RecruitmentDashboard() {
         </div>
     );
 }
-

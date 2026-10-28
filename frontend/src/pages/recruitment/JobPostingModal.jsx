@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Briefcase, Save, DollarSign, MapPin, Layers } from "lucide-react";
+import { X, Briefcase, Save, DollarSign, MapPin, Layers, CheckCircle2 } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 
@@ -86,20 +86,20 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-            <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+            <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
                 
                 {/* Header */}
-                <div className="px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
+                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
+                    <div className="flex items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shadow-xs shrink-0">
                             <Briefcase className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
                                 {isEdit ? "Edit Lowongan Posisi" : "Buka Lowongan Posisi Baru"}
                             </h2>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 mt-0.5">
                                 Posisi tim terstruktur berdasarkan kerangka Position Design KEOS
                             </p>
                         </div>
@@ -107,37 +107,37 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors"
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors shrink-0"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 sm:p-7 overflow-y-auto space-y-5">
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                             Judul Posisi Jabatan <span className="text-rose-500">*</span>
                         </label>
                         <input
                             type="text"
-                            placeholder="e.g. Teknisi Software & OS / Teknisi Hardware"
+                            placeholder="Contoh: Teknisi Software & OS / Teknisi Hardware"
                             value={judulPosisi}
                             onChange={(e) => setJudulPosisi(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             required
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Departemen
                             </label>
                             <select
                                 value={departemen}
                                 onChange={(e) => setDepartemen(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             >
                                 {DEPARTEMEN_OPTIONS.map(opt => (
                                     <option key={opt} value={opt}>{opt}</option>
@@ -146,13 +146,13 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Tipe Kerja
                             </label>
                             <select
                                 value={tipeKerja}
                                 onChange={(e) => setTipeKerja(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             >
                                 {TIPE_OPTIONS.map(opt => (
                                     <option key={opt} value={opt}>{opt}</option>
@@ -161,13 +161,13 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Status Lowongan
                             </label>
                             <select
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             >
                                 {STATUS_OPTIONS.map(opt => (
                                     <option key={opt} value={opt}>{opt}</option>
@@ -176,9 +176,9 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Ekspektasi Gaji Min (Rp)
                             </label>
                             <input
@@ -186,12 +186,12 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                                 placeholder="2500000"
                                 value={gajiMin}
                                 onChange={(e) => setGajiMin(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Ekspektasi Gaji Max (Rp)
                             </label>
                             <input
@@ -199,13 +199,13 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                                 placeholder="4000000"
                                 value={gajiMax}
                                 onChange={(e) => setGajiMax(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                             Tugas & Tanggung Jawab Utama
                         </label>
                         <textarea
@@ -213,12 +213,12 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                             placeholder="Uraikan fokus pengerjaan harian (contoh: instalasi OS, deep cleaning, diagnosa skematik, melayani pelanggan)..."
                             value={deskripsi}
                             onChange={(e) => setDeskripsi(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                             Kualifikasi & Syarat Kompetensi
                         </label>
                         <textarea
@@ -226,22 +226,22 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                             placeholder="Kriteria wajib (contoh: SMK TKJ/Elektro, teliti, paham logika troubleshooting, jujur, mematuhi SOP)..."
                             value={kualifikasi}
                             onChange={(e) => setKualifikasi(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         />
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+                            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
                         >
                             Batal
                         </button>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-colors"
+                            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
                         >
                             <Save className="w-4 h-4" />
                             <span>{submitting ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Terbitkan Posisi"}</span>
@@ -253,4 +253,3 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
         </div>
     );
 }
-

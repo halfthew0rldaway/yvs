@@ -115,20 +115,20 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
             <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
                 
                 {/* Header */}
-                <div className="px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
+                    <div className="flex items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shadow-xs shrink-0">
                             <ShieldCheck className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
                                 {isEdit ? "Edit Dokumen SOP" : "Tulis SOP Standar Baru"}
                             </h2>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 mt-0.5">
                                 Format standar operasional untuk pedoman kerja tim KomputerAwet / Serv.io
                             </p>
                         </div>
@@ -136,37 +136,37 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors"
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors shrink-0"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Form Body */}
-                <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <form onSubmit={handleSubmit} className="p-6 sm:p-7 overflow-y-auto space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Kode SOP <span className="text-rose-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                placeholder="e.g. SOP-OPS-004"
+                                placeholder="Contoh: SOP-OPS-004"
                                 value={kode}
                                 onChange={(e) => setKode(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all uppercase"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Kategori
                             </label>
                             <select
                                 value={kategori}
                                 onChange={(e) => setKategori(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             >
                                 {KATEGORI_OPTIONS.map(opt => (
                                     <option key={opt} value={opt}>{opt}</option>
@@ -175,13 +175,13 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Target Role
                             </label>
                             <select
                                 value={targetRole}
                                 onChange={(e) => setTargetRole(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             >
                                 {ROLE_OPTIONS.map(opt => (
                                     <option key={opt} value={opt}>{opt}</option>
@@ -191,21 +191,21 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                             Judul SOP <span className="text-rose-500">*</span>
                         </label>
                         <input
                             type="text"
-                            placeholder="e.g. SOP Grooming & Standar Penampilan Karyawan"
+                            placeholder="Contoh: SOP Grooming & Standar Penampilan Karyawan"
                             value={judul}
                             onChange={(e) => setJudul(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                             Ringkasan Singkat (1-2 Kalimat) <span className="text-rose-500">*</span>
                         </label>
                         <textarea
@@ -213,21 +213,21 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                             placeholder="Tuliskan tujuan dan esensi SOP secara ringkas agar cepat dipahami tim..."
                             value={ringkasan}
                             onChange={(e) => setRingkasan(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             required
                         />
                     </div>
 
                     {/* Poin Kunci / Quick Glance */}
-                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-2.5">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-3">
                         <div className="flex items-center justify-between">
-                            <label className="text-xs font-semibold text-slate-800">
+                            <label className="text-xs font-bold text-slate-800">
                                 Poin Kunci / Quick Glance (Checklist Cepat Tim)
                             </label>
                             <button
                                 type="button"
                                 onClick={handleAddPoint}
-                                className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1"
+                                className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 cursor-pointer"
                             >
                                 <Plus className="w-3.5 h-3.5" />
                                 <span>Tambah Poin</span>
@@ -237,7 +237,7 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                         <div className="space-y-2">
                             {poinKunciList.map((point, idx) => (
                                 <div key={idx} className="flex items-center gap-2">
-                                    <span className="w-5 text-[11px] font-bold text-slate-400 text-center">
+                                    <span className="w-5 text-[11px] font-bold text-slate-400 text-center font-mono">
                                         {idx + 1}.
                                     </span>
                                     <input
@@ -245,13 +245,13 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                                         placeholder="Poin penting yang wajib ditaati..."
                                         value={point}
                                         onChange={(e) => handlePointChange(idx, e.target.value)}
-                                        className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                     />
                                     {poinKunciList.length > 1 && (
                                         <button
                                             type="button"
                                             onClick={() => handleRemovePoint(idx)}
-                                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -262,7 +262,7 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                             Prosedur Lengkap Bertahap <span className="text-rose-500">*</span>
                         </label>
                         <textarea
@@ -270,24 +270,24 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                             placeholder="Tuliskan bab, alur pengerjaan, aturan teknis, dan standar penyelesaian..."
                             value={konten}
                             onChange={(e) => setKonten(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all leading-relaxed"
                             required
                         />
                     </div>
 
                     {/* Footer Submit */}
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+                            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
                         >
                             Batal
                         </button>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-colors"
+                            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
                         >
                             <Save className="w-4 h-4" />
                             <span>{submitting ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Terbitkan SOP"}</span>
@@ -299,4 +299,3 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
         </div>
     );
 }
-

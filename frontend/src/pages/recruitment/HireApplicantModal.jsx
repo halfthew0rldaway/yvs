@@ -80,7 +80,7 @@ export default function HireApplicantModal({ isOpen, onClose, applicant, onSucce
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-1.5">
                         <div className="text-xs text-slate-400 font-medium">Kandidat Terpilih:</div>
                         <div className="text-sm font-bold text-slate-900">{applicant.nama_lengkap}</div>
-                        <div className="text-xs text-indigo-600 font-semibold">
+                        <div className="text-xs text-blue-600 font-semibold">
                             Posisi: {applicant.job_posting?.judul_posisi || "Staf"}
                         </div>
                     </div>
