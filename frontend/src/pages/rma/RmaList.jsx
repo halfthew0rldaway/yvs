@@ -771,7 +771,7 @@ export default function RmaList() {
                                 <div className="text-center pb-3 border-b border-slate-200">
                                     <h4 className="font-extrabold text-sm uppercase tracking-wider">KOMPUTERAWET / YANGVERSA SERVICE</h4>
                                     <p className="text-[11px] text-slate-500">Surat Pengantar Retur Klaim Garansi Suku Cadang (RMA Slip)</p>
-                                    <div className="mt-2 inline-block px-3 py-1 bg-slate-900 text-white rounded font-mono font-bold text-sm">
+                                    <div className="mt-2 inline-block px-3 py-1 bg-slate-100 text-slate-900 border border-slate-300 rounded-lg font-mono font-bold text-sm tracking-wide">
                                         {printTarget.nomor_rma}
                                     </div>
                                 </div>

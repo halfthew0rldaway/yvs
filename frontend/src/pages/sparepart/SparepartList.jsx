@@ -1279,14 +1279,14 @@ export default function SparepartList() {
 
                     <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden z-10 border border-slate-200">
                         {/* Modal Header */}
-                        <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+                        <div className="px-6 py-4.5 bg-white text-slate-900 flex items-center justify-between border-b border-slate-200">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 text-blue-400">
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100 text-blue-600">
                                     <History className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-base text-white">Log Audit Pengadaan & Restok Gudang</h3>
-                                    <p className="text-xs text-slate-400 mt-0.5">
+                                    <h3 className="font-bold text-base text-slate-900">Log Audit Pengadaan & Restok Gudang</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">
                                         Rekapitulasi riwayat pembelian suku cadang dari distributor & supplier
                                     </p>
                                 </div>
@@ -1295,7 +1295,7 @@ export default function SparepartList() {
                                 <button
                                     onClick={handleExportRestockExcel}
                                     disabled={loadingGlobalRestock || filteredGlobalRestockLogs.length === 0}
-                                    className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer disabled:cursor-not-allowed"
+                                    className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer disabled:cursor-not-allowed"
                                     title="Unduh rekap pengadaan sebagai file Excel (.xlsx)"
                                 >
                                     <Download className="w-4 h-4" />
@@ -1303,7 +1303,7 @@ export default function SparepartList() {
                                 </button>
                                 <button
                                     onClick={() => setIsGlobalRestockModalOpen(false)}
-                                    className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                                    className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>

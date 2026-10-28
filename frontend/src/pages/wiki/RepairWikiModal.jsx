@@ -275,7 +275,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                             placeholder="Tulis urutan langkah perbaikan (1, 2, 3...) beserta poin pemeriksaan voltase dan trik khusus..."
                             value={formData.solusi_langkah}
                             onChange={(e) => setFormData({ ...formData, solusi_langkah: e.target.value })}
-                            className="w-full px-3.5 py-2.5 bg-slate-900 text-slate-100 font-mono text-xs border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
+                            className="w-full px-3.5 py-2.5 bg-slate-50 text-slate-900 font-mono text-xs border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
                         />
                     </div>
 

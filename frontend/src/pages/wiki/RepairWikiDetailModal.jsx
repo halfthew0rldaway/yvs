@@ -123,7 +123,7 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
                             <Wrench className="w-4 h-4 text-blue-600" />
                             <span>Langkah-Langkah Solusi & Perbaikan</span>
                         </div>
-                        <div className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs whitespace-pre-line leading-relaxed border border-slate-800 shadow-inner overflow-x-auto">
+                        <div className="p-4 rounded-xl bg-slate-50 text-slate-800 font-mono text-xs whitespace-pre-line leading-relaxed border border-slate-200 shadow-2xs overflow-x-auto">
                             {wiki.solusi_langkah}
                         </div>
                     </div>

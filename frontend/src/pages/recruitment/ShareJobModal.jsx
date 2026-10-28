@@ -153,7 +153,7 @@ export default function ShareJobModal({ isOpen, onClose, job }) {
                                 rows={12}
                                 value={broadcastText}
                                 onClick={(e) => e.target.select()}
-                                className="w-full p-4 bg-slate-900 text-slate-100 font-mono text-xs rounded-2xl border border-slate-800 leading-relaxed shadow-inner select-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-4 bg-slate-50 text-slate-800 font-mono text-xs rounded-2xl border border-slate-200 leading-relaxed shadow-xs select-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                             />
                         </div>
                     </div>

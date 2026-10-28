@@ -551,39 +551,39 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 {/* QR Code and Warranty Section for Selesai / Diambil */}
                 {['selesai', 'diambil'].includes(t.status) && (
                     <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="bg-slate-800 rounded-3xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center gap-6 shadow-xl">
-                            <div className="bg-white p-3 rounded-2xl shrink-0">
+                        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 text-slate-900 flex flex-col sm:flex-row items-center gap-6 shadow-sm">
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 shrink-0">
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${t.nomor_tiket}`} alt="QR Code" className="w-20 h-20 sm:w-24 sm:h-24" />
                             </div>
                             <div className="text-center sm:text-left">
-                                <h5 className="font-bold text-xl mb-1 flex items-center justify-center sm:justify-start gap-2"><QrCode className="w-5 h-5 text-blue-400"/> Tunjukkan QR ini</h5>
-                                <p className="text-slate-300 text-sm leading-relaxed">Gunakan QR ini saat mengambil perangkat di toko untuk proses validasi yang lebih cepat.</p>
+                                <h5 className="font-bold text-xl mb-1 flex items-center justify-center sm:justify-start gap-2 text-slate-900"><QrCode className="w-5 h-5 text-blue-600"/> Tunjukkan QR ini</h5>
+                                <p className="text-slate-500 text-sm leading-relaxed">Gunakan QR ini saat mengambil perangkat di toko untuk proses validasi yang lebih cepat.</p>
                             </div>
                         </div>
                         {/* Feature 9: Dynamic Real-time Warranty Card */}
                         {t.status === "diambil" ? (
                             t.warranty_status?.isExpired ? (
-                                <div className="bg-slate-800 rounded-3xl p-6 sm:p-8 text-white flex flex-col justify-center shadow-xl relative overflow-hidden">
-                                    <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-white/5" />
+                                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 text-slate-900 flex flex-col justify-center shadow-sm relative overflow-hidden">
+                                    <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-slate-100 pointer-events-none" />
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/30 text-rose-300 border border-rose-500/40 flex items-center gap-1">
-                                                <AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> Kedaluwarsa
+                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                                                <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> Kedaluwarsa
                                             </span>
                                         </div>
-                                        <h5 className="font-bold text-xl mb-1 flex items-center gap-2">Masa Garansi Berakhir</h5>
-                                        <p className="text-slate-300 text-sm mb-3">
+                                        <h5 className="font-bold text-xl mb-1 flex items-center gap-2 text-slate-900">Masa Garansi Berakhir</h5>
+                                        <p className="text-slate-500 text-sm mb-3">
                                             Garansi {t.durasi_garansi || "1 Bulan"} telah berakhir sejak {t.warranty_status?.lewatHari || 0} hari yang lalu.
                                         </p>
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="inline-block bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300">
+                                            <span className="inline-block bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600">
                                                 Berakhir pada: {t.warranty_status?.garansi_berakhir_at ? new Date(t.warranty_status.garansi_berakhir_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}
                                             </span>
                                             <button 
                                                 onClick={() => setIsWarrantyModalOpen(true)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition-all border border-white/20"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold transition-all border border-slate-200 shadow-2xs cursor-pointer"
                                             >
-                                                <Award className="w-3.5 h-3.5 text-amber-300" /> Sertifikat Garansi
+                                                <Award className="w-3.5 h-3.5 text-amber-500" /> Sertifikat Garansi
                                             </button>
                                         </div>
                                     </div>

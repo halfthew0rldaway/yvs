@@ -657,21 +657,21 @@ export default function JobPostingForm() {
 
                         {/* CARD 1: LIVE BROADCAST SIAP COPAS */}
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                            <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-lg bg-blue-600/30 border border-blue-400/40 text-blue-400 flex items-center justify-center">
+                            <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center">
                                         <MessageCircle className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
                                             Format Iklan Siap Copas
                                         </h3>
-                                        <p className="text-[10.5px] text-slate-400">
+                                        <p className="text-[11px] text-slate-500">
                                             Real-time broadcast generator
                                         </p>
                                     </div>
                                 </div>
-                                <span className="text-[10px] bg-blue-500/20 text-blue-300 font-mono px-2 py-0.5 rounded-full border border-blue-500/30">
+                                <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-200">
                                     Live
                                 </span>
                             </div>
@@ -694,7 +694,7 @@ export default function JobPostingForm() {
                                         className={`w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                                             copied 
                                                 ? "bg-emerald-600 text-white shadow-xs" 
-                                                : "bg-slate-800 hover:bg-slate-900 text-white shadow-xs"
+                                                : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 shadow-2xs"
                                         }`}
                                     >
                                         {copied ? (
@@ -778,19 +778,19 @@ export default function JobPostingForm() {
                         </div>
 
                         {/* CARD 3: ACTION CTA */}
-                        <div className="bg-slate-900 text-white rounded-2xl p-5 shadow-lg space-y-3">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                                 Konfirmasi & Terbitkan
                             </h3>
-                            <p className="text-xs text-slate-300 leading-relaxed">
+                            <p className="text-xs text-slate-600 leading-relaxed">
                                 Lowongan yang berstatus <strong>Aktif</strong> akan langsung tersedia di pipeline rekrutmen dan siap menampung data pelamar masuk.
                             </p>
 
-                            <div className="space-y-2 pt-2">
+                            <div className="space-y-2 pt-2 border-t border-slate-100">
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-blue-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
                                 >
                                     <Save className="w-4 h-4" />
                                     <span>{submitting ? "Memproses..." : isEdit ? "Simpan Perubahan Lowongan" : "Terbitkan Lowongan Baru"}</span>
@@ -799,7 +799,7 @@ export default function JobPostingForm() {
                                 <button
                                     type="button"
                                     onClick={() => navigate("/recruitment")}
-                                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition-colors cursor-pointer"
+                                    className="w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl text-xs transition-colors cursor-pointer"
                                 >
                                     Batal & Kembali
                                 </button>
