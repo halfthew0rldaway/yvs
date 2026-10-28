@@ -424,7 +424,7 @@ export default function RmaList() {
                                 <th className="px-6 py-3.5">Sumber & Pelanggan</th>
                                 <th className="px-6 py-3.5">Distributor & Kebijakan Garansi</th>
                                 <th className="px-6 py-3.5">Status & Pengiriman</th>
-                                <th className="px-6 py-3.5 text-right w-28">Aksi</th>
+                                <th className="px-6 py-3.5 text-right w-44">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -442,14 +442,14 @@ export default function RmaList() {
                                         }}
                                         className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
                                     >
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-middle">
                                             <p className="font-mono font-bold text-slate-900">{item.nomor_rma}</p>
                                             <p className="text-xs text-slate-500 mt-0.5">
                                                 {new Date(item.tgl_pengajuan || item.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                                             </p>
                                         </td>
 
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-middle">
                                             <div className="font-semibold text-slate-800">{item.sparepart?.nama}</div>
                                             <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 mt-0.5">
                                                 <span>Brand: {item.sparepart?.brand?.nama || "-"}</span>
@@ -471,7 +471,7 @@ export default function RmaList() {
                                             )}
                                         </td>
 
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-middle">
                                             {isFromTicket ? (
                                                 <div>
                                                     <div className="flex items-center gap-1.5">
@@ -518,7 +518,7 @@ export default function RmaList() {
                                             )}
                                         </td>
 
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-middle">
                                             <div className="flex items-center gap-1.5 font-medium text-slate-900">
                                                 <Building2 className="w-3.5 h-3.5 text-slate-400" />
                                                 <span>{item.supplier_nama}</span>
@@ -545,24 +545,26 @@ export default function RmaList() {
                                             </div>
                                         </td>
 
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusCfg.color}`}>
-                                                <StatusIcon className="w-3.5 h-3.5" />
-                                                {statusCfg.label}
-                                            </span>
-                                            {item.resi_pengiriman && (
-                                                <p className="text-[11px] text-slate-600 font-mono mt-1">
-                                                    {item.kurir_pengiriman || "Kurir"}: {item.resi_pengiriman}
-                                                </p>
-                                            )}
+                                        <td className="px-6 py-4 align-middle">
+                                            <div className="flex flex-col gap-1 items-start justify-center">
+                                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusCfg.color}`}>
+                                                    <StatusIcon className="w-3.5 h-3.5" />
+                                                    {statusCfg.label}
+                                                </span>
+                                                {item.resi_pengiriman && (
+                                                    <p className="text-[11px] text-slate-600 font-mono mt-0.5">
+                                                        {item.kurir_pengiriman || "Kurir"}: {item.resi_pengiriman}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </td>
 
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-1.5">
+                                        <td className="px-6 py-4 align-middle text-right">
+                                            <div className="inline-flex items-center justify-end gap-1.5">
                                                 <button
                                                     type="button"
                                                     onClick={() => handleOpenUpdateModal(item)}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-700 hover:text-blue-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-2xs"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-700 hover:text-blue-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
                                                     title="Update Status / Resi / Penyelesaian"
                                                 >
                                                     <span>Update</span>
@@ -572,21 +574,25 @@ export default function RmaList() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setPrintTarget(item)}
-                                                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                                                    className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shrink-0"
                                                     title="Cetak Surat Jalan Retur RMA"
                                                 >
                                                     <Printer className="w-4 h-4" />
                                                 </button>
 
-                                                {isAdmin && item.status === "diajukan" && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setDeleteTarget(item)}
-                                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                                        title="Hapus / Batalkan Klaim"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
+                                                {isAdmin && (
+                                                    item.status === "diajukan" ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setDeleteTarget(item)}
+                                                            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                                                            title="Hapus / Batalkan Klaim"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    ) : (
+                                                        <div className="w-8 h-8 shrink-0" aria-hidden="true" />
+                                                    )
                                                 )}
                                             </div>
                                         </td>

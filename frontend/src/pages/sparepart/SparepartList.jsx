@@ -902,7 +902,7 @@ export default function SparepartList() {
                                                                 <span>Ingatkan Admin</span>
                                                             </button>
                                                         ) : (
-                                                            <span className="text-xs text-slate-400 font-medium">Stok Aman</span>
+                                                            <span className="inline-flex items-center justify-center w-[116px] text-xs text-slate-400 font-medium">Stok Aman</span>
                                                         )}
                                                     </div>
                                                 )}

@@ -712,7 +712,9 @@ export default function LoanerList() {
                                                             >
                                                                 Kembalikan
                                                             </button>
-                                                        ) : null}
+                                                        ) : (
+                                                            <div className="w-[86px] shrink-0" aria-hidden="true" />
+                                                        )}
 
                                                         {isAdmin && (
                                                             <>
