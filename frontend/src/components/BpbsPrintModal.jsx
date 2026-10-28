@@ -58,37 +58,37 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
 
             <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[95vh]">
                 {/* Header Modal Bar */}
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 shrink-0 no-print">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl">
-                            <FileText className="w-5 h-5" />
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/60 shrink-0 no-print">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 sm:p-2.5 bg-blue-100 text-blue-700 rounded-xl shrink-0">
+                            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
-                        <div>
-                            <h3 className="font-bold text-slate-900 text-base">Surat Tanda Terima Masuk (BPBS)</h3>
-                            <p className="text-xs text-slate-500 mt-0.5">Bukti Penerimaan Barang Servis resmi untuk diserahkan ke pelanggan</p>
+                        <div className="min-w-0">
+                            <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">Surat Tanda Terima Masuk (BPBS)</h3>
+                            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">Bukti Penerimaan Barang Servis resmi untuk pelanggan</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0 justify-end">
                         <button
                             type="button"
                             onClick={handlePrint}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer"
+                            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer"
                         >
-                            <Printer className="w-4 h-4" />
-                            <span>Cetak BPBS (A5/A4)</span>
+                            <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span>Cetak BPBS</span>
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                            className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                     </div>
                 </div>
 
                 {/* Printable Document Area */}
-                <div className="p-6 sm:p-8 overflow-y-auto bg-white text-slate-800" id="printable-bpbs">
+                <div className="p-4 sm:p-8 overflow-y-auto bg-white text-slate-800" id="printable-bpbs">
                     {/* Kop Surat Toko */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-2 border-slate-900 gap-4">
                         <div>

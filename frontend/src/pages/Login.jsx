@@ -62,7 +62,7 @@ export default function Login() {
         <div className="min-h-screen flex w-full bg-white overflow-hidden font-sans">
             
             {/* Left Column - Form */}
-            <div className="w-full lg:w-[50%] xl:w-[45%] flex flex-col justify-between px-8 sm:px-16 md:px-24 py-12 z-10 relative bg-white border-r border-slate-100 shadow-[10px_0_40px_rgba(0,0,0,0.02)]">
+            <div className="w-full lg:w-[50%] xl:w-[45%] flex flex-col justify-between px-5 sm:px-16 md:px-24 py-8 sm:py-12 z-10 relative bg-white border-r border-slate-100 shadow-[10px_0_40px_rgba(0,0,0,0.02)] min-h-screen">
                 
                 {/* Logo Area */}
                 <motion.div 

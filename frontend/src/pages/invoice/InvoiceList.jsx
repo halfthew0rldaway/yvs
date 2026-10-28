@@ -111,7 +111,7 @@ export default function InvoiceList() {
                     <h1 className="text-2xl font-bold text-slate-900">Data & Laporan Invoice</h1>
                     <p className="text-sm text-slate-500 mt-1">Rekapitulasi transaksi, pendapatan periodik, dan performa servis</p>
                 </div>
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
                     <button
                         type="button"
                         onClick={() => setIsReportModalOpen(true)}

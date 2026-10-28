@@ -52,8 +52,8 @@ export default function DefectMapperModal({
         if (!canvasRef.current) return;
 
         const rect = canvasRef.current.getBoundingClientRect();
-        const clientX = e.clientX;
-        const clientY = e.clientY;
+        const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
 
         // Hitung koordinat persentase (0% - 100%)
         const x = Math.round(((clientX - rect.left) / rect.width) * 1000) / 10;
@@ -115,22 +115,22 @@ export default function DefectMapperModal({
             <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
                 
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/80">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs">
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/80 gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs shrink-0">
                             <Laptop className="w-5 h-5" />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-slate-800 text-base">{title}</h3>
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                    {items.length} Cacat Fisik Tercatat
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="font-semibold text-slate-800 text-sm sm:text-base truncate">{title}</h3>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                                    {items.length} Cacat
                                 </span>
                             </div>
-                            <p className="text-xs text-slate-500 mt-0.5">
+                            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 line-clamp-1 sm:line-clamp-none">
                                 {readOnly 
                                     ? "Visualisasi titik goresan dan kecacatan fisik perangkat saat diterima."
-                                    : "Klik pada skema perangkat untuk menandai lokasi baret, retak, penyok, atau baut hilang."
+                                    : "Ketuk pada skema perangkat untuk menandai lokasi baret, retak, penyok, atau baut hilang."
                                 }
                             </p>
                         </div>
@@ -138,7 +138,7 @@ export default function DefectMapperModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors shrink-0"
                     >
                         <X className="w-5 h-5" />
                     </button>

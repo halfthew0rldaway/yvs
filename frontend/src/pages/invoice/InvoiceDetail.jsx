@@ -8,73 +8,101 @@ import {
     DigitalSignatureToggleBar 
 } from "../../components/DigitalSignatureStamp";
 import DigitalSignaturePadModal from "../../components/DigitalSignaturePadModal";
-import AdminSignatureSelectorModal from "../../components/AdminSignatureSelectorModal";
+import AdminSignatureSelectorModal, { DEFAULT_WORKSHOP_SIGNATURE } from "../../components/AdminSignatureSelectorModal";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
 }
 
-function CustomerSignatureBlock({ invoice, customerName, onOpenModal }) {
-    if (invoice?.ttd_customer) {
-        return (
-            <div className="flex flex-col items-center justify-end text-center min-w-[130px] print:min-w-[110px] group relative">
-                <div className="flex items-center gap-1 mb-1">
-                    <p className="text-slate-500 text-[11px] print:text-[8.5px] font-medium">
-                        Tanda Tangan Pelanggan
-                    </p>
-                    <span className="print:hidden text-[8px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 rounded-full">
-                        ✓ Digital
-                    </span>
-                </div>
-                <div className="relative h-20 print:h-16 w-full flex items-center justify-center">
-                    <img 
-                        src={invoice.ttd_customer} 
-                        alt="Tanda Tangan Pelanggan" 
-                        className="max-h-16 print:max-h-14 max-w-[130px] object-contain"
-                    />
-                    <button
-                        type="button"
-                        onClick={onOpenModal}
-                        className="print:hidden absolute -top-1 -right-1 p-1 bg-white hover:bg-slate-100 text-slate-500 rounded-full border border-slate-200 shadow-2xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        title="Perbarui Tanda Tangan"
-                    >
-                        <Edit className="w-3 h-3 text-blue-600" />
-                    </button>
-                </div>
-                <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 mt-1 text-xs print:text-[9px] w-full truncate max-w-[150px]">
-                    {invoice.ttd_customer_nama || customerName}
-                </p>
-                {invoice.ttd_customer_at && (
-                    <span className="text-[9px] print:text-[7.5px] text-slate-400 font-mono">
-                        {new Date(invoice.ttd_customer_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </span>
-                )}
-            </div>
-        );
-    }
+/**
+ * AlignedSignatureRow
+ * Renders both Customer & Workshop Staff signatures side-by-side with identical dimensions & zero inline buttons.
+ */
+function AlignedSignatureRow({
+    customerSignature,
+    customerName,
+    customerSignedAt,
+    adminSignature,
+    adminName,
+    isDigital = true,
+    adminRole = "Petugas Workshop • Kasir"
+}) {
+    const activeAdminSig = isDigital ? (adminSignature || DEFAULT_WORKSHOP_SIGNATURE) : null;
+    const activeCustomerSig = isDigital ? customerSignature : null;
 
     return (
-        <div className="flex flex-col items-center justify-end text-center min-w-[130px] print:min-w-[110px]">
-            <p className="text-slate-500 text-[11px] print:text-[8.5px] font-medium mb-1">
-                Tanda Tangan Pelanggan
-            </p>
-            <div className="h-20 print:h-16 w-full flex flex-col items-center justify-center pb-1">
-                <button
-                    type="button"
-                    onClick={onOpenModal}
-                    className="print:hidden inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
-                    title="Minta tanda tangan pelanggan di kasir"
-                >
-                    <PenTool className="w-3.5 h-3.5 text-blue-600" />
-                    <span>+ TTD Pelanggan</span>
-                </button>
-                <span className="hidden print:inline text-[10px] print:text-[8px] text-slate-300 print:text-slate-200 italic select-none">
-                    [ Tanda Tangan Fisik ]
-                </span>
+        <div className="flex items-end justify-center sm:justify-end gap-8 sm:gap-10 print:gap-10 select-none shrink-0">
+            {/* Kolom Tanda Tangan Pelanggan */}
+            <div className="flex flex-col items-center justify-end text-center w-36 sm:w-44 print:w-32">
+                <p className="text-slate-600 text-xs print:text-[8.5px] font-semibold mb-1">
+                    Penerima / Pelanggan
+                </p>
+
+                {/* Box Area Tanda Tangan (Tinggi Presisi & Rata) */}
+                <div className="h-20 print:h-14 w-full flex items-center justify-center">
+                    {activeCustomerSig ? (
+                        <img 
+                            src={activeCustomerSig} 
+                            alt="Tanda Tangan Pelanggan" 
+                            className="max-h-16 print:max-h-12 max-w-[140px] print:max-w-[105px] object-contain"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-end justify-center pb-2 border-b border-dashed border-slate-300 print:border-none">
+                            <span className="text-[10px] print:text-[8px] text-slate-300 print:text-slate-200 italic">
+                                {isDigital ? "[ Belum TTD Digital ]" : "[ Tanda Tangan Fisik ]"}
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Garis Dasar Tanda Tangan */}
+                <div className="w-full border-b border-slate-400 mt-1 mb-1"></div>
+
+                {/* Nama Terang Pelanggan */}
+                <p className="font-bold text-slate-900 text-xs print:text-[9px] w-full truncate max-w-[160px]">
+                    {customerName || "Pelanggan"}
+                </p>
+                <p className="text-[10px] print:text-[7.5px] text-slate-400 font-mono mt-0.5">
+                    {customerSignedAt 
+                        ? new Date(customerSignedAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : "Pelanggan Yangversa"}
+                </p>
             </div>
-            <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 mt-1 text-xs print:text-[9px] w-full truncate max-w-[150px]">
-                {customerName}
-            </p>
+
+            {/* Kolom Tanda Tangan Petugas Workshop */}
+            <div className="flex flex-col items-center justify-end text-center w-36 sm:w-44 print:w-32">
+                <p className="text-slate-600 text-xs print:text-[8.5px] font-semibold mb-1">
+                    {adminRole}
+                </p>
+
+                {/* Box Area Tanda Tangan (Tinggi Presisi & Rata) */}
+                <div className="h-20 print:h-14 w-full flex items-center justify-center">
+                    {activeAdminSig ? (
+                        <img 
+                            src={activeAdminSig} 
+                            alt={`TTD ${adminName}`} 
+                            className="max-h-16 print:max-h-12 max-w-[140px] print:max-w-[105px] object-contain"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-end justify-center pb-2 border-b border-dashed border-slate-300 print:border-none">
+                            <span className="text-[10px] print:text-[8px] text-slate-300 print:text-slate-200 italic">
+                                [ Tanda Tangan Petugas ]
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Garis Dasar Tanda Tangan */}
+                <div className="w-full border-b border-slate-400 mt-1 mb-1"></div>
+
+                {/* Nama Terang Petugas */}
+                <p className="font-bold text-slate-900 text-xs print:text-[9px] w-full truncate max-w-[160px]">
+                    {adminName || "Yangversa Computer"}
+                </p>
+                <p className="text-[10px] print:text-[7.5px] text-slate-400 mt-0.5">
+                    Yangversa Computer
+                </p>
+            </div>
         </div>
     );
 }
@@ -190,18 +218,18 @@ export default function InvoiceDetail() {
 
     return (
         <div className="w-full space-y-6 pb-12">
-            {/* Header & Controls (Hidden in Print) */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
-                <div className="flex items-center gap-4">
+            {/* Header & Controls Panel (Hidden in Print) */}
+            <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-4 print:hidden">
+                <div className="flex items-center gap-3">
                     <Link
                         to="/invoice"
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        className="p-2.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors shrink-0"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Dokumen Resmi Workshop</h1>
-                        <p className="text-sm text-slate-500 mt-1">Faktur pembayaran & sertifikat garansi resmi Yangversa</p>
+                        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Dokumen Resmi Workshop</h1>
+                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Faktur pembayaran & sertifikat garansi resmi Yangversa</p>
                     </div>
                 </div>
 
@@ -211,7 +239,7 @@ export default function InvoiceDetail() {
                         <button
                             type="button"
                             onClick={() => setActiveDocTab("invoice")}
-                            className={`py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 ${
+                            className={`py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                                 activeDocTab === "invoice" ? "bg-white text-blue-600 shadow-sm font-bold" : "text-slate-600 hover:text-slate-900"
                             }`}
                         >
@@ -221,7 +249,7 @@ export default function InvoiceDetail() {
                         <button
                             type="button"
                             onClick={() => setActiveDocTab("garansi")}
-                            className={`py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 ${
+                            className={`py-2 px-3 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                                 activeDocTab === "garansi" ? "bg-white text-blue-600 shadow-sm font-bold" : "text-slate-600 hover:text-slate-900"
                             }`}
                         >
@@ -231,7 +259,7 @@ export default function InvoiceDetail() {
                         <button
                             type="button"
                             onClick={() => setActiveDocTab("both")}
-                            className={`py-2 px-3 rounded-lg transition-all hidden md:flex items-center gap-1.5 ${
+                            className={`py-2 px-3 rounded-lg transition-all hidden md:flex items-center gap-1.5 cursor-pointer ${
                                 activeDocTab === "both" ? "bg-white text-blue-600 shadow-sm font-bold" : "text-slate-600 hover:text-slate-900"
                             }`}
                         >
@@ -239,7 +267,7 @@ export default function InvoiceDetail() {
                         </button>
                     </div>
 
-                    {/* Master Digital Signature Toggle */}
+                    {/* Master Digital Signature Toggle & Admin Selector */}
                     <DigitalSignatureToggleBar
                         isDigital={isDigitalSignature}
                         onToggle={toggleDigitalSignature}
@@ -262,9 +290,10 @@ export default function InvoiceDetail() {
                         <span>{invoice?.ttd_customer ? "TTD Pelanggan: Terisi ✓" : "+ TTD Pelanggan"}</span>
                     </button>
 
+                    {/* Print Document Button */}
                     <button
                         onClick={() => window.print()}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer active:scale-95"
                     >
                         <Printer className="w-4 h-4" />
                         <span>Cetak Dokumen</span>
@@ -297,7 +326,7 @@ export default function InvoiceDetail() {
 
             {/* DOCUMENT 1: INVOICE TAGIHAN */}
             {showInvoice && (
-                <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-12 max-w-4xl mx-auto print:shadow-none print:border-none print:p-0 print:max-w-none print:text-[11px] print:leading-snug ${showGaransi && activeDocTab === "both" ? "print-break-page print:break-after-page mb-10" : ""}`}>
+                <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8 md:p-12 max-w-4xl mx-auto print:shadow-none print:border-none print:p-0 print:max-w-none print:text-[11px] print:leading-snug ${showGaransi && activeDocTab === "both" ? "print-break-page print:break-after-page mb-10" : ""}`}>
                     {/* Official Workshop Header */}
                     <div className="flex flex-col md:flex-row print:flex-row justify-between items-start gap-6 border-b-2 border-slate-900 pb-6 print:pb-3">
                         <div>
@@ -354,8 +383,8 @@ export default function InvoiceDetail() {
                     </div>
 
                     {/* Cost Breakdown Table */}
-                    <div className="py-2">
-                        <table className="w-full text-left text-xs print:text-[10px]">
+                    <div className="py-2 overflow-x-auto custom-scrollbar">
+                        <table className="w-full text-left text-xs print:text-[10px] min-w-[340px]">
                             <thead>
                                 <tr className="border-b-2 border-slate-200 text-slate-900 font-bold">
                                     <th className="py-3 print:py-1">Deskripsi Item / Jasa</th>
@@ -398,33 +427,27 @@ export default function InvoiceDetail() {
 
                     {/* Footer / Signature */}
                     <div className="pt-6 print:pt-3 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-end gap-6 text-xs print:text-[9px]">
-                        <div>
+                        <div className="max-w-xs">
                             <p className="font-semibold text-slate-700">Masa Garansi Servis: {tiket.durasi_garansi || "1 Bulan"}</p>
                             <p className="text-slate-500 mt-0.5">Berlaku untuk perbaikan dan komponen yang sama sesuai rincian nota di atas.</p>
                             <p className="text-slate-400 mt-1">Dokumen ini merupakan bukti pembayaran resmi yang sah dari Yangversa Computer.</p>
                         </div>
-                        <div className="flex items-end gap-6 print:gap-4">
-                            <CustomerSignatureBlock
-                                invoice={invoice}
-                                customerName={customer.nama}
-                                onOpenModal={() => setIsSignatureModalOpen(true)}
-                            />
-                            <WorkshopSignatureStamp
-                                isDigital={isDigitalSignature}
-                                onToggle={toggleDigitalSignature}
-                                role="Petugas Workshop • Kasir"
-                                name={invoice?.ttd_admin_nama || "Yangversa Computer"}
-                                signature={invoice?.ttd_admin}
-                                onOpenSelector={() => setIsAdminSignatureModalOpen(true)}
-                            />
-                        </div>
+                        <AlignedSignatureRow
+                            customerSignature={invoice?.ttd_customer}
+                            customerName={invoice?.ttd_customer_nama || customer.nama}
+                            customerSignedAt={invoice?.ttd_customer_at}
+                            adminSignature={invoice?.ttd_admin}
+                            adminName={invoice?.ttd_admin_nama || "Yangversa Computer"}
+                            isDigital={isDigitalSignature}
+                            adminRole="Petugas Workshop • Kasir"
+                        />
                     </div>
                 </div>
             )}
 
             {/* DOCUMENT 2: KARTU GARANSI RESMI */}
             {showGaransi && (
-                <div className="bg-white rounded-2xl shadow-sm border-2 border-slate-900 p-8 sm:p-12 max-w-4xl mx-auto print:shadow-none print:p-0 print:max-w-none print:text-[11px] print:leading-snug">
+                <div className="bg-white rounded-2xl shadow-sm border-2 border-slate-900 p-4 sm:p-8 md:p-12 max-w-4xl mx-auto print:shadow-none print:p-0 print:max-w-none print:text-[11px] print:leading-snug">
                     {/* Certificate Official Header */}
                     <div className="border-b-2 border-slate-900 pb-5 text-center relative">
                         <div className="flex items-center justify-center gap-2 mb-1">
@@ -540,21 +563,15 @@ export default function InvoiceDetail() {
                             </div>
                         </div>
 
-                        {/* Customer Signature */}
-                        <CustomerSignatureBlock
-                            invoice={invoice}
-                            customerName={customer.nama}
-                            onOpenModal={() => setIsSignatureModalOpen(true)}
-                        />
-
-                        {/* Official Workshop Signature (Pure Signature, No Stamp) */}
-                        <WorkshopSignatureStamp
+                        {/* Aligned Signatures (Customer & Staff Penyerahan) */}
+                        <AlignedSignatureRow
+                            customerSignature={invoice?.ttd_customer}
+                            customerName={invoice?.ttd_customer_nama || customer.nama}
+                            customerSignedAt={invoice?.ttd_customer_at}
+                            adminSignature={invoice?.ttd_admin}
+                            adminName={invoice?.ttd_admin_nama || "Yangversa Computer"}
                             isDigital={isDigitalSignature}
-                            onToggle={toggleDigitalSignature}
-                            role="Petugas Penyerahan Unit"
-                            name={invoice?.ttd_admin_nama || "Yangversa Computer"}
-                            signature={invoice?.ttd_admin}
-                            onOpenSelector={() => setIsAdminSignatureModalOpen(true)}
+                            adminRole="Petugas Penyerahan Unit"
                         />
                     </div>
                 </div>

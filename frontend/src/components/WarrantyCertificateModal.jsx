@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Printer, ShieldCheck, Check, Award, AlertTriangle, Clock, Laptop, User, Package, Calendar, Wrench, Shield, CheckCircle2 } from "lucide-react";
 import { WorkshopSignatureStamp, DigitalSignatureToggleBar } from "./DigitalSignatureStamp";
+import { DEFAULT_WORKSHOP_SIGNATURE } from "./AdminSignatureSelectorModal";
 
 export default function WarrantyCertificateModal({
     isOpen,
@@ -129,23 +130,23 @@ export default function WarrantyCertificateModal({
             {/* Modal Dialog Card (Landscape Max-Width) */}
             <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-slate-200">
                 {/* Control Action Bar (Screen Only - Clean Light Modern Header) */}
-                <div className="no-print px-6 py-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl border border-emerald-200">
-                            <ShieldCheck className="w-5 h-5" />
+                <div className="no-print px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 sm:p-2.5 bg-emerald-100 text-emerald-700 rounded-xl border border-emerald-200 shrink-0">
+                            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
-                        <div>
-                            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <div className="min-w-0">
+                            <h3 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 truncate">
                                 <span>Kartu Garansi Digital Resmi</span>
-                                <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                                <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
                                     #{tiket.nomor_tiket}
                                 </span>
                             </h3>
-                            <p className="text-xs text-slate-500 mt-0.5">Yangversa Computer &bull; Service & Hardware Protection Pass</p>
+                            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">Yangversa Computer &bull; Service & Hardware Protection</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end">
                         <DigitalSignatureToggleBar
                             isDigital={isDigitalSignature}
                             onToggle={toggleDigitalSignature}
@@ -153,27 +154,27 @@ export default function WarrantyCertificateModal({
                         <button
                             type="button"
                             onClick={handlePrint}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer"
+                            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer"
                             title="Cetak atau Simpan PDF"
                         >
-                            <Printer className="w-4 h-4" />
+                            <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <span>Cetak / PDF</span>
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
+                            className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                     </div>
                 </div>
 
-                {/* Printable Document Area */}
-                <div className="overflow-y-auto p-4 sm:p-7 bg-slate-100/70 custom-scrollbar flex justify-center items-center">
+                {/* Printable Document Area with Smooth Mobile Touch Scroll */}
+                <div className="overflow-x-auto overflow-y-auto p-2 sm:p-6 bg-slate-100/70 custom-scrollbar flex justify-start lg:justify-center items-start overscroll-x-contain" style={{ WebkitOverflowScrolling: "touch" }}>
                     <div
                         id="warranty-certificate-document"
-                        className="bg-white w-full max-w-[940px] rounded-2xl border border-slate-200/90 shadow-sm relative overflow-hidden text-slate-800 font-sans"
+                        className="bg-white min-w-[700px] lg:min-w-0 w-full max-w-[940px] rounded-2xl border border-slate-200/90 shadow-sm relative overflow-hidden text-slate-800 font-sans shrink-0 my-auto"
                     >
                         {/* Top Gradient Stripe */}
                         <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500" />
@@ -387,32 +388,61 @@ export default function WarrantyCertificateModal({
                                         </span>
                                     </div>
 
-                                    {/* Workshop & Customer Signatures */}
-                                    <div className="w-full pt-2.5 mt-2.5 border-t border-slate-200/80 flex items-end justify-center gap-4">
-                                        {tiket.invoice?.ttd_customer && (
-                                            <div className="flex flex-col items-center justify-end text-center min-w-[90px] print:min-w-[80px]">
-                                                <p className="text-slate-500 text-[9.5px] print:text-[7.5px] font-medium mb-0.5">
-                                                    Penerima Garansi
-                                                </p>
-                                                <div className="h-16 print:h-12 w-full flex items-center justify-center">
+                                    {/* Workshop & Customer Signatures (Zero Buttons, Symmetrically Aligned) */}
+                                    <div className="w-full pt-2.5 mt-2.5 border-t border-slate-200/80 flex items-end justify-center gap-8">
+                                        {/* Penerima Garansi */}
+                                        <div className="flex flex-col items-center justify-end text-center w-28 print:w-24">
+                                            <p className="text-slate-500 text-[9.5px] print:text-[7.5px] font-medium mb-0.5">
+                                                Penerima Garansi
+                                            </p>
+                                            <div className="h-14 print:h-11 w-full flex items-center justify-center">
+                                                {isDigitalSignature && tiket.invoice?.ttd_customer ? (
                                                     <img 
                                                         src={tiket.invoice.ttd_customer} 
                                                         alt="TTD Pelanggan" 
-                                                        className="max-h-12 print:max-h-10 max-w-[90px] object-contain"
+                                                        className="max-h-12 print:max-h-10 max-w-[90px] print:max-w-[75px] object-contain"
                                                     />
-                                                </div>
-                                                <p className="font-bold text-slate-900 border-t border-slate-300 pt-0.5 mt-0.5 text-[9.5px] print:text-[8px] w-full truncate max-w-[110px]">
-                                                    {tiket.invoice.ttd_customer_nama || tiket.customer_nama || "Pelanggan"}
-                                                </p>
+                                                ) : (
+                                                    <span className="text-[8.5px] print:text-[7px] text-slate-300 print:text-slate-200 italic select-none">
+                                                        {isDigitalSignature ? "[ Belum TTD ]" : "[ TTD Fisik ]"}
+                                                    </span>
+                                                )}
                                             </div>
-                                        )}
-                                        <WorkshopSignatureStamp
-                                            isDigital={isDigitalSignature}
-                                            onToggle={toggleDigitalSignature}
-                                            role="Petugas Workshop"
-                                            name={tiket.invoice?.ttd_admin_nama || "Yangversa Computer"}
-                                            signature={tiket.invoice?.ttd_admin}
-                                        />
+                                            <div className="w-full border-b border-slate-300 my-0.5"></div>
+                                            <p className="font-bold text-slate-900 text-[9.5px] print:text-[8px] w-full truncate max-w-[105px]">
+                                                {tiket.invoice?.ttd_customer_nama || customer.nama || "Pelanggan"}
+                                            </p>
+                                            <p className="text-[8px] print:text-[6.5px] text-slate-400">
+                                                Pelanggan
+                                            </p>
+                                        </div>
+
+                                        {/* Petugas Workshop */}
+                                        <div className="flex flex-col items-center justify-end text-center w-28 print:w-24">
+                                            <p className="text-slate-500 text-[9.5px] print:text-[7.5px] font-medium mb-0.5">
+                                                Petugas Workshop
+                                            </p>
+                                            <div className="h-14 print:h-11 w-full flex items-center justify-center">
+                                                {isDigitalSignature ? (
+                                                    <img 
+                                                        src={tiket.invoice?.ttd_admin || DEFAULT_WORKSHOP_SIGNATURE} 
+                                                        alt="TTD Petugas" 
+                                                        className="max-h-12 print:max-h-10 max-w-[90px] print:max-w-[75px] object-contain"
+                                                    />
+                                                ) : (
+                                                    <span className="text-[8.5px] print:text-[7px] text-slate-300 print:text-slate-200 italic select-none">
+                                                        [ TTD Petugas ]
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="w-full border-b border-slate-300 my-0.5"></div>
+                                            <p className="font-bold text-slate-900 text-[9.5px] print:text-[8px] w-full truncate max-w-[105px]">
+                                                {tiket.invoice?.ttd_admin_nama || "Yangversa Computer"}
+                                            </p>
+                                            <p className="text-[8px] print:text-[6.5px] text-slate-400">
+                                                Yangversa Computer
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

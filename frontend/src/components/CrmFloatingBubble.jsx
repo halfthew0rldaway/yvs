@@ -195,8 +195,8 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                     isDraggingRef.current = false;
                 }, 120);
             }}
-            className="fixed z-[9999] select-none cursor-grab active:cursor-grabbing pointer-events-auto print:hidden"
-            style={{ right: 28, bottom: 28, touchAction: "none" }}
+            className="fixed z-[9999] select-none cursor-grab active:cursor-grabbing pointer-events-auto print:hidden right-4 sm:right-7 bottom-20 lg:bottom-7"
+            style={{ touchAction: "none" }}
             initial={{ opacity: 0, scale: 0.9, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 280, damping: 22 }}
@@ -210,7 +210,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.92, y: 12 }}
                             transition={{ type: "spring", stiffness: 350, damping: 26 }}
-                            className="w-[330px] sm:w-[360px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden mb-3 flex flex-col text-left"
+                            className="w-[calc(100vw-32px)] sm:w-[360px] max-w-[360px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden mb-3 flex flex-col text-left"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Card Header: Crisp, Clean White matching Servio Modals */}
