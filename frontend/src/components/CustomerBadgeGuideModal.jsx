@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { X, Award, ShieldAlert, Sparkles, BookOpen } from "lucide-react";
 import { BADGE_DEFINITIONS } from "../utils/customerBadges";
 
@@ -7,16 +8,26 @@ export default function CustomerBadgeGuideModal({ isOpen, onClose }) {
 
     const badgeList = Object.values(BADGE_DEFINITIONS);
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    const modalContent = (
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto whitespace-normal"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+        >
             {/* Backdrop */}
             <div 
-                className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" 
-                onClick={onClose}
+                className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity" 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClose();
+                }}
             />
 
             {/* Modal Dialog */}
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden z-10 border border-slate-200 animate-fadeIn">
+            <div 
+                className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden z-10 border border-slate-200 animate-fadeIn whitespace-normal text-slate-800"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -99,5 +110,7 @@ export default function CustomerBadgeGuideModal({ isOpen, onClose }) {
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 }
 
