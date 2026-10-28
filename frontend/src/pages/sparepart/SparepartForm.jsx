@@ -27,9 +27,11 @@ import {
     CheckCircle2, 
     AlertCircle,
     Info,
-    X
+    X,
+    QrCode
 } from "lucide-react";
 import SupplierModal from "../supplier/SupplierModal";
+import SparepartQrModal from "../../components/SparepartQrModal";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
@@ -88,6 +90,7 @@ export default function SparepartForm() {
 
     // Add Supplier Modal
     const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
     // Supplier Directory Selection Mode: "direktori" | "manual"
     const [supplierMode, setSupplierMode] = useState("direktori");
@@ -355,6 +358,17 @@ export default function SparepartForm() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {isEdit && (
+                        <button
+                            type="button"
+                            onClick={() => setIsQrModalOpen(true)}
+                            className="px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                            title="Cetak Stiker Label & QR Code Part"
+                        >
+                            <QrCode className="w-4 h-4 text-blue-600" />
+                            <span className="hidden sm:inline">Cetak Label QR</span>
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={() => navigate("/sparepart")}
@@ -1237,6 +1251,20 @@ export default function SparepartForm() {
                     toast.success("Mitra supplier baru siap dipilih di katalog!");
                 }}
             />
+
+            {/* MODAL 3: CETAK LABEL STIKER & QR CODE */}
+            {isEdit && (
+                <SparepartQrModal
+                    isOpen={isQrModalOpen}
+                    onClose={() => setIsQrModalOpen(false)}
+                    sparepart={{
+                        ...form,
+                        id: Number(id),
+                        brand: brands.find(b => String(b.id) === String(form.brand_id)),
+                        supplier: suppliers.find(s => String(s.id) === String(form.supplier_id))
+                    }}
+                />
+            )}
 
         </div>
     );

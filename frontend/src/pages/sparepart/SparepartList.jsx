@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
-import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw } from "lucide-react";
+import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw, QrCode } from "lucide-react";
 import * as XLSX from "xlsx";
 import ConfirmModal from "../../components/ConfirmModal";
 import TableContainer from "../../components/common/TableContainer";
@@ -11,6 +11,7 @@ import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
 import RestockManifestModal from "../../components/RestockManifestModal";
+import SparepartQrModal from "../../components/SparepartQrModal";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
@@ -22,6 +23,7 @@ export default function SparepartList() {
     const [spareparts, setSpareparts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const [qrModalTarget, setQrModalTarget] = useState(null);
 
     // Filter & Sort States
     const [searchQuery, setSearchQuery] = useState("");
@@ -842,6 +844,14 @@ export default function SparepartList() {
                                             <td className="px-6 py-4 text-right">
                                                 {isAdmin ? (
                                                     <div className="flex items-center justify-end gap-1 transition-opacity">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setQrModalTarget(s)}
+                                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                                            title="Cetak Stiker Label & QR Code Part"
+                                                        >
+                                                            <QrCode className="w-4 h-4" />
+                                                        </button>
                                                         <Link
                                                             to={`/rma/tambah?sparepart_id=${s.id}`}
                                                             className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -858,14 +868,22 @@ export default function SparepartList() {
                                                         </Link>
                                                         <button
                                                             onClick={() => handleDeleteClick(s)}
-                                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                                             title="Hapus"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center justify-end gap-2">
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setQrModalTarget(s)}
+                                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                                            title="Cetak Stiker Label & QR Code Part"
+                                                        >
+                                                            <QrCode className="w-4 h-4" />
+                                                        </button>
                                                         <Link
                                                             to={`/rma/tambah?sparepart_id=${s.id}`}
                                                             className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -917,21 +935,21 @@ export default function SparepartList() {
                     ></div>
 
                     <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden z-10 border border-slate-200">
-                        <div className="px-6 py-5 bg-slate-800 text-white flex items-center justify-between">
+                        <div className="px-6 py-4.5 bg-white text-slate-900 border-b border-slate-200 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center">
-                                    <PackagePlus className="w-5 h-5 text-slate-300" />
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                                    <PackagePlus className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-base text-white">Quick Restock / Tambah Stok</h3>
-                                    <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[220px]">
+                                    <h3 className="font-bold text-base text-slate-900">Quick Restock / Tambah Stok</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[220px]">
                                         {restockModalTarget.nama}
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setRestockModalTarget(null)}
-                                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -1079,21 +1097,21 @@ export default function SparepartList() {
                     ></div>
 
                     <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden z-10 border border-slate-200">
-                        <div className="px-6 py-4 bg-slate-800 text-white flex items-center justify-between">
+                        <div className="px-6 py-4.5 bg-white text-slate-900 border-b border-slate-200 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center">
-                                    <History className="w-5 h-5 text-slate-300" />
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                                    <History className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-base text-white">Audit Jejak Suku Cadang</h3>
-                                    <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[280px]">
+                                    <h3 className="font-bold text-base text-slate-900">Audit Jejak Suku Cadang</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[280px]">
                                         {historyModalTarget.nama}
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setHistoryModalTarget(null)}
-                                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -1546,6 +1564,13 @@ export default function SparepartList() {
             <RestockManifestModal
                 isOpen={isRestockManifestOpen}
                 onClose={() => setIsRestockManifestOpen(false)}
+            />
+
+            {/* Sparepart Label & QR Code Printing Modal */}
+            <SparepartQrModal
+                isOpen={!!qrModalTarget}
+                onClose={() => setQrModalTarget(null)}
+                sparepart={qrModalTarget}
             />
         </div>
     );
