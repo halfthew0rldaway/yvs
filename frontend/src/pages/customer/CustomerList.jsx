@@ -2,10 +2,12 @@ import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import { Search, Plus, Edit2, Trash2, Users, Eye, MonitorSmartphone, X } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, Users, Eye, MonitorSmartphone, X, Award } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import CustomerDetailModal from "../../components/CustomerDetailModal";
 import PerangkatDetailModal from "../../components/PerangkatDetailModal";
+import CustomerBadges from "../../components/CustomerBadges";
+import CustomerBadgeGuideModal from "../../components/CustomerBadgeGuideModal";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
@@ -21,6 +23,7 @@ export default function CustomerList() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
     const [selectedPerangkatId, setSelectedPerangkatId] = useState(null);
+    const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     // Standardized Pagination State
     const [currentPage, setCurrentPage] = useState(1);
@@ -98,13 +101,24 @@ export default function CustomerList() {
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Data Pelanggan</h1>
                     <p className="text-sm text-slate-500 mt-0.5">Kelola data pelanggan, profil komunikasi, dan unit perangkat yang terdaftar</p>
                 </div>
-                <Link
-                    to="/customer/tambah"
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm shrink-0"
-                >
-                    <Plus className="w-4 h-4" />
-                    <span>Tambah Pelanggan</span>
-                </Link>
+                <div className="flex items-center gap-2.5 shrink-0">
+                    <button
+                        type="button"
+                        onClick={() => setIsGuideOpen(true)}
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs hover:border-slate-300 cursor-pointer"
+                        title="Lihat definisi & SOP badge reputasi pelanggan"
+                    >
+                        <Award className="w-4 h-4 text-amber-500" />
+                        <span>Panduan Badge</span>
+                    </button>
+                    <Link
+                        to="/customer/tambah"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm shrink-0"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Tambah Pelanggan</span>
+                    </Link>
+                </div>
             </div>
 
             {/* Filter & Search Bar */}
@@ -182,6 +196,7 @@ export default function CustomerList() {
                             <tr>
                                 <th className="px-6 py-3.5 w-16">No</th>
                                 <th className="px-6 py-3.5">Nama Pelanggan</th>
+                                <th className="px-6 py-3.5">Reputasi & Badge</th>
                                 <th className="px-6 py-3.5">Tipologi Karakter</th>
                                 <th className="px-6 py-3.5">Nomor Telepon</th>
                                 <th className="px-6 py-3.5">Alamat</th>
@@ -218,6 +233,9 @@ export default function CustomerList() {
                                                     <span className="text-slate-400 font-medium">Catatan:</span> {c.catatan_khusus}
                                                 </p>
                                             )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <CustomerBadges customer={c} size="compact" />
                                         </td>
                                         <td className="px-6 py-4">
                                             <span 
@@ -299,6 +317,12 @@ export default function CustomerList() {
                 isOpen={!!selectedPerangkatId}
                 onClose={() => setSelectedPerangkatId(null)}
                 onSelectCustomer={(cId) => setSelectedCustomerId(cId)}
+            />
+
+            {/* Modal Panduan Badge Reputasi Pelanggan */}
+            <CustomerBadgeGuideModal
+                isOpen={isGuideOpen}
+                onClose={() => setIsGuideOpen(false)}
             />
         </div>
     );

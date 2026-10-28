@@ -18,7 +18,8 @@ const {
     getUnclaimedDue,
     markUnclaimedFollowUp,
     uploadFotoSelesai,
-    uploadFotoDiagnosis
+    uploadFotoDiagnosis,
+    revisiAcc
 } = require("../controllers/tiket-servis.controller");
 
 const router = express.Router();
@@ -49,6 +50,7 @@ router.post("/:id/claim-garansi", authorize("admin"), createWarrantyClaim);
 router.post("/:id/reminder-garansi", authorize("admin", "teknisi"), markWarrantyFollowUp);
 router.post("/:id/reminder-maintenance", authorize("admin", "teknisi"), markMaintenanceFollowUp);
 router.post("/:id/reminder-unclaimed", authorize("admin", "teknisi"), markUnclaimedFollowUp);
+router.post("/:id/revisi-acc", authorize("admin", "teknisi"), revisiAcc);
 router.patch("/:id/defect-map", authorize("admin", "teknisi"), updateDefectMap);
 router.put("/:id/defect-map", authorize("admin", "teknisi"), updateDefectMap);
 router.put("/:id", authorize("admin", "teknisi"), update);

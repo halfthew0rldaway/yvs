@@ -561,6 +561,12 @@ export default function TiketServisList() {
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_LABELS[t.status]?.color || "bg-slate-100 text-slate-600 border-slate-200"}`}>
                                                 {STATUS_LABELS[t.status]?.label || t.status}
                                             </span>
+                                            {t.is_revisi_acc && (
+                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200" title={`Pernah 1x Revisi ACC: ${t.alasan_revisi_acc || '-'}`}>
+                                                    <RotateCcw className="w-3 h-3 text-rose-600" />
+                                                    Revisi ACC
+                                                </span>
+                                            )}
                                             {t.checklist_qc?.passed_qc && (
                                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Telah Lulus QC">
                                                     <Award className="w-3 h-3 text-emerald-600" />

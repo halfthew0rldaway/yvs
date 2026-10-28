@@ -1,6 +1,32 @@
 const prisma = require("../config/database");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 const { normalizePhone, normalizeName, normalizeText } = require("../utils/normalize");
+const { computeCustomerStatsAndBadges } = require("../utils/customerBadges");
+
+function enrichCustomerWithBadges(c) {
+    const allTikets = [];
+    let totalBelanja = 0;
+    (c.perangkat || []).forEach(p => {
+        (p.tiket_servis || []).forEach(t => {
+            allTikets.push(t);
+            if (t.invoice?.total_biaya) {
+                totalBelanja += t.invoice.total_biaya;
+            }
+        });
+    });
+
+    const { stats, badges } = computeCustomerStatsAndBadges({
+        totalPerangkat: (c.perangkat || []).length,
+        tikets: allTikets,
+        totalBelanja
+    });
+
+    return {
+        ...c,
+        stats,
+        badges
+    };
+}
 
 // Mengambil seluruh data customer dengan pencarian dan paginasi
 async function getAll(req, res) {
@@ -22,27 +48,45 @@ async function getAll(req, res) {
             where = { OR: orList };
         }
 
+        const includeCustomerRelations = {
+            perangkat: {
+                include: {
+                    tiket_servis: {
+                        select: {
+                            id: true,
+                            status: true,
+                            is_revisi_acc: true,
+                            jml_revisi_acc: true,
+                            invoice: { select: { total_biaya: true } }
+                        }
+                    }
+                }
+            }
+        };
+
         if (!isPaginated) {
             const customers = await prisma.customer.findMany({
                 where,
-                include: { perangkat: true },
+                include: includeCustomerRelations,
                 orderBy: [{ created_at: "desc" }, { id: "desc" }],
             });
-            return res.json(customers);
+            const enriched = customers.map(enrichCustomerWithBadges);
+            return res.json(enriched);
         }
 
         const [total, customers] = await Promise.all([
             prisma.customer.count({ where }),
             prisma.customer.findMany({
                 where,
-                include: { perangkat: true },
+                include: includeCustomerRelations,
                 orderBy: [{ created_at: "desc" }, { id: "desc" }],
                 skip,
                 take: limit,
             }),
         ]);
 
-        return res.json(buildPaginationResponse(customers, total, page, limit));
+        const enriched = customers.map(enrichCustomerWithBadges);
+        return res.json(buildPaginationResponse(enriched, total, page, limit));
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
     }
@@ -105,13 +149,16 @@ async function getById(req, res) {
 
         allTikets.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+        const { stats, badges } = computeCustomerStatsAndBadges({
+            totalPerangkat: (customer.perangkat || []).length,
+            tikets: allTikets,
+            totalBelanja
+        });
+
         return res.json({
             ...customer,
-            stats: {
-                total_perangkat: (customer.perangkat || []).length,
-                total_tiket: totalTiket,
-                total_belanja: totalBelanja
-            },
+            stats,
+            badges,
             riwayat_servis: allTikets
         });
     } catch (error) {

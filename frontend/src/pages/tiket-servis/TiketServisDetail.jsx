@@ -14,6 +14,8 @@ import SlaBadge, { SlaCountdownCard, SLA_PENGERJAAN_PACKAGES } from "../../compo
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import RepairWikiDetailModal from "../wiki/RepairWikiDetailModal";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
+import CustomerBadges from "../../components/CustomerBadges";
+import RevisiAccModal from "../../components/RevisiAccModal";
 import { isVideo } from "../../utils/mediaUtils";
 
 
@@ -232,6 +234,28 @@ export default function TiketServisDetail() {
     
     // Digital Warranty Certificate Modal
     const [isWarrantyCertModalOpen, setIsWarrantyCertModalOpen] = useState(false);
+
+    // Revisi ACC Pasca Selesai Modal State
+    const [isRevisiAccModalOpen, setIsRevisiAccModalOpen] = useState(false);
+    const [isSubmittingRevisi, setIsSubmittingRevisi] = useState(false);
+
+    async function handleConfirmRevisiAcc({ alasan_revisi, konfirmasi_teks }) {
+        setIsSubmittingRevisi(true);
+        try {
+            const res = await api.post(`/tiket-servis/${id}/revisi-acc`, {
+                alasan_revisi,
+                konfirmasi_teks
+            });
+            toast.success(res.data?.message || "Revisi ACC berhasil diterbitkan!");
+            setIsRevisiAccModalOpen(false);
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memproses revisi ACC");
+            throw err;
+        } finally {
+            setIsSubmittingRevisi(false);
+        }
+    }
 
     // Feature 1: Defect Mapper State
     const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
@@ -1007,10 +1031,35 @@ export default function TiketServisDetail() {
 
                     {/* Stage Info: Selesai */}
                     {tiket.status === "selesai" && (
-                        <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold shrink-0">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                            <span>Tahap Kasir / Admin: Siap Diambil</span>
-                        </div>
+                        <>
+                            <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold shrink-0">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                <span>Tahap Kasir / Admin: Siap Diambil</span>
+                            </div>
+
+                            {/* Revisi ACC Button / Badge */}
+                            {tiket.is_revisi_acc ? (
+                                <div 
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold shrink-0 cursor-help"
+                                    title={`Tiket telah menggunakan 1x kuota revisi ACC: "${tiket.alasan_revisi_acc || '-'}"`}
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                    <span>1x Pernah Revisi ACC</span>
+                                </div>
+                            ) : (
+                                isAdmin && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsRevisiAccModalOpen(true)}
+                                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 hover:border-rose-400 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
+                                        title="Pelanggan berubah pikiran atau mengajukan revisi penawaran? Kembalikan status ke Menunggu Persetujuan (Maks 1x)"
+                                    >
+                                        <RotateCcw className="w-4 h-4 text-rose-600 shrink-0" />
+                                        <span>Revisi ACC Pelanggan</span>
+                                    </button>
+                                )
+                            )}
+                        </>
                     )}
                 </div>
             </div>
@@ -1082,6 +1131,38 @@ export default function TiketServisDetail() {
                 </div>
             )}
 
+            {/* Alert Banner: Tiket Pernah Mengalami 1x Revisi ACC */}
+            {tiket.is_revisi_acc && (
+                <div className="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-fadeIn">
+                    <div className="flex items-start gap-3.5">
+                        <div className="p-2.5 bg-amber-500 text-white rounded-xl shrink-0 mt-0.5 shadow-sm">
+                            <RotateCcw className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-900 border border-amber-300 uppercase tracking-wider">
+                                    Pernah 1x Revisi ACC
+                                </span>
+                                <span className="text-xs text-amber-800 font-medium">
+                                    Kuota Maksimal 1x Telah Digunakan
+                                </span>
+                            </div>
+                            <h4 className="text-sm sm:text-base font-bold text-amber-950">
+                                Catatan Revisi Pelanggan: "{tiket.alasan_revisi_acc || "Pelanggan mengajukan perubahan penawaran"}"
+                            </h4>
+                            {tiket.tgl_revisi_acc && (
+                                <p className="text-xs text-amber-800/90 mt-1">
+                                    Diterbitkan pada: {new Date(tiket.tgl_revisi_acc).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                </p>
+                            )}
+                            <p className="text-[11px] text-amber-700 mt-1">
+                                * Tiket ini telah menggunakan hak 1x revisi ACC. Seluruh progres dan kesepakatan berikutnya bersifat mengikat.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-full">
@@ -1096,6 +1177,27 @@ export default function TiketServisDetail() {
                                 <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-0.5">Customer</p>
                                 <p className="font-medium text-slate-900">{tiket.perangkat?.customer?.nama}</p>
                                 <p className="text-slate-500">{tiket.perangkat?.customer?.nomor_telepon}</p>
+
+                                {/* Customer Badges Reputasi */}
+                                {tiket.perangkat?.customer && (
+                                    <div className="mt-2.5">
+                                        <CustomerBadges customer={tiket.perangkat.customer} showGuideButton={true} />
+                                    </div>
+                                )}
+
+                                {/* High-Risk Warning for revisi_acc_risk */}
+                                {tiket.perangkat?.customer?.badges?.some(b => b.id === "revisi_acc_risk") && (
+                                    <div className="mt-2.5 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 flex items-start gap-2.5">
+                                        <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                                        <div className="space-y-0.5">
+                                            <strong className="font-bold text-rose-950 block">Peringatan: Pelanggan Sering Revisi ACC</strong>
+                                            <p className="text-rose-800 text-[11px] leading-relaxed">
+                                                Pelanggan memiliki rekam jejak membatalkan/merubah kesepakatan penawaran setelah unit selesai.
+                                                <span className="font-semibold block mt-0.5 text-rose-900">SOP: Wajibkan SPK tertulis atau DP 50% sebelum teknisi memulai pengerjaan.</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {tiket.perangkat?.customer && (
                                     <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
@@ -2013,6 +2115,33 @@ export default function TiketServisDetail() {
                             />
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Revisi ACC Banner Action for Admin */}
+            {isAdmin && !tiket.is_revisi_acc && tiket.status === "selesai" && (
+                <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                        <div className="p-2.5 bg-rose-100 text-rose-700 border border-rose-200 rounded-xl shrink-0 mt-0.5">
+                            <RotateCcw className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm sm:text-base font-bold text-rose-950 flex items-center gap-2">
+                                <span>Pelanggan Mengajukan Revisi Persetujuan (ACC)?</span>
+                            </h3>
+                            <p className="text-xs text-rose-800/90 mt-1 max-w-2xl leading-relaxed">
+                                Jika pelanggan berubah pikiran di akhir pengerjaan atau ingin mengganti penawaran (misal membatalkan sparepart atau mengubah opsi perbaikan), gunakan tindakan <strong>Revisi ACC</strong> untuk mengembalikan tiket dari <em>Selesai</em> kembali ke <em>Menunggu Persetujuan</em> (kuota maksimal 1 kali).
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setIsRevisiAccModalOpen(true)}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-rose-600/20 shrink-0 cursor-pointer whitespace-nowrap"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>Revisi ACC Pelanggan</span>
+                    </button>
                 </div>
             )}
 
@@ -3525,6 +3654,15 @@ export default function TiketServisDetail() {
                     </div>
                 </div>
             )}
+
+            {/* Modal Revisi Keputusan ACC Pelanggan Pasca Selesai */}
+            <RevisiAccModal
+                isOpen={isRevisiAccModalOpen}
+                onClose={() => setIsRevisiAccModalOpen(false)}
+                onConfirm={handleConfirmRevisiAcc}
+                tiket={tiket}
+                isSubmitting={isSubmittingRevisi}
+            />
         </div>
     );
 }

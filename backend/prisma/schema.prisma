@@ -133,6 +133,12 @@ model TiketServis {
   status_part_bekas    String?   @default("belum_diserahkan") // belum_diserahkan, diserahkan_ke_pelanggan, titip_buang_ewaste, tidak_ada_pergantian
   catatan_part_bekas   String?   @db.VarChar(255)
 
+  // Feature: Revisi Persetujuan (ACC) Pelanggan Pasca Selesai
+  is_revisi_acc        Boolean   @default(false)
+  jml_revisi_acc       Int       @default(0)
+  alasan_revisi_acc    String?   @db.Text
+  tgl_revisi_acc       DateTime?
+
   perangkat         Perangkat          @relation(fields: [perangkat_id], references: [id], onDelete: Cascade)
   teknisi           User?              @relation("TeknisiTiket", fields: [teknisi_id], references: [id], onDelete: SetNull)
   diagnosis         Diagnosis?

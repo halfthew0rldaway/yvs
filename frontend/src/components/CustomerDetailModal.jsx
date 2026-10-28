@@ -4,10 +4,11 @@ import api from "../services/api";
 import { 
     User, Phone, MapPin, MonitorSmartphone, Plus, ExternalLink, X, 
     FileText, Calendar, MessageCircle, Edit2, Wrench, Laptop, Tv, Printer, 
-    Smartphone, AlertCircle, HeartHandshake, Sparkles, CheckCircle2 
+    Smartphone, AlertCircle, HeartHandshake, Sparkles, CheckCircle2, RotateCcw 
 } from "lucide-react";
 import { PERSONALITY_TYPES } from "../constants/personalityTypes";
 import MaintenanceRecallModal from "./MaintenanceRecallModal";
+import CustomerBadges from "./CustomerBadges";
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-50 text-blue-700 border-blue-200" },
@@ -114,6 +115,9 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                         {personality.label}
                                     </span>
                                 )}
+                                {customer && (
+                                    <CustomerBadges customer={customer} size="compact" showGuideButton={true} />
+                                )}
                             </div>
                             <p className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-2">
                                 <span className="font-mono">{customer?.nomor_telepon || "-"}</span>
@@ -153,6 +157,16 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                             <div>
                                 <span className="text-slate-500">Riwayat Servis: </span>
                                 <strong className="text-blue-600 font-semibold">{customer.stats?.total_tiket ?? 0} Tiket</strong>
+                                {customer.stats?.tiket_selesai !== undefined && (
+                                    <span className="text-slate-500 text-[11px]"> ({customer.stats.tiket_selesai} Selesai)</span>
+                                )}
+                            </div>
+                            <span className="text-slate-300">•</span>
+                            <div>
+                                <span className="text-slate-500">Revisi ACC: </span>
+                                <strong className={customer.stats?.total_revisi_acc > 0 ? "text-rose-600 font-semibold" : "text-slate-700 font-semibold"}>
+                                    {customer.stats?.total_revisi_acc ?? 0}x {customer.stats?.revisi_rate ? `(${customer.stats.revisi_rate}%)` : ''}
+                                </strong>
                             </div>
                             {customer.stats?.total_belanja > 0 && (
                                 <>
@@ -419,9 +433,20 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                                         {formatDate(t.created_at)}
                                                                     </td>
                                                                     <td className="py-3 px-4">
-                                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wider ${statusInfo.color}`}>
-                                                                            {statusInfo.label}
-                                                                        </span>
+                                                                        <div className="flex flex-col gap-1 items-start">
+                                                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wider ${statusInfo.color}`}>
+                                                                                {statusInfo.label}
+                                                                            </span>
+                                                                            {t.is_revisi_acc && (
+                                                                                <span 
+                                                                                    className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center gap-1"
+                                                                                    title={t.alasan_revisi_acc ? `Alasan Revisi ACC: ${t.alasan_revisi_acc}` : "Pernah direvisi ACC"}
+                                                                                >
+                                                                                    <RotateCcw className="w-2.5 h-2.5 text-amber-600" />
+                                                                                    1x Revisi ACC
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                     </td>
                                                                     <td className="py-3 px-4 text-slate-700 max-w-[200px] truncate" title={t.keluhan}>
                                                                         {t.keluhan || "-"}

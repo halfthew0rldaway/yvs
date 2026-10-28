@@ -11,6 +11,7 @@ const {
 } = require("../utils/tiket");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 const { broadcast } = require("../utils/sse");
+const { computeCustomerStatsAndBadges } = require("../utils/customerBadges");
 
 // Validasi transisi status yang diizinkan
 const STATUS_TRANSITIONS = {
@@ -274,8 +275,56 @@ async function getById(req, res) {
             }
         }
 
+        // Enrich profil customer dengan badge reputasi dan histori revisi ACC
+        let enrichedCustomer = tiket.perangkat?.customer;
+        if (enrichedCustomer?.id) {
+            const customerData = await prisma.customer.findUnique({
+                where: { id: enrichedCustomer.id },
+                include: {
+                    perangkat: {
+                        include: {
+                            tiket_servis: {
+                                select: {
+                                    id: true,
+                                    status: true,
+                                    is_revisi_acc: true,
+                                    jml_revisi_acc: true,
+                                    invoice: { select: { total_biaya: true } }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (customerData) {
+                const allCustomerTikets = [];
+                let totalBelanja = 0;
+                (customerData.perangkat || []).forEach(p => {
+                    (p.tiket_servis || []).forEach(t => {
+                        allCustomerTikets.push(t);
+                        if (t.invoice?.total_biaya) totalBelanja += t.invoice.total_biaya;
+                    });
+                });
+                const { stats, badges } = computeCustomerStatsAndBadges({
+                    totalPerangkat: (customerData.perangkat || []).length,
+                    tikets: allCustomerTikets,
+                    totalBelanja
+                });
+                enrichedCustomer = {
+                    ...enrichedCustomer,
+                    stats,
+                    badges
+                };
+            }
+        }
+
         return res.json({
             ...tiket,
+            perangkat: {
+                ...tiket.perangkat,
+                customer: enrichedCustomer
+            },
             warranty_status: getWarrantyStatus(tiket),
             sla_status: getSlaStatus(tiket)
         });
@@ -1365,6 +1414,110 @@ async function uploadFotoDiagnosis(req, res) {
     }
 }
 
+// Fitur: Revisi ACC Pelanggan Pasca Selesai
+// Mengembalikan tiket dari status 'selesai' ke 'menunggu_persetujuan'
+// Memerlukan konfirmasi teks 'REVISI', alasan revisi, dan dibatasi maksimal 1x per tiket
+async function revisiAcc(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const { alasan_revisi, konfirmasi_teks } = req.body;
+
+        const tiket = await prisma.tiketServis.findUnique({
+            where: { id },
+            include: {
+                perangkat: {
+                    include: { customer: true }
+                }
+            }
+        });
+
+        if (!tiket) {
+            return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        }
+
+        // Restriksi role Teknisi jika bukan teknisi penanggung jawab
+        if (req.user?.role === "teknisi" && tiket.teknisi_id && tiket.teknisi_id !== req.user.id) {
+            return res.status(403).json({ message: "Akses ditolak: Anda bukan teknisi penanggung jawab tiket ini." });
+        }
+
+        // 1. Validasi status harus 'selesai'
+        if (tiket.status !== "selesai") {
+            return res.status(400).json({
+                message: `Hanya tiket dengan status 'selesai' yang dapat diajukan revisi ACC. Status tiket saat ini: '${tiket.status}'.`
+            });
+        }
+
+        // 2. Validasi kuota revisi: Maksimal 1x revisi ACC
+        if (tiket.is_revisi_acc || (tiket.jml_revisi_acc && tiket.jml_revisi_acc >= 1)) {
+            return res.status(400).json({
+                message: "Tiket servis ini sudah pernah melakukan 1x revisi ACC. Sesuai kebijakan SOP bengkel, kuota revisi ACC dibatasi maksimal 1 kali per tiket."
+            });
+        }
+
+        // 3. Validasi teks konfirmasi keselamatan: 'REVISI'
+        if (!konfirmasi_teks || konfirmasi_teks.trim().toUpperCase() !== "REVISI") {
+            return res.status(400).json({
+                message: "Konfirmasi tidak cocok. Anda wajib mengetik kata 'REVISI' dengan benar untuk menyetujui pembatalan status selesai."
+            });
+        }
+
+        // 4. Validasi alasan revisi
+        if (!alasan_revisi || alasan_revisi.trim().length < 5) {
+            return res.status(400).json({
+                message: "Alasan revisi ACC wajib diisi dengan jelas (minimal 5 karakter)."
+            });
+        }
+
+        const alasanBersih = alasan_revisi.trim();
+
+        // 5. Eksekusi pengembalian tiket ke status menunggu_persetujuan
+        const updatedTiket = await prisma.tiketServis.update({
+            where: { id },
+            data: {
+                status: "menunggu_persetujuan",
+                is_revisi_acc: true,
+                jml_revisi_acc: (tiket.jml_revisi_acc || 0) + 1,
+                alasan_revisi_acc: alasanBersih,
+                tgl_revisi_acc: new Date(),
+                completed_at: null, // Reset selesai
+                disetujui_at: null, // Reset approval awal agar SLA servis dihitung ulang jika disetujui kembali
+                last_reminder_sent: 0
+            },
+            include: {
+                perangkat: { include: { customer: true } },
+                teknisi: { select: { id: true, nama: true } },
+                diagnosis: true,
+                invoice: true
+            }
+        });
+
+        // 6. Buat riwayat otomatis di LogPerbaikan
+        await prisma.logPerbaikan.create({
+            data: {
+                tiket_id: id,
+                fase: "Revisi ACC",
+                catatan: `[REVISI ACC DITERBITKAN]: Status tiket dikembalikan dari 'Selesai' ke 'Menunggu Persetujuan' oleh ${req.user.nama || req.user.role}. Catatan revisi pelanggan: "${alasanBersih}".`
+            }
+        });
+
+        // 7. Broadcast SSE update agar update secara live
+        broadcast("TIKET_UPDATED", {
+            tiketId: id,
+            status: "menunggu_persetujuan",
+            is_revisi_acc: true,
+            message: `Tiket ${tiket.nomor_tiket} telah direvisi ACC dan kembali ke Menunggu Persetujuan.`
+        });
+
+        return res.json({
+            message: `Revisi ACC berhasil diterbitkan. Status tiket ${tiket.nomor_tiket} kini kembali ke 'Menunggu Persetujuan'.`,
+            tiket: updatedTiket
+        });
+    } catch (error) {
+        console.error("Error revisiAcc:", error);
+        return res.status(500).json({ message: "Terjadi kesalahan server", error: error.message });
+    }
+}
+
 module.exports = { 
     getAll, 
     getById, 
@@ -1380,5 +1533,6 @@ module.exports = {
     getUnclaimedDue,
     markUnclaimedFollowUp,
     uploadFotoSelesai,
-    uploadFotoDiagnosis
+    uploadFotoDiagnosis,
+    revisiAcc
 };
