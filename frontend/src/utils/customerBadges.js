@@ -90,7 +90,17 @@ export const BADGE_DEFINITIONS = {
  */
 export function computeCustomerBadges(customer) {
     if (!customer) return [];
-    if (customer.badges && Array.isArray(customer.badges) && customer.badges.length > 0) {
+    
+    // Jika admin telah mengatur badge secara manual (array, bisa kosong [] atau berisi list ID badge)
+    if (customer.custom_badges !== undefined && customer.custom_badges !== null) {
+        const badgeKeys = Array.isArray(customer.custom_badges) 
+            ? customer.custom_badges 
+            : (typeof customer.custom_badges === "string" ? JSON.parse(customer.custom_badges) : []);
+        
+        return badgeKeys.map(k => BADGE_DEFINITIONS[k]).filter(Boolean);
+    }
+
+    if (customer.badges && Array.isArray(customer.badges)) {
         return customer.badges;
     }
 

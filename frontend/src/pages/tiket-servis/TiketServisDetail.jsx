@@ -1181,7 +1181,24 @@ export default function TiketServisDetail() {
                                 {/* Customer Badges Reputasi */}
                                 {tiket.perangkat?.customer && (
                                     <div className="mt-2.5">
-                                        <CustomerBadges customer={tiket.perangkat.customer} showGuideButton={true} />
+                                        <CustomerBadges 
+                                            customer={tiket.perangkat.customer} 
+                                            variant="icon-only" 
+                                            size="normal" 
+                                            showGuideButton={true}
+                                            onCustomerUpdated={(updated) => {
+                                                setTiket(prev => ({
+                                                    ...prev,
+                                                    perangkat: {
+                                                        ...prev.perangkat,
+                                                        customer: {
+                                                            ...prev.perangkat.customer,
+                                                            ...updated
+                                                        }
+                                                    }
+                                                }));
+                                            }} 
+                                        />
                                     </div>
                                 )}
 

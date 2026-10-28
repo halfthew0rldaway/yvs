@@ -18,7 +18,8 @@ function enrichCustomerWithBadges(c) {
     const { stats, badges } = computeCustomerStatsAndBadges({
         totalPerangkat: (c.perangkat || []).length,
         tikets: allTikets,
-        totalBelanja
+        totalBelanja,
+        customBadges: c.custom_badges
     });
 
     return {
@@ -152,7 +153,8 @@ async function getById(req, res) {
         const { stats, badges } = computeCustomerStatsAndBadges({
             totalPerangkat: (customer.perangkat || []).length,
             tikets: allTikets,
-            totalBelanja
+            totalBelanja,
+            customBadges: customer.custom_badges
         });
 
         return res.json({
@@ -251,19 +253,91 @@ async function update(req, res) {
             }
         }
 
+        const updateData = {
+            nama: cleanNama, 
+            nomor_telepon: cleanPhone, 
+            alamat: cleanAlamat,
+            tipe_kepribadian: tipe_kepribadian !== undefined ? tipe_kepribadian : undefined,
+            catatan_khusus: catatan_khusus !== undefined ? (catatan_khusus ? normalizeText(catatan_khusus) : null) : undefined
+        };
+
+        if (req.body.custom_badges !== undefined) {
+            updateData.custom_badges = Array.isArray(req.body.custom_badges) ? req.body.custom_badges : [];
+        }
+
         const customer = await prisma.customer.update({
             where: { id },
-            data: { 
-                nama: cleanNama, 
-                nomor_telepon: cleanPhone, 
-                alamat: cleanAlamat,
-                tipe_kepribadian: tipe_kepribadian !== undefined ? tipe_kepribadian : undefined,
-                catatan_khusus: catatan_khusus !== undefined ? (catatan_khusus ? normalizeText(catatan_khusus) : null) : undefined
-            },
+            data: updateData,
         });
 
         return res.json({ message: "Customer berhasil diperbarui", data: customer });
     } catch (error) {
+        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+    }
+}
+
+// Memperbarui badge reputasi customer secara manual (bisa memilih beberapa atau menghapus semua)
+async function updateBadges(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const { badges } = req.body; // e.g. ["revisi_acc_risk", "vip_loyal"] or []
+
+        const existing = await prisma.customer.findUnique({
+            where: { id },
+            include: {
+                perangkat: {
+                    include: {
+                        tiket_servis: {
+                            select: {
+                                id: true,
+                                status: true,
+                                is_revisi_acc: true,
+                                jml_revisi_acc: true,
+                                invoice: { select: { total_biaya: true } }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!existing) {
+            return res.status(404).json({ message: "Customer tidak ditemukan" });
+        }
+
+        const validBadgeList = Array.isArray(badges) ? badges : [];
+
+        const updated = await prisma.customer.update({
+            where: { id },
+            data: {
+                custom_badges: validBadgeList
+            },
+            include: {
+                perangkat: {
+                    include: {
+                        tiket_servis: {
+                            select: {
+                                id: true,
+                                status: true,
+                                is_revisi_acc: true,
+                                jml_revisi_acc: true,
+                                invoice: { select: { total_biaya: true } }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const enriched = enrichCustomerWithBadges(updated);
+
+        return res.json({
+            message: "Badge reputasi pelanggan berhasil diperbarui",
+            badges: validBadgeList,
+            customer: enriched
+        });
+    } catch (error) {
+        console.error("Error updateBadges:", error);
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
     }
 }
@@ -298,4 +372,4 @@ async function remove(req, res) {
     }
 }
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = { getAll, getById, create, update, remove, updateBadges };

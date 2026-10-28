@@ -116,7 +116,13 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                     </span>
                                 )}
                                 {customer && (
-                                    <CustomerBadges customer={customer} size="compact" showGuideButton={true} />
+                                    <CustomerBadges 
+                                        customer={customer} 
+                                        variant="icon-only" 
+                                        size="normal" 
+                                        showGuideButton={true}
+                                        onCustomerUpdated={(updated) => setCustomer(prev => ({ ...prev, ...updated }))} 
+                                    />
                                 )}
                             </div>
                             <p className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-2">

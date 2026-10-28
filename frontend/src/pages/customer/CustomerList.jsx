@@ -235,7 +235,14 @@ export default function CustomerList() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <CustomerBadges customer={c} size="compact" />
+                                            <CustomerBadges 
+                                                customer={c} 
+                                                variant="icon-only" 
+                                                size="normal" 
+                                                onCustomerUpdated={(updated) => {
+                                                    setCustomers(prev => prev.map(item => item.id === updated.id ? { ...item, ...updated } : item));
+                                                }}
+                                            />
                                         </td>
                                         <td className="px-6 py-4">
                                             <span 

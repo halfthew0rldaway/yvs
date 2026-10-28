@@ -33,6 +33,7 @@ model Customer {
   alamat        String?
   tipe_kepribadian String?  @default("Netral") // Netral, Koleris, Sanguinis, Plegmatis, Melankolis
   catatan_khusus   String?  @db.Text
+  custom_badges    Json?    // Array of badge keys, e.g. ["revisi_acc_risk", "vip_loyal"]
   created_at    DateTime @default(now())
 
   perangkat         Perangkat[]

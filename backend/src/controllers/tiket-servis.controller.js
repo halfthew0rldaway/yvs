@@ -309,7 +309,8 @@ async function getById(req, res) {
                 const { stats, badges } = computeCustomerStatsAndBadges({
                     totalPerangkat: (customerData.perangkat || []).length,
                     tikets: allCustomerTikets,
-                    totalBelanja
+                    totalBelanja,
+                    customBadges: customerData.custom_badges
                 });
                 enrichedCustomer = {
                     ...enrichedCustomer,
