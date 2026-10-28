@@ -492,7 +492,7 @@ export default function SparepartList() {
                     onClick={() => setStockStatusFilter("all")}
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                         stockStatusFilter === "all"
-                            ? "bg-slate-800 text-white shadow-xs"
+                            ? "bg-blue-600 text-white shadow-xs"
                             : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                     }`}
                 >

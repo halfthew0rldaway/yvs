@@ -243,7 +243,7 @@ export default function RmaList() {
                 <div 
                     onClick={() => setStatusFilter("all")}
                     className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                        statusFilter === "all" ? "bg-slate-900 text-white border-slate-900 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"
+                        statusFilter === "all" ? "bg-blue-600 text-white border-blue-600 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"
                     }`}
                 >
                     <p className={`text-[11px] font-bold uppercase tracking-wider ${statusFilter === "all" ? "text-slate-300" : "text-slate-400"}`}>Total Klaim</p>

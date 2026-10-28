@@ -317,7 +317,7 @@ export default function UserList() {
                             <button
                                 onClick={() => setRoleFilter("")}
                                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
-                                    !roleFilter ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200"
+                                    !roleFilter ? "bg-blue-600 text-white border-blue-600 shadow-xs" : "bg-white text-slate-600 border-slate-200"
                                 }`}
                             >
                                 Semua Role

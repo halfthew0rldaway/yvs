@@ -56,3 +56,4 @@ main().catch((err) => {
     console.error("❌ [INIT] Terjadi kesalahan fatal:", err);
     process.exit(0); // Jangan crash container agar express tetap bisa menyajikan error atau logs
 });
+

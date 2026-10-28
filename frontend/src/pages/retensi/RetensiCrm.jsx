@@ -596,7 +596,7 @@ export default function RetensiCrm() {
                                         <button
                                             type="button"
                                             onClick={() => setMaintFilter("all")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${maintFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${maintFilter === "all" ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Semua ({maintenanceData.total_due})
                                         </button>
@@ -617,7 +617,7 @@ export default function RetensiCrm() {
                                         <button
                                             type="button"
                                             onClick={() => setMaintFilter("unsent")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${maintFilter === "unsent" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${maintFilter === "unsent" ? "bg-indigo-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Belum Diingatkan
                                         </button>
@@ -629,7 +629,7 @@ export default function RetensiCrm() {
                                         <button
                                             type="button"
                                             onClick={() => setUnclaimedFilter("all")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${unclaimedFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${unclaimedFilter === "all" ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Semua ({unclaimedData.total_unclaimed})
                                         </button>
@@ -650,7 +650,7 @@ export default function RetensiCrm() {
                                         <button
                                             type="button"
                                             onClick={() => setUnclaimedFilter("unsent")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${unclaimedFilter === "unsent" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${unclaimedFilter === "unsent" ? "bg-indigo-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Belum Diingatkan
                                         </button>
@@ -662,7 +662,7 @@ export default function RetensiCrm() {
                                         <button
                                             type="button"
                                             onClick={() => setWarrantyFilter("all")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${warrantyFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${warrantyFilter === "all" ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Semua ({warrantyData.length})
                                         </button>

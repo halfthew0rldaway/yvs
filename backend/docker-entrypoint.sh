@@ -8,3 +8,4 @@ node scripts/docker-init.js || true
 
 echo "🚀 [ENTRYPOINT] Menjalankan perintah utama: $@"
 exec "$@"
+

@@ -308,7 +308,7 @@ export default function RepairWikiList() {
                                     onClick={() => setSelectedSopKategori(cat.id)}
                                     className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-colors cursor-pointer ${
                                         selectedSopKategori === cat.id
-                                            ? "bg-slate-900 text-white font-semibold shadow-2xs"
+                                            ? "bg-blue-600 text-white font-semibold shadow-xs"
                                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                     }`}
                                 >
@@ -470,7 +470,7 @@ export default function RepairWikiList() {
                                     onClick={() => setSelectedWikiKategori(tab.id)}
                                     className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-colors cursor-pointer ${
                                         selectedWikiKategori === tab.id
-                                            ? "bg-slate-900 text-white font-semibold shadow-2xs"
+                                            ? "bg-blue-600 text-white font-semibold shadow-xs"
                                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                     }`}
                                 >

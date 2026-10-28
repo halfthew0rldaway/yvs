@@ -259,12 +259,12 @@ export default function TiketServisList() {
                 {/* Unified Structured Filter Section */}
                 <div className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-2.5 sm:p-3 space-y-2.5 shadow-2xs">
                     {/* Row 1: Workflow Status */}
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-16 shrink-0 uppercase tracking-wider">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-20 shrink-0 uppercase tracking-wider select-none">
                             <Ticket className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span>Status</span>
                         </div>
-                        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none flex-1 min-w-0">
                             <button
                                 type="button"
                                 onClick={() => {
@@ -273,7 +273,7 @@ export default function TiketServisList() {
                                 }}
                                 className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                                     !filter 
-                                        ? "bg-slate-900 text-white shadow-2xs" 
+                                        ? "bg-blue-600 text-white shadow-xs font-bold" 
                                         : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
                                 }`}
                             >
@@ -287,7 +287,7 @@ export default function TiketServisList() {
                                 }}
                                 className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                                     filter === "aktif" 
-                                        ? "bg-amber-600 text-white shadow-2xs" 
+                                        ? "bg-amber-600 text-white shadow-xs font-bold" 
                                         : "bg-white text-amber-700 hover:bg-amber-50 border border-amber-200"
                                 }`}
                             >
@@ -306,7 +306,7 @@ export default function TiketServisList() {
                                         }}
                                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                                             isActive 
-                                                ? "bg-slate-900 text-white shadow-2xs" 
+                                                ? "bg-blue-600 text-white shadow-xs font-bold" 
                                                 : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
                                         }`}
                                     >
@@ -325,13 +325,13 @@ export default function TiketServisList() {
                     </div>
 
                     {/* Row 2: Priority Queues & Technician Scope */}
-                    <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 pt-2 border-t border-slate-200/60">
-                        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 custom-scrollbar flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-16 shrink-0 uppercase tracking-wider">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-200/60 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-20 shrink-0 uppercase tracking-wider select-none">
                                 <Zap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                 <span>Antrean</span>
                             </div>
-                            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none flex-1 min-w-0">
                                 {/* Express Queue */}
                                 <button
                                     type="button"
@@ -341,7 +341,7 @@ export default function TiketServisList() {
                                     }}
                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                                         slaFilter === "express" 
-                                            ? "bg-amber-500 text-white shadow-2xs font-bold" 
+                                            ? "bg-amber-500 text-white shadow-xs font-bold" 
                                             : "bg-white text-amber-800 hover:bg-amber-50 border border-amber-300"
                                     }`}
                                 >
@@ -363,7 +363,7 @@ export default function TiketServisList() {
                                     }}
                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                                         slaFilter === "overdue" 
-                                            ? "bg-rose-600 text-white shadow-2xs font-bold" 
+                                            ? "bg-rose-600 text-white shadow-xs font-bold" 
                                             : "bg-white text-rose-700 hover:bg-rose-50 border border-rose-200"
                                     }`}
                                 >
@@ -386,7 +386,7 @@ export default function TiketServisList() {
                                     }}
                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                                         filter === "garansi_expiring" 
-                                            ? "bg-amber-600 text-white shadow-2xs font-bold" 
+                                            ? "bg-amber-600 text-white shadow-xs font-bold" 
                                             : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
                                     }`}
                                 >
@@ -416,7 +416,7 @@ export default function TiketServisList() {
 
                         {/* Technician Scope Tabs (Technicians Only) */}
                         {!isAdmin && (
-                            <div className="flex items-center p-0.5 bg-slate-200/70 rounded-lg border border-slate-200/60 text-xs shrink-0 self-start sm:self-auto">
+                            <div className="flex items-center p-0.5 bg-slate-200/70 rounded-lg border border-slate-200/60 text-xs shrink-0 self-start sm:self-auto sm:ml-auto">
                                 <button
                                     type="button"
                                     onClick={() => {
