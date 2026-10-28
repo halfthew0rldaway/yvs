@@ -81,18 +81,18 @@ export default function ManageCustomerBadgesModal({
             />
 
             {/* Modal Dialog */}
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full flex flex-col overflow-hidden z-10 border border-slate-200 animate-fadeIn">
+            <div className="relative bg-white rounded-2xl shadow-xl max-w-md sm:max-w-xl w-full flex flex-col overflow-hidden z-10 border border-slate-200 animate-fadeIn my-auto max-h-[90vh]">
                 {/* Header */}
-                <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold shrink-0">
                             <Award className="w-5 h-5" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <h3 className="font-bold text-base text-slate-900 leading-tight">
                                 Atur Badge Reputasi Pelanggan
                             </h3>
-                            <p className="text-xs text-slate-500 mt-0.5 font-medium truncate max-w-xs">
+                            <p className="text-xs text-slate-500 mt-0.5 font-medium truncate">
                                 {customer.nama} • {customer.nomor_telepon}
                             </p>
                         </div>
@@ -101,41 +101,42 @@ export default function ManageCustomerBadgesModal({
                         type="button"
                         onClick={onClose}
                         disabled={isSaving}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer disabled:opacity-50 shrink-0 ml-2"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Body Content */}
-                <div className="p-5 sm:p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                    <div className="flex items-center justify-between gap-2 text-xs">
-                        <span className="text-slate-600 font-semibold">
-                            Pilih badge (bisa lebih dari satu atau kosong):
-                        </span>
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={handleResetToSystem}
-                                className="text-blue-600 hover:text-blue-800 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
-                                title="Gunakan rekomendasi sistem otomatis"
-                            >
-                                <RotateCcw className="w-3 h-3" />
-                                <span>Reset Sistem</span>
-                            </button>
-                            <span className="text-slate-300">|</span>
-                            <button
-                                type="button"
-                                onClick={handleClearAll}
-                                className="text-rose-600 hover:text-rose-800 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
-                                title="Hilangkan semua badge untuk pelanggan ini"
-                            >
-                                <Trash2 className="w-3 h-3" />
-                                <span>Kosongkan</span>
-                            </button>
-                        </div>
+                {/* Sub-Header Actions */}
+                <div className="px-5 sm:px-6 py-2.5 bg-slate-50 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0 text-xs">
+                    <span className="text-slate-700 font-semibold">
+                        Pilih badge (bisa lebih dari satu atau kosong):
+                    </span>
+                    <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                        <button
+                            type="button"
+                            onClick={handleResetToSystem}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 text-[11px] font-semibold rounded-md transition-colors cursor-pointer"
+                            title="Gunakan rekomendasi sistem otomatis"
+                        >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Reset Sistem</span>
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <button
+                            type="button"
+                            onClick={handleClearAll}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 text-[11px] font-semibold rounded-md transition-colors cursor-pointer"
+                            title="Hilangkan semua badge untuk pelanggan ini"
+                        >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Kosongkan</span>
+                        </button>
                     </div>
+                </div>
 
+                {/* Body Content */}
+                <div className="p-5 sm:p-6 space-y-3 overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar">
                     {/* Badge Selection Cards */}
                     <div className="space-y-2.5">
                         {allBadgeList.map((badge) => {
@@ -146,7 +147,7 @@ export default function ManageCustomerBadgesModal({
                                 <div
                                     key={badge.id}
                                     onClick={() => toggleBadge(badge.id)}
-                                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+                                    className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3.5 select-none w-full ${
                                         isSelected 
                                             ? "border-blue-500 bg-blue-50/40 shadow-xs ring-1 ring-blue-500/20" 
                                             : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60"
@@ -164,12 +165,12 @@ export default function ManageCustomerBadgesModal({
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${badge.colorClass}`}>
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${badge.colorClass}`}>
                                                 <IconComponent className="w-3.5 h-3.5 shrink-0" />
                                                 <span>{badge.label}</span>
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-600 leading-snug">
+                                        <p className="text-xs text-slate-600 leading-relaxed break-words">
                                             {badge.description}
                                         </p>
                                     </div>
@@ -180,7 +181,7 @@ export default function ManageCustomerBadgesModal({
                 </div>
 
                 {/* Footer */}
-                <div className="px-5 sm:px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div className="px-5 sm:px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
                     <span className="text-xs text-slate-500 font-medium">
                         {selectedBadges.length} badge dipilih
                     </span>

@@ -73,7 +73,7 @@ export default function CustomerBadges({
                                             setIsManageOpen(true);
                                         }
                                     }}
-                                    className={`group relative inline-flex items-center justify-center transition-all cursor-pointer rounded-lg border shadow-2xs hover:scale-110 active:scale-95 ${
+                                    className={`inline-flex items-center justify-center transition-all cursor-pointer rounded-lg border shadow-2xs hover:scale-105 active:scale-95 ${
                                         size === "compact"
                                             ? "w-6 h-6 text-[10px]"
                                             : size === "large"
@@ -83,23 +83,6 @@ export default function CustomerBadges({
                                     title={`${label}: ${description}${allowManage ? ' (Klik untuk kelola badge)' : ''}`}
                                 >
                                     <IconComponent className={size === "compact" ? "w-3 h-3" : "w-3.5 h-3.5"} />
-
-                                    {/* Tooltip on Hover */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col z-30 w-56 p-2 bg-slate-900 text-white rounded-xl shadow-xl text-[11px] font-normal leading-snug pointer-events-none text-left animate-fadeIn">
-                                        <div className="font-bold flex items-center gap-1.5 pb-1 border-b border-slate-800 text-slate-100">
-                                            <IconComponent className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                            <span className="truncate">{label}</span>
-                                        </div>
-                                        <p className="mt-1 text-slate-300 line-clamp-2">
-                                            {description}
-                                        </p>
-                                        {allowManage && (
-                                            <p className="mt-1 pt-1 border-t border-slate-800 text-[10px] text-blue-400 font-semibold">
-                                                Klik untuk ubah badge
-                                            </p>
-                                        )}
-                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
-                                    </div>
                                 </button>
                             );
                         }
