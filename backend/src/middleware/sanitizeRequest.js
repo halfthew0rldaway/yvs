@@ -15,7 +15,7 @@ function sanitizeValue(key, value) {
         let cleaned = value.replace(/\0/g, "").trim();
 
         // Specific field normalizers based on key name
-        const lowerKey = (key || "").toLowerCase();
+        const lowerKey = typeof key === "string" ? key.toLowerCase() : String(key ?? "").toLowerCase();
         if (lowerKey === "nomor_telepon" || lowerKey === "phone" || lowerKey === "telepon") {
             return normalizePhone(cleaned) || cleaned;
         }
@@ -38,7 +38,7 @@ function sanitizeValue(key, value) {
     }
 
     if (Array.isArray(value)) {
-        return value.map((item, index) => sanitizeValue(index, item));
+        return value.map((item, index) => sanitizeValue(key, item));
     }
 
     if (value !== null && typeof value === "object" && !(value instanceof Date)) {
