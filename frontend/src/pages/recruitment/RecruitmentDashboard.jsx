@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
     Users, 
     Briefcase, 
@@ -57,6 +58,7 @@ const STATUS_BADGES = {
 
 export default function RecruitmentDashboard() {
     const { user, isAdmin } = useAuth();
+    const navigate = useNavigate();
 
     // Main Tab: "pipeline" or "jobs"
     const [activeTab, setActiveTab] = useState("pipeline"); // "pipeline" | "jobs"
@@ -187,10 +189,7 @@ export default function RecruitmentDashboard() {
                     </button>
                     <button
                         type="button"
-                        onClick={() => {
-                            setJobToEdit(null);
-                            setIsJobModalOpen(true);
-                        }}
+                        onClick={() => navigate("/recruitment/jobs/tambah")}
                         className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
                     >
                         <Plus className="w-4 h-4" />
@@ -521,10 +520,7 @@ export default function RecruitmentDashboard() {
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    setJobToEdit(job);
-                                                    setIsJobModalOpen(true);
-                                                }}
+                                                onClick={() => navigate(`/recruitment/jobs/edit/${job.id}`)}
                                                 className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                                             >
                                                 <Edit3 className="w-3.5 h-3.5" />

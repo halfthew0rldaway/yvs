@@ -1754,7 +1754,7 @@ export default function TiketServisDetail() {
                                                 <td className="py-3 px-4 text-center">
                                                     <div className="flex items-center justify-center gap-1">
                                                         <Link
-                                                            to={`/rma?action=new&sparepart_id=${ps.sparepart_id}&tiket_id=${tiket.id}`}
+                                                            to={`/rma/tambah?sparepart_id=${ps.sparepart_id}&tiket_id=${tiket.id}`}
                                                             className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center justify-center"
                                                             title="Klaim Retur Garansi Distributor (RMA)"
                                                         >

@@ -26,9 +26,11 @@ const Tracking = lazy(() => import("./pages/tracking/Tracking"));
 const UserList = lazy(() => import("./pages/user/UserList"));
 const RepairWikiList = lazy(() => import("./pages/wiki/RepairWikiList"));
 const RecruitmentDashboard = lazy(() => import("./pages/recruitment/RecruitmentDashboard"));
+const JobPostingForm = lazy(() => import("./pages/recruitment/JobPostingForm"));
 const RetensiCrm = lazy(() => import("./pages/retensi/RetensiCrm"));
 const LoanerList = lazy(() => import("./pages/loaner/LoanerList"));
 const RmaList = lazy(() => import("./pages/rma/RmaList"));
+const RmaForm = lazy(() => import("./pages/rma/RmaForm"));
 const DatabaseManagement = lazy(() => import("./pages/database/DatabaseManagement"));
 
 function PageLoader() {
@@ -93,6 +95,9 @@ export default function App() {
                     <Route path="/sparepart/tambah" element={<ProtectedRoute roles={["admin"]}><SparepartForm /></ProtectedRoute>} />
                     <Route path="/sparepart/edit/:id" element={<ProtectedRoute roles={["admin"]}><SparepartForm /></ProtectedRoute>} />
                     <Route path="/rma" element={<ProtectedRoute><RmaList /></ProtectedRoute>} />
+                    <Route path="/rma/tambah" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
+                    <Route path="/rma/create" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
+                    <Route path="/rma/new" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
                     <Route path="/invoice" element={<ProtectedRoute roles={["admin"]}><InvoiceList /></ProtectedRoute>} />
                     <Route path="/invoice/tambah" element={<ProtectedRoute roles={["admin"]}><InvoiceForm /></ProtectedRoute>} />
                     <Route path="/invoice/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />
@@ -100,6 +105,8 @@ export default function App() {
                     <Route path="/database" element={<ProtectedRoute roles={["admin"]}><DatabaseManagement /></ProtectedRoute>} />
                     <Route path="/wiki" element={<ProtectedRoute><RepairWikiList /></ProtectedRoute>} />
                     <Route path="/recruitment" element={<ProtectedRoute roles={["admin"]}><RecruitmentDashboard /></ProtectedRoute>} />
+                    <Route path="/recruitment/jobs/tambah" element={<ProtectedRoute roles={["admin"]}><JobPostingForm /></ProtectedRoute>} />
+                    <Route path="/recruitment/jobs/edit/:id" element={<ProtectedRoute roles={["admin"]}><JobPostingForm /></ProtectedRoute>} />
 
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

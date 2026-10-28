@@ -126,6 +126,32 @@ async function getJobPostings(req, res) {
     }
 }
 
+// GET single job posting by ID
+async function getJobById(req, res) {
+    try {
+        const id = parseInt(req.params.id);
+        const job = await prisma.jobPosting.findUnique({
+            where: { id },
+            include: {
+                _count: {
+                    select: { pelamar: true }
+                }
+            }
+        });
+
+        if (!job) {
+            return res.status(404).json({ success: false, message: "Lowongan tidak ditemukan" });
+        }
+
+        res.json({
+            success: true,
+            data: job
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Gagal memuat detail lowongan" });
+    }
+}
+
 // CREATE job posting
 async function createJobPosting(req, res) {
     try {
@@ -485,6 +511,7 @@ async function deleteApplicant(req, res) {
 module.exports = {
     getOverviewStats,
     getJobPostings,
+    getJobById,
     createJobPosting,
     updateJobPosting,
     deleteJobPosting,

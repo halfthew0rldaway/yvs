@@ -837,7 +837,7 @@ export default function SparepartList() {
                                                 {isAdmin ? (
                                                     <div className="flex items-center justify-end gap-1 transition-opacity">
                                                         <Link
-                                                            to={`/rma?action=new&sparepart_id=${s.id}`}
+                                                            to={`/rma/tambah?sparepart_id=${s.id}`}
                                                             className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                                                             title="Klaim Retur Garansi Distributor (RMA)"
                                                         >
@@ -861,7 +861,7 @@ export default function SparepartList() {
                                                 ) : (
                                                     <div className="flex items-center justify-end gap-2">
                                                         <Link
-                                                            to={`/rma?action=new&sparepart_id=${s.id}`}
+                                                            to={`/rma/tambah?sparepart_id=${s.id}`}
                                                             className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                                                             title="Klaim Retur Garansi Distributor (RMA)"
                                                         >

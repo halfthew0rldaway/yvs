@@ -3,6 +3,7 @@ const { authenticate, authorize } = require("../middleware/auth");
 const {
     getOverviewStats,
     getJobPostings,
+    getJobById,
     createJobPosting,
     updateJobPosting,
     deleteJobPosting,
@@ -25,6 +26,7 @@ router.get("/stats", getOverviewStats);
 
 // Job Postings
 router.get("/jobs", getJobPostings);
+router.get("/jobs/:id", getJobById);
 router.post("/jobs", createJobPosting);
 router.put("/jobs/:id", updateJobPosting);
 router.delete("/jobs/:id", deleteJobPosting);
