@@ -213,6 +213,8 @@ export default function CustomerList() {
                                     <tr 
                                         key={c.id} 
                                         onClick={(e) => {
+                                            // Cegah klik dari React Portal (seperti modal badge/dialog yang di-render di document.body) memicu row click
+                                            if (!e.currentTarget.contains(e.target)) return;
                                             if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
                                             setSelectedCustomerId(c.id);
                                         }}

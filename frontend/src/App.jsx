@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import Layout from "./components/Layout";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { Toaster } from 'react-hot-toast';
 
 // Lazy-loaded route pages for code-splitting & fast initial load
@@ -69,7 +70,7 @@ function ProtectedRoute({ children, roles }) {
 
 export default function App() {
     return (
-        <>
+        <ErrorBoundary>
             <Toaster position="top-right" toastOptions={{ className: 'text-sm font-medium text-slate-900', style: { borderRadius: '12px', padding: '16px' } }} />
             <Suspense fallback={<PageLoader />}>
                 <Routes>
@@ -114,6 +115,6 @@ export default function App() {
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
             </Suspense>
-        </>
+        </ErrorBoundary>
     );
 }

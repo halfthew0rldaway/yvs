@@ -5,6 +5,7 @@ const { trackingLimiter } = require("../middleware/rateLimiter");
 
 router.use(trackingLimiter);
 
+router.get("/", trackingController.track);
 router.post("/", trackingController.track);
 router.post("/rate", trackingController.submitRating);
 router.post("/respond", trackingController.respondDiagnosisApproval);

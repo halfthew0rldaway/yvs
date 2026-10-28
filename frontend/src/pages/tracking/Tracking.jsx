@@ -4,12 +4,13 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../../services/api";
 import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2, Play, Video } from "lucide-react";
-import { isVideo } from "../../utils/mediaUtils";
+import { isVideo, getMediaUrl } from "../../utils/mediaUtils";
 import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS } from "../../utils/checklistItems";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
 import SlaBadge, { SlaCountdownCard } from "../../components/SlaBadge";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import DigitalSignaturePadModal from "../../components/DigitalSignaturePadModal";
+import ErrorBoundary from "../../components/ErrorBoundary";
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-50 text-blue-700 border-blue-200" },
@@ -23,7 +24,50 @@ const STATUS_LABELS = {
 };
 
 function formatRupiah(num) {
-    return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num);
+    const val = typeof num === "number" ? num : (parseFloat(num) || 0);
+    return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(val);
+}
+
+function formatDateSafe(dateStr, options = { day: 'numeric', month: 'long', year: 'numeric' }) {
+    if (!dateStr) return "-";
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return "-";
+        return d.toLocaleDateString('id-ID', options);
+    } catch (_) {
+        return "-";
+    }
+}
+
+function safeParseUrls(val) {
+    if (!val) return [];
+    let parsed = val;
+    if (typeof parsed === "string") {
+        try {
+            parsed = JSON.parse(parsed);
+        } catch (_) {
+            return [parsed];
+        }
+    }
+    if (typeof parsed === "string") {
+        try {
+            parsed = JSON.parse(parsed);
+        } catch (_) {
+            return [parsed];
+        }
+    }
+    if (Array.isArray(parsed)) {
+        return parsed.map(item => {
+            if (!item) return "";
+            if (typeof item === "string") return item;
+            if (typeof item === "object" && item.url) return item.url;
+            return String(item);
+        }).filter(Boolean);
+    }
+    if (typeof parsed === "object" && parsed !== null) {
+        return Object.values(parsed).map(item => (typeof item === "object" && item?.url) ? item.url : String(item)).filter(Boolean);
+    }
+    return [];
 }
 
 function TrackingProgress({ currentStatus }) {
@@ -76,6 +120,11 @@ function TrackingProgress({ currentStatus }) {
 }
 
 function TrackingListItem({ t, onClick }) {
+    const statusInfo = STATUS_LABELS[t?.status] || {
+        label: t?.status ? String(t.status).replace(/_/g, " ") : "Dalam Proses",
+        color: "bg-slate-50 text-slate-700 border-slate-200"
+    };
+
     return (
         <div 
             onClick={onClick}
@@ -83,28 +132,28 @@ function TrackingListItem({ t, onClick }) {
         >
             <div className="space-y-1 w-full">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-                    <span className="font-mono font-bold text-base sm:text-lg text-slate-900">{t.nomor_tiket}</span>
+                    <span className="font-mono font-bold text-base sm:text-lg text-slate-900">{t?.nomor_tiket}</span>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-[10px] font-bold uppercase tracking-wide">
                         <MonitorSmartphone className="w-3.5 h-3.5" />
-                        {t.jenis_perangkat}
+                        {t?.jenis_perangkat || "Perangkat"}
                     </span>
-                    {t.sla_paket && <SlaBadge tiket={t} />}
+                    {t?.sla_paket && <SlaBadge tiket={t} />}
                 </div>
-                <h4 className="text-slate-800 font-bold text-base sm:text-lg leading-tight break-words">{t.perangkat}</h4>
+                <h4 className="text-slate-800 font-bold text-base sm:text-lg leading-tight break-words">{t?.perangkat || "Detail Perangkat"}</h4>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 mt-3">
                     <p className="text-slate-500 font-medium text-xs sm:text-sm flex items-center gap-1.5">
                         <Calendar className="w-4 h-4 text-slate-400" />
-                        Masuk: {new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        Masuk: {formatDateSafe(t?.created_at)}
                     </p>
                     <p className="text-slate-500 font-medium text-xs sm:text-sm flex items-center gap-1.5">
                         <User className="w-4 h-4 text-slate-400" />
-                        Teknisi: <span className="text-slate-700 font-semibold">{t.teknisi}</span>
+                        Teknisi: <span className="text-slate-700 font-semibold">{t?.teknisi || "Belum ditugaskan"}</span>
                     </p>
                 </div>
             </div>
             <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-100 mt-2 sm:mt-0 shrink-0">
-                <span className={`inline-flex px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold border uppercase tracking-widest text-center shrink-0 ${STATUS_LABELS[t.status]?.color}`}>
-                    {STATUS_LABELS[t.status]?.label}
+                <span className={`inline-flex px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold border uppercase tracking-widest text-center shrink-0 ${statusInfo.color}`}>
+                    {statusInfo.label}
                 </span>
                 <button className="p-2 bg-white border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 hover:text-slate-700 transition-colors shadow-sm hidden sm:flex shrink-0">
                     <ChevronDown className="w-4 h-4 -rotate-90" />
@@ -122,39 +171,29 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan })
     // Collect all media into categorized array
     const allPhotos = [];
 
-    // Helper to parse JSON or array
-    function safeParse(val) {
-        if (!val) return [];
-        try {
-            return typeof val === 'string' ? JSON.parse(val) : val;
-        } catch (_) {
-            return [];
-        }
-    }
-
     // 1. Initial condition photos
-    const intakeUrls = safeParse(fotoKondisi);
+    const intakeUrls = safeParseUrls(fotoKondisi);
     intakeUrls.forEach((url, i) => {
         allPhotos.push({ url, label: `Kondisi Awal ${i + 1}`, category: 'intake' });
     });
 
     // 2. Diagnosis proof photos/videos
-    const diagUrls = safeParse(fotoDiagnosis);
+    const diagUrls = safeParseUrls(fotoDiagnosis);
     diagUrls.forEach((url, i) => {
         allPhotos.push({ url, label: `Temuan Diagnosis ${i + 1}`, category: 'diagnosis' });
     });
 
     // 3. Repair log photos
-    if (logPerbaikan && logPerbaikan.length > 0) {
+    if (Array.isArray(logPerbaikan)) {
         logPerbaikan.forEach((log) => {
-            if (log.foto_url) {
-                allPhotos.push({ url: log.foto_url, label: `Proses: ${log.catatan?.substring(0, 50)}...`, category: 'repair' });
+            if (log && log.foto_url) {
+                allPhotos.push({ url: log.foto_url, label: `Proses: ${(log.catatan || '').substring(0, 50)}...`, category: 'repair' });
             }
         });
     }
 
     // 4. Completed & QC photos/videos
-    const selesaiUrls = safeParse(fotoSelesai);
+    const selesaiUrls = safeParseUrls(fotoSelesai);
     selesaiUrls.forEach((url, i) => {
         allPhotos.push({ url, label: `Hasil Selesai & QC ${i + 1}`, category: 'completed' });
     });
@@ -176,17 +215,18 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan })
             <div className="flex flex-wrap gap-2.5">
                 {items.map((photo, idx) => {
                     const globalIdx = allPhotos.indexOf(photo);
-                    const isVid = isVideo(photo.url);
+                    const photoUrl = typeof photo?.url === "string" ? photo.url : "";
+                    const isVid = isVideo(photoUrl);
 
                     return (
                         <button 
                             key={idx} 
-                            onClick={() => openLightbox(globalIdx)} 
+                            onClick={() => openLightbox(globalIdx >= 0 ? globalIdx : 0)} 
                             className={`group relative overflow-hidden rounded-xl border-2 ${borderColor} hover:${hoverBorder} transition-all shadow-sm hover:shadow-lg w-24 h-24 sm:w-28 sm:h-28 bg-slate-900 shrink-0 cursor-pointer`}
                         >
                             {isVid ? (
                                 <div className="w-full h-full relative flex items-center justify-center">
-                                    <video src={photo.url} className="w-full h-full object-cover opacity-75" preload="metadata" />
+                                    <video src={getMediaUrl(photoUrl)} className="w-full h-full object-cover opacity-75" preload="metadata" />
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <div className="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center shadow border border-white/20">
                                             <Play className="w-4 h-4 fill-white ml-0.5" />
@@ -195,7 +235,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan })
                                     <span className="absolute top-1.5 right-1.5 bg-purple-600 text-white text-[8px] font-bold px-1 rounded shadow">VIDEO</span>
                                 </div>
                             ) : (
-                                <img src={photo.url} alt={photo.label} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                                <img src={getMediaUrl(photoUrl)} alt={photo.label || "Dokumentasi"} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                             )}
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                                 <span className="text-white text-[9px] font-bold truncate">{photo.label}</span>
@@ -268,16 +308,18 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan })
                                 </button>
                             )}
 
-                            {isVideo(allPhotos[lightboxIdx].url) ? (
-                                <video 
-                                    src={allPhotos[lightboxIdx].url} 
-                                    controls 
-                                    autoPlay 
-                                    playsInline 
-                                    className="max-h-[75vh] max-w-full rounded-2xl shadow-2xl bg-black border border-white/20"
-                                />
-                            ) : (
-                                <img src={allPhotos[lightboxIdx].url} alt={allPhotos[lightboxIdx].label} className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl border border-white/20" />
+                            {allPhotos[lightboxIdx] && (
+                                isVideo(allPhotos[lightboxIdx].url) ? (
+                                    <video 
+                                        src={getMediaUrl(allPhotos[lightboxIdx].url)} 
+                                        controls 
+                                        autoPlay 
+                                        playsInline 
+                                        className="max-h-[75vh] max-w-full rounded-2xl shadow-2xl bg-black border border-white/20"
+                                    />
+                                ) : (
+                                    <img src={getMediaUrl(allPhotos[lightboxIdx].url)} alt={allPhotos[lightboxIdx].label} className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl border border-white/20" />
+                                )
                             )}
 
                             {allPhotos.length > 1 && (
@@ -288,7 +330,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan })
                         </div>
 
                         <div className="mt-4 text-center">
-                            <p className="text-white/90 text-sm font-semibold">{allPhotos[lightboxIdx].label}</p>
+                            <p className="text-white/90 text-sm font-semibold">{allPhotos[lightboxIdx]?.label || ""}</p>
                             <p className="text-white/50 text-xs mt-1">{lightboxIdx + 1} / {allPhotos.length}</p>
                         </div>
 
@@ -296,7 +338,8 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan })
                         {allPhotos.length > 1 && (
                             <div className="mt-4 flex gap-2 overflow-x-auto max-w-full pb-2 px-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
                                 {allPhotos.map((photo, idx) => {
-                                    const isVid = isVideo(photo.url);
+                                    const photoUrl = typeof photo?.url === "string" ? photo.url : "";
+                                    const isVid = isVideo(photoUrl);
                                     return (
                                         <button 
                                             key={idx} 
@@ -305,11 +348,11 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan })
                                         >
                                             {isVid ? (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <video src={photo.url} className="w-full h-full object-cover opacity-60" preload="metadata" />
+                                                    <video src={getMediaUrl(photoUrl)} className="w-full h-full object-cover opacity-60" preload="metadata" />
                                                     <Play className="w-3.5 h-3.5 text-white fill-white absolute" />
                                                 </div>
                                             ) : (
-                                                <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                                                <img src={getMediaUrl(photoUrl)} alt="" className="w-full h-full object-cover" />
                                             )}
                                         </button>
                                     );
@@ -355,14 +398,25 @@ function AccessoriesChecklist({ kelengkapanDetail, kelengkapanText }) {
     let items = [];
     if (kelengkapanDetail) {
         try {
-            items = typeof kelengkapanDetail === 'string' ? JSON.parse(kelengkapanDetail) : kelengkapanDetail;
-        } catch(e) { /* ignore */ }
+            let parsed = typeof kelengkapanDetail === 'string' ? JSON.parse(kelengkapanDetail) : kelengkapanDetail;
+            if (typeof parsed === 'string') {
+                try { parsed = JSON.parse(parsed); } catch (_) {}
+            }
+            if (Array.isArray(parsed)) {
+                items = parsed;
+            } else if (typeof parsed === 'object' && parsed !== null) {
+                items = Object.values(parsed);
+            }
+        } catch(e) {
+            items = [];
+        }
     }
 
+    if (!Array.isArray(items)) items = [];
     if (items.length === 0 && !kelengkapanText) return null;
 
     const totalItems = items.length;
-    const presentItems = items.filter(i => i.ada).length;
+    const presentItems = items.filter(i => i && i.ada).length;
 
     return (
         <div className="mb-8 pt-6 border-t border-slate-100">
@@ -381,18 +435,18 @@ function AccessoriesChecklist({ kelengkapanDetail, kelengkapanText }) {
                     <div className="divide-y divide-slate-100">
                         {items.map((item, idx) => (
                             <div key={idx} className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-white/60 transition-colors">
-                                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${item.ada ? 'bg-emerald-100 text-emerald-600' : 'bg-red-50 text-red-400'}`}>
-                                    {item.ada ? (
+                                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${item && item.ada ? 'bg-emerald-100 text-emerald-600' : 'bg-red-50 text-red-400'}`}>
+                                    {item && item.ada ? (
                                         <CheckCircle className="w-4 h-4" />
                                     ) : (
                                         <X className="w-4 h-4" />
                                     )}
                                 </div>
-                                <span className={`text-sm font-medium flex-1 min-w-0 break-words ${item.ada ? 'text-slate-800' : 'text-slate-400 line-through'}`}>
-                                    {item.item}
+                                <span className={`text-sm font-medium flex-1 min-w-0 break-words ${item && item.ada ? 'text-slate-800' : 'text-slate-400 line-through'}`}>
+                                    {item?.item || "Barang"}
                                 </span>
-                                <span className={`text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-md shrink-0 ${item.ada ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-400 border border-red-100'}`}>
-                                    {item.ada ? 'Ada' : 'Tidak Ada'}
+                                <span className={`text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-md shrink-0 ${item && item.ada ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-400 border border-red-100'}`}>
+                                    {item && item.ada ? 'Ada' : 'Tidak Ada'}
                                 </span>
                             </div>
                         ))}
@@ -663,58 +717,69 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 />
 
                 {/* Feature 1: 2D Visual Defect Map for Customer */}
-                {t.defect_map && (
-                    <div className="mb-8 pt-6 border-t border-slate-100">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-blue-600 shadow-2xs shrink-0">
-                                    <PenTool className="w-5 h-5" />
+                {t?.defect_map && (() => {
+                    const defectMapObj = typeof t.defect_map === "string" 
+                        ? (function() { try { return JSON.parse(t.defect_map); } catch(_) { return null; } })() 
+                        : t.defect_map;
+                    const defectItems = Array.isArray(defectMapObj?.items) ? defectMapObj.items : [];
+                    return (
+                        <div className="mb-8 pt-6 border-t border-slate-100">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-blue-600 shadow-2xs shrink-0">
+                                        <PenTool className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h5 className="font-bold text-slate-900 text-sm">Peta Cacat Fisik Unit (2D Blueprint)</h5>
+                                        <p className="text-xs text-slate-500">
+                                            {defectItems.length > 0
+                                                ? `Transparansi bengkel: ${defectItems.length} goresan/cacat fisik awal terpetakan saat unit diterima.`
+                                                : "Unit tercatat dalam kondisi fisik mulus tanpa cacat fisik eksterior."}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h5 className="font-bold text-slate-900 text-sm">Peta Cacat Fisik Unit (2D Blueprint)</h5>
-                                    <p className="text-xs text-slate-500">
-                                        {Array.isArray(t.defect_map?.items) && t.defect_map.items.length > 0
-                                            ? `Transparansi bengkel: ${t.defect_map.items.length} goresan/cacat fisik awal terpetakan saat unit diterima.`
-                                            : "Unit tercatat dalam kondisi fisik mulus tanpa cacat fisik eksterior."}
-                                    </p>
-                                </div>
+                                <DefectMapBadge 
+                                    value={defectMapObj} 
+                                    onClick={() => setIsDefectModalOpen(true)} 
+                                />
                             </div>
-                            <DefectMapBadge 
-                                value={t.defect_map} 
-                                onClick={() => setIsDefectModalOpen(true)} 
-                            />
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* Checklist Intake (Before / Diagnose) */}
-                {t.checklist_intake && (
-                    <div className="mb-8 pt-6 border-t border-slate-100">
-                        <div className="flex items-center gap-2.5 mb-4">
-                            <ClipboardCheck className="w-5 h-5 text-blue-600" />
-                            <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Kondisi Awal Perangkat (Sebelum Perbaikan)</h5>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 text-xs">
-                            {CHECKLIST_ITEMS.map(item => {
-                                const val = t.checklist_intake[item.key];
-                                const ItemIcon = item.Icon;
-                                return (
-                                    <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
-                                        val ? "bg-emerald-50/60 border-emerald-200 text-emerald-800" : "bg-red-50/40 border-red-100 text-red-500"
-                                    }`}>
-                                        <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-red-400"}`} />
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                            <span className={`font-bold text-[10px] mb-0.5 uppercase tracking-wide ${val ? "text-emerald-600" : "text-red-500"}`}>
-                                                {val ? "Berfungsi" : "Bermasalah"}
-                                            </span>
-                                            <span className={`truncate sm:whitespace-normal sm:break-words ${val ? "font-medium" : "line-through opacity-80"}`}>{item.label}</span>
+                {t?.checklist_intake && (() => {
+                    const intakeObj = typeof t.checklist_intake === "string"
+                        ? (function() { try { return JSON.parse(t.checklist_intake); } catch(_) { return {}; } })()
+                        : (t.checklist_intake || {});
+                    return (
+                        <div className="mb-8 pt-6 border-t border-slate-100">
+                            <div className="flex items-center gap-2.5 mb-4">
+                                <ClipboardCheck className="w-5 h-5 text-blue-600" />
+                                <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Kondisi Awal Perangkat (Sebelum Perbaikan)</h5>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 text-xs">
+                                {(CHECKLIST_ITEMS || []).map(item => {
+                                    const val = intakeObj[item.key];
+                                    const ItemIcon = item.Icon || ClipboardCheck;
+                                    return (
+                                        <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
+                                            val ? "bg-emerald-50/60 border-emerald-200 text-emerald-800" : "bg-red-50/40 border-red-100 text-red-500"
+                                        }`}>
+                                            <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-red-400"}`} />
+                                            <div className="flex flex-col flex-1 min-w-0">
+                                                <span className={`font-bold text-[10px] mb-0.5 uppercase tracking-wide ${val ? "text-emerald-600" : "text-red-500"}`}>
+                                                    {val ? "Berfungsi" : "Bermasalah"}
+                                                </span>
+                                                <span className={`truncate sm:whitespace-normal sm:break-words ${val ? "font-medium" : "line-through opacity-80"}`}>{item.label}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {t.diagnosis && (
                     <div className="mb-8 pt-6 border-t border-slate-100">
@@ -897,42 +962,44 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 
                 <div className="pt-6 border-t border-slate-100">
                     <h5 className="font-semibold text-slate-900 mb-4">Riwayat Perbaikan</h5>
-                    {t.log_perbaikan && t.log_perbaikan.length > 0 ? (
+                    {t?.log_perbaikan && t.log_perbaikan.length > 0 ? (
                         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-3" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
-                            {t.log_perbaikan.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).map((log, logIdx) => {
-                                let badgeColor = "bg-blue-100 text-blue-700";
-                                let label = "Perbaikan";
+                            {[...(t.log_perbaikan || [])]
+                                .sort((a,b) => new Date(a?.created_at || 0) - new Date(b?.created_at || 0))
+                                .map((log, logIdx) => {
+                                    let badgeColor = "bg-blue-100 text-blue-700";
+                                    let label = "Perbaikan";
 
-                                if (log.fase === "Diagnosis") {
-                                    badgeColor = "bg-amber-100 text-amber-700";
-                                    label = "Diagnosis";
-                                } else if (log.fase === "Catatan Admin") {
-                                    badgeColor = "bg-purple-100 text-purple-700";
-                                    label = "Admin";
-                                }
-                                
-                                return (
-                                    <div key={logIdx} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                        <div className="mb-2">
-                                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${badgeColor}`}>{label}</span>
-                                        </div>
-                                        <p className="text-slate-900 text-sm whitespace-pre-line mb-2 leading-relaxed">{log.catatan}</p>
-                                        
-                                        {log.foto_url && (
-                                            <div className="mb-3">
-                                                <a href={log.foto_url} target="_blank" rel="noreferrer" className="block w-fit">
-                                                    <img src={log.foto_url} alt="Dokumentasi Perbaikan" className="h-24 object-cover rounded-lg border border-slate-200 hover:opacity-90 transition-opacity shadow-sm" />
-                                                </a>
+                                    if (log?.fase === "Diagnosis") {
+                                        badgeColor = "bg-amber-100 text-amber-700";
+                                        label = "Diagnosis";
+                                    } else if (log?.fase === "Catatan Admin") {
+                                        badgeColor = "bg-purple-100 text-purple-700";
+                                        label = "Admin";
+                                    }
+                                    
+                                    return (
+                                        <div key={logIdx} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                            <div className="mb-2">
+                                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${badgeColor}`}>{label}</span>
                                             </div>
-                                        )}
-                                        
-                                        <p className="text-xs text-slate-400 font-medium">
-                                            {new Date(log.created_at).toLocaleDateString("id-ID", { 
-                                                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                                            })}
-                                        </p>
-                                    </div>
-                                );
+                                            <p className="text-slate-900 text-sm whitespace-pre-line mb-2 leading-relaxed">{log?.catatan}</p>
+                                            
+                                            {log?.foto_url && (
+                                                <div className="mb-3">
+                                                    <a href={getMediaUrl(log.foto_url)} target="_blank" rel="noreferrer" className="block w-fit">
+                                                        <img src={getMediaUrl(log.foto_url)} alt="Dokumentasi Perbaikan" className="h-24 object-cover rounded-lg border border-slate-200 hover:opacity-90 transition-opacity shadow-sm" />
+                                                    </a>
+                                                </div>
+                                            )}
+                                            
+                                            <p className="text-xs text-slate-400 font-medium">
+                                                {formatDateSafe(log?.created_at, { 
+                                                    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                                })}
+                                            </p>
+                                        </div>
+                                    );
                             })}
                         </div>
                     ) : (
@@ -941,75 +1008,80 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 </div>
 
                 {/* Feature 3: Post-Service Care Tips */}
-                {['selesai', 'diambil'].includes(t.status) && (
-                    <CareTipsCard tips={t.tips_perawatan} />
+                {['selesai', 'diambil'].includes(t?.status) && (
+                    <CareTipsCard tips={t?.tips_perawatan} />
                 )}
 
                 {/* Checklist QC (After / Selesai) */}
-                {t.checklist_qc && ["selesai", "diambil"].includes(t.status) && (
-                    <div className="pt-6 border-t border-slate-100">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                            <div>
-                                <div className="flex items-center gap-2.5">
-                                    <ClipboardCheck className="w-5 h-5 text-emerald-600" />
-                                    <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Sertifikasi Kendali Mutu (Quality Control WOW Service)</h5>
-                                </div>
-                                <p className="text-xs text-slate-500 mt-0.5">
-                                    {t.checklist_qc.passed_qc
-                                        ? "Perangkat telah lulus uji kelayakan 8 poin fungsional & pembersihan menyeluruh standar workshop."
-                                        : "Pemeriksaan fungsi perangkat sedang berlangsung pada tahap akhir perbaikan."}
-                                </p>
-                            </div>
-                            {t.checklist_qc.passed_qc && (
-                                <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1.5 rounded-full uppercase tracking-wider w-fit border border-emerald-300">
-                                    <Award className="w-4 h-4 text-emerald-600" /> Lulus QC Resmi
-                                </span>
-                            )}
-                        </div>
-
-                        {t.checklist_qc.passed_qc && (
-                            <div className="mb-4 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center gap-3 text-xs text-emerald-900">
-                                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                {t?.checklist_qc && ["selesai", "diambil"].includes(t?.status) && (() => {
+                    const qcObj = typeof t.checklist_qc === "string"
+                        ? (function() { try { return JSON.parse(t.checklist_qc); } catch(_) { return {}; } })()
+                        : (t.checklist_qc || {});
+                    return (
+                        <div className="pt-6 border-t border-slate-100">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                                 <div>
-                                    <span className="font-bold">Unit Lolos Standar WOW Service.</span>
-                                    <span className="opacity-90 block">
-                                        Perangkat telah dibersihkan menyeluruh dan seluruh komponen utama diuji kelayakannya sebelum diserahkan.
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                            {QC_CHECKLIST_ITEMS.map(item => {
-                                const val = Boolean(
-                                    t.checklist_qc[item.key] ??
-                                    (item.key === "power_test" ? t.checklist_qc.baterai : false) ??
-                                    (item.key === "clean_wow" ? t.checklist_qc.cleaning_done : false)
-                                );
-                                const ItemIcon = item.Icon;
-                                return (
-                                    <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
-                                        val ? "bg-emerald-50/60 border-emerald-200 text-emerald-950" : "bg-slate-50 border-slate-200 text-slate-400"
-                                    }`}>
-                                        <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-slate-300"}`} />
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                            <span className={`font-bold text-[10px] mb-0.5 uppercase tracking-wide flex items-center gap-1 ${val ? "text-emerald-700" : "text-slate-400"}`}>
-                                                {val ? (
-                                                    <>
-                                                        <CheckCircle className="w-3 h-3 text-emerald-600 inline shrink-0" />
-                                                        <span>Normal</span>
-                                                    </>
-                                                ) : "Belum diuji"}
-                                            </span>
-                                            <span className={`font-semibold text-slate-800 truncate sm:whitespace-normal`}>{item.label}</span>
-                                            <p className="text-[10px] text-slate-500 font-normal leading-tight mt-0.5">{item.desc}</p>
-                                        </div>
+                                    <div className="flex items-center gap-2.5">
+                                        <ClipboardCheck className="w-5 h-5 text-emerald-600" />
+                                        <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Sertifikasi Kendali Mutu (Quality Control WOW Service)</h5>
                                     </div>
-                                );
-                            })}
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        {qcObj.passed_qc
+                                            ? "Perangkat telah lulus uji kelayakan 8 poin fungsional & pembersihan menyeluruh standar workshop."
+                                            : "Pemeriksaan fungsi perangkat sedang berlangsung pada tahap akhir perbaikan."}
+                                    </p>
+                                </div>
+                                {qcObj.passed_qc && (
+                                    <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1.5 rounded-full uppercase tracking-wider w-fit border border-emerald-300">
+                                        <Award className="w-4 h-4 text-emerald-600" /> Lulus QC Resmi
+                                    </span>
+                                )}
+                            </div>
+
+                            {qcObj.passed_qc && (
+                                <div className="mb-4 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center gap-3 text-xs text-emerald-900">
+                                    <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                                    <div>
+                                        <span className="font-bold">Unit Lolos Standar WOW Service.</span>
+                                        <span className="opacity-90 block">
+                                            Perangkat telah dibersihkan menyeluruh dan seluruh komponen utama diuji kelayakannya sebelum diserahkan.
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                                {(QC_CHECKLIST_ITEMS || []).map(item => {
+                                    const val = Boolean(
+                                        qcObj[item.key] ??
+                                        (item.key === "power_test" ? qcObj.baterai : false) ??
+                                        (item.key === "clean_wow" ? qcObj.cleaning_done : false)
+                                    );
+                                    const ItemIcon = item.Icon || Award;
+                                    return (
+                                        <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
+                                            val ? "bg-emerald-50/60 border-emerald-200 text-emerald-950" : "bg-slate-50 border-slate-200 text-slate-400"
+                                        }`}>
+                                            <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-slate-300"}`} />
+                                            <div className="flex flex-col flex-1 min-w-0">
+                                                <span className={`font-bold text-[10px] mb-0.5 uppercase tracking-wide flex items-center gap-1 ${val ? "text-emerald-700" : "text-slate-400"}`}>
+                                                    {val ? (
+                                                        <>
+                                                            <CheckCircle className="w-3 h-3 text-emerald-600 inline shrink-0" />
+                                                            <span>Normal</span>
+                                                        </>
+                                                    ) : "Belum diuji"}
+                                                </span>
+                                                <span className={`font-semibold text-slate-800 truncate sm:whitespace-normal`}>{item.label}</span>
+                                                <p className="text-[10px] text-slate-500 font-normal leading-tight mt-0.5">{item.desc}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* Feature 6: Rating Teknisi & Rating Toko Google Maps */}
                 {["selesai", "diambil"].includes(t.status) && (
@@ -1261,9 +1333,10 @@ export default function Tracking() {
 
         try {
             const res = await api.post("/tracking", payload);
-            setResults(res.data);
-            if (res.data && res.data.length === 1) {
-                setSelectedTicket(res.data[0]);
+            const data = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : []);
+            setResults(data);
+            if (data.length === 1) {
+                setSelectedTicket(data[0]);
             }
         } catch (err) {
             setError(err.response?.data?.message || "Gagal melacak servis");
@@ -1424,14 +1497,16 @@ export default function Tracking() {
 
                 {selectedTicket && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 max-w-none w-full">
-                        <TrackingDetail 
-                            t={selectedTicket} 
-                            onBack={() => setSelectedTicket(null)} 
-                            onUpdateTicket={(updated) => {
-                                setSelectedTicket(updated);
-                                setResults(prev => prev ? prev.map(item => item.id === updated.id ? { ...item, ...updated } : item) : [updated]);
-                            }}
-                        />
+                        <ErrorBoundary>
+                            <TrackingDetail 
+                                t={selectedTicket} 
+                                onBack={() => setSelectedTicket(null)} 
+                                onUpdateTicket={(updated) => {
+                                    setSelectedTicket(updated);
+                                    setResults(prev => prev ? prev.map(item => item.id === updated.id ? { ...item, ...updated } : item) : [updated]);
+                                }}
+                            />
+                        </ErrorBoundary>
                     </div>
                 )}
 

@@ -6,7 +6,8 @@ const { normalizePhone } = require("../utils/normalize");
 // Customer melacak status servis tanpa login
 async function track(req, res) {
     try {
-        const { nomorTelepon, nomorTiket } = req.body;
+        const nomorTelepon = req.body?.nomorTelepon || req.query?.nomorTelepon || req.query?.phone;
+        const nomorTiket = req.body?.nomorTiket || req.query?.nomorTiket || req.query?.nomor_tiket || req.query?.tiket;
 
         if (!nomorTelepon && !nomorTiket) {
             return res.status(400).json({ message: "Masukkan nomor telepon atau nomor tiket" });
@@ -15,11 +16,16 @@ async function track(req, res) {
         const where = {};
 
         if (nomorTiket) {
-            where.nomor_tiket = nomorTiket.trim();
+            const cleanTiket = String(nomorTiket).trim();
+            where.OR = [
+                { nomor_tiket: cleanTiket },
+                { nomor_tiket: cleanTiket.toUpperCase() },
+                { nomor_tiket: cleanTiket.toLowerCase() }
+            ];
         }
 
         if (nomorTelepon) {
-            const rawPhone = nomorTelepon.trim();
+            const rawPhone = String(nomorTelepon).trim();
             const cleanDigits = rawPhone.replace(/\D/g, "");
             const normalized08 = normalizePhone(rawPhone);
             const normalized62 = cleanDigits.startsWith("0") ? "62" + cleanDigits.slice(1) : cleanDigits;
@@ -57,75 +63,91 @@ async function track(req, res) {
         }
 
         // Format response untuk customer
-        const result = tikets.map((t) => ({
-            id: t.id,
-            nomor_tiket: t.nomor_tiket,
-            customer_nama: t.perangkat?.customer?.nama || "Pelanggan",
-            customer_telepon: t.perangkat?.customer?.nomor_telepon || "",
-            perangkat: `${t.perangkat.merek} ${t.perangkat.model}`,
-            merek: t.perangkat.merek,
-            model: t.perangkat.model,
-            serial_number: t.perangkat.serial_number || "-",
-            jenis_perangkat: t.perangkat.jenis_perangkat,
-            status: t.status,
-            keluhan: t.keluhan,
-            kelengkapan: t.kelengkapan,
-            kelengkapan_detail: t.kelengkapan_detail,
-            foto_kondisi: t.foto_kondisi,
-            foto_diagnosis: t.foto_diagnosis || t.diagnosis?.foto_diagnosis || null,
-            foto_selesai: t.foto_selesai || null,
-            defect_map: t.defect_map,
-            sla_paket: t.sla_paket,
-            target_pengecekan_at: t.target_pengecekan_at,
-            disetujui_at: t.disetujui_at,
-            target_selesai_at: t.target_selesai_at,
-            sla_status: getSlaStatus(t),
-            teknisi: t.teknisi?.nama || "Belum ditugaskan",
-            diagnosis: t.diagnosis
-                ? {
-                    masalah: t.diagnosis.masalah,
-                    solusi: t.diagnosis.solusi,
-                    estimasi_biaya: t.diagnosis.estimasi_biaya,
-                }
-                : null,
-            log_perbaikan: t.log_perbaikan,
-            penggunaan_sparepart: t.penggunaan_sparepart?.map(ps => ({
-                nama: ps.sparepart.nama,
-                kategori: ps.sparepart.kategori,
-                jumlah: ps.jumlah
-            })) || [],
-            invoice: t.invoice
-                ? { 
-                    id: t.invoice.id,
-                    biaya_jasa: t.invoice.biaya_jasa,
-                    biaya_sparepart: t.invoice.biaya_sparepart,
-                    total_biaya: t.invoice.total_biaya,
-                    ttd_customer: t.invoice.ttd_customer,
-                    ttd_customer_at: t.invoice.ttd_customer_at,
-                    ttd_customer_nama: t.invoice.ttd_customer_nama,
-                    ttd_admin: t.invoice.ttd_admin,
-                    ttd_admin_at: t.invoice.ttd_admin_at,
-                    ttd_admin_nama: t.invoice.ttd_admin_nama,
-                    created_at: t.invoice.created_at
-                }
-                : null,
-            created_at: t.created_at,
-            completed_at: t.completed_at,
-            tgl_diambil: t.tgl_diambil,
-            durasi_garansi: t.durasi_garansi,
-            garansi_berakhir_at: t.garansi_berakhir_at,
-            warranty_status: getWarrantyStatus(t),
-            is_garansi_claim: t.is_garansi_claim,
-            tips_perawatan: t.tips_perawatan,
-            rating_teknisi: t.rating_teknisi,
-            rating_submitted_at: t.rating_submitted_at,
-            alasan_batal: t.alasan_batal,
-            catatan_batal: t.catatan_batal,
-            status_part_bekas: t.status_part_bekas,
-            checklist_intake: t.checklist_intake,
-            checklist_qc: t.checklist_qc,
-            googleMapsUrl: "https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"
-        }));
+        const result = tikets.map((t) => {
+            let slaStatus = null;
+            try {
+                slaStatus = getSlaStatus(t);
+            } catch (_) {}
+
+            let warrantyStatus = null;
+            try {
+                warrantyStatus = getWarrantyStatus(t);
+            } catch (_) {}
+
+            const merek = t.perangkat?.merek || "";
+            const model = t.perangkat?.model || "";
+            const perangkatNama = `${merek} ${model}`.trim() || "Perangkat";
+
+            return {
+                id: t.id,
+                nomor_tiket: t.nomor_tiket,
+                customer_nama: t.perangkat?.customer?.nama || "Pelanggan",
+                customer_telepon: t.perangkat?.customer?.nomor_telepon || "",
+                perangkat: perangkatNama,
+                merek: merek,
+                model: model,
+                serial_number: t.perangkat?.serial_number || "-",
+                jenis_perangkat: t.perangkat?.jenis_perangkat || "Perangkat",
+                status: t.status,
+                keluhan: t.keluhan || "-",
+                kelengkapan: t.kelengkapan || "-",
+                kelengkapan_detail: t.kelengkapan_detail,
+                foto_kondisi: t.foto_kondisi,
+                foto_diagnosis: t.foto_diagnosis || t.diagnosis?.foto_diagnosis || null,
+                foto_selesai: t.foto_selesai || null,
+                defect_map: t.defect_map,
+                sla_paket: t.sla_paket,
+                target_pengecekan_at: t.target_pengecekan_at,
+                disetujui_at: t.disetujui_at,
+                target_selesai_at: t.target_selesai_at,
+                sla_status: slaStatus,
+                teknisi: t.teknisi?.nama || "Belum ditugaskan",
+                diagnosis: t.diagnosis
+                    ? {
+                        masalah: t.diagnosis.masalah || "-",
+                        solusi: t.diagnosis.solusi || "-",
+                        estimasi_biaya: t.diagnosis.estimasi_biaya || 0,
+                    }
+                    : null,
+                log_perbaikan: t.log_perbaikan || [],
+                penggunaan_sparepart: t.penggunaan_sparepart?.map(ps => ({
+                    nama: ps.sparepart?.nama || "Sparepart",
+                    kategori: ps.sparepart?.kategori || "Umum",
+                    jumlah: ps.jumlah || 1
+                })) || [],
+                invoice: t.invoice
+                    ? { 
+                        id: t.invoice.id,
+                        biaya_jasa: t.invoice.biaya_jasa || 0,
+                        biaya_sparepart: t.invoice.biaya_sparepart || 0,
+                        total_biaya: t.invoice.total_biaya || 0,
+                        ttd_customer: t.invoice.ttd_customer,
+                        ttd_customer_at: t.invoice.ttd_customer_at,
+                        ttd_customer_nama: t.invoice.ttd_customer_nama,
+                        ttd_admin: t.invoice.ttd_admin,
+                        ttd_admin_at: t.invoice.ttd_admin_at,
+                        ttd_admin_nama: t.invoice.ttd_admin_nama,
+                        created_at: t.invoice.created_at
+                    }
+                    : null,
+                created_at: t.created_at,
+                completed_at: t.completed_at,
+                tgl_diambil: t.tgl_diambil,
+                durasi_garansi: t.durasi_garansi || "1 Bulan",
+                garansi_berakhir_at: t.garansi_berakhir_at,
+                warranty_status: warrantyStatus,
+                is_garansi_claim: t.is_garansi_claim,
+                tips_perawatan: t.tips_perawatan,
+                rating_teknisi: t.rating_teknisi,
+                rating_submitted_at: t.rating_submitted_at,
+                alasan_batal: t.alasan_batal,
+                catatan_batal: t.catatan_batal,
+                status_part_bekas: t.status_part_bekas,
+                checklist_intake: t.checklist_intake,
+                checklist_qc: t.checklist_qc,
+                googleMapsUrl: "https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"
+            };
+        });
 
         return res.json(result);
     } catch (error) {
@@ -201,8 +223,10 @@ async function respondDiagnosisApproval(req, res) {
         const rawCustomerPhone = (tiket.perangkat?.customer?.nomor_telepon || "").replace(/\D/g, "");
         const cleanInputPhone = String(phone_last4).replace(/\D/g, "");
 
-        if (!rawCustomerPhone.endsWith(cleanInputPhone) || cleanInputPhone.length < 4) {
-            return res.status(403).json({ message: "Verifikasi gagal: 4 digit terakhir nomor telepon tidak cocok dengan nomor yang terdaftar." });
+        if (rawCustomerPhone.length >= 4) {
+            if (!rawCustomerPhone.endsWith(cleanInputPhone) || cleanInputPhone.length < 4) {
+                return res.status(403).json({ message: "Verifikasi gagal: 4 digit terakhir nomor telepon tidak cocok dengan nomor yang terdaftar." });
+            }
         }
 
         if (action === "approve") {
@@ -327,8 +351,10 @@ async function signCustomerInvoice(req, res) {
         const rawCustomerPhone = (tiket.perangkat?.customer?.nomor_telepon || "").replace(/\D/g, "");
         const cleanInputPhone = String(phone_last4).replace(/\D/g, "");
 
-        if (!rawCustomerPhone.endsWith(cleanInputPhone) || cleanInputPhone.length < 4) {
-            return res.status(403).json({ message: "Verifikasi gagal: 4 digit terakhir nomor telepon tidak cocok dengan nomor yang terdaftar." });
+        if (rawCustomerPhone.length >= 4) {
+            if (!rawCustomerPhone.endsWith(cleanInputPhone) || cleanInputPhone.length < 4) {
+                return res.status(403).json({ message: "Verifikasi gagal: 4 digit terakhir nomor telepon tidak cocok dengan nomor yang terdaftar." });
+            }
         }
 
         const namaPenandatangan = signer_nama || tiket.perangkat?.customer?.nama || "Pelanggan";

@@ -1,4 +1,5 @@
 const prisma = require("../config/database");
+const { Prisma } = require("@prisma/client");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 const { normalizePhone, normalizeName, normalizeText } = require("../utils/normalize");
 const { computeCustomerStatsAndBadges } = require("../utils/customerBadges");
@@ -270,7 +271,9 @@ async function update(req, res) {
         };
 
         if (req.body.custom_badges !== undefined) {
-            updateData.custom_badges = Array.isArray(req.body.custom_badges) ? req.body.custom_badges : [];
+            updateData.custom_badges = req.body.custom_badges === null 
+                ? Prisma.DbNull 
+                : (Array.isArray(req.body.custom_badges) ? req.body.custom_badges : []);
         }
 
         const customer = await prisma.customer.update({
@@ -320,12 +323,14 @@ async function updateBadges(req, res) {
             validBadgeList = [];
         }
 
+        const jsonVal = validBadgeList === null ? Prisma.DbNull : validBadgeList;
+
         let updated;
         try {
             updated = await prisma.customer.update({
                 where: { id },
                 data: {
-                    custom_badges: validBadgeList
+                    custom_badges: jsonVal
                 },
                 include: {
                     perangkat: {
@@ -343,16 +348,14 @@ async function updateBadges(req, res) {
             console.warn("Retrying customer badge update with raw column ensure:", dbErr.message);
             // Defensif: pastikan kolom custom_badges ada jika terjadi mismatch skema lokal
             try {
-                await prisma.$executeRawUnsafe(`ALTER TABLE Customer ADD COLUMN IF NOT EXISTS custom_badges JSON NULL;`);
-            } catch (rawErr) {
-                try {
-                    await prisma.$executeRawUnsafe(`ALTER TABLE customer ADD COLUMN IF NOT EXISTS custom_badges JSON NULL;`);
-                } catch {}
-            }
+                for (const tbl of ["Customer", "customer"]) {
+                    await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN custom_badges JSON NULL;`).catch(() => {});
+                }
+            } catch {}
             updated = await prisma.customer.update({
                 where: { id },
                 data: {
-                    custom_badges: validBadgeList
+                    custom_badges: jsonVal
                 },
                 include: {
                     perangkat: {

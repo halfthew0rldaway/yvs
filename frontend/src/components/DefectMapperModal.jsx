@@ -41,7 +41,11 @@ export default function DefectMapperModal({
     if (!isOpen) return null;
 
     // Normalisasi value
-    const defectData = value && typeof value === "object" ? value : { items: [] };
+    let defectData = value;
+    if (typeof defectData === "string") {
+        try { defectData = JSON.parse(defectData); } catch (_) { defectData = { items: [] }; }
+    }
+    defectData = defectData && typeof defectData === "object" ? defectData : { items: [] };
     const items = Array.isArray(defectData.items) ? defectData.items : [];
 
     // Filter items untuk tampilan view yang sedang aktif
@@ -489,7 +493,11 @@ export default function DefectMapperModal({
 
 // Mini preview badge / trigger for list or details
 export function DefectMapBadge({ value, onClick, readOnly = false }) {
-    const defectData = value && typeof value === "object" ? value : { items: [] };
+    let defectData = value;
+    if (typeof defectData === "string") {
+        try { defectData = JSON.parse(defectData); } catch (_) { defectData = { items: [] }; }
+    }
+    defectData = defectData && typeof defectData === "object" ? defectData : { items: [] };
     const count = Array.isArray(defectData.items) ? defectData.items.length : 0;
 
     return (
