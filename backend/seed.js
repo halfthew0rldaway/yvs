@@ -659,7 +659,7 @@ Untuk menjaga kepuasan dan kelancaran produktivitas pelanggan prioritas, Serv.io
 
         { status: "menunggu_persetujuan", pIdx: 12, tIdx: 0, sla: "reguler", clean: "Bersih", prioritas: "Standar", keluhan: "Dell Inspiron 14 engsel patah butuh ganti casing palmrest satu set." },
         { status: "menunggu_persetujuan", pIdx: 13, tIdx: 1, sla: "express", clean: "Bersih", prioritas: "Cepat Selesai", keluhan: "Layar kedua ZenBook Duo mati, estimasi penggantian kabel fleksibel." },
-        { status: "menunggu_persetujuan", pIdx: 14, tIdx: 2, sla: "kompleks", clean: "Bersih", prioritas: "Data Aman", keluhan: "MacBook Pro 14 M2 Pro short di jalur 3.3V audio codec IC." },
+        { status: "menunggu_persetujuan", pIdx: 14, tIdx: 2, sla: "kompleks", clean: "Bersih", prioritas: "Data Aman", keluhan: "MacBook Pro 14 M2 Pro short di jalur 3.3V audio codec IC.", isRevisi: true, alasanRevisi: "Pelanggan meminta perubahan opsi servis: membatalkan ganti motherboard utuh, diganti perbaikan jalur mikro-soldering komponen saja karena pertimbangan budget." },
         { status: "menunggu_persetujuan", pIdx: 16, tIdx: 3, sla: "reguler", clean: "Kotor", prioritas: "Biaya Hemat", keluhan: "Printer LaserJet HP M404 roller penarik kertas aus paper jam." },
         { status: "menunggu_persetujuan", pIdx: 17, tIdx: 4, sla: "reguler", clean: "Bersih", prioritas: "Standar", keluhan: "Mac Studio M1 Ultra port HDMI belakang tidak keluar sinyal monitor." },
 
@@ -869,7 +869,11 @@ Untuk menjaga kepuasan dan kelancaran produktivitas pelanggan prioritas, Serv.io
                 target_selesai_at: targetSelesaiAt,
                 alasan_batal: cfg.alasanBatal || null,
                 catatan_batal: cfg.catatanBatal || null,
-                biaya_pembatalan: cfg.biayaBatal || 0
+                biaya_pembatalan: cfg.biayaBatal || 0,
+                is_revisi_acc: cfg.isRevisi || false,
+                jml_revisi_acc: cfg.isRevisi ? 1 : 0,
+                alasan_revisi_acc: cfg.alasanRevisi || null,
+                tgl_revisi_acc: cfg.isRevisi ? new Date(Date.now() - 2 * 86400000) : null
             }
         });
 

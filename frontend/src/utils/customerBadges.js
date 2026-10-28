@@ -144,3 +144,4 @@ export function computeCustomerBadges(customer) {
 
     return badges;
 }
+

@@ -122,3 +122,4 @@ function computeCustomerStatsAndBadges({ totalPerangkat = 0, tikets = [], totalB
 module.exports = {
     computeCustomerStatsAndBadges
 };
+

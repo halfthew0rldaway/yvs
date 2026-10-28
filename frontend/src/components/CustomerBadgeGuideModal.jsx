@@ -100,3 +100,4 @@ export default function CustomerBadgeGuideModal({ isOpen, onClose }) {
         </div>
     );
 }
+
