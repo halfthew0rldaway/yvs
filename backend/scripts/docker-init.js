@@ -35,21 +35,15 @@ async function main() {
 
     // 2b. Verifikasi & pastikan kolom custom_badges & is_revisi_acc tersedia
     try {
-        await prisma.$executeRawUnsafe(`
-            ALTER TABLE Customer ADD COLUMN IF NOT EXISTS custom_badges JSON NULL;
-        `).catch(() => {});
-        await prisma.$executeRawUnsafe(`
-            ALTER TABLE TiketServis ADD COLUMN IF NOT EXISTS is_revisi_acc TINYINT(1) DEFAULT 0;
-        `).catch(() => {});
-        await prisma.$executeRawUnsafe(`
-            ALTER TABLE TiketServis ADD COLUMN IF NOT EXISTS jml_revisi_acc INT DEFAULT 0;
-        `).catch(() => {});
-        await prisma.$executeRawUnsafe(`
-            ALTER TABLE TiketServis ADD COLUMN IF NOT EXISTS alasan_revisi_acc TEXT NULL;
-        `).catch(() => {});
-        await prisma.$executeRawUnsafe(`
-            ALTER TABLE TiketServis ADD COLUMN IF NOT EXISTS tgl_revisi_acc DATETIME NULL;
-        `).catch(() => {});
+        for (const tbl of ["Customer", "customer"]) {
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS custom_badges JSON NULL;`).catch(() => {});
+        }
+        for (const tbl of ["TiketServis", "tiket_servis", "tiketservis"]) {
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS is_revisi_acc TINYINT(1) DEFAULT 0;`).catch(() => {});
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS jml_revisi_acc INT DEFAULT 0;`).catch(() => {});
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS alasan_revisi_acc TEXT NULL;`).catch(() => {});
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS tgl_revisi_acc DATETIME NULL;`).catch(() => {});
+        }
     } catch (e) {
         // Kolom sudah ada atau variasi casing diabaikan
     }

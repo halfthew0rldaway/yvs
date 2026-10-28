@@ -4,29 +4,41 @@ const { normalizePhone, normalizeName, normalizeText } = require("../utils/norma
 const { computeCustomerStatsAndBadges } = require("../utils/customerBadges");
 
 function enrichCustomerWithBadges(c) {
+    if (!c) return c;
     const allTikets = [];
     let totalBelanja = 0;
-    (c.perangkat || []).forEach(p => {
-        (p.tiket_servis || []).forEach(t => {
-            allTikets.push(t);
-            if (t.invoice?.total_biaya) {
-                totalBelanja += t.invoice.total_biaya;
-            }
+    try {
+        (c.perangkat || []).forEach(p => {
+            (p.tiket_servis || []).forEach(t => {
+                if (t) {
+                    allTikets.push(t);
+                    if (t.invoice?.total_biaya) {
+                        totalBelanja += Number(t.invoice.total_biaya) || 0;
+                    }
+                }
+            });
         });
-    });
 
-    const { stats, badges } = computeCustomerStatsAndBadges({
-        totalPerangkat: (c.perangkat || []).length,
-        tikets: allTikets,
-        totalBelanja,
-        customBadges: c.custom_badges
-    });
+        const { stats, badges } = computeCustomerStatsAndBadges({
+            totalPerangkat: (c.perangkat || []).length,
+            tikets: allTikets,
+            totalBelanja,
+            customBadges: c.custom_badges
+        });
 
-    return {
-        ...c,
-        stats,
-        badges
-    };
+        return {
+            ...c,
+            stats: stats || {},
+            badges: badges || []
+        };
+    } catch (err) {
+        console.warn("enrichCustomerWithBadges fallback:", err.message);
+        return {
+            ...c,
+            stats: {},
+            badges: []
+        };
+    }
 }
 
 // Mengambil seluruh data customer dengan pencarian dan paginasi
@@ -53,11 +65,7 @@ async function getAll(req, res) {
             perangkat: {
                 include: {
                     tiket_servis: {
-                        select: {
-                            id: true,
-                            status: true,
-                            is_revisi_acc: true,
-                            jml_revisi_acc: true,
+                        include: {
                             invoice: { select: { total_biaya: true } }
                         }
                     }

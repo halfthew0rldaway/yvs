@@ -278,45 +278,47 @@ async function getById(req, res) {
         // Enrich profil customer dengan badge reputasi dan histori revisi ACC
         let enrichedCustomer = tiket.perangkat?.customer;
         if (enrichedCustomer?.id) {
-            const customerData = await prisma.customer.findUnique({
-                where: { id: enrichedCustomer.id },
-                include: {
-                    perangkat: {
-                        include: {
-                            tiket_servis: {
-                                select: {
-                                    id: true,
-                                    status: true,
-                                    is_revisi_acc: true,
-                                    jml_revisi_acc: true,
-                                    invoice: { select: { total_biaya: true } }
+            try {
+                const customerData = await prisma.customer.findUnique({
+                    where: { id: enrichedCustomer.id },
+                    include: {
+                        perangkat: {
+                            include: {
+                                tiket_servis: {
+                                    include: {
+                                        invoice: { select: { total_biaya: true } }
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
 
-            if (customerData) {
-                const allCustomerTikets = [];
-                let totalBelanja = 0;
-                (customerData.perangkat || []).forEach(p => {
-                    (p.tiket_servis || []).forEach(t => {
-                        allCustomerTikets.push(t);
-                        if (t.invoice?.total_biaya) totalBelanja += t.invoice.total_biaya;
+                if (customerData) {
+                    const allCustomerTikets = [];
+                    let totalBelanja = 0;
+                    (customerData.perangkat || []).forEach(p => {
+                        (p.tiket_servis || []).forEach(t => {
+                            if (t) {
+                                allCustomerTikets.push(t);
+                                if (t.invoice?.total_biaya) totalBelanja += Number(t.invoice.total_biaya) || 0;
+                            }
+                        });
                     });
-                });
-                const { stats, badges } = computeCustomerStatsAndBadges({
-                    totalPerangkat: (customerData.perangkat || []).length,
-                    tikets: allCustomerTikets,
-                    totalBelanja,
-                    customBadges: customerData.custom_badges
-                });
-                enrichedCustomer = {
-                    ...enrichedCustomer,
-                    stats,
-                    badges
-                };
+                    const { stats, badges } = computeCustomerStatsAndBadges({
+                        totalPerangkat: (customerData.perangkat || []).length,
+                        tikets: allCustomerTikets,
+                        totalBelanja,
+                        customBadges: customerData.custom_badges
+                    });
+                    enrichedCustomer = {
+                        ...enrichedCustomer,
+                        stats: stats || {},
+                        badges: badges || []
+                    };
+                }
+            } catch (custErr) {
+                console.warn("Gagal fetch data customer di tiket getById:", custErr.message);
             }
         }
 
