@@ -36,12 +36,16 @@ async function getAll(req, res) {
             where,
             include: {
                 sparepart: {
-                    include: { brand: true }
+                    include: { brand: true, supplier: true }
                 },
+                supplier: true,
                 tiket: {
                     include: {
                         perangkat: {
                             include: { customer: true }
+                        },
+                        penggunaan_sparepart: {
+                            include: { sparepart: true }
                         }
                     }
                 }
@@ -97,11 +101,13 @@ async function getById(req, res) {
         const rma = await prisma.supplierRma.findUnique({
             where: { id: parseInt(id) },
             include: {
-                sparepart: { include: { brand: true } },
+                sparepart: { include: { brand: true, supplier: true } },
+                supplier: true,
                 tiket: {
                     include: {
                         perangkat: { include: { customer: true } },
-                        teknisi: { select: { id: true, nama: true } }
+                        teknisi: { select: { id: true, nama: true } },
+                        penggunaan_sparepart: { include: { sparepart: true } }
                     }
                 }
             }
@@ -123,6 +129,7 @@ async function create(req, res) {
     try {
         const {
             sparepart_id,
+            supplier_id,
             tipe_sumber,
             customer_nama,
             customer_kontak,
@@ -220,6 +227,7 @@ async function create(req, res) {
                 data: {
                     nomor_rma,
                     sparepart_id: sparepart.id,
+                    supplier_id: supplier_id ? parseInt(supplier_id) : (sparepart.supplier_id || null),
                     tipe_sumber: tipe_sumber || (tiket_id ? "tiket_user" : "stok_toko"),
                     customer_nama: resolvedCustomer,
                     customer_kontak: resolvedKontak,

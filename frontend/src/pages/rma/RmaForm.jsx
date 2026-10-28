@@ -23,7 +23,12 @@ import {
     AlertTriangle,
     FileText,
     HelpCircle,
-    Search
+    Search,
+    ShoppingBag,
+    CheckCircle2,
+    Calendar,
+    Wrench,
+    ExternalLink
 } from "lucide-react";
 
 export default function RmaForm() {
@@ -33,18 +38,20 @@ export default function RmaForm() {
 
     const [spareparts, setSpareparts] = useState([]);
     const [tickets, setTickets] = useState([]);
+    const [suppliers, setSuppliers] = useState([]);
     const [fetching, setFetching] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
-        tipe_sumber: "tiket_user", // "tiket_user" | "stok_toko"
+        tipe_sumber: "tiket_user", // "tiket_user" | "retail_customer" | "stok_toko"
         tiket_id: "",
         customer_nama: "",
         customer_kontak: "",
         perangkat_nama: "",
         tgl_penjualan_customer: "",
         sparepart_id: "",
+        supplier_id: "",
         supplier_nama: "",
         nomor_faktur: "",
         serial_number_lama: "",
@@ -61,23 +68,27 @@ export default function RmaForm() {
     });
 
     const [ticketSearch, setTicketSearch] = useState("");
+    const [sparepartSearch, setSparepartSearch] = useState("");
 
     useEffect(() => {
         async function loadData() {
             setFetching(true);
             try {
-                const [spRes, tktRes] = await Promise.all([
+                const [spRes, tktRes, supRes] = await Promise.all([
                     api.get("/sparepart"),
-                    api.get("/tiket-servis")
+                    api.get("/tiket-servis"),
+                    api.get("/supplier").catch(() => ({ data: { data: [] } }))
                 ]);
 
                 const spData = spRes.data || [];
                 const tktData = Array.isArray(tktRes.data) ? tktRes.data : (tktRes.data?.data || []);
+                const supData = supRes.data?.data || [];
 
                 setSpareparts(spData);
                 setTickets(tktData);
+                setSuppliers(supData);
 
-                // Deep links from URL params
+                // Deep links from URL params (e.g. ?tiket_id=5&sparepart_id=12)
                 const paramTicketId = searchParams.get("tiket_id");
                 const paramSparepartId = searchParams.get("sparepart_id");
 
@@ -104,12 +115,7 @@ export default function RmaForm() {
                 if (paramSparepartId) {
                     const foundSp = spData.find(s => String(s.id) === String(paramSparepartId));
                     if (foundSp) {
-                        setFormData(prev => ({
-                            ...prev,
-                            sparepart_id: String(paramSparepartId),
-                            supplier_nama: foundSp.distributor_nama || prev.supplier_nama,
-                            kebijakan_garansi: foundSp.sistem_perhitungan_garansi || (foundSp.tipe_garansi_distri === "Lifetime" ? "lifetime" : "sejak_nota_customer")
-                        }));
+                        applySparepartAutoDetect(foundSp);
                     }
                 }
             } catch (err) {
@@ -122,6 +128,25 @@ export default function RmaForm() {
         loadData();
     }, [searchParams]);
 
+    // Auto-detect & lock supplier and warranty details from sparepart data
+    function applySparepartAutoDetect(sp) {
+        if (!sp) return;
+
+        const distriName = sp.supplier?.nama || sp.distributor_nama || "Distributor Resmi";
+        const distriContact = sp.supplier?.telepon || sp.distributor_kontak || "";
+        const policy = sp.sistem_perhitungan_garansi || (sp.tipe_garansi_distri === "Lifetime" ? "lifetime" : "sejak_nota_customer");
+
+        setFormData(prev => ({
+            ...prev,
+            sparepart_id: String(sp.id),
+            supplier_id: sp.supplier_id ? String(sp.supplier_id) : (sp.supplier?.id ? String(sp.supplier.id) : ""),
+            supplier_nama: distriName,
+            kebijakan_garansi: policy
+        }));
+
+        toast.success(`Suku cadang "${sp.nama}" dipilih! Data distributor & garansi terdeteksi otomatis.`, { id: "sp-detect" });
+    }
+
     // Handle ticket selection
     function handleSelectTicket(tiketId) {
         if (!tiketId) {
@@ -131,7 +156,10 @@ export default function RmaForm() {
                 customer_nama: "",
                 customer_kontak: "",
                 perangkat_nama: "",
-                tgl_penjualan_customer: ""
+                tgl_penjualan_customer: "",
+                sparepart_id: "",
+                supplier_nama: "",
+                serial_number_lama: ""
             }));
             return;
         }
@@ -143,59 +171,58 @@ export default function RmaForm() {
             const deviceName = `${found.perangkat?.tipe || "Unit"} ${found.perangkat?.model || ""}`.trim();
             const tglJual = found.created_at ? new Date(found.created_at).toISOString().split("T")[0] : "";
 
-            let autoSparepartId = formData.sparepart_id;
-            let autoDistri = formData.supplier_nama;
-            let autoPolicy = formData.kebijakan_garansi;
+            // Check if ticket used spareparts
+            const installedParts = found.penggunaan_sparepart || [];
+            let autoSp = null;
+            let autoSn = "";
 
-            // If ticket used spareparts, auto-suggest first one if none selected
-            if (!autoSparepartId && found.penggunaan_sparepart && found.penggunaan_sparepart.length > 0) {
-                const firstPs = found.penggunaan_sparepart[0].sparepart;
-                if (firstPs) {
-                    autoSparepartId = String(firstPs.id);
-                    autoDistri = firstPs.distributor_nama || "";
-                    autoPolicy = firstPs.sistem_perhitungan_garansi || (firstPs.tipe_garansi_distri === "Lifetime" ? "lifetime" : "sejak_nota_customer");
-                }
+            if (installedParts.length > 0) {
+                const firstUsage = installedParts[0];
+                autoSp = firstUsage.sparepart;
+                autoSn = firstUsage.serial_number || "";
             }
 
-            setFormData(prev => ({
-                ...prev,
-                tipe_sumber: "tiket_user",
-                tiket_id: String(tiketId),
-                customer_nama: custName,
-                customer_kontak: custHp,
-                perangkat_nama: deviceName,
-                tgl_penjualan_customer: tglJual,
-                sparepart_id: autoSparepartId || prev.sparepart_id,
-                supplier_nama: autoDistri || prev.supplier_nama,
-                kebijakan_garansi: autoPolicy || prev.kebijakan_garansi
-            }));
-        }
-    }
+            setFormData(prev => {
+                const next = {
+                    ...prev,
+                    tipe_sumber: "tiket_user",
+                    tiket_id: String(tiketId),
+                    customer_nama: custName,
+                    customer_kontak: custHp,
+                    perangkat_nama: deviceName,
+                    tgl_penjualan_customer: tglJual,
+                    serial_number_lama: autoSn || prev.serial_number_lama
+                };
 
-    // Handle sparepart selection
-    function handleSelectSparepart(spId) {
-        const sp = spareparts.find(s => String(s.id) === String(spId));
-        setFormData(prev => ({
-            ...prev,
-            sparepart_id: String(spId),
-            supplier_nama: sp?.distributor_nama || prev.supplier_nama || "",
-            kebijakan_garansi: sp?.sistem_perhitungan_garansi || (sp?.tipe_garansi_distri === "Lifetime" ? "lifetime" : "sejak_nota_customer")
-        }));
+                if (autoSp) {
+                    next.sparepart_id = String(autoSp.id);
+                    next.supplier_id = autoSp.supplier_id ? String(autoSp.supplier_id) : "";
+                    next.supplier_nama = autoSp.supplier?.nama || autoSp.distributor_nama || "Distributor Resmi";
+                    next.kebijakan_garansi = autoSp.sistem_perhitungan_garansi || (autoSp.tipe_garansi_distri === "Lifetime" ? "lifetime" : "sejak_nota_customer");
+                }
+
+                return next;
+            });
+
+            if (autoSp) {
+                toast.success(`Tiket #${found.nomor_tiket} dipilih! Mendeteksi suku cadang terpasang: ${autoSp.nama}`, { id: "ticket-detect" });
+            }
+        }
     }
 
     // Submit handler
     async function handleSubmit(e) {
         e.preventDefault();
         if (!formData.sparepart_id) {
-            toast.error("Pilih suku cadang yang akan diklaim");
+            toast.error("Pilih suku cadang yang akan diklaim!");
             return;
         }
         if (!formData.supplier_nama.trim()) {
-            toast.error("Nama supplier / distributor resmi wajib diisi");
+            toast.error("Nama supplier / distributor resmi wajib terisi!");
             return;
         }
         if (!formData.alasan_rusak.trim()) {
-            toast.error("Uraikan gejala kerusakan / defek suku cadang");
+            toast.error("Uraikan gejala kerusakan / trouble hardware yang terjadi!");
             return;
         }
 
@@ -219,7 +246,10 @@ export default function RmaForm() {
         ? spareparts.find(s => String(s.id) === String(formData.sparepart_id)) 
         : null;
 
-    // Filter tickets for quick search
+    // Filter tickets that actually have spareparts installed (prioritized for RMA)
+    const ticketsWithParts = tickets.filter(t => t.penggunaan_sparepart && t.penggunaan_sparepart.length > 0);
+    const ticketsWithoutParts = tickets.filter(t => !t.penggunaan_sparepart || t.penggunaan_sparepart.length === 0);
+
     const filteredTickets = tickets.filter(t => {
         if (!ticketSearch.trim()) return true;
         const q = ticketSearch.toLowerCase();
@@ -228,6 +258,17 @@ export default function RmaForm() {
             t.perangkat?.customer?.nama?.toLowerCase().includes(q) ||
             t.perangkat?.customer?.no_hp?.toLowerCase().includes(q) ||
             t.perangkat?.model?.toLowerCase().includes(q)
+        );
+    });
+
+    const filteredSpareparts = spareparts.filter(s => {
+        if (!sparepartSearch.trim()) return true;
+        const q = sparepartSearch.toLowerCase();
+        return (
+            s.nama?.toLowerCase().includes(q) ||
+            s.kategori?.toLowerCase().includes(q) ||
+            s.distributor_nama?.toLowerCase().includes(q) ||
+            s.brand?.nama?.toLowerCase().includes(q)
         );
     });
 
@@ -243,7 +284,7 @@ export default function RmaForm() {
     return (
         <div className="w-full space-y-6 pb-16">
             
-            {/* Header with Back Button */}
+            {/* Top Bar Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
                     <button
@@ -260,11 +301,11 @@ export default function RmaForm() {
                                 Formulir Pengajuan Klaim RMA Distributor
                             </h1>
                             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                Garansi Supplier & Retur
+                                Auto-Detect Distributor
                             </span>
                         </div>
                         <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                            Pencatatan resmi klaim suku cadang rusak, penyesuaian masa garansi nota end-user, serta fasilitas bantu klaim lifetime.
+                            Auto-detect suku cadang dari tiket servis, pencatatan nota end-user, serta fasilitas bantu klaim distributor resmi.
                         </p>
                     </div>
                 </div>
@@ -295,7 +336,7 @@ export default function RmaForm() {
                 {/* LEFT / MAIN COLUMN (8 Columns) */}
                 <div className="lg:col-span-8 space-y-6">
                     
-                    {/* CARD 1: SUMBER SUKU CADANG */}
+                    {/* CARD 1: 3 KATEGORI SUMBER KLAIM */}
                     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-5">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div className="flex items-center gap-2.5">
@@ -304,17 +345,19 @@ export default function RmaForm() {
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-900">
-                                        Sumber Suku Cadang yang Diajukan Retur
+                                        Sumber & Asal-Usul Suku Cadang yang Diklaim
                                     </h3>
                                     <p className="text-xs text-slate-500">
-                                        Pilih apakah suku cadang berasal dari unit komplain servis customer atau cacat stok toko
+                                        Pilih apakah sparepart dipasang pada tiket servis, dibeli lepas oleh konsumen, atau stok inventaris toko
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Sumber Selection Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {/* 3 Sumber Selection Cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            
+                            {/* Kategori 1: Unit Servis Pelanggan */}
                             <div
                                 onClick={() => setFormData(prev => ({ ...prev, tipe_sumber: "tiket_user" }))}
                                 className={`p-4 rounded-xl border cursor-pointer transition-all ${
@@ -325,24 +368,54 @@ export default function RmaForm() {
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                                        <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
                                             <Laptop className="w-4 h-4" />
                                         </div>
                                         <span className="font-bold text-xs text-slate-900">
-                                            Unit Servis Pelanggan
+                                            Tiket Servis User
                                         </span>
                                     </div>
                                     {formData.tipe_sumber === "tiket_user" && (
-                                        <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                                            <Check className="w-3.5 h-3.5" />
-                                        </div>
+                                        <CheckCircle2 className="w-4 h-4 text-blue-600" />
                                     )}
                                 </div>
-                                <p className="text-xs text-slate-500 leading-relaxed">
-                                    Part dipasang pada laptop/PC customer & ditemukan bermasalah saat masa garansi pengerjaan atau komplain servis.
+                                <p className="text-[11px] text-slate-500 leading-snug">
+                                    Sparepart dipasang teknisi pada laptop/PC customer saat servis (RAM, SSD, LCD). <strong>Auto-detect tiket & part!</strong>
                                 </p>
                             </div>
 
+                            {/* Kategori 2: Pembelian Langsung Konsumen (Retail) */}
+                            <div
+                                onClick={() => setFormData(prev => ({ 
+                                    ...prev, 
+                                    tipe_sumber: "retail_customer",
+                                    tiket_id: ""
+                                }))}
+                                className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                                    formData.tipe_sumber === "retail_customer"
+                                        ? "bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20 shadow-xs"
+                                        : "bg-white border-slate-200 hover:border-slate-300"
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                            <ShoppingBag className="w-4 h-4" />
+                                        </div>
+                                        <span className="font-bold text-xs text-slate-900">
+                                            Beli Langsung / Retail
+                                        </span>
+                                    </div>
+                                    {formData.tipe_sumber === "retail_customer" && (
+                                        <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                                    )}
+                                </div>
+                                <p className="text-[11px] text-slate-500 leading-snug">
+                                    Customer beli sparepart lepas tanpa servis unit (misal beli charger / RAM sendiri), dengan nota toko.
+                                </p>
+                            </div>
+
+                            {/* Kategori 3: Stok Toko / Dead on Arrival */}
                             <div
                                 onClick={() => setFormData(prev => ({ 
                                     ...prev, 
@@ -360,32 +433,36 @@ export default function RmaForm() {
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+                                        <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
                                             <Package className="w-4 h-4" />
                                         </div>
                                         <span className="font-bold text-xs text-slate-900">
-                                            Stok Inventaris Bengkel / Toko
+                                            Stok Gudang Toko
                                         </span>
                                     </div>
                                     {formData.tipe_sumber === "stok_toko" && (
-                                        <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                                            <Check className="w-3.5 h-3.5" />
-                                        </div>
+                                        <CheckCircle2 className="w-4 h-4 text-blue-600" />
                                     )}
                                 </div>
-                                <p className="text-xs text-slate-500 leading-relaxed">
-                                    Cacat pabrik langsung dari etalase / DoA (Dead on Arrival) saat restock baru sebelum terjual ke customer.
+                                <p className="text-[11px] text-slate-500 leading-snug">
+                                    Cacat pabrik langsung saat baru datang dari distributor (DoA) atau rusak di rak toko sebelum terjual.
                                 </p>
                             </div>
+
                         </div>
 
-                        {/* Detail Bagian Tiket Servis Pelanggan */}
+                        {/* CASE 1: TIKET SERVIS USER (AUTO DETECT) */}
                         {formData.tipe_sumber === "tiket_user" && (
                             <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200 space-y-4 animate-fade-in">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
-                                        <span>Pilih Tiket Servis Terkait:</span>
-                                        <span className="text-[11px] font-normal text-slate-400">Total {tickets.length} tiket tersedia</span>
+                                        <span className="flex items-center gap-1.5">
+                                            <Search className="w-3.5 h-3.5 text-blue-600" />
+                                            <span>Pilih Tiket Servis Customer:</span>
+                                        </span>
+                                        <span className="text-[11px] font-semibold text-blue-600">
+                                            {ticketsWithParts.length} tiket memiliki riwayat sparepart
+                                        </span>
                                     </label>
 
                                     <div className="relative">
@@ -394,18 +471,30 @@ export default function RmaForm() {
                                             onChange={(e) => handleSelectTicket(e.target.value)}
                                             className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                         >
-                                            <option value="">-- Cari / Pilih Nomor Tiket Servis Pelanggan --</option>
-                                            {filteredTickets.map(t => (
-                                                <option key={t.id} value={t.id}>
-                                                    #{t.nomor_tiket} - {t.perangkat?.customer?.nama || "Pelanggan"} ({t.perangkat?.tipe || "Unit"} {t.perangkat?.model || ""})
-                                                </option>
-                                            ))}
+                                            <option value="">-- Pilih Tiket Servis (Diurutkan dari yang memakai sparepart) --</option>
+                                            <optgroup label="Tiket Servis Dengan Sparepart Terpasang">
+                                                {ticketsWithParts.map(t => {
+                                                    const partNames = t.penggunaan_sparepart.map(ps => ps.sparepart?.nama).filter(Boolean).join(", ");
+                                                    return (
+                                                        <option key={t.id} value={t.id}>
+                                                            #{t.nomor_tiket} - {t.perangkat?.customer?.nama || "Pelanggan"} ({t.perangkat?.tipe || "Unit"} {t.perangkat?.model || ""}) • Part: [{partNames}]
+                                                        </option>
+                                                    );
+                                                })}
+                                            </optgroup>
+                                            <optgroup label="Tiket Servis Lainnya (Jasa / Tanpa Part)">
+                                                {ticketsWithoutParts.map(t => (
+                                                    <option key={t.id} value={t.id}>
+                                                        #{t.nomor_tiket} - {t.perangkat?.customer?.nama || "Pelanggan"} ({t.perangkat?.tipe || "Unit"} {t.perangkat?.model || ""})
+                                                    </option>
+                                                ))}
+                                            </optgroup>
                                         </select>
                                     </div>
                                 </div>
 
                                 {currentSelectedTicket && (
-                                    <div className="space-y-3 pt-2 border-t border-slate-200/60">
+                                    <div className="space-y-4 pt-2 border-t border-slate-200/60">
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                             <div className="bg-white p-3 rounded-xl border border-slate-200">
                                                 <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Identitas Pelanggan</span>
@@ -420,62 +509,128 @@ export default function RmaForm() {
                                             </div>
 
                                             <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Tanggal Nota / Pemasangan</span>
-                                                <p className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 font-mono">
-                                                    {new Date(currentSelectedTicket.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                                <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Tanggal Nota / Pengerjaan</span>
+                                                <p className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5">
+                                                    {currentSelectedTicket.created_at ? new Date(currentSelectedTicket.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}
                                                 </p>
-                                                <span className="inline-block mt-0.5 text-[10.5px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                                                    Day 1 Garansi End-User
+                                                <span className="inline-block text-[10px] text-emerald-600 font-bold mt-0.5 bg-emerald-50 px-1.5 py-0.2 rounded">
+                                                    Day 1 Garansi Konsumen
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {/* Quick Pick Suku Cadang Terpasang pada Tiket */}
+                                        {/* AUTO-DETECTED INSTALLED SPAREPARTS */}
                                         {currentSelectedTicket.penggunaan_sparepart && currentSelectedTicket.penggunaan_sparepart.length > 0 ? (
-                                            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">
+                                            <div className="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                                    <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
                                                         <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                                                        <span>Suku Cadang yang Dipasang pada Tiket Ini (Klik untuk Memilih Cepat):</span>
+                                                        <span>Suku Cadang yang Terpasang pada Tiket Ini (Klik untuk Klaim):</span>
                                                     </span>
-                                                    <span className="text-[11px] text-slate-400">1-Klik isi otomatis</span>
+                                                    <span className="text-[11px] text-blue-700 font-semibold">1-Klik Auto-Detect</span>
                                                 </div>
 
-                                                <div className="flex flex-wrap gap-2">
-                                                    {currentSelectedTicket.penggunaan_sparepart.map((ps, idx) => {
-                                                        const isSelected = String(formData.sparepart_id) === String(ps.sparepart?.id);
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                                    {currentSelectedTicket.penggunaan_sparepart.map((ps) => {
+                                                        const isSelected = String(formData.sparepart_id) === String(ps.sparepart_id);
                                                         return (
                                                             <button
-                                                                key={idx}
+                                                                key={ps.id}
                                                                 type="button"
-                                                                onClick={() => handleSelectSparepart(ps.sparepart?.id)}
-                                                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                                                                onClick={() => {
+                                                                    if (ps.sparepart) {
+                                                                        applySparepartAutoDetect(ps.sparepart);
+                                                                        if (ps.serial_number) {
+                                                                            setFormData(prev => ({ ...prev, serial_number_lama: ps.serial_number }));
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className={`p-3 rounded-xl text-left border transition-all cursor-pointer flex items-start justify-between gap-2 ${
                                                                     isSelected
                                                                         ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                                                                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                                                                        : "bg-white text-slate-800 border-slate-200 hover:border-blue-400 hover:bg-blue-50/40"
                                                                 }`}
                                                             >
-                                                                <span>{ps.sparepart?.nama}</span>
-                                                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                                                                    {ps.jumlah}x
-                                                                </span>
+                                                                <div>
+                                                                    <div className="font-bold text-xs">
+                                                                        {ps.sparepart?.nama || "Suku Cadang"}
+                                                                    </div>
+                                                                    <div className={`text-[11px] mt-0.5 ${isSelected ? "text-blue-100" : "text-slate-500"}`}>
+                                                                        Distri: {ps.sparepart?.distributor_nama || "Resmi"} • {ps.sparepart?.tipe_garansi_distri || "Garansi"}
+                                                                    </div>
+                                                                    {ps.serial_number && (
+                                                                        <div className={`text-[10.5px] font-mono mt-0.5 ${isSelected ? "text-blue-200" : "text-blue-600 font-semibold"}`}>
+                                                                            SN: {ps.serial_number}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                {isSelected && <Check className="w-4 h-4 text-white shrink-0 mt-0.5" />}
                                                             </button>
                                                         );
                                                     })}
                                                 </div>
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-slate-400 italic">
-                                                Belum ada suku cadang yang dicatat pada tiket servis ini. Anda dapat memilih part dari katalog di bawah.
-                                            </p>
+                                            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800">
+                                                Tiket ini belum memiliki catatan suku cadang terpasang di sistem. Silakan pilih suku cadang secara manual di bawah.
+                                            </div>
                                         )}
                                     </div>
                                 )}
                             </div>
                         )}
+
+                        {/* CASE 2: PEMBELIAN LANGSUNG PELANGGAN (RETAIL) */}
+                        {formData.tipe_sumber === "retail_customer" && (
+                            <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200 space-y-3 animate-fade-in">
+                                <div className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+                                    <ShoppingBag className="w-4 h-4 text-emerald-600" />
+                                    <span>Identitas Pembelian Konsumen (Nota Penjualan Toko)</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                            Nama Customer
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Contoh: Hendra Wijaya"
+                                            value={formData.customer_nama}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, customer_nama: e.target.value }))}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                            No. WhatsApp Customer
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="0812-3456-7890"
+                                            value={formData.customer_kontak}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, customer_kontak: e.target.value }))}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                            Nomor Nota / Faktur Toko
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Contoh: INV-2026-0045"
+                                            value={formData.nomor_faktur}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, nomor_faktur: e.target.value }))}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
 
-                    {/* CARD 2: IDENTIFIKASI SUKU CADANG & KEBIJAKAN DISTRIBUTOR */}
+                    {/* CARD 2: AUTO-DETECT SUKU CADANG & DISTRIBUTOR */}
                     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-5">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div className="flex items-center gap-2.5">
@@ -484,155 +639,112 @@ export default function RmaForm() {
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-900">
-                                        Identifikasi Suku Cadang & Kebijakan Distributor
+                                        Identifikasi Suku Cadang & Status Garansi Distributor
                                     </h3>
                                     <p className="text-xs text-slate-500">
-                                        Pilih suku cadang dari inventaris dan pastikan skenario perhitungan masa garansi sesuai
+                                        Data distributor, kontak RMA, dan skenario garansi terdeteksi otomatis dari master katalog suku cadang
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="sm:col-span-2">
-                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                    Pilih Suku Cadang dari Katalog <span className="text-red-500">*</span>
+                        {/* Dropdown Suku Cadang */}
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                                    <span>Pilih Suku Cadang yang Mengalami Defek <span className="text-rose-500">*</span></span>
+                                    <span className="text-[11px] font-normal text-slate-400">Total {spareparts.length} item katalog</span>
                                 </label>
                                 <select
-                                    required
                                     value={formData.sparepart_id}
-                                    onChange={(e) => handleSelectSparepart(e.target.value)}
-                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    onChange={(e) => {
+                                        const foundSp = spareparts.find(s => String(s.id) === String(e.target.value));
+                                        if (foundSp) {
+                                            applySparepartAutoDetect(foundSp);
+                                        } else {
+                                            setFormData(prev => ({ ...prev, sparepart_id: "" }));
+                                        }
+                                    }}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
                                 >
-                                    <option value="">-- Pilih Suku Cadang dari Katalog Gudang --</option>
-                                    {spareparts.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.nama} ({s.brand?.nama || "No Brand"}) {s.has_garansi_distri ? `[Garansi: ${s.tipe_garansi_distri || "Distri"}]` : ""} - Stok: {s.stok}
+                                    <option value="">-- Cari & Pilih Suku Cadang --</option>
+                                    {spareparts.map((sp) => (
+                                        <option key={sp.id} value={sp.id}>
+                                            {sp.brand?.nama || ""} {sp.nama} ({sp.kategori}) • Distri: {sp.distributor_nama || "Resmi"} ({sp.tipe_garansi_distri || "Garansi"})
                                         </option>
                                     ))}
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                    Jumlah Unit (Qty Klaim) <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    required
-                                    value={formData.jumlah}
-                                    onChange={(e) => setFormData({ ...formData, jumlah: e.target.value })}
-                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                                    <span>Nama Distributor / Vendor Resmi <span className="text-red-500">*</span></span>
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.supplier_nama}
-                                    onChange={(e) => setFormData({ ...formData, supplier_nama: e.target.value })}
-                                    placeholder="Contoh: PT Astrindo / Synnex Metrodata / Toko LCD"
-                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                                    <FileText className="w-3.5 h-3.5 text-slate-400" />
-                                    <span>Nomor Faktur / Nota Pembelian Awal</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.nomor_faktur}
-                                    onChange={(e) => setFormData({ ...formData, nomor_faktur: e.target.value })}
-                                    placeholder="Contoh: INV-SUPPLIER-2026-001"
-                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Skenario Perhitungan Garansi Distributor (3 Wide Cards) */}
-                        <div className="space-y-2 pt-2">
-                            <label className="block text-xs font-bold text-slate-700">
-                                Skenario Perhitungan Masa Garansi Distributor:
-                            </label>
-                            
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                {[
-                                    { 
-                                        key: "sejak_nota_customer", 
-                                        badge: "Authorized / Resmi",
-                                        badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                                        title: "Sejak Nota End-User", 
-                                        desc: "Day 1 dihitung sejak tanggal nota transaksi toko ke konsumen. Sesuai hukum perlindungan konsumen & garansi distributor resmi dengan grace period toko." 
-                                    },
-                                    { 
-                                        key: "sejak_segel_distri", 
-                                        badge: "Distri Independen",
-                                        badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-                                        title: "Sejak Segel Distributor", 
-                                        desc: "Garansi sudah berjalan sejak stiker distributor ditempel (saat toko terima barang). Masa simpan di rak toko otomatis memotong sisa garansi konsumen." 
-                                    },
-                                    { 
-                                        key: "lifetime", 
-                                        badge: "Garansi Seumur Hidup",
-                                        badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-                                        title: "Lifetime Warranty", 
-                                        desc: "Khusus RAM & Flash Storage. Selama produk diproduksi vendor & segel utuh, Toko KomputerAwet memfasilitasi dan siap mendampingi klaim ke service center." 
-                                    }
-                                ].map(pol => {
-                                    const isSelected = formData.kebijakan_garansi === pol.key;
-                                    return (
-                                        <div
-                                            key={pol.key}
-                                            onClick={() => setFormData({ ...formData, kebijakan_garansi: pol.key })}
-                                            className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-                                                isSelected
-                                                    ? "bg-blue-50/80 border-blue-500 ring-2 ring-blue-500/20 shadow-xs"
-                                                    : "bg-white border-slate-200 hover:border-slate-300"
-                                            }`}
-                                        >
-                                            <div className="flex items-center justify-between mb-1.5">
-                                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${pol.badgeColor}`}>
-                                                    {pol.badge}
-                                                </span>
-                                                {isSelected && <Check className="w-4 h-4 text-blue-600" />}
+                            {/* PROMINENT AUTO-DETECTED BANNER */}
+                            {currentSelectedSparepart ? (
+                                <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-3 animate-fade-in">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                                                <CheckCircle2 className="w-4 h-4" />
                                             </div>
-                                            <h4 className="font-bold text-xs text-slate-900 mb-1">{pol.title}</h4>
-                                            <p className="text-[11px] text-slate-500 leading-snug">{pol.desc}</p>
+                                            <div>
+                                                <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-wider">
+                                                    ✓ Data Distributor & Garansi Terdeteksi Otomatis
+                                                </h4>
+                                                <p className="text-[11px] text-emerald-700">
+                                                    Anda tidak perlu input ulang informasi distributor atau skenario garansi.
+                                                </p>
+                                            </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                                        <span className="text-[11px] font-bold bg-emerald-200/60 text-emerald-900 px-2.5 py-0.5 rounded-full">
+                                            Master Sync Valid
+                                        </span>
+                                    </div>
 
-                        {/* Callout Penjelasan Kebijakan */}
-                        <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
-                            <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                            <div className="space-y-0.5">
-                                <p className="font-bold">
-                                    {formData.kebijakan_garansi === "lifetime" 
-                                        ? "Dukungan Penuh: Lifetime Warranty Assistance"
-                                        : formData.kebijakan_garansi === "sejak_nota_customer"
-                                        ? "Perhitungan Garansi Resmi Sejak Nota Penjualan ke Konsumen"
-                                        : "Peringatan Selisih Bulan: Segel Stiker Distributor Independen"}
-                                </p>
-                                <p className="text-[11.5px] text-blue-800 leading-relaxed">
-                                    {formData.kebijakan_garansi === "lifetime"
-                                        ? "Suku cadang RAM / Flash Memory yang dibeli di kita didampingi penuh. Toko siap memfasilitasi penukaran retur ke service center resmi distributor selama segel utuh dan model didukung vendor."
-                                        : formData.kebijakan_garansi === "sejak_nota_customer"
-                                        ? `Berdasarkan nota pemasangan/servis pelanggan (${formData.tgl_penjualan_customer || "hari transaksi"}), hak garansi konsumen terlindungi penuh dengan bukti faktur toko.`
-                                        : "Garansi telah terpotong masa simpan di toko. Pastikan stiker segel distributor pada unit fisik belum melebihi masa berlaku garansi."}
-                                </p>
-                            </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                                        <div className="bg-white p-3 rounded-xl border border-emerald-100">
+                                            <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Distributor Resmi</span>
+                                            <p className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5">
+                                                {currentSelectedSparepart.distributor_nama || formData.supplier_nama || "Distributor Resmi"}
+                                            </p>
+                                            {currentSelectedSparepart.distributor_kontak && (
+                                                <p className="text-[11px] text-blue-600 font-mono mt-0.5 truncate">
+                                                    {currentSelectedSparepart.distributor_kontak}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="bg-white p-3 rounded-xl border border-emerald-100">
+                                            <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Status & Durasi Garansi</span>
+                                            <p className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5">
+                                                {currentSelectedSparepart.tipe_garansi_distri || "Garansi Distributor"}
+                                            </p>
+                                            <p className="text-[11px] text-emerald-700 font-semibold mt-0.5">
+                                                {formData.kebijakan_garansi === "lifetime" ? "Lifetime Warranty (RAM)" : "Garansi Pabrik Resmi"}
+                                            </p>
+                                        </div>
+
+                                        <div className="bg-white p-3 rounded-xl border border-emerald-100">
+                                            <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Skenario Perhitungan</span>
+                                            <p className="font-bold text-blue-700 text-xs sm:text-sm mt-0.5">
+                                                {formData.kebijakan_garansi === "lifetime" ? "Seumur Hidup (Lifetime)" : formData.kebijakan_garansi === "sejak_segel_distri" ? "Sejak Segel Distri" : "Sejak Nota End-User"}
+                                            </p>
+                                            <p className="text-[10.5px] text-slate-400 mt-0.5">
+                                                {formData.kebijakan_garansi === "sejak_nota_customer" ? "Day 1 dimulai saat nota jual customer" : "Mengikuti stiker/segel distributor"}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {currentSelectedSparepart.kebijakan_klaim && (
+                                        <div className="text-[11px] text-emerald-900 bg-white/80 p-2.5 rounded-xl border border-emerald-100 leading-relaxed">
+                                            <strong>Prosedur / Ketentuan Retur Distributor:</strong> {currentSelectedSparepart.kebijakan_klaim}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="p-3.5 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-500">
+                                    Silakan pilih salah satu suku cadang di atas untuk memicu auto-detect data distributor & kebijakan garansi.
+                                </div>
+                            )}
+
                         </div>
                     </div>
 
@@ -645,169 +757,207 @@ export default function RmaForm() {
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-900">
-                                        Identifikasi Hardware & Gejala Kerusakan
+                                        Identifikasi Hardware & Gejala Kerusakan Teknis
                                     </h3>
                                     <p className="text-xs text-slate-500">
-                                        Catat nomor seri unit lama yang diklaim dan detail gejala kerusakan teknis
+                                        Fokus teknisi: Catat Serial Number (SN) fisik unit rusak dan rincian masalah teknis
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
-                                <span>Serial Number (SN) Unit yang Rusak / Dikirim ke Distributor:</span>
-                                <span className="text-[11px] text-slate-400">Penting untuk tracking unit retur</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.serial_number_lama}
-                                onChange={(e) => setFormData({ ...formData, serial_number_lama: e.target.value })}
-                                placeholder="Contoh: SN: KVR32S22S8/8-202410-0988 / SN: NVME-512-998231"
-                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                            />
-                            <p className="text-[11px] text-slate-400 mt-1">
-                                Nomor seri ini akan dicetak pada Surat Jalan Pengantar Retur agar pihak distributor tidak salah menukar unit.
-                            </p>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                                        <Wrench className="w-3.5 h-3.5 text-blue-600" />
+                                        <span>Serial Number (SN) Fisik Unit Rusak <span className="text-rose-500">*</span></span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Contoh: SN: KG-98214-X / SN pada stiker barcode"
+                                        value={formData.serial_number_lama}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, serial_number_lama: e.target.value }))}
+                                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <p className="text-[11px] text-slate-400 mt-1">
+                                        Nomor seri yang tertera pada badan IC / barcode komponen fisik untuk verifikasi distributor.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                                        Jumlah Unit yang Diklaim (Qty)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={formData.jumlah}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, jumlah: parseInt(e.target.value) || 1 }))}
+                                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Detail Kerusakan */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                                    Gejala Kerusakan Teknis / Defek <span className="text-rose-500">*</span>
+                                </label>
+                                <textarea
+                                    rows={4}
+                                    placeholder="Uraikan detail kerusakan secara teknis. Contoh:&#10;• RAM bluescreen WHEA_UNCORRECTABLE_ERROR saat running benchmark 3DMark.&#10;• SSD freeze total dan hilang dari boot list BIOS setelah suhu kerja 15 menit.&#10;• LCD muncul garis putih vertikal di sisi kanan panel..."
+                                    value={formData.alasan_rusak}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, alasan_rusak: e.target.value }))}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed font-medium"
+                                    required
+                                />
+                            </div>
+
+                            {/* Checklist Kondisi Fisik & Fasilitas Bantu Klaim */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                                <label className="flex items-start gap-2.5 p-3.5 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100/60 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.kondisi_fisik_valid}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, kondisi_fisik_valid: e.target.checked }))}
+                                        className="w-4 h-4 text-blue-600 rounded border-slate-300 mt-0.5 focus:ring-blue-500"
+                                    />
+                                    <div className="text-xs">
+                                        <span className="font-bold text-slate-800 block">Kondisi Fisik Lolos Syarat Garansi</span>
+                                        <span className="text-slate-500 text-[11px] leading-snug">
+                                            Segel distributor utuh, tidak ada pin patah, tidak ada korosi cairan, dan tidak gosong/terbakar.
+                                        </span>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start gap-2.5 p-3.5 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100/60 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.bantuan_klaim_toko}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, bantuan_klaim_toko: e.target.checked }))}
+                                        className="w-4 h-4 text-blue-600 rounded border-slate-300 mt-0.5 focus:ring-blue-500"
+                                    />
+                                    <div className="text-xs">
+                                        <span className="font-bold text-slate-800 block">Fasilitas Bantu Klaim Toko</span>
+                                        <span className="text-slate-500 text-[11px] leading-snug">
+                                            Toko menjembatani komunikasi ke distributor menggunakan faktur toko untuk melindungi hak garansi pelanggan.
+                                        </span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Uraian Gejala Kerusakan / Defek Teknis <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
-                                rows={4}
-                                required
-                                value={formData.alasan_rusak}
-                                onChange={(e) => setFormData({ ...formData, alasan_rusak: e.target.value })}
-                                placeholder="Contoh: Layar LCD muncul garis vertikal merah tipis setelah 2 hari dipasang ke laptop pelanggan. Atau: Modul RAM menyebabkan crash blue screen (MEMORY_MANAGEMENT) saat ditest MemTest86 di slot 1."
-                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 leading-relaxed placeholder:text-slate-400"
-                            />
-                        </div>
                     </div>
 
                 </div>
 
-                {/* RIGHT / SIDEBAR COLUMN (4 Columns) */}
-                <div className="lg:col-span-4 space-y-6">
+                {/* RIGHT / SIDE COLUMN (4 Columns Sticky) */}
+                <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-20">
                     
-                    {/* CARD 4: CEKLIS VERIFIKASI FISIK & BANTUAN KLAIM */}
+                    {/* CARD 4: LOGISTIK EKSPEDISI & PENGIRIMAN */}
                     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
-                        <div className="pb-3 border-b border-slate-100 flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4 text-blue-600" />
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                                Verifikasi Kelayakan Klaim
-                            </h3>
-                        </div>
-
-                        <div className="space-y-3">
-                            <label className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-colors">
-                                <input
-                                    type="checkbox"
-                                    checked={formData.kondisi_fisik_valid}
-                                    onChange={(e) => setFormData({ ...formData, kondisi_fisik_valid: e.target.checked })}
-                                    className="w-4 h-4 text-blue-600 rounded mt-0.5 shrink-0"
-                                />
-                                <div className="text-xs">
-                                    <span className="font-bold text-slate-900 block">Kondisi Fisik Bebas Void</span>
-                                    <span className="text-[11px] text-slate-500 leading-tight block mt-0.5">
-                                        Segel stiker/hologram distributor utuh, tidak ada cacat bakar, somplak, atau korosi cairan.
-                                    </span>
-                                </div>
-                            </label>
-
-                            <label className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-colors">
-                                <input
-                                    type="checkbox"
-                                    checked={formData.bantuan_klaim_toko}
-                                    onChange={(e) => setFormData({ ...formData, bantuan_klaim_toko: e.target.checked })}
-                                    className="w-4 h-4 text-blue-600 rounded mt-0.5 shrink-0"
-                                />
-                                <div className="text-xs">
-                                    <span className="font-bold text-slate-900 block">Fasilitasi 'Bantu Klaim' Toko</span>
-                                    <span className="text-[11px] text-slate-500 leading-tight block mt-0.5">
-                                        Komitmen layanan toko menjembatani retur pelanggan ke vendor resmi tanpa lepas tangan.
-                                    </span>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* CARD 5: LOGISTIK & EKSPEDISI PENGIRIMAN */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
-                        <div className="pb-3 border-b border-slate-100 flex items-center gap-2">
+                        <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
                             <Truck className="w-4 h-4 text-blue-600" />
                             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                                Logistik Pengiriman ke Vendor
+                                Logistik Pengiriman Ekspedisi
                             </h3>
                         </div>
 
                         <div className="space-y-3.5">
                             <div>
                                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                    Kurir / Ekspedisi Pengiriman
+                                    Kurir Ekspedisi / Drop Point
                                 </label>
                                 <select
                                     value={formData.kurir_pengiriman}
-                                    onChange={(e) => setFormData({ ...formData, kurir_pengiriman: e.target.value })}
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    onChange={(e) => setFormData(prev => ({ ...prev, kurir_pengiriman: e.target.value }))}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
-                                    <option value="JNE">JNE</option>
-                                    <option value="J&T Express">J&T Express</option>
+                                    <option value="JNE">JNE Express</option>
+                                    <option value="J&T">J&T Express</option>
                                     <option value="SiCepat">SiCepat</option>
-                                    <option value="Kurir Toko / Langsung">Kurir Toko / Antar Langsung</option>
-                                    <option value="Lainnya">Lainnya</option>
+                                    <option value="TiKi">TiKi</option>
+                                    <option value="Lion Parcel">Lion Parcel</option>
+                                    <option value="Antar Langsung">Antar Langsung ke Service Center</option>
+                                    <option value="Lainnya">Lainnya / Titip Kurir Toko</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                    Nomor Resi Pelacakan
+                                    Nomor Resi Pengiriman (Opsional)
                                 </label>
                                 <input
                                     type="text"
+                                    placeholder="Contoh: JNE8822001199"
                                     value={formData.resi_pengiriman}
-                                    onChange={(e) => setFormData({ ...formData, resi_pengiriman: e.target.value })}
-                                    placeholder="Kosongkan jika belum dikirim"
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    onChange={(e) => setFormData(prev => ({ ...prev, resi_pengiriman: e.target.value }))}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                    Beban Biaya Ongkir Ditanggung:
-                                </label>
-                                <select
-                                    value={formData.biaya_ongkir_ditanggung}
-                                    onChange={(e) => setFormData({ ...formData, biaya_ongkir_ditanggung: e.target.value })}
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                >
-                                    <option value="toko">Toko (Komitmen Garansi Servis)</option>
-                                    <option value="distributor">Distributor (Free Return)</option>
-                                    <option value="customer">Pelanggan</option>
-                                </select>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                        Ongkir (Rp)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={formData.ongkir}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, ongkir: e.target.value }))}
+                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                        Penanggung Ongkir
+                                    </label>
+                                    <select
+                                        value={formData.biaya_ongkir_ditanggung}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, biaya_ongkir_ditanggung: e.target.value }))}
+                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="toko">Toko</option>
+                                        <option value="distributor">Distributor</option>
+                                        <option value="customer">Customer</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* CARD 6: ACTION & SUMMARY */}
+                    {/* CARD 5: RINGKASAN & ACTION CTA */}
                     <div className="bg-slate-900 text-white rounded-2xl p-5 shadow-lg space-y-4">
                         <div>
                             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                                Ringkasan Pengajuan Klaim
+                                Ringkasan Pengajuan Klaim RMA
                             </h3>
                             <p className="text-sm font-bold text-white mt-1">
                                 {currentSelectedSparepart?.nama || "Pilih suku cadang"}
                             </p>
                             <p className="text-xs text-slate-400 font-mono mt-0.5">
-                                Qty: {formData.jumlah} unit | {formData.tipe_sumber === "tiket_user" ? `Dari Tiket #${formData.tiket_id || '-'}` : "Stok Toko"}
+                                Qty: {formData.jumlah} unit | {
+                                    formData.tipe_sumber === "tiket_user" 
+                                        ? `Tiket #${formData.tiket_id || '-'}` 
+                                        : formData.tipe_sumber === "retail_customer" 
+                                        ? "Retail / Beli Lepas" 
+                                        : "Stok Toko"
+                                }
                             </p>
                         </div>
 
-                        <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700/60 text-xs space-y-1">
+                        <div className="p-3.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-xs space-y-1.5">
                             <div className="flex justify-between">
                                 <span className="text-slate-400">Distributor:</span>
-                                <span className="font-semibold text-white">{formData.supplier_nama || "-"}</span>
+                                <span className="font-semibold text-white truncate max-w-[170px]">{formData.supplier_nama || "-"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">SN Fisik:</span>
+                                <span className="font-mono text-amber-300 font-semibold truncate max-w-[170px]">{formData.serial_number_lama || "Belum diisi"}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-slate-400">Kebijakan:</span>
@@ -843,4 +993,3 @@ export default function RmaForm() {
         </div>
     );
 }
-

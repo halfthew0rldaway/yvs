@@ -42,7 +42,7 @@ async function getAll(req, res) {
             orderBy = [{ harga: sortOrder === "asc" ? "asc" : "desc" }, { id: "desc" }];
         }
 
-        const include = { brand: true };
+        const include = { brand: true, supplier: true };
         const isTeknisi = req.user?.role === "teknisi";
 
         if (!isPaginated) {
@@ -110,6 +110,7 @@ async function create(req, res) {
             harga, 
             harga_beli, 
             brand_id, 
+            supplier_id,
             supplier_nama, 
             nomor_faktur, 
             tanggal_beli, 
@@ -154,6 +155,7 @@ async function create(req, res) {
             data: { 
                 nama: cleanNama, 
                 brand_id: Number(brand_id),
+                supplier_id: supplier_id ? Number(supplier_id) : null,
                 kategori: kategori || "Umum", 
                 stok: initialStok, 
                 harga: Number(harga),
@@ -165,7 +167,7 @@ async function create(req, res) {
                 distributor_kontak: distributor_kontak ? distributor_kontak.trim() : null,
                 kebijakan_klaim: kebijakan_klaim ? kebijakan_klaim.trim() : null
             },
-            include: { brand: true }
+            include: { brand: true, supplier: true }
         });
 
         // Audit Trail Pengadaan: Jika stok awal > 0, catat RestockLog
@@ -202,6 +204,7 @@ async function update(req, res) {
             harga, 
             harga_beli, 
             brand_id,
+            supplier_id,
             has_garansi_distri,
             tipe_garansi_distri,
             sistem_perhitungan_garansi,
@@ -221,6 +224,7 @@ async function update(req, res) {
             data: {
                 nama: nama || undefined,
                 brand_id: brand_id ? Number(brand_id) : undefined,
+                supplier_id: supplier_id !== undefined ? (supplier_id ? Number(supplier_id) : null) : undefined,
                 kategori: kategori || undefined,
                 stok: stok !== undefined ? Number(stok) : undefined,
                 harga: harga !== undefined ? Number(harga) : undefined,
@@ -232,7 +236,7 @@ async function update(req, res) {
                 distributor_kontak: distributor_kontak !== undefined ? (distributor_kontak ? distributor_kontak.trim() : null) : undefined,
                 kebijakan_klaim: kebijakan_klaim !== undefined ? (kebijakan_klaim ? kebijakan_klaim.trim() : null) : undefined
             },
-            include: { brand: true }
+            include: { brand: true, supplier: true }
         });
 
         return res.json({ message: "Sparepart berhasil diperbarui", data: sparepart });

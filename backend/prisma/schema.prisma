@@ -182,9 +182,32 @@ model Brand {
   repair_wikis RepairWiki[]
 }
 
+model Supplier {
+  id              Int       @id @default(autoincrement())
+  nama            String    @db.VarChar(150)
+  kategori        String?   @default("Distributor Resmi") // "Distributor Resmi", "Distributor Paralel", "Toko Online / Marketplace", "Supplier Komponen"
+  kontak_person   String?   @db.VarChar(100) // Nama PIC / Sales
+  telepon         String?   @db.VarChar(50)  // Telepon / No WhatsApp
+  email           String?   @db.VarChar(100)
+  alamat          String?   @db.Text         // Alamat kantor / drop point / service center
+  link_toko       String?   @db.VarChar(255) // Link toko online / website / portal garansi
+  kebijakan_klaim String?   @db.Text         // Ketentuan garansi / syarat box & nota
+  catatan         String?   @db.Text
+  is_active       Boolean   @default(true)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  spareparts      Sparepart[]
+  supplier_rma    SupplierRma[]
+
+  @@index([nama])
+  @@index([kategori])
+}
+
 model Sparepart {
   id                         Int      @id @default(autoincrement())
   brand_id                   Int?
+  supplier_id                Int?
   kategori                   String   @default("Umum") // Laptop, Desktop, Printer, Umum
   nama                       String
   stok                       Int      @default(0)
@@ -202,11 +225,13 @@ model Sparepart {
   created_at                 DateTime @default(now())
 
   brand                      Brand?   @relation(fields: [brand_id], references: [id], onDelete: Restrict)
+  supplier                   Supplier? @relation(fields: [supplier_id], references: [id], onDelete: SetNull)
   penggunaan_sparepart       PenggunaanSparepart[]
   restock_logs               RestockLog[]
   supplier_rma               SupplierRma[]
 
   @@index([brand_id])
+  @@index([supplier_id])
   @@index([kategori])
   @@index([has_garansi_distri])
 }
@@ -388,7 +413,8 @@ model SupplierRma {
   id                      Int          @id @default(autoincrement())
   nomor_rma               String       @unique @db.VarChar(50) // e.g. "RMA-2026-0001"
   sparepart_id            Int
-  tipe_sumber             String       @default("tiket_user") // "tiket_user" (Dari Tiket Servis Customer) vs "stok_toko" (Cacat Stok / Gudang Toko)
+  supplier_id             Int?
+  tipe_sumber             String       @default("tiket_user") // "tiket_user" (Dari Tiket Servis Customer), "retail_customer" (Beli Langsung / Retail), "stok_toko" (Cacat Stok / Gudang Toko)
   customer_nama           String?      @db.VarChar(150)
   customer_kontak         String?      @db.VarChar(50)
   perangkat_nama          String?      @db.VarChar(150)
@@ -419,10 +445,12 @@ model SupplierRma {
   updated_at              DateTime     @updatedAt
 
   sparepart               Sparepart    @relation(fields: [sparepart_id], references: [id], onDelete: Restrict)
+  supplier                Supplier?    @relation(fields: [supplier_id], references: [id], onDelete: SetNull)
   tiket                   TiketServis? @relation(fields: [tiket_id], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([sparepart_id])
+  @@index([supplier_id])
   @@index([tiket_id])
   @@index([tipe_sumber])
 }

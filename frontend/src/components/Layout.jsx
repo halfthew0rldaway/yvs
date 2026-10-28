@@ -22,7 +22,10 @@ import {
     HeartHandshake,
     Laptop,
     RotateCcw,
-    Database
+    Database,
+    Building2,
+    ChevronDown,
+    ChevronRight
 } from "lucide-react";
 import SopModal from "./SopModal";
 import api from "../services/api";
@@ -30,29 +33,101 @@ import CrmFloatingBubble from "./CrmFloatingBubble";
 import MaintenanceRecallModal from "./MaintenanceRecallModal";
 import NotificationBell from "./NotificationBell";
 
-const adminMenu = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/customer", label: "Customer", icon: Users },
-    { path: "/perangkat", label: "Perangkat", icon: MonitorSmartphone },
-    { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
-    { path: "/loaner", label: "Unit Pinjaman", icon: Laptop },
-    { path: "/retensi", label: "Retensi & CRM", icon: HeartHandshake },
-    { path: "/sparepart", label: "Sparepart", icon: Wrench },
-    { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
-    { path: "/invoice", label: "Invoice", icon: FileText },
-    { path: "/wiki", label: "Pusat SOP & Wiki", icon: BookOpen },
-    { path: "/recruitment", label: "Rekrutmen Tim", icon: UserPlus },
-    { path: "/users", label: "User & Performa", icon: UserCheck },
-    { path: "/database", label: "Cadangan Database", icon: Database },
+// Menu Groups untuk Admin (Struktur Navigasi Collapsible Terorganisir)
+const adminNavGroups = [
+    {
+        id: "overview",
+        label: "Ringkasan",
+        items: [
+            { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard }
+        ]
+    },
+    {
+        id: "operasional",
+        label: "Operasional Servis",
+        icon: Ticket,
+        items: [
+            { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
+            { path: "/perangkat", label: "Perangkat Pelanggan", icon: MonitorSmartphone },
+            { path: "/customer", label: "Data Pelanggan", icon: Users },
+            { path: "/loaner", label: "Unit Pinjaman (Loaner)", icon: Laptop },
+        ]
+    },
+    {
+        id: "logistik",
+        label: "Suku Cadang & Logistik",
+        icon: Wrench,
+        items: [
+            { path: "/sparepart", label: "Katalog Sparepart", icon: Wrench },
+            { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
+            { path: "/supplier", label: "Direktori Supplier", icon: Building2 },
+        ]
+    },
+    {
+        id: "transaksi",
+        label: "Kasir & CRM",
+        icon: FileText,
+        items: [
+            { path: "/invoice", label: "Invoice & Kasir", icon: FileText },
+            { path: "/retensi", label: "Retensi & CRM Pelanggan", icon: HeartHandshake },
+        ]
+    },
+    {
+        id: "knowledge",
+        label: "Knowledge & SDM",
+        icon: BookOpen,
+        items: [
+            { path: "/wiki", label: "Pusat SOP & Wiki Teknis", icon: BookOpen },
+            { path: "/recruitment", label: "Rekrutmen Tim (HR)", icon: UserPlus },
+        ]
+    },
+    {
+        id: "sistem",
+        label: "Pengaturan & Sistem",
+        icon: Settings,
+        items: [
+            { path: "/users", label: "User & Performa Tim", icon: UserCheck },
+            { path: "/database", label: "Cadangan Database", icon: Database },
+        ]
+    }
 ];
 
-const teknisiMenu = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
-    { path: "/loaner", label: "Unit Pinjaman", icon: Laptop },
-    { path: "/sparepart", label: "Sparepart", icon: Wrench },
-    { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
-    { path: "/wiki", label: "Pusat SOP & Wiki", icon: BookOpen },
+// Menu Groups untuk Teknisi
+const teknisiNavGroups = [
+    {
+        id: "overview",
+        label: "Ringkasan",
+        items: [
+            { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard }
+        ]
+    },
+    {
+        id: "operasional",
+        label: "Operasional Servis",
+        icon: Ticket,
+        items: [
+            { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
+            { path: "/loaner", label: "Unit Pinjaman (Loaner)", icon: Laptop },
+        ]
+    },
+    {
+        id: "logistik",
+        label: "Suku Cadang & Logistik",
+        icon: Wrench,
+        items: [
+            { path: "/sparepart", label: "Katalog Sparepart", icon: Wrench },
+            { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
+            { path: "/supplier", label: "Direktori Supplier", icon: Building2 },
+        ]
+    },
+    {
+        id: "knowledge",
+        label: "Knowledge & SOP",
+        icon: BookOpen,
+        items: [
+            { path: "/wiki", label: "Pusat SOP & Wiki Teknis", icon: BookOpen },
+        ]
+    }
 ];
 
 export default function Layout({ children }) {
@@ -137,7 +212,35 @@ export default function Layout({ children }) {
         return () => window.removeEventListener("resize", handleResize);
     }, [isSidebarOpen]);
 
-    const menu = isAdmin ? adminMenu : teknisiMenu;
+    const navGroups = isAdmin ? adminNavGroups : teknisiNavGroups;
+
+    // Collapsible Groups state: open by default for core daily groups
+    const [openGroups, setOpenGroups] = useState({
+        operasional: true,
+        logistik: true,
+        transaksi: true,
+        knowledge: false,
+        sistem: false
+    });
+
+    const toggleGroup = (groupId) => {
+        setOpenGroups(prev => ({
+            ...prev,
+            [groupId]: !prev[groupId]
+        }));
+    };
+
+    // Auto-expand group if current route is within it
+    useEffect(() => {
+        navGroups.forEach(group => {
+            if (group.id !== "overview" && group.items) {
+                const hasActive = group.items.some(item => location.pathname.startsWith(item.path));
+                if (hasActive) {
+                    setOpenGroups(prev => ({ ...prev, [group.id]: true }));
+                }
+            }
+        });
+    }, [location.pathname, navGroups]);
 
     function handleLogout() {
         logout();
@@ -183,25 +286,83 @@ export default function Layout({ children }) {
                     </button>
                 </div>
 
-                {/* Sidebar Nav */}
-                <nav className="flex-1 overflow-y-auto py-5 px-4 space-y-1 custom-scrollbar">
-                    <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Menu Utama</p>
-                    {menu.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = location.pathname.startsWith(item.path);
+                {/* Sidebar Nav (Collapsible Navigation Grouping) */}
+                <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1 custom-scrollbar">
+                    {navGroups.map((group) => {
+                        // Overview standalone items (e.g. Dashboard)
+                        if (group.id === "overview") {
+                            return group.items.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = location.pathname === item.path;
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-semibold transition-all mb-2 ${
+                                            isActive
+                                                ? "bg-blue-600 text-white shadow-xs"
+                                                : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                                        }`}
+                                    >
+                                        <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-500"}`} />
+                                        <span>{item.label}</span>
+                                    </Link>
+                                );
+                            });
+                        }
+
+                        // Collapsible Group
+                        const GroupIcon = group.icon;
+                        const isOpen = openGroups[group.id] !== false;
+                        const hasActiveChild = group.items.some(item => location.pathname.startsWith(item.path));
+
                         return (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
-                                    isActive
-                                        ? "bg-blue-50 text-blue-600 font-semibold border border-blue-100 shadow-2xs"
-                                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                }`}
-                            >
-                                <Icon className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
-                                <span>{item.label}</span>
-                            </Link>
+                            <div key={group.id} className="pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleGroup(group.id)}
+                                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer group ${
+                                        hasActiveChild 
+                                            ? "text-blue-600 hover:bg-blue-50/60" 
+                                            : "text-slate-400 hover:text-slate-700 hover:bg-slate-100/60"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <GroupIcon className={`w-3.5 h-3.5 ${hasActiveChild ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`} />
+                                        <span>{group.label}</span>
+                                    </div>
+                                    <div className="text-slate-400 group-hover:text-slate-600 transition-transform">
+                                        {isOpen ? (
+                                            <ChevronDown className="w-3.5 h-3.5" />
+                                        ) : (
+                                            <ChevronRight className="w-3.5 h-3.5" />
+                                        )}
+                                    </div>
+                                </button>
+
+                                {isOpen && (
+                                    <div className="space-y-0.5 mt-1 pl-2.5 ml-2 border-l border-slate-200/90 animate-fade-in">
+                                        {group.items.map((item) => {
+                                            const Icon = item.icon;
+                                            const isActive = location.pathname.startsWith(item.path);
+                                            return (
+                                                <Link
+                                                    key={item.path}
+                                                    to={item.path}
+                                                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                                        isActive
+                                                            ? "bg-blue-50 text-blue-600 font-bold border border-blue-100 shadow-2xs"
+                                                            : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+                                                    }`}
+                                                >
+                                                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
+                                                    <span className="truncate">{item.label}</span>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         );
                     })}
                 </nav>

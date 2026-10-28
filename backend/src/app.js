@@ -26,6 +26,7 @@ const databaseRoutes = require("./routes/database.routes");
 const staffSignatureRoutes = require("./routes/staffSignature.routes");
 const sopRoutes = require("./routes/sop.routes");
 const recruitmentRoutes = require("./routes/recruitment.routes");
+const supplierRoutes = require("./routes/supplier.routes");
 const activityLogger = require("./middleware/activityLogger");
 const sanitizeRequest = require("./middleware/sanitizeRequest");
 const errorHandler = require("./middleware/errorHandler");
@@ -89,6 +90,8 @@ app.use("/api/database", databaseRoutes);
 app.use("/api/staff-signatures", staffSignatureRoutes);
 app.use("/api/sop", sopRoutes);
 app.use("/api/recruitment", recruitmentRoutes);
+app.use("/api/supplier", supplierRoutes);
+app.use("/api/suppliers", supplierRoutes);
 
 // Health check
 app.get("/", (req, res) => {

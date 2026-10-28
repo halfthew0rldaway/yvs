@@ -31,6 +31,7 @@ const RetensiCrm = lazy(() => import("./pages/retensi/RetensiCrm"));
 const LoanerList = lazy(() => import("./pages/loaner/LoanerList"));
 const RmaList = lazy(() => import("./pages/rma/RmaList"));
 const RmaForm = lazy(() => import("./pages/rma/RmaForm"));
+const SupplierList = lazy(() => import("./pages/supplier/SupplierList"));
 const DatabaseManagement = lazy(() => import("./pages/database/DatabaseManagement"));
 
 function PageLoader() {
@@ -98,6 +99,8 @@ export default function App() {
                     <Route path="/rma/tambah" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
                     <Route path="/rma/create" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
                     <Route path="/rma/new" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
+                    <Route path="/supplier" element={<ProtectedRoute><SupplierList /></ProtectedRoute>} />
+                    <Route path="/suppliers" element={<ProtectedRoute><SupplierList /></ProtectedRoute>} />
                     <Route path="/invoice" element={<ProtectedRoute roles={["admin"]}><InvoiceList /></ProtectedRoute>} />
                     <Route path="/invoice/tambah" element={<ProtectedRoute roles={["admin"]}><InvoiceForm /></ProtectedRoute>} />
                     <Route path="/invoice/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />

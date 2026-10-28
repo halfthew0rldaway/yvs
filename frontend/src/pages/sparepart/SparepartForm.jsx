@@ -11,6 +11,7 @@ export default function SparepartForm() {
 
     const [form, setForm] = useState({ 
         brand_id: "", 
+        supplier_id: "",
         nama: "", 
         kategori: "Umum", 
         stok: "", 
@@ -27,6 +28,7 @@ export default function SparepartForm() {
         catatan: ""
     });
     const [brands, setBrands] = useState([]);
+    const [suppliers, setSuppliers] = useState([]);
     const [searchBrand, setSearchBrand] = useState("");
     const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
     
@@ -44,6 +46,11 @@ export default function SparepartForm() {
             .then(res => setBrands(res.data))
             .catch(() => toast.error("Gagal memuat daftar merek"));
 
+        // Fetch suppliers
+        api.get("/supplier")
+            .then(res => setSuppliers(res.data?.data || []))
+            .catch(() => console.warn("Belum ada data supplier"));
+
         if (isEdit) {
             api
                 .get("/sparepart")
@@ -52,6 +59,7 @@ export default function SparepartForm() {
                     if (sp) {
                         setForm({ 
                             brand_id: sp.brand_id ? String(sp.brand_id) : "", 
+                            supplier_id: sp.supplier_id ? String(sp.supplier_id) : "",
                             nama: sp.nama, 
                             kategori: sp.kategori || "Umum", 
                             stok: String(sp.stok), 
@@ -548,46 +556,90 @@ export default function SparepartForm() {
                                     </div>
 
                                     {/* Info Distributor & Kontak */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                                                <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                                                <span>Nama Distributor / Service Center Vendor</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                placeholder="Contoh: PT Astrindo / Synnex Metrodata / NJT / Toko LCD"
-                                                value={form.distributor_nama}
-                                                onChange={(e) => setForm({ ...form, distributor_nama: e.target.value })}
-                                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
-                                            />
-                                        </div>
+                                    <div className="space-y-4">
+                                        {suppliers.length > 0 && (
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                                                        <span>Pilih dari Direktori Mitra Distributor Terdaftar</span>
+                                                    </span>
+                                                    <span className="text-[11px] text-blue-600 font-semibold">1-Klik Autofill Kontak & Syarat</span>
+                                                </label>
+                                                <select
+                                                    value={form.supplier_id}
+                                                    onChange={(e) => {
+                                                        const sId = e.target.value;
+                                                        if (!sId) {
+                                                            setForm(prev => ({ ...prev, supplier_id: "" }));
+                                                            return;
+                                                        }
+                                                        const selected = suppliers.find(s => String(s.id) === String(sId));
+                                                        if (selected) {
+                                                            const kontakStr = [selected.telepon, selected.kontak_person ? `(${selected.kontak_person})` : null, selected.alamat ? `- ${selected.alamat}` : null].filter(Boolean).join(" ");
+                                                            setForm(prev => ({
+                                                                ...prev,
+                                                                supplier_id: String(selected.id),
+                                                                distributor_nama: selected.nama,
+                                                                distributor_kontak: kontakStr,
+                                                                kebijakan_klaim: selected.kebijakan_klaim || prev.kebijakan_klaim
+                                                            }));
+                                                            toast.success(`Distributor ${selected.nama} dipilih! Data kontak & syarat terisi.`);
+                                                        }
+                                                    }}
+                                                    className="w-full px-3.5 py-2.5 bg-blue-50/60 border border-blue-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="">-- Pilih Distributor Terdaftar (atau ketik manual di bawah) --</option>
+                                                    {suppliers.map(sup => (
+                                                        <option key={sup.id} value={sup.id}>
+                                                            {sup.nama} ({sup.kategori || "Distributor"})
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
 
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                                                <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                <span>Kontak CS / Alamat RMA Distributor</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                placeholder="Contoh: 0812-9988-7766 / Mangga Dua Mall Lt. 4"
-                                                value={form.distributor_kontak}
-                                                onChange={(e) => setForm({ ...form, distributor_kontak: e.target.value })}
-                                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
-                                            />
-                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                                                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                                                    <span>Nama Distributor / Toko</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Contoh: PT Astrindo / Synnex Metrodata / NJT / Toko LCD"
+                                                    value={form.distributor_nama}
+                                                    onChange={(e) => setForm({ ...form, distributor_nama: e.target.value })}
+                                                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400 font-semibold"
+                                                />
+                                            </div>
 
-                                        <div className="md:col-span-2">
-                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                                Ketentuan / Syarat Klaim Distributor
-                                            </label>
-                                            <input
-                                                type="text"
-                                                placeholder="Contoh: Box asli wajib disimpan, stiker segel utuh, tidak ada korosi/terbakar, toko bantu klaim gratis"
-                                                value={form.kebijakan_klaim}
-                                                onChange={(e) => setForm({ ...form, kebijakan_klaim: e.target.value })}
-                                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
-                                            />
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                                    <span>Kontak CS / Alamat RMA Distributor</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Contoh: 0812-9988-7766 / Harco Mangga Dua Lt. 4"
+                                                    value={form.distributor_kontak}
+                                                    onChange={(e) => setForm({ ...form, distributor_kontak: e.target.value })}
+                                                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                                                />
+                                            </div>
+
+                                            <div className="md:col-span-2">
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                                    Ketentuan / Syarat Klaim Distributor
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Contoh: Box asli wajib disimpan, stiker segel utuh, tidak ada korosi/terbakar, toko bantu klaim gratis"
+                                                    value={form.kebijakan_klaim}
+                                                    onChange={(e) => setForm({ ...form, kebijakan_klaim: e.target.value })}
+                                                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

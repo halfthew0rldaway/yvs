@@ -340,11 +340,12 @@ export default function RmaList() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {/* Sumber Filter: All, Tiket Servis, Stok Toko */}
+                        {/* Sumber Filter: All, Tiket Servis, Retail, Stok Toko */}
                         <div className="flex items-center bg-slate-100 p-1 rounded-xl">
                             {[
                                 { key: "all", label: "Semua Sumber" },
-                                { key: "tiket_user", label: "Tiket Servis Customer" },
+                                { key: "tiket_user", label: "Tiket Servis" },
+                                { key: "retail_customer", label: "Retail Konsumen" },
                                 { key: "stok_toko", label: "Stok Toko" }
                             ].map((sb) => (
                                 <button
@@ -492,6 +493,20 @@ export default function RmaList() {
                                                     <p className="text-[11px] text-slate-500">
                                                         {item.perangkat_nama || `${item.tiket?.perangkat?.tipe || ''} ${item.tiket?.perangkat?.model || ''}`}
                                                     </p>
+                                                </div>
+                                            ) : item.tipe_sumber === "retail_customer" ? (
+                                                <div>
+                                                    <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        🛍️ Retail Konsumen
+                                                    </span>
+                                                    <p className="text-xs font-semibold text-slate-800 mt-1">
+                                                        {item.customer_nama || "Pelanggan Lepas"}
+                                                    </p>
+                                                    {item.nomor_faktur && (
+                                                        <p className="text-[11px] font-mono text-slate-500">
+                                                            Faktur: {item.nomor_faktur}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <div>
