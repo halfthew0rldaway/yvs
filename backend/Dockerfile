@@ -15,8 +15,10 @@ RUN npx prisma generate
 COPY src ./src
 COPY scripts ./scripts
 COPY seed.js ./
+COPY docker-entrypoint.sh ./
 
-RUN mkdir -p /app/uploads \
+RUN chmod +x docker-entrypoint.sh \
+    && mkdir -p /app/uploads \
     && chown -R node:node /app
 
 ENV NODE_ENV=production
@@ -26,4 +28,5 @@ USER node
 
 EXPOSE 5000
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "src/app.js"]

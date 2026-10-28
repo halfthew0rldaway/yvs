@@ -1,5 +1,6 @@
 require("dotenv").config();
 const { PrismaClient } = require("@prisma/client");
+const { execSync } = require("child_process");
 const bcrypt = require("bcrypt");
 const { calculateWarrantyExpiry } = require("./src/utils/tiket");
 
@@ -14,6 +15,30 @@ async function main() {
     console.log("[SEED] Memulai proses seeding data komprehensif, terintegrasi, dan sinkron...");
     console.log("[SEED] Mencakup seluruh modul baru: Supplier, RMA, SOP, Rekrutmen, Loaner, dll.");
     console.log("[SEED] ==========================================================================\n");
+
+    // 0. Sinkronisasi skema sebelum eksekusi apapun agar kolom/tabel baru selalu tersedia
+    try {
+        console.log("[SEED] 0. Sinkronisasi skema database (Prisma db push)...");
+        execSync("npx prisma db push --accept-data-loss --skip-generate", { stdio: "inherit" });
+        console.log("[SEED] -> Skema database telah sinkron dan siap menerima data.\n");
+    } catch (e) {
+        console.warn("[SEED] Catatan: Sinkronisasi skema dilewati:", e.message);
+    }
+
+    // Proteksi data produksi: Jika database sudah berisi data dan tidak ada flag FORCE_SEED
+    const isForce = process.env.FORCE_SEED === "true" || process.argv.includes("--force");
+    const existingUserCount = await prisma.user.count();
+    const existingCustomerCount = await prisma.customer.count();
+
+    if (!isForce && (existingUserCount > 0 || existingCustomerCount > 0)) {
+        console.log(`[SEED] 🛡️  PROTEKSI DATA PRODUKSI AKTIF:`);
+        console.log(`[SEED] Terdeteksi ${existingUserCount} staf dan ${existingCustomerCount} pelanggan di database.`);
+        console.log(`[SEED] Untuk mencegah kehilangan data secara tidak sengaja, proses seeding dibatalkan.`);
+        console.log(`[SEED] Jika Anda BENAR-BENAR yakin ingin mereset dan mengosongkan seluruh database, jalankan:`);
+        console.log(`[SEED]   FORCE_SEED=true npm run seed\n`);
+        await prisma.$disconnect();
+        return;
+    }
 
     // 1. Bersihkan seluruh data lama secara berurutan agar bebas duplikasi dan aman foreign key
     console.log("[SEED] 1. Membersihkan seluruh data lama (Zero Collision / Clean Slate)...");

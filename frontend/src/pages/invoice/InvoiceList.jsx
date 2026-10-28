@@ -346,14 +346,14 @@ export default function InvoiceList() {
 
                     <div className="relative bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden z-10 border border-slate-200">
                         {/* Header Modal */}
-                        <div className="px-6 py-5 bg-slate-800 text-white flex items-center justify-between print:hidden">
+                        <div className="px-6 py-5 bg-white border-b border-slate-100 flex items-center justify-between print:hidden">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center">
-                                    <FileText className="w-5 h-5 text-slate-300" />
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+                                    <FileText className="w-5 h-5 text-blue-600" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg text-white">Laporan Keuangan & Performa Workshop</h3>
-                                    <p className="text-xs text-slate-400 mt-0.5">
+                                    <h3 className="font-bold text-lg text-slate-900">Laporan Keuangan & Performa Workshop</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">
                                         Periode: {startDate ? new Date(startDate).toLocaleDateString("id-ID") : "Awal"} s/d {endDate ? new Date(endDate).toLocaleDateString("id-ID") : "Sekarang"}
                                     </p>
                                 </div>
@@ -362,7 +362,7 @@ export default function InvoiceList() {
                                 <button
                                     type="button"
                                     onClick={handlePrintReport}
-                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-xs"
                                 >
                                     <Printer className="w-4 h-4" />
                                     <span>Cetak PDF / Print</span>
@@ -370,7 +370,7 @@ export default function InvoiceList() {
                                 <button
                                     type="button"
                                     onClick={() => setIsReportModalOpen(false)}
-                                    className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                                    className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>

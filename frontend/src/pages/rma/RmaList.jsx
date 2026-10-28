@@ -546,14 +546,18 @@ export default function RmaList() {
                                         </td>
 
                                         <td className="px-6 py-4 align-middle">
-                                            <div className="flex flex-col gap-1 items-start justify-center">
-                                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusCfg.color}`}>
+                                            <div className="flex flex-col gap-1 items-start justify-center min-h-[44px]">
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusCfg.color}`}>
                                                     <StatusIcon className="w-3.5 h-3.5" />
                                                     {statusCfg.label}
                                                 </span>
-                                                {item.resi_pengiriman && (
+                                                {item.resi_pengiriman ? (
                                                     <p className="text-[11px] text-slate-600 font-mono mt-0.5">
                                                         {item.kurir_pengiriman || "Kurir"}: {item.resi_pengiriman}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-[11px] text-slate-400 font-mono mt-0.5 opacity-60">
+                                                        Belum ada resi
                                                     </p>
                                                 )}
                                             </div>
@@ -564,7 +568,7 @@ export default function RmaList() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleOpenUpdateModal(item)}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-700 hover:text-blue-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
+                                                    className="inline-flex items-center justify-center gap-1 w-[80px] py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-700 hover:text-blue-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
                                                     title="Update Status / Resi / Penyelesaian"
                                                 >
                                                     <span>Update</span>
