@@ -11,15 +11,23 @@ import {
     ChevronRight, 
     Sparkles, 
     X,
-    ExternalLink
+    ExternalLink,
+    ShieldCheck,
+    Users,
+    Layers,
+    FileText,
+    Wrench,
+    Printer
 } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
 import RepairWikiModal from "./RepairWikiModal";
 import RepairWikiDetailModal from "./RepairWikiDetailModal";
+import SopDetailModal from "./SopDetailModal";
+import SopFormModal from "./SopFormModal";
 
-const KATEGORI_TABS = [
+const KATEGORI_WIKI_TABS = [
     { id: "all", label: "Semua Kategori" },
     { id: "Motherboard / Power", label: "Motherboard / Power" },
     { id: "Layar / Display", label: "Layar / Display" },
@@ -27,6 +35,14 @@ const KATEGORI_TABS = [
     { id: "Storage & OS", label: "Storage & OS" },
     { id: "Pembersihan & Pasta", label: "Pembersihan & Pasta" },
     { id: "Audio & Port", label: "Audio & Port" },
+];
+
+const KATEGORI_SOP_TABS = [
+    { id: "all", label: "Semua SOP" },
+    { id: "Teknisi & QC", label: "Teknisi & QC" },
+    { id: "Frontliner & CS", label: "Frontliner & CS" },
+    { id: "Operasional Toko", label: "Operasional Toko" },
+    { id: "Keselamatan & K3", label: "Keselamatan & K3" },
 ];
 
 const DIFFICULTY_MAP = {
@@ -37,26 +53,44 @@ const DIFFICULTY_MAP = {
 
 export default function RepairWikiList() {
     const { user, isAdmin } = useAuth();
+    
+    // Top-Level Mode: "sop" or "wiki"
+    const [mainTab, setMainTab] = useState("sop"); // "sop" | "wiki"
+
+    // SOP States
+    const [sops, setSops] = useState([]);
+    const [loadingSop, setLoadingSop] = useState(true);
+    const [sopSearch, setSopSearch] = useState("");
+    const [selectedSopKategori, setSelectedSopKategori] = useState("all");
+    const [selectedSopRole, setSelectedSopRole] = useState("all");
+    const [activeSopDetail, setActiveSopDetail] = useState(null);
+    const [isSopFormOpen, setIsSopFormOpen] = useState(false);
+    const [sopToEdit, setSopToEdit] = useState(null);
+
+    // Hardware Wiki States
     const [wikis, setWikis] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState("");
-    const [selectedKategori, setSelectedKategori] = useState("all");
+    const [loadingWiki, setLoadingWiki] = useState(true);
+    const [wikiSearch, setWikiSearch] = useState("");
+    const [selectedWikiKategori, setSelectedWikiKategori] = useState("all");
     const [selectedMerek, setSelectedMerek] = useState("all");
     const [selectedDifficulty, setSelectedDifficulty] = useState("all");
     const [brands, setBrands] = useState([]);
-
-    // Modal states
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isCreateWikiOpen, setIsCreateWikiOpen] = useState(false);
     const [wikiToEdit, setWikiToEdit] = useState(null);
     const [activeWikiDetail, setActiveWikiDetail] = useState(null);
 
     useEffect(() => {
         fetchBrands();
+        fetchSops();
     }, []);
 
     useEffect(() => {
-        fetchWikis();
-    }, [selectedKategori, selectedMerek, selectedDifficulty]);
+        if (mainTab === "sop") {
+            fetchSops();
+        } else {
+            fetchWikis();
+        }
+    }, [mainTab, selectedSopKategori, selectedSopRole, selectedWikiKategori, selectedMerek, selectedDifficulty]);
 
     async function fetchBrands() {
         try {
@@ -67,12 +101,30 @@ export default function RepairWikiList() {
         }
     }
 
-    async function fetchWikis(searchQuery = search) {
+    async function fetchSops(searchQuery = sopSearch) {
         try {
-            setLoading(true);
+            setLoadingSop(true);
             const params = {};
             if (searchQuery && searchQuery.trim() !== "") params.search = searchQuery.trim();
-            if (selectedKategori !== "all") params.kategori = selectedKategori;
+            if (selectedSopKategori !== "all") params.kategori = selectedSopKategori;
+            if (selectedSopRole !== "all") params.target_role = selectedSopRole;
+
+            const res = await api.get("/sop", { params });
+            const list = Array.isArray(res.data?.data) ? res.data.data : [];
+            setSops(list);
+        } catch (error) {
+            console.error("Gagal memuat dokumen SOP", error);
+        } finally {
+            setLoadingSop(false);
+        }
+    }
+
+    async function fetchWikis(searchQuery = wikiSearch) {
+        try {
+            setLoadingWiki(true);
+            const params = {};
+            if (searchQuery && searchQuery.trim() !== "") params.search = searchQuery.trim();
+            if (selectedWikiKategori !== "all") params.kategori = selectedWikiKategori;
             if (selectedMerek !== "all") params.merek = selectedMerek;
             if (selectedDifficulty !== "all") params.tingkat_kesulitan = selectedDifficulty;
 
@@ -82,11 +134,16 @@ export default function RepairWikiList() {
         } catch (error) {
             toast.error("Gagal memuat pustaka wiki reparasi");
         } finally {
-            setLoading(false);
+            setLoadingWiki(false);
         }
     }
 
-    function handleSearchSubmit(e) {
+    function handleSopSearchSubmit(e) {
+        e.preventDefault();
+        fetchSops();
+    }
+
+    function handleWikiSearchSubmit(e) {
         e.preventDefault();
         fetchWikis();
     }
@@ -109,225 +166,426 @@ export default function RepairWikiList() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-3.5">
                     <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs">
-                        <BookOpen className="w-6 h-6" />
+                        {mainTab === "sop" ? <ShieldCheck className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Pustaka Wiki Reparasi</h1>
+                            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                                Pusat SOP & Knowledge Base
+                            </h1>
                             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                {wikis.length} Panduan
+                                KEOS Standard
                             </span>
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
-                            Basis pengetahuan hardware internal untuk solusi cepat kasus kerusakan laptop & komputer.
+                            Pusat panduan operasional standar & basis pengetahuan teknis workshop KomputerAwet / Serv.io.
                         </p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setWikiToEdit(null);
-                            setIsCreateModalOpen(true);
-                        }}
-                        className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>Tulis Panduan Baru</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Filter Bar & Search */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-                <div className="flex flex-col md:flex-row items-center gap-3">
-                    {/* Search Input */}
-                    <form onSubmit={handleSearchSubmit} className="relative flex-1 w-full">
-                        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Cari berdasarkan judul, gejala, solusi, seri model, atau kode IC..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        {search && (
+                    {mainTab === "sop" ? (
+                        isAdmin && (
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setSearch("");
-                                    fetchWikis("");
+                                    setSopToEdit(null);
+                                    setIsSopFormOpen(true);
                                 }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors"
                             >
-                                <X className="w-3.5 h-3.5" />
+                                <Plus className="w-4 h-4" />
+                                <span>Tulis SOP Baru</span>
                             </button>
-                        )}
-                    </form>
-
-                    {/* Merek Filter */}
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <select
-                            value={selectedMerek}
-                            onChange={(e) => setSelectedMerek(e.target.value)}
-                            className="w-full md:w-40 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        )
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setWikiToEdit(null);
+                                setIsCreateWikiOpen(true);
+                            }}
+                            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors"
                         >
-                            <option value="all">Semua Merek</option>
-                            {brands.map(b => (
-                                <option key={b.id} value={b.nama}>{b.nama}</option>
-                            ))}
-                        </select>
-
-                        {/* Difficulty Filter */}
-                        <select
-                            value={selectedDifficulty}
-                            onChange={(e) => setSelectedDifficulty(e.target.value)}
-                            className="w-full md:w-36 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                            <option value="all">Semua Level</option>
-                            <option value="Mudah">Mudah</option>
-                            <option value="Menengah">Menengah</option>
-                            <option value="Mahir">Mahir</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Category Tabs */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 no-scrollbar">
-                    {KATEGORI_TABS.map(tab => {
-                        const isActive = selectedKategori === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                type="button"
-                                onClick={() => setSelectedKategori(tab.id)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
-                                    isActive 
-                                        ? "bg-slate-900 text-white font-semibold shadow-xs" 
-                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                                }`}
-                            >
-                                {tab.label}
-                            </button>
-                        );
-                    })}
+                            <Plus className="w-4 h-4" />
+                            <span>Tulis Kasus Hardware</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* Wiki Cards Grid */}
-            {loading ? (
-                <div className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
-                    <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                    <p className="text-xs font-medium">Memuat pustaka wiki reparasi...</p>
-                </div>
-            ) : wikis.length === 0 ? (
-                <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
-                        <BookOpen className="w-6 h-6" />
+            {/* Segmented Main Navigation Tabs */}
+            <div className="flex items-center p-1.5 bg-slate-200/70 rounded-2xl max-w-md">
+                <button
+                    type="button"
+                    onClick={() => setMainTab("sop")}
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                        mainTab === "sop"
+                            ? "bg-white text-indigo-600 shadow-xs"
+                            : "text-slate-600 hover:text-slate-900"
+                    }`}
+                >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Standar SOP Operasional</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-semibold ${
+                        mainTab === "sop" ? "bg-indigo-100 text-indigo-700" : "bg-slate-300 text-slate-700"
+                    }`}>
+                        {sops.length}
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setMainTab("wiki")}
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                        mainTab === "wiki"
+                            ? "bg-white text-indigo-600 shadow-xs"
+                            : "text-slate-600 hover:text-slate-900"
+                    }`}
+                >
+                    <Wrench className="w-4 h-4" />
+                    <span>Pustaka Servis Hardware</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-semibold ${
+                        mainTab === "wiki" ? "bg-indigo-100 text-indigo-700" : "bg-slate-300 text-slate-700"
+                    }`}>
+                        {wikis.length}
+                    </span>
+                </button>
+            </div>
+
+            {/* ======================================================== */}
+            {/* VIEW 1: STANDAR SOP OPERASIONAL                           */}
+            {/* ======================================================== */}
+            {mainTab === "sop" && (
+                <div className="space-y-5">
+                    {/* Filter & Search Bar */}
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                        <div className="flex flex-col md:flex-row items-center gap-3">
+                            <form onSubmit={handleSopSearchSubmit} className="relative flex-1 w-full">
+                                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Cari kode SOP (e.g. SOP-OPS-004), judul panduan, atau kata kunci..."
+                                    value={sopSearch}
+                                    onChange={(e) => setSopSearch(e.target.value)}
+                                    className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                                {sopSearch && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSopSearch("");
+                                            fetchSops("");
+                                        }}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </form>
+
+                            {/* Role Filter */}
+                            <div className="flex items-center gap-2 w-full md:w-auto">
+                                <select
+                                    value={selectedSopRole}
+                                    onChange={(e) => setSelectedSopRole(e.target.value)}
+                                    className="w-full md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="all">Semua Peran / Role</option>
+                                    <option value="Teknisi">Khusus Teknisi</option>
+                                    <option value="Frontliner">Khusus Frontliner</option>
+                                    <option value="Admin">Khusus Admin</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Category Pills */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 scrollbar-none">
+                            {KATEGORI_SOP_TABS.map((cat) => (
+                                <button
+                                    key={cat.id}
+                                    type="button"
+                                    onClick={() => setSelectedSopKategori(cat.id)}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-colors ${
+                                        selectedSopKategori === cat.id
+                                            ? "bg-slate-900 text-white font-semibold shadow-2xs"
+                                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                    }`}
+                                >
+                                    {cat.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <h3 className="font-semibold text-slate-800 text-sm mb-1">Belum Ada Panduan Wiki</h3>
-                    <p className="text-xs text-slate-500 max-w-sm mb-4">
-                        Tidak ada catatan wiki yang sesuai dengan filter atau pencarian Anda. Tulis panduan baru untuk memperkaya database toko.
-                    </p>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setWikiToEdit(null);
-                            setIsCreateModalOpen(true);
-                        }}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-colors"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>Tulis Panduan Pertama</span>
-                    </button>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {wikis.map(wiki => {
-                        const diffBadge = DIFFICULTY_MAP[wiki.tingkat_kesulitan] || DIFFICULTY_MAP.Menengah;
-                        return (
-                            <div
-                                key={wiki.id}
-                                onClick={() => setActiveWikiDetail(wiki)}
-                                className="group bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-between"
-                            >
-                                <div>
-                                    {/* Badges Top */}
-                                    <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
-                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                            {wiki.merek || "Umum"} {wiki.model_seri ? `• ${wiki.model_seri}` : ""}
-                                        </span>
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                            {wiki.kategori}
-                                        </span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${diffBadge}`}>
-                                            {wiki.tingkat_kesulitan}
-                                        </span>
-                                    </div>
 
-                                    {/* Judul */}
-                                    <h3 className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors line-clamp-2 leading-snug mb-2">
-                                        {wiki.judul}
-                                    </h3>
-
-                                    {/* Gejala Preview */}
-                                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">
-                                        <span className="font-medium text-slate-700">Gejala: </span>
-                                        {wiki.gejala}
-                                    </p>
-
-                                    {/* Komponen Preview */}
-                                    {wiki.komponen_terkait && (
-                                        <div className="inline-block px-2 py-1 bg-slate-50 border border-slate-200/60 rounded-md text-[10px] font-mono text-slate-600 max-w-full truncate mb-3">
-                                            Part: {wiki.komponen_terkait}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Footer Card */}
-                                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                        <span>{wiki.estimasi_waktu || "1-2 Jam"}</span>
-                                        {wiki.tingkat_sukses && (
-                                            <span className="text-emerald-600 font-medium">
-                                                • {wiki.tingkat_sukses}% Sukses
+                    {/* SOP Cards Grid */}
+                    {loadingSop ? (
+                        <div className="py-16 text-center text-slate-400">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-indigo-600 border-t-transparent mb-2"></div>
+                            <p className="text-xs">Memuat dokumen SOP KEOS...</p>
+                        </div>
+                    ) : sops.length === 0 ? (
+                        <div className="bg-white p-12 text-center rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                                <FileText className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-sm font-bold text-slate-800">Tidak ada SOP ditemukan</h3>
+                            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                                Coba ubah kata kunci pencarian atau ganti filter kategori untuk menemukan dokumen SOP yang dicari.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {sops.map((sop) => (
+                                <div
+                                    key={sop.id || sop.kode}
+                                    className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:border-indigo-200 transition-all p-5 flex flex-col justify-between group"
+                                >
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                                {sop.kode}
                                             </span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                                    {sop.kategori}
+                                                </span>
+                                                <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200">
+                                                    {sop.target_role}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
+                                                {sop.judul}
+                                            </h3>
+                                            <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                                                {sop.ringkasan}
+                                            </p>
+                                        </div>
+
+                                        {/* Poin Kunci Preview (Max 2 bullet points) */}
+                                        {sop.poin_kunci_list && sop.poin_kunci_list.length > 0 && (
+                                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1.5">
+                                                <div className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                                    <Sparkles className="w-3 h-3 text-indigo-600" />
+                                                    <span>Inti Prosedur:</span>
+                                                </div>
+                                                <ul className="space-y-1">
+                                                    {sop.poin_kunci_list.slice(0, 2).map((pt, i) => (
+                                                        <li key={i} className="text-[11px] text-slate-600 flex items-start gap-1.5">
+                                                            <span className="text-emerald-500 font-bold mt-0.5">✓</span>
+                                                            <span className="line-clamp-1">{pt}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
                                         )}
                                     </div>
-                                    <span className="text-indigo-600 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                                        Buka
-                                        <ChevronRight className="w-3.5 h-3.5" />
-                                    </span>
+
+                                    {/* Action Footnotes */}
+                                    <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
+                                        <span className="text-[11px] text-slate-400 font-medium">
+                                            Versi {sop.versi || "1.0"}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveSopDetail(sop)}
+                                            className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition-all shadow-2xs"
+                                        >
+                                            <span>Baca SOP Lengkap</span>
+                                            <ChevronRight className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 
-            {/* Modals */}
-            <RepairWikiModal
-                isOpen={isCreateModalOpen}
-                onClose={() => {
-                    setIsCreateModalOpen(false);
-                    setWikiToEdit(null);
+            {/* ======================================================== */}
+            {/* VIEW 2: PUSTAKA SERVIS HARDWARE                           */}
+            {/* ======================================================== */}
+            {mainTab === "wiki" && (
+                <div className="space-y-5">
+                    {/* Filter Bar & Search */}
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                        <div className="flex flex-col md:flex-row items-center gap-3">
+                            <form onSubmit={handleWikiSearchSubmit} className="relative flex-1 w-full">
+                                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Cari berdasarkan judul, gejala, solusi, seri model, atau kode IC..."
+                                    value={wikiSearch}
+                                    onChange={(e) => setWikiSearch(e.target.value)}
+                                    className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                                {wikiSearch && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setWikiSearch("");
+                                            fetchWikis("");
+                                        }}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </form>
+
+                            <div className="flex items-center gap-2 w-full md:w-auto">
+                                <select
+                                    value={selectedMerek}
+                                    onChange={(e) => setSelectedMerek(e.target.value)}
+                                    className="w-full md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="all">Semua Merek Brand</option>
+                                    {brands.map((b) => (
+                                        <option key={b.id} value={b.nama}>{b.nama}</option>
+                                    ))}
+                                </select>
+
+                                <select
+                                    value={selectedDifficulty}
+                                    onChange={(e) => setSelectedDifficulty(e.target.value)}
+                                    className="w-full md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="all">Semua Tingkat</option>
+                                    <option value="Mudah">Mudah</option>
+                                    <option value="Menengah">Menengah</option>
+                                    <option value="Mahir">Mahir</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Category Tabs */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 scrollbar-none">
+                            {KATEGORI_WIKI_TABS.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => setSelectedWikiKategori(tab.id)}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-colors ${
+                                        selectedWikiKategori === tab.id
+                                            ? "bg-slate-900 text-white font-semibold shadow-2xs"
+                                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Wiki List Cards */}
+                    {loadingWiki ? (
+                        <div className="py-16 text-center text-slate-400">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-indigo-600 border-t-transparent mb-2"></div>
+                            <p className="text-xs">Memuat pustaka hardware...</p>
+                        </div>
+                    ) : wikis.length === 0 ? (
+                        <div className="bg-white p-12 text-center rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                                <Cpu className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-sm font-bold text-slate-800">Belum ada panduan hardware</h3>
+                            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                                Tulis catatan reparasi baru agar solusi teknis dapat dipelajari oleh seluruh teknisi.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {wikis.map((item) => (
+                                <div
+                                    key={item.id}
+                                    onClick={() => setActiveWikiDetail(item)}
+                                    className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer flex flex-col justify-between group"
+                                >
+                                    <div className="space-y-2.5">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                                {item.merek || "Umum"} {item.model_seri ? `• ${item.model_seri}` : ""}
+                                            </span>
+                                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${DIFFICULTY_MAP[item.tingkat_kesulitan] || DIFFICULTY_MAP.Menengah}`}>
+                                                {item.tingkat_kesulitan}
+                                            </span>
+                                        </div>
+
+                                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                                            {item.judul}
+                                        </h3>
+
+                                        <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100/80 space-y-1">
+                                            <p className="text-[11px] text-slate-400 font-medium">Gejala Utama:</p>
+                                            <p className="line-clamp-2 font-medium text-slate-800">{item.gejala}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                                        <div className="flex items-center gap-1.5">
+                                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                            <span>{item.estimasi_waktu || "1-2 Jam"}</span>
+                                        </div>
+                                        <span className="text-indigo-600 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                                            <span>Detail</span>
+                                            <ChevronRight className="w-3.5 h-3.5" />
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Modals for SOP */}
+            <SopDetailModal
+                isOpen={Boolean(activeSopDetail)}
+                onClose={() => setActiveSopDetail(null)}
+                sop={activeSopDetail}
+                canModify={isAdmin}
+                onEdit={(sop) => {
+                    setActiveSopDetail(null);
+                    setSopToEdit(sop);
+                    setIsSopFormOpen(true);
                 }}
-                wikiToEdit={wikiToEdit}
-                onSuccess={fetchWikis}
             />
 
+            <SopFormModal
+                isOpen={isSopFormOpen}
+                onClose={() => {
+                    setIsSopFormOpen(false);
+                    setSopToEdit(null);
+                }}
+                sopToEdit={sopToEdit}
+                onSuccess={() => fetchSops()}
+            />
+
+            {/* Modals for Hardware Wiki */}
             <RepairWikiDetailModal
                 isOpen={Boolean(activeWikiDetail)}
                 onClose={() => setActiveWikiDetail(null)}
                 wiki={activeWikiDetail}
-                canModify={isAdmin || (activeWikiDetail && user && activeWikiDetail.user_id === user.id)}
+                canModify={isAdmin || user?.id === activeWikiDetail?.user_id}
                 onEdit={(wiki) => {
+                    setActiveWikiDetail(null);
                     setWikiToEdit(wiki);
-                    setIsCreateModalOpen(true);
+                    setIsCreateWikiOpen(true);
                 }}
-                onDelete={handleDeleteWiki}
+                onDelete={(id) => handleDeleteWiki(id)}
+            />
+
+            <RepairWikiModal
+                isOpen={isCreateWikiOpen}
+                onClose={() => {
+                    setIsCreateWikiOpen(false);
+                    setWikiToEdit(null);
+                }}
+                wikiToEdit={wikiToEdit}
+                onSuccess={() => fetchWikis()}
             />
 
         </div>

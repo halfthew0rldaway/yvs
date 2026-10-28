@@ -7,6 +7,7 @@ import {
     LayoutDashboard,
     Users,
     UserCheck,
+    UserPlus,
     MonitorSmartphone,
     Ticket,
     Wrench,
@@ -39,7 +40,8 @@ const adminMenu = [
     { path: "/sparepart", label: "Sparepart", icon: Wrench },
     { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
     { path: "/invoice", label: "Invoice", icon: FileText },
-    { path: "/wiki", label: "Pustaka Wiki", icon: BookOpen },
+    { path: "/wiki", label: "Pusat SOP & Wiki", icon: BookOpen },
+    { path: "/recruitment", label: "Rekrutmen Tim", icon: UserPlus },
     { path: "/users", label: "User & Performa", icon: UserCheck },
     { path: "/database", label: "Cadangan Database", icon: Database },
 ];
@@ -50,7 +52,7 @@ const teknisiMenu = [
     { path: "/loaner", label: "Unit Pinjaman", icon: Laptop },
     { path: "/sparepart", label: "Sparepart", icon: Wrench },
     { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
-    { path: "/wiki", label: "Pustaka Wiki", icon: BookOpen },
+    { path: "/wiki", label: "Pusat SOP & Wiki", icon: BookOpen },
 ];
 
 export default function Layout({ children }) {
@@ -281,11 +283,12 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/sparepart") && "Sparepart"}
                                 {location.pathname.startsWith("/rma") && "Klaim RMA"}
                                 {location.pathname.startsWith("/invoice") && "Invoice"}
-                                {location.pathname.startsWith("/wiki") && "Pustaka Wiki"}
+                                {location.pathname.startsWith("/wiki") && "SOP & Wiki"}
+                                {location.pathname.startsWith("/recruitment") && "Rekrutmen"}
                                 {location.pathname.startsWith("/users") && "User"}
                                 {location.pathname.startsWith("/database") && "Database"}
                                 {location.pathname.startsWith("/profile") && "Profil"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/invoice", "/wiki", "/users", "/database", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
                             </span>
                         </div>
 
@@ -303,11 +306,12 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/sparepart") && "Katalog Sparepart"}
                                 {location.pathname.startsWith("/rma") && "Klaim RMA Supplier"}
                                 {location.pathname.startsWith("/invoice") && "Faktur & Pembayaran"}
-                                {location.pathname.startsWith("/wiki") && "Pustaka Wiki"}
+                                {location.pathname.startsWith("/wiki") && "Pusat SOP & Knowledge Base"}
+                                {location.pathname.startsWith("/recruitment") && "Pusat Rekrutmen Tim"}
                                 {location.pathname.startsWith("/users") && "User & Performa"}
                                 {location.pathname.startsWith("/database") && "Cadangan Database"}
                                 {location.pathname.startsWith("/profile") && "Profil Akun"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/invoice", "/wiki", "/users", "/database", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
                             </span>
                         </div>
                     </div>

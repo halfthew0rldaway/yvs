@@ -23,6 +23,7 @@ model User {
   repair_wikis  RepairWiki[]
   notifications_received Notification[] @relation("NotificationRecipient")
   notifications_sent     Notification[] @relation("NotificationSender")
+  applicants_hired       Applicant[]    @relation("ApplicantHired")
 }
 
 model Customer {
@@ -401,4 +402,78 @@ model SupplierRma {
   @@index([sparepart_id])
   @@index([tiket_id])
 }
+
+// Feature: Standard Operating Procedures (SOP Center)
+model SopDocument {
+  id          Int      @id @default(autoincrement())
+  kode        String   @unique @db.VarChar(50) // e.g. "SOP-OPS-004", "SOP-QC-001"
+  judul       String   @db.VarChar(255)
+  kategori    String   @db.VarChar(100) // Frontliner & CS, Teknisi & QC, Operasional Toko, Keselamatan & K3
+  target_role String   @default("Semua") // Semua, Teknisi, Frontliner, Admin
+  ringkasan   String   @db.VarChar(500)
+  konten      String   @db.Text
+  poin_kunci  String?  @db.Text // JSON string or newline-separated key points
+  versi       String   @default("1.0")
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([kategori])
+  @@index([target_role])
+}
+
+// Feature: Recruitment Center & Talent Acquisition
+model JobPosting {
+  id            Int         @id @default(autoincrement())
+  judul_posisi  String      @db.VarChar(150)
+  departemen    String      @db.VarChar(100) // Teknisi, Frontliner, Operasional, Back Office
+  tipe_kerja    String      @default("Full Time") // Full Time, Part Time, Magang, Kontrak
+  lokasi        String      @default("Workshop Utama")
+  status        String      @default("Aktif") // Aktif, Ditutup, Draft
+  deskripsi     String?     @db.Text
+  kualifikasi   String?     @db.Text
+  gaji_min      Int?        @default(0)
+  gaji_max      Int?        @default(0)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  pelamar       Applicant[]
+
+  @@index([status])
+  @@index([departemen])
+}
+
+model Applicant {
+  id               Int         @id @default(autoincrement())
+  job_posting_id   Int
+  nama_lengkap     String      @db.VarChar(150)
+  email            String?     @db.VarChar(150)
+  nomor_telepon    String      @db.VarChar(50)
+  alamat           String?     @db.VarChar(255)
+  pendidikan       String?     @db.VarChar(100) // SMA/SMK TKJ, D3, S1, dll
+  pengalaman_thn   Int?        @default(0)
+  resume_url       String?     @db.VarChar(255)
+  portofolio_url   String?     @db.VarChar(255)
+  status           String      @default("Baru Masuk") // Baru Masuk, Screening, Tes Logika & Teknis, Wawancara / Trial, Diterima, Ditolak
+  
+  // Rubrik Evaluasi KEOS (Skor 0 - 100)
+  skor_logika      Int?        @default(0) // Troubleshooting mindset & logic
+  skor_teknis      Int?        @default(0) // Hardware/Software mastery
+  skor_attitude    Int?        @default(0) // Integritas, komunikasi, tata krama
+  skor_sop         Int?        @default(0) // Disiplin sistem, kerapihan pengerjaan
+  catatan_evaluasi String?     @db.Text
+  
+  // Onboarding ke User Staff
+  user_id_hired    Int?
+  
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+
+  job_posting      JobPosting  @relation(fields: [job_posting_id], references: [id], onDelete: Cascade)
+  user_hired       User?       @relation("ApplicantHired", fields: [user_id_hired], references: [id], onDelete: SetNull)
+
+  @@index([job_posting_id])
+  @@index([status])
+}
+
 

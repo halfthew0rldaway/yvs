@@ -25,6 +25,7 @@ const InvoiceDetail = lazy(() => import("./pages/invoice/InvoiceDetail"));
 const Tracking = lazy(() => import("./pages/tracking/Tracking"));
 const UserList = lazy(() => import("./pages/user/UserList"));
 const RepairWikiList = lazy(() => import("./pages/wiki/RepairWikiList"));
+const RecruitmentDashboard = lazy(() => import("./pages/recruitment/RecruitmentDashboard"));
 const RetensiCrm = lazy(() => import("./pages/retensi/RetensiCrm"));
 const LoanerList = lazy(() => import("./pages/loaner/LoanerList"));
 const RmaList = lazy(() => import("./pages/rma/RmaList"));
@@ -98,6 +99,7 @@ export default function App() {
                     <Route path="/users" element={<ProtectedRoute roles={["admin"]}><UserList /></ProtectedRoute>} />
                     <Route path="/database" element={<ProtectedRoute roles={["admin"]}><DatabaseManagement /></ProtectedRoute>} />
                     <Route path="/wiki" element={<ProtectedRoute><RepairWikiList /></ProtectedRoute>} />
+                    <Route path="/recruitment" element={<ProtectedRoute roles={["admin"]}><RecruitmentDashboard /></ProtectedRoute>} />
 
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
