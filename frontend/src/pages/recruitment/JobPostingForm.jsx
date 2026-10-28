@@ -225,55 +225,53 @@ export default function JobPostingForm() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20">
+        <div className="w-full space-y-6 pb-16">
             {/* TOP BAR / NAVIGATION */}
-            <div className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            to="/recruitment"
-                            className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-                            title="Kembali ke Recruitment Center"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </Link>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                                    Position Design KEOS
-                                </span>
-                                <span className="text-xs text-slate-400">•</span>
-                                <span className="text-xs text-slate-500 font-medium">Recruitment Center</span>
-                            </div>
-                            <h1 className="text-base sm:text-xl font-bold text-slate-900 leading-tight">
-                                {isEdit ? `Edit Lowongan: ${judulPosisi || "Posisi"}` : "Buka Lowongan Posisi Baru"}
-                            </h1>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                    <button
+                        type="button"
+                        onClick={() => navigate("/recruitment")}
+                        className="p-2.5 bg-white border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors shadow-2xs cursor-pointer"
+                        title="Kembali ke Recruitment Center"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                Position Design KEOS
+                            </span>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs text-slate-500 font-medium">Recruitment Center</span>
                         </div>
+                        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                            {isEdit ? `Edit Lowongan: ${judulPosisi || "Posisi"}` : "Buka Lowongan Posisi Baru"}
+                        </h1>
                     </div>
+                </div>
 
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={() => navigate("/recruitment")}
-                            className="hidden sm:inline-flex px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-600 cursor-pointer transition-colors"
-                        >
-                            Batal
-                        </button>
-                        <button
-                            onClick={handleSubmit}
-                            disabled={submitting}
-                            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
-                        >
-                            <Save className="w-4 h-4" />
-                            <span>{submitting ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Terbitkan Posisi"}</span>
-                        </button>
-                    </div>
+                <div className="flex items-center gap-2.5">
+                    <button
+                        type="button"
+                        onClick={() => navigate("/recruitment")}
+                        className="px-4 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-600 cursor-pointer transition-colors"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-sm shadow-blue-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                        <Save className="w-4 h-4" />
+                        <span>{submitting ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Terbitkan Posisi"}</span>
+                    </button>
                 </div>
             </div>
 
-            {/* MAIN CONTAINER */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
-                <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+            {/* MAIN FORM GRID */}
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
                     
                     {/* LEFT COLUMN: FORM CONTENT (8 COLS) */}
                     <div className="lg:col-span-8 space-y-6">
@@ -811,7 +809,6 @@ export default function JobPostingForm() {
                     </div>
 
                 </form>
-            </div>
         </div>
     );
 }

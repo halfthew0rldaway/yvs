@@ -443,13 +443,14 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/retensi") && "Retensi CRM"}
                                 {location.pathname.startsWith("/sparepart") && "Sparepart"}
                                 {location.pathname.startsWith("/rma") && "Klaim RMA"}
+                                {location.pathname.startsWith("/supplier") && "Supplier"}
                                 {location.pathname.startsWith("/invoice") && "Invoice"}
                                 {location.pathname.startsWith("/wiki") && "SOP & Wiki"}
                                 {location.pathname.startsWith("/recruitment") && "Rekrutmen"}
                                 {location.pathname.startsWith("/users") && "User"}
                                 {location.pathname.startsWith("/database") && "Database"}
                                 {location.pathname.startsWith("/profile") && "Profil"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
                             </span>
                         </div>
 
@@ -466,13 +467,14 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/retensi") && "Retensi & CRM Pelanggan"}
                                 {location.pathname.startsWith("/sparepart") && "Katalog Sparepart"}
                                 {location.pathname.startsWith("/rma") && "Klaim RMA Supplier"}
+                                {location.pathname.startsWith("/supplier") && "Direktori Supplier"}
                                 {location.pathname.startsWith("/invoice") && "Faktur & Pembayaran"}
                                 {location.pathname.startsWith("/wiki") && "Pusat SOP & Knowledge Base"}
                                 {location.pathname.startsWith("/recruitment") && "Pusat Rekrutmen Tim"}
                                 {location.pathname.startsWith("/users") && "User & Performa"}
                                 {location.pathname.startsWith("/database") && "Cadangan Database"}
                                 {location.pathname.startsWith("/profile") && "Profil Akun"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
                             </span>
                         </div>
                     </div>

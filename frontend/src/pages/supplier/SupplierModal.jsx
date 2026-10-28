@@ -102,7 +102,7 @@ export default function SupplierModal({ isOpen, onClose, supplierToEdit, onSucce
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
-            <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+            <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
                 
                 {/* Header */}
                 <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">

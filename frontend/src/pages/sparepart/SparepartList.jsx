@@ -778,6 +778,12 @@ export default function SparepartList() {
                                                 <p className="font-medium text-slate-900">{(s.brand?.nama && s.brand.nama.toLowerCase() !== "lainnya" ? s.brand.nama + " " : "") + s.nama}</p>
                                                 <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                                     <p className="text-xs text-slate-500">{s.kategori}</p>
+                                                    {(s.supplier?.nama || s.distributor_nama) && (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md font-medium">
+                                                            <Building2 className="w-3 h-3 text-slate-400" />
+                                                            <span>{s.supplier?.nama || s.distributor_nama}</span>
+                                                        </span>
+                                                    )}
                                                     {s.has_garansi_distri && (
                                                         <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${
                                                             s.tipe_garansi_distri === "Lifetime" || s.sistem_perhitungan_garansi === "lifetime"
