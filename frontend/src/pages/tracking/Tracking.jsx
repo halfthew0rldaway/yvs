@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import api from "../../services/api";
 import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2, Play, Video } from "lucide-react";
 import { isVideo, getMediaUrl } from "../../utils/mediaUtils";
-import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS } from "../../utils/checklistItems";
+import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS, getChecklistValue } from "../../utils/checklistItems";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
 import SlaBadge, { SlaCountdownCard } from "../../components/SlaBadge";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
@@ -760,18 +760,18 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 text-xs">
                                 {(CHECKLIST_ITEMS || []).map(item => {
-                                    const val = intakeObj[item.key];
+                                    const val = getChecklistValue(intakeObj, item.key, item.legacyKey);
                                     const ItemIcon = item.Icon || ClipboardCheck;
                                     return (
                                         <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
-                                            val ? "bg-emerald-50/60 border-emerald-200 text-emerald-800" : "bg-red-50/40 border-red-100 text-red-500"
+                                            val ? "bg-emerald-50/60 border-emerald-200 text-emerald-800" : "bg-rose-50/60 border-rose-200 text-rose-800"
                                         }`}>
-                                            <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-red-400"}`} />
+                                            <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-rose-500"}`} />
                                             <div className="flex flex-col flex-1 min-w-0">
-                                                <span className={`font-bold text-[10px] mb-0.5 uppercase tracking-wide ${val ? "text-emerald-600" : "text-red-500"}`}>
-                                                    {val ? "Berfungsi" : "Bermasalah"}
+                                                <span className={`font-bold text-[10px] mb-0.5 uppercase tracking-wide ${val ? "text-emerald-600" : "text-rose-600"}`}>
+                                                    {val ? "Normal / OK" : "Bermasalah"}
                                                 </span>
-                                                <span className={`truncate sm:whitespace-normal sm:break-words ${val ? "font-medium" : "line-through opacity-80"}`}>{item.label}</span>
+                                                <span className={`truncate sm:whitespace-normal sm:break-words font-medium ${val ? "text-slate-800" : "text-rose-700 font-semibold"}`}>{item.label}</span>
                                             </div>
                                         </div>
                                     );
@@ -1027,7 +1027,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                     </div>
                                     <p className="text-xs text-slate-500 mt-0.5">
                                         {qcObj.passed_qc
-                                            ? "Perangkat telah lulus uji kelayakan 8 poin fungsional & pembersihan menyeluruh standar workshop."
+                                            ? `Perangkat telah lulus uji kelayakan ${QC_CHECKLIST_ITEMS.length} poin kendali mutu fungsional & pembersihan menyeluruh standar workshop.`
                                             : "Pemeriksaan fungsi perangkat sedang berlangsung pada tahap akhir perbaikan."}
                                     </p>
                                 </div>
@@ -1052,11 +1052,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
                                 {(QC_CHECKLIST_ITEMS || []).map(item => {
-                                    const val = Boolean(
-                                        qcObj[item.key] ??
-                                        (item.key === "power_test" ? qcObj.baterai : false) ??
-                                        (item.key === "clean_wow" ? qcObj.cleaning_done : false)
-                                    );
+                                    const val = getChecklistValue(qcObj, item.key, item.legacyKey);
                                     const ItemIcon = item.Icon || Award;
                                     return (
                                         <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${

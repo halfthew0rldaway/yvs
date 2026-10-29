@@ -4,32 +4,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { 
     ArrowLeft, Save, AlertTriangle, Lightbulb, DollarSign, Send, CheckCircle2,
-    BatteryCharging, MonitorSmartphone, Keyboard, MousePointer, Usb, Volume2, 
-    Camera, Wifi, HardDrive, Cpu, Gauge, Sparkles, Check, X, RotateCcw, 
+    Check, X, RotateCcw, 
     Info, Wand2, ListChecks, ShieldAlert, Plus, Minus, AlignLeft, List
 } from "lucide-react";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
+import { HARDWARE_CHECKLIST_ITEMS as HARDWARE_ITEMS } from "../../utils/checklistItems";
 
 const MAX_TEXT_LIMIT = 5000;
-
-// Daftar Komponen Hardware yang dicek di meja teknisi
-const HARDWARE_ITEMS = [
-    { key: "usb", label: "Port USB", shortName: "port USB", hasQty: true, defaultQty: 2, unit: "port", icon: Usb, defaultSolusi: "Perbaikan pin konektor / ganti board port USB" },
-    { key: "type_c", label: "Port Type-C", shortName: "type C", hasQty: true, defaultQty: 1, unit: "port", icon: Usb, defaultSolusi: "Ganti atau solder ulang konektor Type-C" },
-    { key: "hdmi", label: "Port HDMI", shortName: "HDMI", hasQty: false, icon: MonitorSmartphone, defaultSolusi: "Perbaikan jalur display out HDMI / ganti soket HDMI" },
-    { key: "keyboard", label: "Keyboard", shortName: "keyboard", hasQty: false, icon: Keyboard, defaultSolusi: "Penggantian modul keyboard baru" },
-    { key: "touchpad", label: "Touchpad", shortName: "touchpad", hasQty: false, icon: MousePointer, defaultSolusi: "Perbaikan fleksibel touchpad / modul klik" },
-    { key: "layar", label: "Layar / LCD", shortName: "layar", hasQty: false, icon: MonitorSmartphone, defaultSolusi: "Penggantian panel LCD / re-seat fleksibel eDP" },
-    { key: "webcam", label: "Webcam", shortName: "webcam", hasQty: false, icon: Camera, defaultSolusi: "Ganti modul kamera / periksa kabel fleksibel webcam" },
-    { key: "mic", label: "Mikrofon (Mic)", shortName: "mic", hasQty: false, icon: Volume2, defaultSolusi: "Periksa modul mic internal / IC codec audio" },
-    { key: "speaker", label: "Speaker", shortName: "speaker", hasQty: false, icon: Volume2, defaultSolusi: "Penggantian sepasang speaker internal" },
-    { key: "audio_jack", label: "Audio Jack", shortName: "audio jack", hasQty: false, icon: Volume2, defaultSolusi: "Penggantian soket audio jack 3.5mm" },
-    { key: "wifi_bt", label: "WiFi & Bluetooth", shortName: "WiFi", hasQty: false, icon: Wifi, defaultSolusi: "Ganti modul WiFi card / install driver certified" },
-    { key: "baterai", label: "Baterai", shortName: "baterai", hasQty: false, icon: BatteryCharging, defaultSolusi: "Penggantian baterai baru original / OEM" },
-    { key: "ram", label: "Slot RAM", shortName: "RAM", hasQty: true, defaultQty: 1, unit: "slot", icon: Cpu, defaultSolusi: "Ganti atau tambah keping RAM DDR" },
-    { key: "storage", label: "SSD / Storage", shortName: "SSD", hasQty: true, defaultQty: 1, unit: "slot", icon: HardDrive, defaultSolusi: "Upgrade / ganti SSD NVMe dan migrasi data" },
-    { key: "fan_thermal", label: "Fan & Pendingin", shortName: "fan & pendingin", hasQty: false, icon: Gauge, defaultSolusi: "Deep cleaning fan heatsink & repasta thermal compound" },
-];
 
 function getStats(text = "") {
     const chars = text.length;
@@ -159,6 +140,27 @@ export default function DiagnosisForm() {
                     }
                 }
                 setFotos(loadedPhotos || []);
+
+                // Restore checklist status from ticket intake if already recorded
+                if (res.data?.checklist_intake) {
+                    try {
+                        const intake = typeof res.data.checklist_intake === "string" 
+                            ? JSON.parse(res.data.checklist_intake) 
+                            : res.data.checklist_intake;
+                        const initialStatus = {};
+                        HARDWARE_ITEMS.forEach(item => {
+                            const val = intake[item.key] !== undefined ? intake[item.key] : (item.legacyKey ? intake[item.legacyKey] : undefined);
+                            if (val === true) {
+                                initialStatus[item.key] = { status: "ok", qty: item.defaultQty || 1, note: "" };
+                            } else if (val === false) {
+                                initialStatus[item.key] = { status: "issue", qty: item.defaultQty || 1, note: "" };
+                            }
+                        });
+                        if (Object.keys(initialStatus).length > 0) {
+                            setChecklistStatus(initialStatus);
+                        }
+                    } catch (_) {}
+                }
             } catch (err) {
                 console.error(err);
             } finally {
@@ -366,11 +368,32 @@ export default function DiagnosisForm() {
                 });
             }
 
+            // Synchronize hardware checklist directly into ticket's checklist_intake
+            const intakeData = {};
+            HARDWARE_ITEMS.forEach(item => {
+                const st = checklistStatus[item.key]?.status;
+                if (st === "ok") {
+                    intakeData[item.key] = true;
+                } else if (st === "issue") {
+                    intakeData[item.key] = false;
+                }
+            });
+
+            const ticketPayload = {};
+            if (Object.keys(intakeData).length > 0) {
+                ticketPayload.checklist_intake = intakeData;
+            }
             if (advanceToApproval) {
-                await api.put(`/tiket-servis/${id}`, { status: "menunggu_persetujuan" });
+                ticketPayload.status = "menunggu_persetujuan";
+            }
+            if (Object.keys(ticketPayload).length > 0) {
+                await api.put(`/tiket-servis/${id}`, ticketPayload);
+            }
+
+            if (advanceToApproval) {
                 toast.success("Diagnosis disimpan & tiket dinaikkan ke tahap Penawaran (Menunggu Persetujuan Admin)!");
             } else {
-                toast.success("Diagnosis berhasil disimpan!");
+                toast.success("Diagnosis & checklist fisik berhasil disimpan!");
             }
             navigate(`/tiket-servis/${id}`);
         } catch (err) {

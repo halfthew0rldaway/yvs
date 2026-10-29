@@ -9,7 +9,7 @@ import SopWaModal from "../../components/SopWaModal";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
 import TicketQrModal from "../../components/TicketQrModal";
 import BpbsPrintModal from "../../components/BpbsPrintModal";
-import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS } from "../../utils/checklistItems";
+import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS, getChecklistValue } from "../../utils/checklistItems";
 import SlaBadge, { SlaCountdownCard, SLA_PENGERJAAN_PACKAGES } from "../../components/SlaBadge";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import RepairWikiDetailModal from "../wiki/RepairWikiDetailModal";
@@ -714,23 +714,18 @@ export default function TiketServisDetail() {
             return;
         }
         const finalQc = {
-            power_test: true,
-            display_test: true,
-            keyboard_touchpad: true,
-            audio_multimedia: true,
-            port_io_connectivity: true,
-            os_thermal_performance: true,
-            clean_wow: true,
-            accessories_handover: true,
             passed_qc: true,
             qc_by: user?.nama || "Teknisi / Admin",
             qc_at: new Date().toISOString(),
-            catatan_qc: tiket.checklist_qc?.catatan_qc || "Lulus uji kelayakan 8 poin kendali mutu & pembersihan menyeluruh standar WOW Service."
+            catatan_qc: tiket.checklist_qc?.catatan_qc || "Lulus uji kelayakan seluruh komponen kendali mutu & pembersihan menyeluruh standar WOW Service."
         };
+        QC_CHECKLIST_ITEMS.forEach(item => {
+            finalQc[item.key] = true;
+        });
 
         try {
             await api.put(`/tiket-servis/${id}`, { checklist_qc: finalQc });
-            toast.success("Seluruh 8 poin QC (Standar WOW) berhasil diluluskan!");
+            toast.success(`Seluruh ${QC_CHECKLIST_ITEMS.length} poin QC (Standar WOW) berhasil diluluskan!`);
             fetchTiket();
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal meluluskan QC");
@@ -1690,16 +1685,21 @@ export default function TiketServisDetail() {
                                 >
                                     <div className="flex items-center gap-2">
                                         <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
-                                        <span className="text-xs font-semibold text-slate-800">Checklist Fisik Awal</span>
+                                        <span className="text-xs font-semibold text-slate-800">Checklist Fisik & Fungsi Awal (Diagnosis)</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                                            CHECKLIST_ITEMS.filter(i => tiket.checklist_intake[i.key]).length === CHECKLIST_ITEMS.length
-                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                : "bg-amber-50 text-amber-800 border-amber-300"
-                                        }`}>
-                                            {CHECKLIST_ITEMS.filter(i => tiket.checklist_intake[i.key]).length}/{CHECKLIST_ITEMS.length} Normal
-                                        </span>
+                                        {(() => {
+                                            const normalCount = CHECKLIST_ITEMS.filter(i => getChecklistValue(tiket.checklist_intake, i.key, i.legacyKey)).length;
+                                            return (
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                                    normalCount === CHECKLIST_ITEMS.length
+                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                        : "bg-amber-50 text-amber-800 border-amber-300"
+                                                }`}>
+                                                    {normalCount}/{CHECKLIST_ITEMS.length} Normal
+                                                </span>
+                                            );
+                                        })()}
                                         {isIntakeChecklistOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                                     </div>
                                 </div>
@@ -1707,15 +1707,15 @@ export default function TiketServisDetail() {
                                 {isIntakeChecklistOpen && (
                                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-1.5 bg-slate-50/70 p-3 rounded-xl border border-slate-200 text-xs mt-2 transition-all">
                                         {CHECKLIST_ITEMS.map(item => {
-                                            const val = tiket.checklist_intake[item.key];
+                                            const val = getChecklistValue(tiket.checklist_intake, item.key, item.legacyKey);
                                             const ItemIcon = item.Icon;
                                             return (
-                                                <div key={item.key} className={`flex items-center gap-2 p-1.5 rounded-lg border ${val ? "bg-white text-emerald-800 border-emerald-200" : "bg-white text-rose-600 border-rose-200"}`}>
+                                                <div key={item.key} className={`flex items-center gap-2 p-1.5 rounded-lg border ${val ? "bg-white text-emerald-800 border-emerald-200" : "bg-white text-rose-700 border-rose-200"}`}>
                                                     <ItemIcon className="w-3.5 h-3.5 shrink-0" />
                                                     <span className="shrink-0">
                                                         {val ? <Check className="w-3 h-3 text-emerald-600" /> : <XCircle className="w-3 h-3 text-rose-500" />}
                                                     </span>
-                                                    <span className={val ? "text-slate-700 font-medium truncate" : "text-slate-400 line-through truncate"}>{item.label}</span>
+                                                    <span className={val ? "text-slate-700 font-medium truncate" : "text-rose-700 font-semibold truncate"}>{item.label}</span>
                                                 </div>
                                             );
                                         })}
@@ -3035,7 +3035,7 @@ export default function TiketServisDetail() {
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <h2 className="text-sm font-bold text-slate-900">Inspeksi Kendali Mutu (QC Pra-Penyerahan Unit)</h2>
                                     <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                        8 Poin WOW Service
+                                        {QC_CHECKLIST_ITEMS.length} Poin Standar WOW
                                     </span>
                                 </div>
                                 <p className="text-xs text-slate-500 mt-0.5">
@@ -3090,13 +3090,9 @@ export default function TiketServisDetail() {
 
                     {isQcOpen && (
                         <div className="p-5 pt-0 border-t border-slate-100">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs my-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 text-xs my-4">
                                 {QC_CHECKLIST_ITEMS.map(item => {
-                                    const isChecked = Boolean(
-                                        tiket.checklist_qc?.[item.key] ?? 
-                                        (item.key === "power_test" ? tiket.checklist_qc?.baterai : false) ??
-                                        (item.key === "clean_wow" ? tiket.checklist_qc?.cleaning_done : false)
-                                    );
+                                    const isChecked = getChecklistValue(tiket.checklist_qc, item.key, item.legacyKey);
                                     const ItemIcon = item.Icon;
                                     return (
                                         <label key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all select-none ${
@@ -3233,7 +3229,7 @@ export default function TiketServisDetail() {
                                         </span>
                                     </div>
                                     <p className="text-xs text-slate-500">
-                                        Pengujian 8 poin kendali mutu & pembersihan menyeluruh (Standar WOW Service)
+                                        Pengujian {QC_CHECKLIST_ITEMS.length} poin kendali mutu fungsional & pembersihan menyeluruh (Standar WOW Service)
                                     </p>
                                 </div>
                             </div>
@@ -3257,19 +3253,15 @@ export default function TiketServisDetail() {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setQcModalData({
-                                            power_test: true,
-                                            display_test: true,
-                                            keyboard_touchpad: true,
-                                            audio_multimedia: true,
-                                            port_io_connectivity: true,
-                                            os_thermal_performance: true,
-                                            clean_wow: true,
-                                            accessories_handover: true,
+                                        const allApproved = {
                                             passed_qc: true,
-                                            catatan_qc: qcModalData.catatan_qc || "Unit telah lulus uji kelayakan 8 poin kendali mutu dan dibersihkan menyeluruh."
+                                            catatan_qc: qcModalData.catatan_qc || "Unit telah lulus uji kelayakan seluruh poin kendali mutu fungsional dan dibersihkan menyeluruh."
+                                        };
+                                        QC_CHECKLIST_ITEMS.forEach(item => {
+                                            allApproved[item.key] = true;
                                         });
-                                        toast.success("Semua 8 poin QC ditandai lulus!");
+                                        setQcModalData(allApproved);
+                                        toast.success(`Semua ${QC_CHECKLIST_ITEMS.length} poin QC ditandai lulus!`);
                                     }}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
                                 >
