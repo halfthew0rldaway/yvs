@@ -16,6 +16,8 @@ import RepairWikiDetailModal from "../wiki/RepairWikiDetailModal";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
 import CustomerBadges from "../../components/CustomerBadges";
 import RevisiAccModal from "../../components/RevisiAccModal";
+import CustomerDetailModal from "../../components/CustomerDetailModal";
+import PerangkatDetailModal from "../../components/PerangkatDetailModal";
 import { isVideo } from "../../utils/mediaUtils";
 
 
@@ -238,6 +240,10 @@ export default function TiketServisDetail() {
     // Revisi ACC Pasca Selesai Modal State
     const [isRevisiAccModalOpen, setIsRevisiAccModalOpen] = useState(false);
     const [isSubmittingRevisi, setIsSubmittingRevisi] = useState(false);
+
+    // Customer & Perangkat Quick Access / Shortcut Modals
+    const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+    const [isPerangkatModalOpen, setIsPerangkatModalOpen] = useState(false);
 
     async function handleConfirmRevisiAcc({ alasan_revisi, konfirmasi_teks }) {
         setIsSubmittingRevisi(true);
@@ -1173,9 +1179,42 @@ export default function TiketServisDetail() {
                     <div className="space-y-4 text-sm">
                         <div className="flex items-start gap-3">
                             <User className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-                            <div className="flex-1">
-                                <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-0.5">Customer</p>
-                                <p className="font-medium text-slate-900">{tiket.perangkat?.customer?.nama}</p>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Customer</p>
+                                    {tiket.perangkat?.customer && (
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsCustomerModalOpen(true)}
+                                                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+                                                title="Buka profil lengkap, riwayat unit & seluruh tiket servis pelanggan ini"
+                                            >
+                                                <User className="w-3 h-3" />
+                                                <span>Profil</span>
+                                            </button>
+                                            {isAdmin && (
+                                                <Link
+                                                    to={`/customer/edit/${tiket.perangkat.customer.id}?returnUrl=/tiket-servis/${id}`}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-all shadow-2xs hover:shadow-xs"
+                                                    title="Edit data pelanggan (nama, nomor telepon, alamat, profil)"
+                                                >
+                                                    <Edit className="w-3 h-3 text-slate-500" />
+                                                    <span>Edit</span>
+                                                </Link>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCustomerModalOpen(true)}
+                                    className="text-left font-semibold text-slate-900 hover:text-blue-600 transition-colors cursor-pointer group flex items-center gap-1.5"
+                                    title="Klik untuk melihat profil pelanggan"
+                                >
+                                    <span>{tiket.perangkat?.customer?.nama}</span>
+                                    <ExternalLink className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                </button>
                                 <p className="text-slate-500">{tiket.perangkat?.customer?.nomor_telepon}</p>
 
                                 {/* Customer Badges Reputasi */}
@@ -1239,9 +1278,42 @@ export default function TiketServisDetail() {
                         </div>
                         <div className="flex items-start gap-3">
                             <Info className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-                            <div>
-                                <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-0.5">Detail Perangkat</p>
-                                <p className="font-medium text-slate-900">{tiket.perangkat?.merek} {tiket.perangkat?.model}</p>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Detail Perangkat</p>
+                                    {tiket.perangkat && (
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsPerangkatModalOpen(true)}
+                                                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+                                                title="Buka spesifikasi & riwayat servis unit ini"
+                                            >
+                                                <MonitorSmartphone className="w-3 h-3" />
+                                                <span>Detail Unit</span>
+                                            </button>
+                                            {isAdmin && (
+                                                <Link
+                                                    to={`/perangkat/edit/${tiket.perangkat.id}?returnUrl=/tiket-servis/${id}`}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-all shadow-2xs hover:shadow-xs"
+                                                    title="Edit data perangkat (merek, model, nomor seri, jenis)"
+                                                >
+                                                    <Edit className="w-3 h-3 text-slate-500" />
+                                                    <span>Edit</span>
+                                                </Link>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsPerangkatModalOpen(true)}
+                                    className="text-left font-semibold text-slate-900 hover:text-blue-600 transition-colors cursor-pointer group flex items-center gap-1.5"
+                                    title="Klik untuk melihat detail unit perangkat"
+                                >
+                                    <span>{tiket.perangkat?.merek} {tiket.perangkat?.model}</span>
+                                    <ExternalLink className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                </button>
                                 <p className="text-slate-600">{tiket.perangkat?.jenis_perangkat} • SN: {tiket.perangkat?.serial_number || "-"}</p>
                             </div>
                         </div>
@@ -3680,6 +3752,44 @@ export default function TiketServisDetail() {
                 tiket={tiket}
                 isSubmitting={isSubmittingRevisi}
             />
+
+            {/* Quick Customer Detail Modal */}
+            {isCustomerModalOpen && (
+                <CustomerDetailModal
+                    customerId={tiket?.perangkat?.customer?.id}
+                    isOpen={isCustomerModalOpen}
+                    onClose={() => setIsCustomerModalOpen(false)}
+                    onSelectPerangkat={() => {
+                        setIsCustomerModalOpen(false);
+                        setIsPerangkatModalOpen(true);
+                    }}
+                    onCustomerUpdated={(updated) => {
+                        setTiket(prev => ({
+                            ...prev,
+                            perangkat: {
+                                ...prev.perangkat,
+                                customer: {
+                                    ...prev.perangkat.customer,
+                                    ...updated
+                                }
+                            }
+                        }));
+                    }}
+                />
+            )}
+
+            {/* Quick Perangkat Detail Modal */}
+            {isPerangkatModalOpen && (
+                <PerangkatDetailModal
+                    perangkatId={tiket?.perangkat?.id}
+                    isOpen={isPerangkatModalOpen}
+                    onClose={() => setIsPerangkatModalOpen(false)}
+                    onSelectCustomer={() => {
+                        setIsPerangkatModalOpen(false);
+                        setIsCustomerModalOpen(true);
+                    }}
+                />
+            )}
         </div>
     );
 }

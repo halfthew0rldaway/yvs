@@ -44,7 +44,7 @@ function getDeviceIcon(jenis) {
     return MonitorSmartphone;
 }
 
-export default function CustomerDetailModal({ customerId, isOpen, onClose, onSelectPerangkat }) {
+export default function CustomerDetailModal({ customerId, isOpen, onClose, onSelectPerangkat, onCustomerUpdated }) {
     const navigate = useNavigate();
     const [customer, setCustomer] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -121,7 +121,10 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                         variant="icon-only" 
                                         size="normal" 
                                         showGuideButton={true}
-                                        onCustomerUpdated={(updated) => setCustomer(prev => ({ ...prev, ...updated }))} 
+                                        onCustomerUpdated={(updated) => {
+                                            setCustomer(prev => ({ ...prev, ...updated }));
+                                            if (onCustomerUpdated) onCustomerUpdated(updated);
+                                        }} 
                                     />
                                 )}
                             </div>
@@ -135,7 +138,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                     <div className="flex items-center gap-2 shrink-0">
                         {customer && (
                             <Link
-                                to={`/customer/edit/${customer.id}`}
+                                to={`/customer/edit/${customer.id}${window.location.pathname ? `?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}` : ''}`}
                                 className="hidden xs:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all"
                             >
                                 <Edit2 className="w-3.5 h-3.5" />

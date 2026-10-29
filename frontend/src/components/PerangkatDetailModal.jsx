@@ -142,7 +142,7 @@ export default function PerangkatDetailModal({ perangkatId, isOpen, onClose, onS
                     <div className="flex items-center gap-2">
                         {perangkat && (
                             <Link
-                                to={`/perangkat/edit/${perangkat.id}`}
+                                to={`/perangkat/edit/${perangkat.id}${window.location.pathname ? `?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}` : ''}`}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all"
                             >
                                 <Edit2 className="w-3.5 h-3.5" />

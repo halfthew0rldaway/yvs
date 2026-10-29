@@ -23,7 +23,9 @@ import {
     ArrowRightLeft,
     Sparkles,
     UserPlus,
-    CheckCircle2
+    CheckCircle2,
+    ShieldAlert,
+    AlertTriangle
 } from "lucide-react";
 
 const DEVICE_TYPES = [
@@ -85,6 +87,7 @@ export default function PerangkatForm() {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
     const customerParam = searchParams.get("customer_id");
+    const returnUrl = searchParams.get("returnUrl");
     const navigate = useNavigate();
     const isEdit = !!id;
 
@@ -100,6 +103,8 @@ export default function PerangkatForm() {
     const [riwayat, setRiwayat] = useState([]);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [isDoubleConfirmed, setIsDoubleConfirmed] = useState(false);
 
     useEffect(() => {
         Promise.all([
@@ -148,7 +153,7 @@ export default function PerangkatForm() {
         }).slice(0, 8);
     }, [customers, customerSearch]);
 
-    async function handleSubmit(e) {
+    function handleSubmit(e) {
         e.preventDefault();
 
         if (!form.customer_id) {
@@ -171,6 +176,15 @@ export default function PerangkatForm() {
             return;
         }
 
+        if (isEdit) {
+            setIsDoubleConfirmed(false);
+            setIsConfirmModalOpen(true);
+        } else {
+            executeSave();
+        }
+    }
+
+    async function executeSave() {
         setLoading(true);
 
         try {
@@ -181,7 +195,12 @@ export default function PerangkatForm() {
                 await api.post("/perangkat", form);
                 toast.success("Perangkat baru berhasil ditambahkan!");
             }
-            navigate("/perangkat");
+            setIsConfirmModalOpen(false);
+            if (returnUrl) {
+                navigate(returnUrl);
+            } else {
+                navigate("/perangkat");
+            }
         } catch (err) {
             toast.error(err.response?.data?.message || "Terjadi kesalahan saat menyimpan perangkat");
         } finally {
@@ -204,7 +223,7 @@ export default function PerangkatForm() {
             <div className="flex items-center gap-3">
                 <button
                     type="button"
-                    onClick={() => navigate("/perangkat")}
+                    onClick={() => returnUrl ? navigate(returnUrl) : navigate("/perangkat")}
                     className="p-2.5 bg-white border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors shadow-2xs cursor-pointer"
                 >
                     <ArrowLeft className="w-5 h-5" />
@@ -509,7 +528,7 @@ export default function PerangkatForm() {
                 <div className="flex items-center gap-3 pt-6 border-t border-slate-100">
                     <button
                         type="button"
-                        onClick={() => navigate("/perangkat")}
+                        onClick={() => returnUrl ? navigate(returnUrl) : navigate("/perangkat")}
                         className="px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-colors shadow-2xs w-full sm:w-auto text-center text-sm cursor-pointer"
                     >
                         Batal
@@ -595,6 +614,113 @@ export default function PerangkatForm() {
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Double Confirmation Modal for Crucial Device Data Edit */}
+            {isConfirmModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+                    <div className="relative bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-150">
+                        {/* Modal Header */}
+                        <div className="p-5 border-b border-slate-100 flex items-start justify-between gap-3 bg-amber-50/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200">
+                                    <ShieldAlert className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-slate-900">
+                                        Konfirmasi Perubahan Data Perangkat
+                                    </h3>
+                                    <p className="text-xs text-slate-500">
+                                        Periksa kembali data perangkat sebelum perubahan disimpan ke sistem.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsConfirmModalOpen(false)}
+                                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-5 space-y-4 text-xs sm:text-sm">
+                            {/* Changed Summary Card */}
+                            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200/60">
+                                    <span className="text-slate-500 font-medium">Customer Pemilik:</span>
+                                    <span className="font-bold text-slate-900">{selectedCustomer?.nama || "Pelanggan Terpilih"}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200/60">
+                                    <span className="text-slate-500 font-medium">Kategori / Jenis:</span>
+                                    <span className="font-semibold text-slate-800">{form.jenis_perangkat}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200/60">
+                                    <span className="text-slate-500 font-medium">Merek & Model:</span>
+                                    <span className="font-bold text-slate-900">{form.merek} {form.model}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="text-slate-500 font-medium">Serial Number (SN):</span>
+                                    <span className="font-mono font-bold text-indigo-700">{form.serial_number || "Tanpa Serial Number"}</span>
+                                </div>
+                            </div>
+
+                            {/* Impact Notice */}
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+                                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <strong className="font-bold text-amber-950 block">Penting: Dampak Perubahan Data Unit</strong>
+                                    <p className="text-amber-800 text-[11px] leading-relaxed mt-0.5">
+                                        Perubahan nomor seri atau data unit akan memengaruhi pencarian barcode/QR, histori pengerjaan teknisi, dan validasi klaim garansi di masa mendatang.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Double Confirmation Checkbox */}
+                            <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100/70 cursor-pointer select-none transition-all">
+                                <input
+                                    type="checkbox"
+                                    checked={isDoubleConfirmed}
+                                    onChange={(e) => setIsDoubleConfirmed(e.target.checked)}
+                                    className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer mt-0.5 shrink-0"
+                                />
+                                <div className="text-xs text-slate-700 leading-snug">
+                                    <span className="font-bold text-slate-900 block">Saya telah memverifikasi unit fisik</span>
+                                    <span className="text-slate-500 text-[11px]">Saya yakin merek, tipe, nomor seri, dan kepemilikan unit sudah sesuai fisik perangkat.</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => setIsConfirmModalOpen(false)}
+                                className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                                Periksa Kembali
+                            </button>
+                            <button
+                                type="button"
+                                onClick={executeSave}
+                                disabled={!isDoubleConfirmed || loading}
+                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+                            >
+                                {loading ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white/20 border-t-white"></div>
+                                        <span>Menyimpan...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        <span>Ya, Simpan Perangkat</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>
