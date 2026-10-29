@@ -1931,13 +1931,18 @@ export default function TiketServisDetail() {
                                                 <p className="text-slate-800 mb-2 whitespace-pre-line">{log.catatan}</p>
                                             {log.foto_url && (
                                                 <div className="mb-3">
-                                                    <a href={log.foto_url} target="_blank" rel="noreferrer" className="block w-fit">
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => setSelectedImage(log.foto_url)} 
+                                                        className="block w-fit group relative rounded-lg overflow-hidden border border-slate-200 hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
+                                                        title="Klik untuk melihat foto dalam modal"
+                                                    >
                                                         <img 
                                                             src={log.foto_url} 
                                                             alt="Dokumentasi Perbaikan" 
-                                                            className="h-20 object-cover rounded-lg border border-slate-200 hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
+                                                            className="h-20 object-cover group-hover:scale-105 transition-transform"
                                                         />
-                                                    </a>
+                                                    </button>
                                                 </div>
                                             )}
                                             <p className="text-xs font-medium text-slate-400 mt-2">

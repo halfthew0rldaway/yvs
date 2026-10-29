@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../../services/api";
-import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2, Play, Video } from "lucide-react";
+import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2, Play, Video, ZoomIn } from "lucide-react";
 import { isVideo, getMediaUrl } from "../../utils/mediaUtils";
 import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS, getChecklistValue } from "../../utils/checklistItems";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
@@ -163,10 +163,13 @@ function TrackingListItem({ t, onClick }) {
     );
 }
 
-/* ===== Feature 1: Photo & Video Media Gallery with Lightbox ===== */
-function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan }) {
+/* ===== Feature 1: Photo & Video Media Gallery Modal & Lightbox ===== */
+function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, externalPhoto, onCloseExternal }) {
+    const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIdx, setLightboxIdx] = useState(0);
+    const [customItem, setCustomItem] = useState(null);
+    const [activeTab, setActiveTab] = useState("all");
 
     // Collect all media into categorized array
     const allPhotos = [];
@@ -174,20 +177,25 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan })
     // 1. Initial condition photos
     const intakeUrls = safeParseUrls(fotoKondisi);
     intakeUrls.forEach((url, i) => {
-        allPhotos.push({ url, label: `Kondisi Awal ${i + 1}`, category: 'intake' });
+        allPhotos.push({ url, label: `Kondisi Awal #${i + 1}`, category: 'intake', categoryLabel: "Kondisi Awal" });
     });
 
     // 2. Diagnosis proof photos/videos
     const diagUrls = safeParseUrls(fotoDiagnosis);
     diagUrls.forEach((url, i) => {
-        allPhotos.push({ url, label: `Temuan Diagnosis ${i + 1}`, category: 'diagnosis' });
+        allPhotos.push({ url, label: `Temuan Diagnosis #${i + 1}`, category: 'diagnosis', categoryLabel: "Diagnosis" });
     });
 
     // 3. Repair log photos
     if (Array.isArray(logPerbaikan)) {
-        logPerbaikan.forEach((log) => {
+        logPerbaikan.forEach((log, i) => {
             if (log && log.foto_url) {
-                allPhotos.push({ url: log.foto_url, label: `Proses: ${(log.catatan || '').substring(0, 50)}...`, category: 'repair' });
+                allPhotos.push({ 
+                    url: log.foto_url, 
+                    label: log.catatan ? `Pengerjaan: ${log.catatan.substring(0, 45)}...` : `Foto Pengerjaan #${i + 1}`, 
+                    category: 'repair',
+                    categoryLabel: "Pengerjaan" 
+                });
             }
         });
     }
@@ -195,154 +203,278 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan })
     // 4. Completed & QC photos/videos
     const selesaiUrls = safeParseUrls(fotoSelesai);
     selesaiUrls.forEach((url, i) => {
-        allPhotos.push({ url, label: `Hasil Selesai & QC ${i + 1}`, category: 'completed' });
+        allPhotos.push({ url, label: `Hasil Selesai & QC #${i + 1}`, category: 'completed', categoryLabel: "Selesai & QC" });
     });
 
-    if (allPhotos.length === 0) return null;
+    // Handle external trigger (e.g. from timeline click)
+    useEffect(() => {
+        if (externalPhoto && externalPhoto.url) {
+            const foundIdx = allPhotos.findIndex(p => p.url === externalPhoto.url);
+            if (foundIdx >= 0) {
+                setLightboxIdx(foundIdx);
+                setCustomItem(null);
+            } else {
+                setCustomItem({
+                    url: externalPhoto.url,
+                    label: externalPhoto.label || "Dokumentasi Perbaikan",
+                    category: "repair",
+                    categoryLabel: "Pengerjaan"
+                });
+                setLightboxIdx(0);
+            }
+            setLightboxOpen(true);
+        }
+    }, [externalPhoto]);
 
-    const openLightbox = (idx) => { setLightboxIdx(idx); setLightboxOpen(true); };
-    const closeLightbox = () => setLightboxOpen(false);
-    const goPrev = () => setLightboxIdx((prev) => (prev - 1 + allPhotos.length) % allPhotos.length);
-    const goNext = () => setLightboxIdx((prev) => (prev + 1) % allPhotos.length);
+    if (allPhotos.length === 0 && !customItem) return null;
+
+    const currentList = customItem ? [customItem, ...allPhotos] : allPhotos;
+
+    const openLightbox = (idx) => { 
+        setLightboxIdx(idx); 
+        setCustomItem(null); 
+        setLightboxOpen(true); 
+    };
+    
+    const closeLightbox = () => { 
+        setLightboxOpen(false); 
+        setCustomItem(null); 
+        if (onCloseExternal) onCloseExternal(); 
+    };
+
+    const goPrev = () => setLightboxIdx((prev) => (prev - 1 + currentList.length) % currentList.length);
+    const goNext = () => setLightboxIdx((prev) => (prev + 1) % currentList.length);
 
     const intakePhotos = allPhotos.filter(p => p.category === 'intake');
     const diagPhotos = allPhotos.filter(p => p.category === 'diagnosis');
     const repairPhotos = allPhotos.filter(p => p.category === 'repair');
     const selesaiPhotos = allPhotos.filter(p => p.category === 'completed');
 
-    function renderThumbnailGrid(items, borderColor, hoverBorder) {
-        return (
-            <div className="flex flex-wrap gap-2.5">
-                {items.map((photo, idx) => {
-                    const globalIdx = allPhotos.indexOf(photo);
-                    const photoUrl = typeof photo?.url === "string" ? photo.url : "";
-                    const isVid = isVideo(photoUrl);
+    const tabs = [
+        { id: "all", label: "Semua", count: allPhotos.length },
+        ...(intakePhotos.length > 0 ? [{ id: "intake", label: "Kondisi Awal", count: intakePhotos.length }] : []),
+        ...(diagPhotos.length > 0 ? [{ id: "diagnosis", label: "Diagnosis", count: diagPhotos.length }] : []),
+        ...(repairPhotos.length > 0 ? [{ id: "repair", label: "Pengerjaan", count: repairPhotos.length }] : []),
+        ...(selesaiPhotos.length > 0 ? [{ id: "completed", label: "Selesai & QC", count: selesaiPhotos.length }] : []),
+    ];
 
-                    return (
-                        <button 
-                            key={idx} 
-                            onClick={() => openLightbox(globalIdx >= 0 ? globalIdx : 0)} 
-                            className={`group relative overflow-hidden rounded-xl border-2 ${borderColor} hover:${hoverBorder} transition-all shadow-sm hover:shadow-lg w-24 h-24 sm:w-28 sm:h-28 bg-slate-900 shrink-0 cursor-pointer`}
-                        >
-                            {isVid ? (
-                                <div className="w-full h-full relative flex items-center justify-center">
-                                    <video src={getMediaUrl(photoUrl)} className="w-full h-full object-cover opacity-75" preload="metadata" />
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center shadow border border-white/20">
-                                            <Play className="w-4 h-4 fill-white ml-0.5" />
-                                        </div>
-                                    </div>
-                                    <span className="absolute top-1.5 right-1.5 bg-purple-600 text-white text-[8px] font-bold px-1 rounded shadow">VIDEO</span>
-                                </div>
-                            ) : (
-                                <img src={getMediaUrl(photoUrl)} alt={photo.label || "Dokumentasi"} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                            )}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                                <span className="text-white text-[9px] font-bold truncate">{photo.label}</span>
-                            </div>
-                        </button>
-                    );
-                })}
-            </div>
-        );
-    }
+    const filteredPhotos = activeTab === "all" 
+        ? allPhotos 
+        : allPhotos.filter(p => p.category === activeTab);
 
     return (
         <>
+            {/* Compact Summary Card instead of sprawling layout section */}
             <div className="mb-8 pt-6 border-t border-slate-100">
-                <div className="flex items-center gap-2.5 mb-5">
-                    <Camera className="w-5 h-5 text-blue-600" />
-                    <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Dokumentasi Media Perangkat</h5>
-                    <span className="ml-auto text-xs text-slate-400 font-medium">{allPhotos.length} item</span>
+                <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-50 via-white to-blue-50/40 rounded-2xl border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs hover:border-blue-300 transition-all">
+                    <div className="flex items-start sm:items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/20">
+                            <Camera className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 mb-0.5">
+                                <h5 className="font-bold text-slate-900 text-sm sm:text-base">Dokumentasi Media Perangkat</h5>
+                                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-blue-100 text-blue-700">
+                                    {allPhotos.length} Media
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                                Foto kondisi fisik awal, pembuktian diagnosa, proses perbaikan, dan hasil akhir QC.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 self-stretch sm:self-center justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
+                        {/* Stacked Preview Thumbnails */}
+                        <div className="flex -space-x-2.5 overflow-hidden">
+                            {allPhotos.slice(0, 4).map((p, i) => (
+                                <img 
+                                    key={i} 
+                                    src={getMediaUrl(p.url)} 
+                                    alt="" 
+                                    className="inline-block h-9 w-9 rounded-full ring-2 ring-white object-cover shadow-2xs" 
+                                />
+                            ))}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsGalleryModalOpen(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer shrink-0"
+                        >
+                            <ZoomIn className="w-4 h-4" />
+                            <span>Buka Galeri Foto</span>
+                        </button>
+                    </div>
                 </div>
-
-                {intakePhotos.length > 0 && (
-                    <div className="mb-4">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-1.5">
-                            <ImageIcon className="w-3.5 h-3.5 text-blue-500" /> Kondisi Awal (Saat Diterima)
-                        </p>
-                        {renderThumbnailGrid(intakePhotos, "border-slate-200", "border-blue-400")}
-                    </div>
-                )}
-
-                {diagPhotos.length > 0 && (
-                    <div className="mb-4">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-purple-600 mb-2.5 flex items-center gap-1.5">
-                            <Video className="w-3.5 h-3.5 text-purple-600" /> Temuan & Hasil Diagnosis
-                        </p>
-                        {renderThumbnailGrid(diagPhotos, "border-purple-200", "border-purple-400")}
-                    </div>
-                )}
-
-                {repairPhotos.length > 0 && (
-                    <div className="mb-4">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 mb-2.5 flex items-center gap-1.5">
-                            <Wrench className="w-3.5 h-3.5 text-indigo-600" /> Proses Pengerjaan Servis
-                        </p>
-                        {renderThumbnailGrid(repairPhotos, "border-slate-200", "border-indigo-400")}
-                    </div>
-                )}
-
-                {selesaiPhotos.length > 0 && (
-                    <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 mb-2.5 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Hasil Akhir Selesai Servis & QC
-                        </p>
-                        {renderThumbnailGrid(selesaiPhotos, "border-emerald-200", "border-emerald-400")}
-                    </div>
-                )}
             </div>
 
-            {/* Lightbox Modal (Foto & Video) */}
-            {lightboxOpen && (
-                <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in" onClick={closeLightbox}>
+            {/* Gallery Grid Modal */}
+            {isGalleryModalOpen && (
+                <div 
+                    className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in"
+                    onClick={() => setIsGalleryModalOpen(false)}
+                >
+                    <div 
+                        className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                    <Camera className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 text-base">Dokumentasi Media Perangkat</h3>
+                                    <p className="text-xs text-slate-500">Total {allPhotos.length} foto & video pengerjaan</p>
+                                </div>
+                            </div>
+                            <button 
+                                type="button" 
+                                onClick={() => setIsGalleryModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Category Filter Tabs */}
+                        {tabs.length > 2 && (
+                            <div className="px-5 py-2.5 border-b border-slate-100 flex items-center gap-2 overflow-x-auto custom-scrollbar bg-slate-50/50">
+                                {tabs.map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                                            activeTab === tab.id
+                                                ? "bg-blue-600 text-white shadow-xs"
+                                                : "bg-white text-slate-600 hover:bg-slate-200/70 border border-slate-200"
+                                        }`}
+                                    >
+                                        {tab.label} ({tab.count})
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Grid */}
+                        <div className="p-4 sm:p-5 overflow-y-auto flex-1 custom-scrollbar">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                {filteredPhotos.map((photo, idx) => {
+                                    const globalIdx = allPhotos.indexOf(photo);
+                                    const isVid = isVideo(photo.url);
+                                    return (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => openLightbox(globalIdx >= 0 ? globalIdx : 0)}
+                                            className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 hover:border-blue-500 transition-all shadow-2xs hover:shadow-md cursor-pointer flex items-center justify-center text-left"
+                                        >
+                                            {isVid ? (
+                                                <div className="w-full h-full relative flex items-center justify-center">
+                                                    <video src={getMediaUrl(photo.url)} className="w-full h-full object-cover opacity-80" preload="metadata" />
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center shadow-lg border border-white/20">
+                                                            <Play className="w-4 h-4 fill-white ml-0.5" />
+                                                        </div>
+                                                    </div>
+                                                    <span className="absolute top-2 right-2 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                                                        VIDEO
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <img 
+                                                    src={getMediaUrl(photo.url)} 
+                                                    alt={photo.label} 
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
+                                                />
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
+                                                <span className="text-[10px] uppercase font-bold text-blue-300 mb-0.5">{photo.categoryLabel}</span>
+                                                <span className="text-white text-xs font-semibold truncate">{photo.label}</span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Fullscreen Interactive Lightbox Modal */}
+            {lightboxOpen && currentList[lightboxIdx] && (
+                <div 
+                    className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in" 
+                    onClick={closeLightbox}
+                >
                     <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={closeLightbox} className="absolute -top-2 -right-2 sm:top-2 sm:right-2 z-10 bg-white/10 hover:bg-white/20 p-2.5 rounded-full text-white transition-colors backdrop-blur-sm cursor-pointer shadow-lg">
+                        <button 
+                            type="button"
+                            onClick={closeLightbox} 
+                            className="absolute -top-3 -right-2 sm:top-2 sm:right-2 z-10 bg-white/10 hover:bg-white/20 p-2.5 rounded-full text-white transition-colors backdrop-blur-sm cursor-pointer shadow-lg"
+                        >
                             <X className="w-5 h-5" />
                         </button>
 
                         <div className="relative w-full flex items-center justify-center">
-                            {allPhotos.length > 1 && (
-                                <button onClick={goPrev} className="absolute left-0 sm:left-2 z-10 bg-white/10 hover:bg-white/25 p-2.5 sm:p-3 rounded-full text-white transition-all backdrop-blur-sm cursor-pointer">
+                            {currentList.length > 1 && (
+                                <button 
+                                    type="button"
+                                    onClick={goPrev} 
+                                    className="absolute left-0 sm:left-2 z-10 bg-white/10 hover:bg-white/25 p-2.5 sm:p-3 rounded-full text-white transition-all backdrop-blur-sm cursor-pointer"
+                                >
                                     <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </button>
                             )}
 
-                            {allPhotos[lightboxIdx] && (
-                                isVideo(allPhotos[lightboxIdx].url) ? (
-                                    <video 
-                                        src={getMediaUrl(allPhotos[lightboxIdx].url)} 
-                                        controls 
-                                        autoPlay 
-                                        playsInline 
-                                        className="max-h-[75vh] max-w-full rounded-2xl shadow-2xl bg-black border border-white/20"
-                                    />
-                                ) : (
-                                    <img src={getMediaUrl(allPhotos[lightboxIdx].url)} alt={allPhotos[lightboxIdx].label} className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl border border-white/20" />
-                                )
+                            {isVideo(currentList[lightboxIdx].url) ? (
+                                <video 
+                                    src={getMediaUrl(currentList[lightboxIdx].url)} 
+                                    controls 
+                                    autoPlay 
+                                    playsInline 
+                                    className="max-h-[75vh] max-w-full rounded-2xl shadow-2xl bg-black border border-white/20"
+                                />
+                            ) : (
+                                <img 
+                                    src={getMediaUrl(currentList[lightboxIdx].url)} 
+                                    alt={currentList[lightboxIdx].label} 
+                                    className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl border border-white/20" 
+                                />
                             )}
 
-                            {allPhotos.length > 1 && (
-                                <button onClick={goNext} className="absolute right-0 sm:right-2 z-10 bg-white/10 hover:bg-white/25 p-2.5 sm:p-3 rounded-full text-white transition-all backdrop-blur-sm cursor-pointer">
+                            {currentList.length > 1 && (
+                                <button 
+                                    type="button"
+                                    onClick={goNext} 
+                                    className="absolute right-0 sm:right-2 z-10 bg-white/10 hover:bg-white/25 p-2.5 sm:p-3 rounded-full text-white transition-all backdrop-blur-sm cursor-pointer"
+                                >
                                     <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </button>
                             )}
                         </div>
 
                         <div className="mt-4 text-center">
-                            <p className="text-white/90 text-sm font-semibold">{allPhotos[lightboxIdx]?.label || ""}</p>
-                            <p className="text-white/50 text-xs mt-1">{lightboxIdx + 1} / {allPhotos.length}</p>
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/80 uppercase tracking-wider mb-1">
+                                {currentList[lightboxIdx]?.categoryLabel || "Dokumentasi"}
+                            </span>
+                            <p className="text-white/95 text-sm font-semibold">{currentList[lightboxIdx]?.label || ""}</p>
+                            <p className="text-white/50 text-xs mt-1">{lightboxIdx + 1} / {currentList.length}</p>
                         </div>
 
-                        {/* Thumbnail strip */}
-                        {allPhotos.length > 1 && (
+                        {/* Thumbnail filmstrip */}
+                        {currentList.length > 1 && (
                             <div className="mt-4 flex gap-2 overflow-x-auto max-w-full pb-2 px-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
-                                {allPhotos.map((photo, idx) => {
+                                {currentList.map((photo, idx) => {
                                     const photoUrl = typeof photo?.url === "string" ? photo.url : "";
                                     const isVid = isVideo(photoUrl);
                                     return (
                                         <button 
                                             key={idx} 
+                                            type="button"
                                             onClick={() => setLightboxIdx(idx)} 
                                             className={`shrink-0 rounded-lg overflow-hidden border-2 transition-all relative w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 cursor-pointer ${idx === lightboxIdx ? 'border-blue-400 ring-2 ring-blue-400/30 scale-105' : 'border-white/20 opacity-60 hover:opacity-100'}`}
                                         >
@@ -463,6 +595,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
     const [t, setT] = useState(initialTicket);
     const [isWarrantyModalOpen, setIsWarrantyModalOpen] = useState(false);
     const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
+    const [externalPhoto, setExternalPhoto] = useState(null);
 
     // Interactive Customer Approval Modal State
     const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
@@ -708,12 +841,14 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 {/* Feature 4: Structured Deposited Accessories Checklist */}
                 <AccessoriesChecklist kelengkapanDetail={t.kelengkapan_detail} kelengkapanText={null} />
 
-                {/* Feature 1: Photo & Video Media Gallery with Lightbox */}
+                {/* Feature 1: Photo & Video Media Gallery Modal & Lightbox */}
                 <PhotoGallery 
                     fotoKondisi={t.foto_kondisi} 
                     fotoDiagnosis={t.foto_diagnosis} 
                     fotoSelesai={t.foto_selesai} 
                     logPerbaikan={t.log_perbaikan} 
+                    externalPhoto={externalPhoto}
+                    onCloseExternal={() => setExternalPhoto(null)}
                 />
 
                 {/* Feature 1: 2D Visual Defect Map for Customer */}
@@ -987,9 +1122,26 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                             
                                             {log?.foto_url && (
                                                 <div className="mb-3">
-                                                    <a href={getMediaUrl(log.foto_url)} target="_blank" rel="noreferrer" className="block w-fit">
-                                                        <img src={getMediaUrl(log.foto_url)} alt="Dokumentasi Perbaikan" className="h-24 object-cover rounded-lg border border-slate-200 hover:opacity-90 transition-opacity shadow-sm" />
-                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setExternalPhoto({ 
+                                                            url: log.foto_url, 
+                                                            label: `Proses: ${(log.catatan || '').substring(0, 50)}...` 
+                                                        })}
+                                                        className="group relative block rounded-xl overflow-hidden border border-slate-200 shadow-2xs hover:shadow-md transition-all cursor-pointer text-left"
+                                                        title="Klik untuk melihat foto dalam modal"
+                                                    >
+                                                        <img 
+                                                            src={getMediaUrl(log.foto_url)} 
+                                                            alt="Dokumentasi Perbaikan" 
+                                                            className="h-24 sm:h-28 object-cover rounded-xl group-hover:scale-105 transition-transform" 
+                                                        />
+                                                        <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <div className="w-8 h-8 rounded-full bg-white/90 text-slate-800 flex items-center justify-center shadow-md">
+                                                                <ZoomIn className="w-4 h-4" />
+                                                            </div>
+                                                        </div>
+                                                    </button>
                                                 </div>
                                             )}
                                             
