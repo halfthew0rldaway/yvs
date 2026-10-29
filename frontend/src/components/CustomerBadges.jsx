@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
     AlertTriangle, 
     Crown, 
@@ -24,7 +24,7 @@ const ICON_MAP = {
     UserPlus
 };
 
-export default function CustomerBadges({ 
+function CustomerBadges({ 
     customer, 
     badges: directBadges, 
     variant = "icon-only", // "icon-only" | "full"
@@ -37,12 +37,13 @@ export default function CustomerBadges({
     const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isManageOpen, setIsManageOpen] = useState(false);
 
-    let badges = [];
-    if (directBadges && Array.isArray(directBadges)) {
-        badges = directBadges;
-    } else if (customer) {
-        badges = customer.badges || computeCustomerBadges(customer);
-    }
+    // Memoize badge derivation to avoid redundant computations on every parent render
+    const badges = useMemo(() => {
+        if (directBadges && Array.isArray(directBadges)) return directBadges;
+        if (customer?.badges && Array.isArray(customer.badges)) return customer.badges;
+        if (customer) return computeCustomerBadges(customer);
+        return [];
+    }, [customer, directBadges]);
 
     const hasBadges = Array.isArray(badges) && badges.length > 0;
 
@@ -167,14 +168,16 @@ export default function CustomerBadges({
                 )}
             </div>
 
-            {/* Modal Panduan Badge */}
-            <CustomerBadgeGuideModal 
-                isOpen={isGuideOpen} 
-                onClose={() => setIsGuideOpen(false)} 
-            />
+            {/* Modal Panduan Badge: Lazy render only when open */}
+            {isGuideOpen && (
+                <CustomerBadgeGuideModal 
+                    isOpen={isGuideOpen} 
+                    onClose={() => setIsGuideOpen(false)} 
+                />
+            )}
 
-            {/* Modal Kelola / Kustomisasi Badge Pelanggan */}
-            {customer && (
+            {/* Modal Kelola / Kustomisasi Badge Pelanggan: Lazy render only when open */}
+            {isManageOpen && customer && (
                 <ManageCustomerBadgesModal
                     isOpen={isManageOpen}
                     onClose={() => setIsManageOpen(false)}
@@ -189,3 +192,5 @@ export default function CustomerBadges({
         </>
     );
 }
+
+export default React.memo(CustomerBadges);

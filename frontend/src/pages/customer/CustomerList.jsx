@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useTransition, useDeferredValue, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { Search, Plus, Edit2, Trash2, Users, Eye, MonitorSmartphone, X, Award } from "lucide-react";
@@ -14,6 +14,102 @@ import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
 import { PERSONALITY_TYPES } from "../../constants/personalityTypes";
 export { PERSONALITY_TYPES };
+
+// Memoized Table Row to prevent re-rendering all rows on isolated state updates
+const CustomerRow = memo(function CustomerRow({ 
+    customer, 
+    rowNumber, 
+    onSelect, 
+    onDelete, 
+    onCustomerUpdated 
+}) {
+    const personality = PERSONALITY_TYPES[customer.tipe_kepribadian] || PERSONALITY_TYPES["Netral"];
+
+    return (
+        <tr 
+            onClick={(e) => {
+                // Cegah klik dari React Portal (seperti modal badge/dialog) memicu row click
+                if (!e.currentTarget.contains(e.target)) return;
+                if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                onSelect(customer.id);
+            }}
+            className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
+        >
+            <td className="px-6 py-4 text-slate-400 font-mono text-xs">{rowNumber}</td>
+            <td className="px-6 py-4">
+                <button
+                    type="button"
+                    onClick={() => onSelect(customer.id)}
+                    className="font-bold text-slate-900 hover:text-blue-600 transition-colors text-left group-hover:underline block cursor-pointer"
+                    title="Lihat detail data pelanggan & perangkat miliknya"
+                >
+                    {customer.nama}
+                </button>
+                {customer.catatan_khusus && (
+                    <p className="text-[11px] text-slate-500 truncate max-w-[240px] mt-0.5" title={customer.catatan_khusus}>
+                        <span className="text-slate-400 font-medium">Catatan:</span> {customer.catatan_khusus}
+                    </p>
+                )}
+            </td>
+            <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                <CustomerBadges 
+                    customer={customer} 
+                    variant="icon-only" 
+                    size="normal" 
+                    onCustomerUpdated={onCustomerUpdated}
+                />
+            </td>
+            <td className="px-6 py-4">
+                <span 
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${personality.badge}`}
+                    title={personality.trait}
+                >
+                    {personality.label}
+                </span>
+            </td>
+            <td className="px-6 py-4 text-slate-600 font-mono text-xs">{customer.nomor_telepon}</td>
+            <td className="px-6 py-4 text-slate-500 truncate max-w-[240px]">{customer.alamat || "-"}</td>
+            <td className="px-6 py-4 text-center">
+                <button
+                    type="button"
+                    onClick={() => onSelect(customer.id)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-semibold text-xs transition-all hover:scale-105 cursor-pointer"
+                    title="Buka daftar perangkat milik pelanggan ini"
+                >
+                    <MonitorSmartphone className="w-3.5 h-3.5" />
+                    <span>{customer.perangkat?.length || 0} Unit</span>
+                </button>
+            </td>
+            <td className="px-6 py-4 text-right">
+                <div className="flex items-center justify-end gap-1.5">
+                    <button
+                        type="button"
+                        onClick={() => onSelect(customer.id)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                        title="Lihat Detail Customer & Perangkat"
+                    >
+                        <Eye className="w-4 h-4" />
+                    </button>
+                    <Link
+                        to={`/customer/edit/${customer.id}`}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                        title="Edit"
+                    >
+                        <Edit2 className="w-4 h-4" />
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={() => onDelete(customer)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            </td>
+        </tr>
+    );
+});
 
 export default function CustomerList() {
     const navigate = useNavigate();
@@ -30,6 +126,8 @@ export default function CustomerList() {
     const [pageSize, setPageSize] = useState(10);
     const [totalItems, setTotalItems] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
+
+    const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
         fetchCustomers();
@@ -64,9 +162,17 @@ export default function CustomerList() {
         }
     }
 
-    function handleDeleteClick(customer) {
+    const handleSelectCustomer = useCallback((id) => {
+        setSelectedCustomerId(id);
+    }, []);
+
+    const handleDeleteClick = useCallback((customer) => {
         setDeleteTarget(customer);
-    }
+    }, []);
+
+    const handleCustomerUpdated = useCallback((updated) => {
+        setCustomers((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
+    }, []);
 
     async function executeDelete() {
         if (!deleteTarget) return;
@@ -83,14 +189,18 @@ export default function CustomerList() {
 
     function handleSearch(e) {
         e.preventDefault();
-        setCurrentPage(1);
-        fetchCustomers(search, 1);
+        startTransition(() => {
+            setCurrentPage(1);
+            fetchCustomers(search, 1);
+        });
     }
 
     function handleClearSearch() {
         setSearch("");
-        setCurrentPage(1);
-        fetchCustomers("", 1);
+        startTransition(() => {
+            setCurrentPage(1);
+            fetchCustomers("", 1);
+        });
     }
 
     return (
@@ -205,134 +315,61 @@ export default function CustomerList() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {customers.map((c, i) => {
-                                const personality = PERSONALITY_TYPES[c.tipe_kepribadian] || PERSONALITY_TYPES["Netral"];
-                                const rowNumber = (currentPage - 1) * pageSize + i + 1;
-
-                                return (
-                                    <tr 
-                                        key={c.id} 
-                                        onClick={(e) => {
-                                            // Cegah klik dari React Portal (seperti modal badge/dialog yang di-render di document.body) memicu row click
-                                            if (!e.currentTarget.contains(e.target)) return;
-                                            if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
-                                            setSelectedCustomerId(c.id);
-                                        }}
-                                        className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
-                                    >
-                                        <td className="px-6 py-4 text-slate-400 font-mono text-xs">{rowNumber}</td>
-                                        <td className="px-6 py-4">
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedCustomerId(c.id)}
-                                                className="font-bold text-slate-900 hover:text-blue-600 transition-colors text-left group-hover:underline block"
-                                                title="Lihat detail data pelanggan & perangkat miliknya"
-                                            >
-                                                {c.nama}
-                                            </button>
-                                            {c.catatan_khusus && (
-                                                <p className="text-[11px] text-slate-500 truncate max-w-[240px] mt-0.5" title={c.catatan_khusus}>
-                                                    <span className="text-slate-400 font-medium">Catatan:</span> {c.catatan_khusus}
-                                                </p>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                                            <CustomerBadges 
-                                                customer={c} 
-                                                variant="icon-only" 
-                                                size="normal" 
-                                                onCustomerUpdated={(updated) => {
-                                                    setCustomers(prev => prev.map(item => item.id === updated.id ? { ...item, ...updated } : item));
-                                                }}
-                                            />
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span 
-                                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${personality.badge}`}
-                                                title={personality.trait}
-                                            >
-                                                {personality.label}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-600 font-mono text-xs">{c.nomor_telepon}</td>
-                                        <td className="px-6 py-4 text-slate-500 truncate max-w-[240px]">{c.alamat || "-"}</td>
-                                        <td className="px-6 py-4 text-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedCustomerId(c.id)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-semibold text-xs transition-all hover:scale-105"
-                                                title="Buka daftar perangkat milik pelanggan ini"
-                                            >
-                                                <MonitorSmartphone className="w-3.5 h-3.5" />
-                                                <span>{c.perangkat?.length || 0} Unit</span>
-                                            </button>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-1.5">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSelectedCustomerId(c.id)}
-                                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Lihat Detail Customer & Perangkat"
-                                                >
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
-                                                <Link
-                                                    to={`/customer/edit/${c.id}`}
-                                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Edit"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteClick(c)}
-                                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Hapus"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                            {customers.map((c, i) => (
+                                <CustomerRow
+                                    key={c.id}
+                                    customer={c}
+                                    rowNumber={(currentPage - 1) * pageSize + i + 1}
+                                    onSelect={handleSelectCustomer}
+                                    onDelete={handleDeleteClick}
+                                    onCustomerUpdated={handleCustomerUpdated}
+                                />
+                            ))}
                         </tbody>
                     </table>
                 )}
             </TableContainer>
 
-            <ConfirmModal
-                isOpen={!!deleteTarget}
-                title="Hapus Customer"
-                message={`Apakah Anda yakin ingin menghapus pelanggan "${deleteTarget?.nama}"? Data yang sudah dihapus tidak dapat dikembalikan.`}
-                onConfirm={executeDelete}
-                onCancel={() => setDeleteTarget(null)}
-                confirmText="Hapus"
-                isDanger={true}
-            />
+            {/* Modals mounted conditionally for zero idle memory footprint */}
+            {deleteTarget && (
+                <ConfirmModal
+                    isOpen={!!deleteTarget}
+                    title="Hapus Customer"
+                    message={`Apakah Anda yakin ingin menghapus pelanggan "${deleteTarget?.nama}"? Data yang sudah dihapus tidak dapat dikembalikan.`}
+                    onConfirm={executeDelete}
+                    onCancel={() => setDeleteTarget(null)}
+                    confirmText="Hapus"
+                    isDanger={true}
+                />
+            )}
 
             {/* Modal Detail Customer & Perangkat */}
-            <CustomerDetailModal
-                customerId={selectedCustomerId}
-                isOpen={!!selectedCustomerId}
-                onClose={() => setSelectedCustomerId(null)}
-                onSelectPerangkat={(p) => setSelectedPerangkatId(p.id)}
-            />
+            {selectedCustomerId && (
+                <CustomerDetailModal
+                    customerId={selectedCustomerId}
+                    isOpen={!!selectedCustomerId}
+                    onClose={() => setSelectedCustomerId(null)}
+                    onSelectPerangkat={(p) => setSelectedPerangkatId(p.id)}
+                />
+            )}
 
             {/* Modal Detail Perangkat & Rekam Medis */}
-            <PerangkatDetailModal
-                perangkatId={selectedPerangkatId}
-                isOpen={!!selectedPerangkatId}
-                onClose={() => setSelectedPerangkatId(null)}
-                onSelectCustomer={(cId) => setSelectedCustomerId(cId)}
-            />
+            {selectedPerangkatId && (
+                <PerangkatDetailModal
+                    perangkatId={selectedPerangkatId}
+                    isOpen={!!selectedPerangkatId}
+                    onClose={() => setSelectedPerangkatId(null)}
+                    onSelectCustomer={(cId) => setSelectedCustomerId(cId)}
+                />
+            )}
 
             {/* Modal Panduan Badge Reputasi Pelanggan */}
-            <CustomerBadgeGuideModal
-                isOpen={isGuideOpen}
-                onClose={() => setIsGuideOpen(false)}
-            />
+            {isGuideOpen && (
+                <CustomerBadgeGuideModal
+                    isOpen={isGuideOpen}
+                    onClose={() => setIsGuideOpen(false)}
+                />
+            )}
         </div>
     );
 }

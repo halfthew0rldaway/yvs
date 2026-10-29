@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
-import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
 import {
     Database,
@@ -200,6 +199,8 @@ export default function DatabaseManagement() {
                 const res = await api.post("/database/export", payload);
                 const { sheets, filename } = res.data;
 
+                // Dynamic import: Only download XLSX when export is requested
+                const XLSX = await import("xlsx");
                 const wb = XLSX.utils.book_new();
                 let sheetCount = 0;
 

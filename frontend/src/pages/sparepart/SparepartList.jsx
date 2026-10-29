@@ -1,10 +1,9 @@
 import toast from 'react-hot-toast';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useDeferredValue, useTransition, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw, QrCode } from "lucide-react";
-import * as XLSX from "xlsx";
 import ConfirmModal from "../../components/ConfirmModal";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
@@ -199,7 +198,7 @@ export default function SparepartList() {
         }
     }
 
-    function handleExportRestockExcel() {
+    async function handleExportRestockExcel() {
         if (filteredGlobalRestockLogs.length === 0) {
             toast.error("Tidak ada data log pengadaan untuk diekspor");
             return;
@@ -224,6 +223,8 @@ export default function SparepartList() {
             "Catatan": log.catatan || "-"
         }));
 
+        // Dynamic import: XLSX is only downloaded on demand when user clicks Export
+        const XLSX = await import("xlsx");
         const ws = XLSX.utils.json_to_sheet(exportData);
         ws['!cols'] = [
             { wch: 6 },
@@ -249,64 +250,96 @@ export default function SparepartList() {
     }
 
 
-    const categoriesRaw = new Set();
-    const brandsRaw = new Set();
-    spareparts.forEach(s => {
-        s.kategori.split(',').map(c => c.trim()).forEach(c => categoriesRaw.add(c));
-        if (s.brand?.nama) brandsRaw.add(s.brand.nama);
-    });
-    const categories = Array.from(categoriesRaw).sort();
-    const brands = Array.from(brandsRaw).sort();
+    // Deferred search input value for non-blocking 60 FPS typing
+    const deferredSearchQuery = useDeferredValue(searchQuery);
 
-    // Apply Filter & Sort
-    let processedSpareparts = spareparts.filter(s => {
-        const brandNameStr = s.brand?.nama && s.brand.nama.toLowerCase() !== "lainnya" ? s.brand.nama + " " : "";
-        const fullName = brandNameStr + s.nama;
-        const matchSearch = fullName.toLowerCase().includes(searchQuery.toLowerCase());
-        const itemCats = s.kategori.split(',').map(c => c.trim());
-        const matchCategory = selectedCategories.length === 0 || selectedCategories.some(c => itemCats.includes(c));
-        const matchBrand = selectedBrands.length === 0 || (s.brand && selectedBrands.includes(s.brand.nama));
-        
-        let matchStock = true;
-        if (stockStatusFilter === "low") {
-            matchStock = s.stok > 0 && s.stok <= 5;
-        } else if (stockStatusFilter === "out") {
-            matchStock = s.stok === 0;
-        } else if (stockStatusFilter === "available") {
-            matchStock = s.stok > 5;
-        }
+    // Memoize category and brand aggregations from dataset
+    const { categories, brands } = useMemo(() => {
+        const categoriesRaw = new Set();
+        const brandsRaw = new Set();
+        spareparts.forEach(s => {
+            if (s.kategori) {
+                s.kategori.split(',').map(c => c.trim()).forEach(c => categoriesRaw.add(c));
+            }
+            if (s.brand?.nama) brandsRaw.add(s.brand.nama);
+        });
+        return {
+            categories: Array.from(categoriesRaw).sort(),
+            brands: Array.from(brandsRaw).sort()
+        };
+    }, [spareparts]);
 
-        return matchSearch && matchCategory && matchBrand && matchStock;
-    });
+    // Apply Filter & Sort with useMemo
+    const processedSpareparts = useMemo(() => {
+        const query = (deferredSearchQuery || "").toLowerCase();
+        let filtered = spareparts.filter(s => {
+            const brandNameStr = s.brand?.nama && s.brand.nama.toLowerCase() !== "lainnya" ? s.brand.nama + " " : "";
+            const fullName = brandNameStr + (s.nama || "");
+            const matchSearch = !query || fullName.toLowerCase().includes(query);
+            const itemCats = s.kategori ? s.kategori.split(',').map(c => c.trim()) : [];
+            const matchCategory = selectedCategories.length === 0 || selectedCategories.some(c => itemCats.includes(c));
+            const matchBrand = selectedBrands.length === 0 || (s.brand && selectedBrands.includes(s.brand.nama));
+            
+            let matchStock = true;
+            if (stockStatusFilter === "low") {
+                matchStock = s.stok > 0 && s.stok <= 5;
+            } else if (stockStatusFilter === "out") {
+                matchStock = s.stok === 0;
+            } else if (stockStatusFilter === "available") {
+                matchStock = s.stok > 5;
+            }
 
+            return matchSearch && matchCategory && matchBrand && matchStock;
+        });
 
-    processedSpareparts.sort((a, b) => {
-        const aBrandStr = a.brand?.nama && a.brand.nama.toLowerCase() !== "lainnya" ? a.brand.nama + " " : "";
-        const bBrandStr = b.brand?.nama && b.brand.nama.toLowerCase() !== "lainnya" ? b.brand.nama + " " : "";
-        const aName = aBrandStr + a.nama;
-        const bName = bBrandStr + b.nama;
-        switch (sortBy) {
-            case "nama_asc": return aName.localeCompare(bName);
-            case "nama_desc": return bName.localeCompare(aName);
-            case "stok_asc": return a.stok - b.stok;
-            case "stok_desc": return b.stok - a.stok;
-            case "harga_asc": return a.harga - b.harga;
-            case "harga_desc": return b.harga - a.harga;
-            default: return 0;
-        }
-    });
+        return filtered.sort((a, b) => {
+            const aBrandStr = a.brand?.nama && a.brand.nama.toLowerCase() !== "lainnya" ? a.brand.nama + " " : "";
+            const bBrandStr = b.brand?.nama && b.brand.nama.toLowerCase() !== "lainnya" ? b.brand.nama + " " : "";
+            const aName = aBrandStr + (a.nama || "");
+            const bName = bBrandStr + (b.nama || "");
+            switch (sortBy) {
+                case "nama_asc": return aName.localeCompare(bName);
+                case "nama_desc": return bName.localeCompare(aName);
+                case "stok_asc": return (a.stok || 0) - (b.stok || 0);
+                case "stok_desc": return (b.stok || 0) - (a.stok || 0);
+                case "harga_asc": return (a.harga || 0) - (b.harga || 0);
+                case "harga_desc": return (b.harga || 0) - (a.harga || 0);
+                default: return 0;
+            }
+        });
+    }, [spareparts, deferredSearchQuery, selectedCategories, selectedBrands, stockStatusFilter, sortBy]);
 
     // Apply Pagination
-    const totalPages = Math.ceil(processedSpareparts.length / itemsPerPage);
+    const totalPages = Math.ceil(processedSpareparts.length / itemsPerPage) || 1;
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedSpareparts = processedSpareparts.slice(startIndex, startIndex + itemsPerPage);
 
-    // Summary Metrics
-    const totalInventoryValue = spareparts.reduce((sum, s) => sum + ((s.harga_beli || s.harga * 0.7) * s.stok), 0);
-    const totalPotentialRevenue = spareparts.reduce((sum, s) => sum + (s.harga * s.stok), 0);
-    const totalUnitsInStock = spareparts.reduce((sum, s) => sum + s.stok, 0);
-    const lowStockCount = spareparts.filter(s => s.stok > 0 && s.stok <= 5).length;
-    const outOfStockCount = spareparts.filter(s => s.stok === 0).length;
+    // Summary Metrics with useMemo
+    const { totalInventoryValue, totalPotentialRevenue, totalUnitsInStock, lowStockCount, outOfStockCount } = useMemo(() => {
+        let invVal = 0;
+        let potRev = 0;
+        let units = 0;
+        let low = 0;
+        let out = 0;
+
+        for (const s of spareparts) {
+            const stok = s.stok || 0;
+            const hargaBeli = s.harga_beli || s.harga * 0.7 || 0;
+            invVal += hargaBeli * stok;
+            potRev += (s.harga || 0) * stok;
+            units += stok;
+            if (stok > 0 && stok <= 5) low++;
+            else if (stok === 0) out++;
+        }
+
+        return {
+            totalInventoryValue: invVal,
+            totalPotentialRevenue: potRev,
+            totalUnitsInStock: units,
+            lowStockCount: low,
+            outOfStockCount: out
+        };
+    }, [spareparts]);
 
     // Global Restock Filtering & KPI Calculations
     const uniqueSuppliers = Array.from(new Set(

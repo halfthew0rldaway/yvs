@@ -29,7 +29,6 @@ import {
     MessageCircle
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, AreaChart, Area, LineChart, Line } from 'recharts';
-import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
 function StatCard({ label, value, icon: Icon, color = "blue", to }) {
@@ -749,6 +748,8 @@ export default function Dashboard() {
                                                             const dbData = res.data;
                                                             delete dbData.exportedAt;
                                                             
+                                                            // Dynamic import: Only download XLSX when user triggers export
+                                                            const XLSX = await import('xlsx');
                                                             const wb = XLSX.utils.book_new();
                                                             
                                                             for (const key of Object.keys(dbData)) {
