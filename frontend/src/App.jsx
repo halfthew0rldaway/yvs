@@ -1,39 +1,40 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import Layout from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Toaster } from 'react-hot-toast';
+import { lazyWithRetry } from "./utils/lazyWithRetry";
 
-// Lazy-loaded route pages for code-splitting & fast initial load
-const Login = lazy(() => import("./pages/Login"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
-const CustomerList = lazy(() => import("./pages/customer/CustomerList"));
-const CustomerForm = lazy(() => import("./pages/customer/CustomerForm"));
-const PerangkatList = lazy(() => import("./pages/perangkat/PerangkatList"));
-const PerangkatForm = lazy(() => import("./pages/perangkat/PerangkatForm"));
-const TiketServisList = lazy(() => import("./pages/tiket-servis/TiketServisList"));
-const TiketServisForm = lazy(() => import("./pages/tiket-servis/TiketServisForm"));
-const TiketServisDetail = lazy(() => import("./pages/tiket-servis/TiketServisDetail"));
-const DiagnosisForm = lazy(() => import("./pages/diagnosis/DiagnosisForm"));
-const LogPerbaikanList = lazy(() => import("./pages/log-perbaikan/LogPerbaikanList"));
-const SparepartList = lazy(() => import("./pages/sparepart/SparepartList"));
-const SparepartForm = lazy(() => import("./pages/sparepart/SparepartForm"));
-const InvoiceList = lazy(() => import("./pages/invoice/InvoiceList"));
-const InvoiceForm = lazy(() => import("./pages/invoice/InvoiceForm"));
-const InvoiceDetail = lazy(() => import("./pages/invoice/InvoiceDetail"));
-const Tracking = lazy(() => import("./pages/tracking/Tracking"));
-const UserList = lazy(() => import("./pages/user/UserList"));
-const RepairWikiList = lazy(() => import("./pages/wiki/RepairWikiList"));
-const RecruitmentDashboard = lazy(() => import("./pages/recruitment/RecruitmentDashboard"));
-const JobPostingForm = lazy(() => import("./pages/recruitment/JobPostingForm"));
-const RetensiCrm = lazy(() => import("./pages/retensi/RetensiCrm"));
-const LoanerList = lazy(() => import("./pages/loaner/LoanerList"));
-const RmaList = lazy(() => import("./pages/rma/RmaList"));
-const RmaForm = lazy(() => import("./pages/rma/RmaForm"));
-const SupplierList = lazy(() => import("./pages/supplier/SupplierList"));
-const DatabaseManagement = lazy(() => import("./pages/database/DatabaseManagement"));
+// Lazy-loaded route pages with automatic chunk refresh retry on new deployments
+const Login = lazyWithRetry(() => import("./pages/Login"));
+const Profile = lazyWithRetry(() => import("./pages/Profile"));
+const Dashboard = lazyWithRetry(() => import("./pages/dashboard/Dashboard"));
+const CustomerList = lazyWithRetry(() => import("./pages/customer/CustomerList"));
+const CustomerForm = lazyWithRetry(() => import("./pages/customer/CustomerForm"));
+const PerangkatList = lazyWithRetry(() => import("./pages/perangkat/PerangkatList"));
+const PerangkatForm = lazyWithRetry(() => import("./pages/perangkat/PerangkatForm"));
+const TiketServisList = lazyWithRetry(() => import("./pages/tiket-servis/TiketServisList"));
+const TiketServisForm = lazyWithRetry(() => import("./pages/tiket-servis/TiketServisForm"));
+const TiketServisDetail = lazyWithRetry(() => import("./pages/tiket-servis/TiketServisDetail"));
+const DiagnosisForm = lazyWithRetry(() => import("./pages/diagnosis/DiagnosisForm"));
+const LogPerbaikanList = lazyWithRetry(() => import("./pages/log-perbaikan/LogPerbaikanList"));
+const SparepartList = lazyWithRetry(() => import("./pages/sparepart/SparepartList"));
+const SparepartForm = lazyWithRetry(() => import("./pages/sparepart/SparepartForm"));
+const InvoiceList = lazyWithRetry(() => import("./pages/invoice/InvoiceList"));
+const InvoiceForm = lazyWithRetry(() => import("./pages/invoice/InvoiceForm"));
+const InvoiceDetail = lazyWithRetry(() => import("./pages/invoice/InvoiceDetail"));
+const Tracking = lazyWithRetry(() => import("./pages/tracking/Tracking"));
+const UserList = lazyWithRetry(() => import("./pages/user/UserList"));
+const RepairWikiList = lazyWithRetry(() => import("./pages/wiki/RepairWikiList"));
+const RecruitmentDashboard = lazyWithRetry(() => import("./pages/recruitment/RecruitmentDashboard"));
+const JobPostingForm = lazyWithRetry(() => import("./pages/recruitment/JobPostingForm"));
+const RetensiCrm = lazyWithRetry(() => import("./pages/retensi/RetensiCrm"));
+const LoanerList = lazyWithRetry(() => import("./pages/loaner/LoanerList"));
+const RmaList = lazyWithRetry(() => import("./pages/rma/RmaList"));
+const RmaForm = lazyWithRetry(() => import("./pages/rma/RmaForm"));
+const SupplierList = lazyWithRetry(() => import("./pages/supplier/SupplierList"));
+const DatabaseManagement = lazyWithRetry(() => import("./pages/database/DatabaseManagement"));
 
 function PageLoader() {
     return (
