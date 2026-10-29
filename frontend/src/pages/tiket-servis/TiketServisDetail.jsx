@@ -19,6 +19,7 @@ import CustomerBadges from "../../components/CustomerBadges";
 import RevisiAccModal from "../../components/RevisiAccModal";
 import CustomerDetailModal from "../../components/CustomerDetailModal";
 import PerangkatDetailModal from "../../components/PerangkatDetailModal";
+import KlaimGaransiModal from "../../components/KlaimGaransiModal";
 import { isVideo } from "../../utils/mediaUtils";
 
 
@@ -330,6 +331,7 @@ export default function TiketServisDetail() {
     }
 
     // Modals state
+    const [isKlaimGaransiOpen, setIsKlaimGaransiOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isTakeOverModalOpen, setIsTakeOverModalOpen] = useState(false);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -1202,6 +1204,76 @@ export default function TiketServisDetail() {
                             <p className="text-[11px] text-amber-700 mt-1">
                                 * Tiket ini telah menggunakan hak 1x revisi ACC. Seluruh progres dan kesepakatan berikutnya bersifat mengikat.
                             </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Alert Banner: Tiket Ini Adalah Klaim Garansi (Re-work) */}
+            {tiket.is_garansi_claim && (
+                <div className="bg-indigo-50/90 border-2 border-indigo-400 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-fadeIn">
+                    <div className="flex items-start gap-3.5">
+                        <div className="p-2.5 bg-indigo-600 text-white rounded-xl shrink-0 mt-0.5 shadow-sm">
+                            <ShieldAlert className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-200 text-indigo-950 border border-indigo-300 uppercase tracking-wider">
+                                    Tiket Klaim Garansi Servis (Re-work)
+                                </span>
+                                <span className="text-xs text-indigo-700 font-semibold">
+                                    Prioritas SLA Express
+                                </span>
+                            </div>
+                            <h4 className="text-sm sm:text-base font-bold text-indigo-950">
+                                Retur pengerjaan servis dari Tiket Rujukan #{tiket.parent_tiket?.nomor_tiket || "Lama"}
+                            </h4>
+                            <p className="text-xs text-indigo-800 mt-1">
+                                Keluhan klaim: {tiket.keluhan}
+                            </p>
+                        </div>
+                    </div>
+                    {tiket.parent_tiket?.id && (
+                        <Link
+                            to={`/tiket-servis/${tiket.parent_tiket.id}`}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shrink-0 whitespace-nowrap"
+                        >
+                            <span>Lihat Tiket Induk #{tiket.parent_tiket.nomor_tiket}</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                    )}
+                </div>
+            )}
+
+            {/* Alert Banner: Tiket Ini Memiliki Riwayat Klaim Garansi Ulang */}
+            {tiket.child_claims && tiket.child_claims.length > 0 && (
+                <div className="bg-amber-50/90 border-2 border-amber-400 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-fadeIn">
+                    <div className="flex items-start gap-3.5">
+                        <div className="p-2.5 bg-amber-600 text-white rounded-xl shrink-0 mt-0.5 shadow-sm">
+                            <RotateCcw className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-950 border border-amber-300 uppercase tracking-wider">
+                                    Memiliki {tiket.child_claims.length} Tiket Klaim Garansi Terkait
+                                </span>
+                            </div>
+                            <h4 className="text-sm sm:text-base font-bold text-amber-950">
+                                Perangkat ini telah diterbitkan tiket retur garansi pengerjaan ulang.
+                            </h4>
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                {tiket.child_claims.map((claim) => (
+                                    <Link
+                                        key={claim.id}
+                                        to={`/tiket-servis/${claim.id}`}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition-colors shadow-2xs"
+                                    >
+                                        <span>#{claim.nomor_tiket}</span>
+                                        <span className="text-[10px] uppercase font-semibold text-amber-700">({claim.status})</span>
+                                        <ArrowRight className="w-3 h-3 text-amber-600" />
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2513,8 +2585,9 @@ export default function TiketServisDetail() {
                             </a>
 
                             <button
-                                onClick={handleCreateWarrantyClaim}
-                                className={`w-full sm:w-auto px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 ${
+                                type="button"
+                                onClick={() => setIsKlaimGaransiOpen(true)}
+                                className={`w-full sm:w-auto px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
                                     tiket.warranty_status?.isExpired 
                                         ? "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20" 
                                         : "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20"
@@ -3830,6 +3903,14 @@ export default function TiketServisDetail() {
                     }}
                 />
             )}
+
+            {/* Modal Klaim Garansi Servis (Re-work) */}
+            <KlaimGaransiModal
+                isOpen={isKlaimGaransiOpen}
+                onClose={() => setIsKlaimGaransiOpen(false)}
+                tiket={tiket}
+                onSuccess={() => fetchTiket()}
+            />
 
             {/* Network Media Upload Loading Modal for QC Completion */}
             <MediaProcessingModal {...qcUploadModal} />

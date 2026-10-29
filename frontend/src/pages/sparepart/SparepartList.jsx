@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useDeferredValue, useTransition, useCallb
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
-import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw, QrCode } from "lucide-react";
+import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw, QrCode, Camera } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
@@ -11,6 +11,7 @@ import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
 import RestockManifestModal from "../../components/RestockManifestModal";
 import SparepartQrModal from "../../components/SparepartQrModal";
+import CameraScannerModal from "../../components/CameraScannerModal";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
@@ -23,6 +24,14 @@ export default function SparepartList() {
     const [loading, setLoading] = useState(true);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [qrModalTarget, setQrModalTarget] = useState(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+    function handleScanSuccess(decodedText) {
+        setIsScannerOpen(false);
+        const code = decodedText.trim();
+        setSearchQuery(code);
+        toast.success(`Berhasil memindai barcode sparepart: ${code}`);
+    }
 
     // Filter & Sort States
     const [searchQuery, setSearchQuery] = useState("");
@@ -570,33 +579,44 @@ export default function SparepartList() {
             {/* Filter & Sort Bar */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
                 <div className="flex flex-col lg:flex-row gap-3">
-                    {/* Search */}
-                    <div className="flex-1 min-w-0 relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-slate-400" />
+                    {/* Search & Camera Barcode Scanner */}
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search className="h-4 w-4 text-slate-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Cari nama, SKU, atau barcode suku cadang..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                        setSearchQuery("");
+                                    }
+                                }}
+                                className="block w-full pl-9 pr-9 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors"
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery("")}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors cursor-pointer"
+                                    title="Hapus pencarian (Esc)"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Cari nama sparepart..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Escape") {
-                                    setSearchQuery("");
-                                }
-                            }}
-                            className="block w-full pl-9 pr-9 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors"
-                        />
-                        {searchQuery && (
-                            <button
-                                type="button"
-                                onClick={() => setSearchQuery("")}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors cursor-pointer"
-                                title="Hapus pencarian (Esc)"
-                            >
-                                <X className="w-3.5 h-3.5" />
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            onClick={() => setIsScannerOpen(true)}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer"
+                            title="Pindai Barcode / QR Label Fisik Sparepart dengan Kamera"
+                        >
+                            <Camera className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Scan Barcode</span>
+                        </button>
                     </div>
 
                     {/* Filter & Sort Controls Group */}
@@ -1604,6 +1624,15 @@ export default function SparepartList() {
                 isOpen={!!qrModalTarget}
                 onClose={() => setQrModalTarget(null)}
                 sparepart={qrModalTarget}
+            />
+
+            {/* In-Browser Camera Barcode Scanner Modal */}
+            <CameraScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onScan={handleScanSuccess}
+                title="Pindai Barcode / QR Sparepart"
+                subtitle="Arahkan kamera ke stiker barcode fisik sparepart atau label rak gudang"
             />
         </div>
     );

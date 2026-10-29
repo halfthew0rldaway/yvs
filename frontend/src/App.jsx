@@ -35,6 +35,7 @@ const RmaList = lazyWithRetry(() => import("./pages/rma/RmaList"));
 const RmaForm = lazyWithRetry(() => import("./pages/rma/RmaForm"));
 const SupplierList = lazyWithRetry(() => import("./pages/supplier/SupplierList"));
 const DatabaseManagement = lazyWithRetry(() => import("./pages/database/DatabaseManagement"));
+const AuditLogList = lazyWithRetry(() => import("./pages/audit/AuditLogList"));
 
 function PageLoader() {
     return (
@@ -108,6 +109,7 @@ export default function App() {
                     <Route path="/invoice/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />
                     <Route path="/users" element={<ProtectedRoute roles={["admin"]}><UserList /></ProtectedRoute>} />
                     <Route path="/database" element={<ProtectedRoute roles={["admin"]}><DatabaseManagement /></ProtectedRoute>} />
+                    <Route path="/audit-log" element={<ProtectedRoute roles={["admin"]}><AuditLogList /></ProtectedRoute>} />
                     <Route path="/wiki" element={<ProtectedRoute><RepairWikiList /></ProtectedRoute>} />
                     <Route path="/recruitment" element={<ProtectedRoute roles={["admin"]}><RecruitmentDashboard /></ProtectedRoute>} />
                     <Route path="/recruitment/jobs/tambah" element={<ProtectedRoute roles={["admin"]}><JobPostingForm /></ProtectedRoute>} />

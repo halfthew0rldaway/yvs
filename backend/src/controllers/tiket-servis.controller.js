@@ -12,6 +12,7 @@ const {
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 const { broadcast } = require("../utils/sse");
 const { computeCustomerStatsAndBadges } = require("../utils/customerBadges");
+const { recordActivity } = require("../services/activityLog.service");
 
 // Validasi transisi status yang diizinkan
 const STATUS_TRANSITIONS = {
@@ -48,7 +49,11 @@ async function getAll(req, res) {
             andConditions.push({ teknisi_id: Number(teknisi_id) });
         }
 
-        if (status && status !== "garansi_expiring" && status !== "aktif") {
+        if (req.query.tipe_tiket === "garansi" || status === "klaim_garansi") {
+            andConditions.push({ is_garansi_claim: true });
+        }
+
+        if (status && status !== "garansi_expiring" && status !== "aktif" && status !== "klaim_garansi") {
             andConditions.push({ status });
         } else if (status === "aktif") {
             andConditions.push({
@@ -129,6 +134,8 @@ async function getAll(req, res) {
             teknisi: { select: { id: true, nama: true } },
             invoice: { select: { id: true, total_biaya: true } },
             penggunaan_sparepart: { include: { sparepart: { include: { brand: true } } } },
+            parent_tiket: { select: { id: true, nomor_tiket: true, status: true } },
+            child_claims: { select: { id: true, nomor_tiket: true, status: true } },
         };
 
         if (!isPaginated) {
@@ -254,6 +261,29 @@ async function getById(req, res) {
                 },
                 supplier_rma: {
                     include: { sparepart: true },
+                    orderBy: { created_at: "desc" }
+                },
+                parent_tiket: {
+                    select: {
+                        id: true,
+                        nomor_tiket: true,
+                        status: true,
+                        created_at: true,
+                        tgl_diambil: true,
+                        completed_at: true,
+                        durasi_garansi: true,
+                        garansi_berakhir_at: true,
+                        keluhan: true
+                    }
+                },
+                child_claims: {
+                    select: {
+                        id: true,
+                        nomor_tiket: true,
+                        status: true,
+                        created_at: true,
+                        keluhan: true
+                    },
                     orderBy: { created_at: "desc" }
                 }
             },
@@ -873,7 +903,11 @@ async function createWarrantyClaim(req, res) {
         const id = Number(req.params.id);
         const parentTiket = await prisma.tiketServis.findUnique({
             where: { id },
-            include: { perangkat: true }
+            include: { 
+                perangkat: {
+                    include: { customer: true }
+                } 
+            }
         });
 
         if (!parentTiket) {
@@ -889,6 +923,10 @@ async function createWarrantyClaim(req, res) {
             ? `[Klaim Luar Garansi / Kebijakan Toko: Masa garansi telah berakhir ${warrantyInfo.garansi_berakhir_at ? new Date(warrantyInfo.garansi_berakhir_at).toLocaleDateString('id-ID') : ''}]` 
             : `[Klaim Dalam Garansi Resmi: Sisa garansi ${warrantyInfo?.sisaHari} hari]`;
 
+        const kategoriKlaim = req.body.kategori_klaim || "Kerusakan Berulang";
+        const alasanKlaim = req.body.alasan || req.body.keluhan_detail || "Kerusakan kembali terjadi setelah unit diambil.";
+        const kelengkapanKlaim = req.body.kelengkapan || parentTiket.kelengkapan;
+
         let claimTiket = null;
         let retries = 3;
         let offset = 0;
@@ -901,16 +939,20 @@ async function createWarrantyClaim(req, res) {
                         nomor_tiket,
                         perangkat_id: parentTiket.perangkat_id,
                         teknisi_id: parentTiket.teknisi_id,
-                        keluhan: `[KLAIM GARANSI] Retur perbaikan dari Tiket #${parentTiket.nomor_tiket}. Sampaikan kendala: ${req.body.alasan || 'Kerusakan kembali terjadi.'}`,
-                        kelengkapan: parentTiket.kelengkapan,
+                        keluhan: `[KLAIM GARANSI - ${kategoriKlaim}] ${alasanKlaim} (Ref Tiket: #${parentTiket.nomor_tiket})`,
+                        kelengkapan: kelengkapanKlaim,
+                        kelengkapan_detail: parentTiket.kelengkapan_detail,
+                        kondisi_fisik: parentTiket.kondisi_fisik,
                         status: "diterima",
                         is_garansi_claim: true,
                         parent_tiket_id: parentTiket.id,
-                        durasi_garansi: parentTiket.durasi_garansi
+                        durasi_garansi: parentTiket.durasi_garansi,
+                        sla_paket: "express"
                     },
                     include: {
                         perangkat: { include: { customer: true } },
-                        teknisi: { select: { id: true, nama: true } }
+                        teknisi: { select: { id: true, nama: true } },
+                        parent_tiket: { select: { id: true, nomor_tiket: true } }
                     }
                 });
                 break;
@@ -925,20 +967,37 @@ async function createWarrantyClaim(req, res) {
             }
         }
 
-        // Insert log item
+        // Insert log item pada tiket baru
         await prisma.logPerbaikan.create({
             data: {
                 tiket_id: claimTiket.id,
                 fase: "Klaim Garansi",
-                catatan: `Tiket klaim garansi diterbitkan berdasarkan tiket terdahulu #${parentTiket.nomor_tiket}. ${statusNote}`
+                catatan: `Tiket klaim garansi diterbitkan berdasarkan tiket terdahulu #${parentTiket.nomor_tiket}. Kategori: ${kategoriKlaim}. ${statusNote}`
             }
+        });
+
+        // Insert log item catatan pada tiket lama agar riwayat re-work terpaut dua arah
+        await prisma.logPerbaikan.create({
+            data: {
+                tiket_id: parentTiket.id,
+                fase: "Klaim Garansi Masuk",
+                catatan: `Pelanggan mengajukan klaim garansi servis ulang dengan tiket baru #${claimTiket.nomor_tiket}. Kategori: ${kategoriKlaim}. Alasan: ${alasanKlaim}`
+            }
+        });
+
+        // Audit Trail Activity Anti-Fraud
+        await recordActivity({
+            req,
+            action: `Menerbitkan tiket klaim garansi servis #${claimTiket.nomor_tiket} untuk unit ${parentTiket.perangkat?.merek} ${parentTiket.perangkat?.model} (Kategori: ${kategoriKlaim}, Ref Tiket: #${parentTiket.nomor_tiket})`,
+            entity: "tiket"
         });
 
         // Broadcast real-time SSE event
         broadcast("tiket:created", { 
             id: claimTiket.id, 
             nomor_tiket: claimTiket.nomor_tiket, 
-            is_garansi_claim: true 
+            is_garansi_claim: true,
+            parent_tiket_id: parentTiket.id
         });
         broadcast("dashboard:refresh");
 

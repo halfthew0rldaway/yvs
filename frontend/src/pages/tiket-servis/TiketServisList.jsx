@@ -20,14 +20,18 @@ import {
     Send,
     Wrench,
     QrCode,
-    RotateCcw
+    RotateCcw,
+    Camera,
+    ShieldCheck
 } from "lucide-react";
+import toast from "react-hot-toast";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
 import SlaBadge from "../../components/SlaBadge";
 import TicketQrModal from "../../components/TicketQrModal";
+import CameraScannerModal from "../../components/CameraScannerModal";
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-100 text-blue-700 border-blue-200" },
@@ -104,6 +108,12 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_LABELS[tiket.status]?.color || "bg-slate-100 text-slate-600 border-slate-200"}`}>
                         {STATUS_LABELS[tiket.status]?.label || tiket.status}
                     </span>
+                    {tiket.is_garansi_claim && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title={`Klaim Garansi Retur dari #${tiket.parent_tiket?.nomor_tiket || 'Lama'}`}>
+                            <ShieldCheck className="w-3 h-3 text-indigo-600" />
+                            Klaim Garansi
+                        </span>
+                    )}
                     {tiket.is_revisi_acc && (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200" title={`Pernah 1x Revisi ACC: ${tiket.alasan_revisi_acc || '-'}`}>
                             <RotateCcw className="w-3 h-3 text-rose-600" />
@@ -151,6 +161,21 @@ export default function TiketServisList() {
     const [sortOrder, setSortOrder] = useState("desc"); // 'desc' | 'asc'
     const [loading, setLoading] = useState(true);
     const [selectedQrTiket, setSelectedQrTiket] = useState(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+    function handleScanSuccess(decodedText) {
+        setIsScannerOpen(false);
+        let code = decodedText.trim();
+        if (code.includes("/tracking/")) {
+            code = code.split("/tracking/")[1].split("?")[0].split("/")[0];
+        } else if (code.includes("/tiket-servis/")) {
+            code = code.split("/tiket-servis/")[1].split("?")[0].split("/")[0];
+        }
+        setSearchTerm(code);
+        setCurrentPage(1);
+        fetchTikets(code, 1);
+        toast.success(`Berhasil memindai: ${code}`);
+    }
 
     // Standardized Pagination State
     const [currentPage, setCurrentPage] = useState(1);
@@ -321,32 +346,43 @@ export default function TiketServisList() {
             {/* Filter & Search Bar */}
             <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3.5">
                 <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                    {/* Search Input */}
-                    <form onSubmit={handleSearchSubmit} className="relative w-full sm:flex-1">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Cari nomor tiket, customer, perangkat, keluhan, teknisi..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Escape") {
-                                    handleClearSearch();
-                                }
-                            }}
-                            className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all text-sm"
-                        />
-                        {searchTerm && (
-                            <button
-                                type="button"
-                                onClick={handleClearSearch}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
-                                title="Hapus pencarian"
-                            >
-                                <X className="w-3.5 h-3.5" />
-                            </button>
-                        )}
-                    </form>
+                    {/* Search Input & QR Scan Button */}
+                    <div className="flex items-center gap-2 w-full sm:flex-1">
+                        <form onSubmit={handleSearchSubmit} className="relative flex-1">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari nomor tiket, customer, perangkat, keluhan, teknisi..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                        handleClearSearch();
+                                    }
+                                }}
+                                className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all text-sm"
+                            />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearSearch}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
+                                    title="Hapus pencarian"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
+                        </form>
+                        <button
+                            type="button"
+                            onClick={() => setIsScannerOpen(true)}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer"
+                            title="Pindai QR Fisik Tiket dengan Kamera"
+                        >
+                            <Camera className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Scan QR</span>
+                        </button>
+                    </div>
 
                     {/* Sorting Button */}
                     <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -508,6 +544,24 @@ export default function TiketServisList() {
                                     </span>
                                 </button>
 
+                                {/* Klaim Garansi Filter */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setFilter(filter === "klaim_garansi" ? "" : "klaim_garansi");
+                                        setSlaFilter("");
+                                        setCurrentPage(1);
+                                    }}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                        filter === "klaim_garansi" 
+                                            ? "bg-indigo-600 text-white shadow-xs font-bold" 
+                                            : "bg-indigo-50 text-indigo-800 hover:bg-indigo-100 border border-indigo-200"
+                                    }`}
+                                >
+                                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                                    <span>Klaim Garansi</span>
+                                </button>
+
                                 {/* Reset Filter Button */}
                                 {hasActiveFilters && (
                                     <button
@@ -628,6 +682,15 @@ export default function TiketServisList() {
                     tiket={selectedQrTiket} 
                 />
             )}
+
+            {/* In-Browser Camera QR Scanner Modal */}
+            <CameraScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onScan={handleScanSuccess}
+                title="Pindai QR Tiket Servis"
+                subtitle="Arahkan kamera ke QR Code nota servis atau stiker fisik unit"
+            />
         </div>
     );
 }
