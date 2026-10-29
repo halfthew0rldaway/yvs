@@ -8,6 +8,7 @@ import {
     Info, Wand2, ListChecks, ShieldAlert, Plus, Minus, AlignLeft, List
 } from "lucide-react";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
+import MediaProcessingModal from "../../components/MediaProcessingModal";
 import { HARDWARE_CHECKLIST_ITEMS as HARDWARE_ITEMS } from "../../utils/checklistItems";
 
 const MAX_TEXT_LIMIT = 5000;
@@ -105,6 +106,15 @@ export default function DiagnosisForm() {
     const [diagnosisId, setDiagnosisId] = useState(null);
     const [tiket, setTiket] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [uploadModal, setUploadModal] = useState({
+        isOpen: false,
+        stage: "uploading",
+        title: "",
+        subtitle: "",
+        progressPercent: 0,
+        uploadedBytes: 0,
+        totalBytes: 0
+    });
     const [fetching, setFetching] = useState(true);
 
     // Checklist state: { [key]: { status: "ok"|"issue"|null, qty: number, note: string } }
@@ -341,6 +351,20 @@ export default function DiagnosisForm() {
         }
 
         setLoading(true);
+
+        const newMediaFiles = fotos.filter(f => f instanceof File);
+        if (newMediaFiles.length > 0) {
+            setUploadModal({
+                isOpen: true,
+                stage: "uploading",
+                title: "Mengunggah Dokumentasi Diagnosa...",
+                subtitle: `Mentransfer ${newMediaFiles.length} berkas foto diagnosa teknisi ke server.`,
+                progressPercent: 5,
+                uploadedBytes: 0,
+                totalBytes: 0
+            });
+        }
+
         try {
             const formData = new FormData();
             formData.append("tiket_id", String(id));
@@ -358,14 +382,36 @@ export default function DiagnosisForm() {
             });
             formData.append("existing_foto_diagnosis", JSON.stringify(existingUrls));
 
+            const uploadConfig = {
+                headers: { "Content-Type": "multipart/form-data" },
+                onUploadProgress: (progressEvent) => {
+                    if (progressEvent.total) {
+                        const percent = Math.min(99, Math.round((progressEvent.loaded * 100) / progressEvent.total));
+                        setUploadModal(prev => ({
+                            ...prev,
+                            progressPercent: percent,
+                            uploadedBytes: progressEvent.loaded,
+                            totalBytes: progressEvent.total
+                        }));
+                    }
+                }
+            };
+
             if (diagnosisId) {
-                await api.put(`/diagnosis/${diagnosisId}`, formData, {
-                    headers: { "Content-Type": "multipart/form-data" }
-                });
+                await api.put(`/diagnosis/${diagnosisId}`, formData, uploadConfig);
             } else {
-                await api.post("/diagnosis", formData, {
-                    headers: { "Content-Type": "multipart/form-data" }
-                });
+                await api.post("/diagnosis", formData, uploadConfig);
+            }
+
+            if (newMediaFiles.length > 0) {
+                setUploadModal(prev => ({
+                    ...prev,
+                    progressPercent: 100,
+                    stage: "done",
+                    title: "Dokumentasi Diagnosa Berhasil Disimpan!",
+                    subtitle: "Memperbarui status tiket..."
+                }));
+                await new Promise(r => setTimeout(r, 450));
             }
 
             // Synchronize hardware checklist directly into ticket's checklist_intake
@@ -400,6 +446,7 @@ export default function DiagnosisForm() {
             toast.error(err.response?.data?.message || "Terjadi kesalahan saat menyimpan diagnosis");
         } finally {
             setLoading(false);
+            setUploadModal(prev => ({ ...prev, isOpen: false }));
         }
     }
 
@@ -843,6 +890,9 @@ export default function DiagnosisForm() {
                     </div>
                 </div>
             </form>
+
+            {/* Network Media Upload Loading Modal */}
+            <MediaProcessingModal {...uploadModal} />
         </div>
     );
 }

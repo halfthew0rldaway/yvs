@@ -14,6 +14,7 @@ import SlaBadge, { SlaCountdownCard, SLA_PENGERJAAN_PACKAGES } from "../../compo
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import RepairWikiDetailModal from "../wiki/RepairWikiDetailModal";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
+import MediaProcessingModal from "../../components/MediaProcessingModal";
 import CustomerBadges from "../../components/CustomerBadges";
 import RevisiAccModal from "../../components/RevisiAccModal";
 import CustomerDetailModal from "../../components/CustomerDetailModal";
@@ -218,6 +219,15 @@ export default function TiketServisDetail() {
         catatan_qc: ""
     });
     const [qcPhotos, setQcPhotos] = useState([]);
+    const [qcUploadModal, setQcUploadModal] = useState({
+        isOpen: false,
+        stage: "uploading",
+        title: "",
+        subtitle: "",
+        progressPercent: 0,
+        uploadedBytes: 0,
+        totalBytes: 0
+    });
 
     // Dual-Phase SLA: ACC & Estimasi SLA Pengerjaan Modal State
     const [isAccModalOpen, setIsAccModalOpen] = useState(false);
@@ -766,15 +776,48 @@ export default function TiketServisDetail() {
                 formData.append("replace", "true");
                 const hasNewFiles = qcPhotos.some(p => p instanceof File);
                 if (hasNewFiles) {
+                    const newFilesCount = qcPhotos.filter(p => p instanceof File).length;
+                    setQcUploadModal({
+                        isOpen: true,
+                        stage: "uploading",
+                        title: "Mengunggah Bukti Hasil QC...",
+                        subtitle: `Mentransfer ${newFilesCount} berkas foto/video selesai servis ke server.`,
+                        progressPercent: 5,
+                        uploadedBytes: 0,
+                        totalBytes: 0
+                    });
+
                     try {
                         const uploadRes = await api.post(`/tiket-servis/${id}/foto-selesai`, formData, {
-                            headers: { "Content-Type": "multipart/form-data" }
+                            headers: { "Content-Type": "multipart/form-data" },
+                            onUploadProgress: (progressEvent) => {
+                                if (progressEvent.total) {
+                                    const percent = Math.min(99, Math.round((progressEvent.loaded * 100) / progressEvent.total));
+                                    setQcUploadModal(prev => ({
+                                        ...prev,
+                                        progressPercent: percent,
+                                        uploadedBytes: progressEvent.loaded,
+                                        totalBytes: progressEvent.total
+                                    }));
+                                }
+                            }
                         });
                         if (uploadRes.data?.foto_selesai) {
                             payload.foto_selesai = uploadRes.data.foto_selesai;
                         }
+
+                        setQcUploadModal(prev => ({
+                            ...prev,
+                            progressPercent: 100,
+                            stage: "done",
+                            title: "Berkas QC Berhasil Diunggah!",
+                            subtitle: "Menyimpan verifikasi akhir..."
+                        }));
+                        await new Promise(r => setTimeout(r, 400));
                     } catch (uploadErr) {
                         console.error("Gagal upload foto selesai:", uploadErr);
+                    } finally {
+                        setQcUploadModal(prev => ({ ...prev, isOpen: false }));
                     }
                 } else {
                     payload.foto_selesai = existingUrls;
@@ -3782,6 +3825,9 @@ export default function TiketServisDetail() {
                     }}
                 />
             )}
+
+            {/* Network Media Upload Loading Modal for QC Completion */}
+            <MediaProcessingModal {...qcUploadModal} />
         </div>
     );
 }

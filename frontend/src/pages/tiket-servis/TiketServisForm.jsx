@@ -12,6 +12,7 @@ import {
 import DefectMapperModal from "../../components/DefectMapperModal";
 import { SLA_PENGECEKAN_PACKAGES } from "../../components/SlaBadge";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
+import MediaProcessingModal from "../../components/MediaProcessingModal";
 
 const POPULAR_BRANDS = ["ASUS", "Lenovo", "HP", "Acer", "Dell", "Apple", "MSI", "Toshiba", "Samsung", "Canon", "Epson"];
 const DEVICE_CATEGORIES = ["Laptop", "Desktop PC", "Printer", "Penyimpanan (HDD/SSD)", "Aksesoris (Mouse/Keyboard)", "Lainnya"];
@@ -97,6 +98,15 @@ export default function TiketServisForm() {
     const [perangkats, setPerangkats] = useState([]);
     const [teknisis, setTeknisis] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [uploadModal, setUploadModal] = useState({
+        isOpen: false,
+        stage: "uploading",
+        title: "",
+        subtitle: "",
+        progressPercent: 0,
+        uploadedBytes: 0,
+        totalBytes: 0
+    });
     const [fetching, setFetching] = useState(true);
 
     const [selectedPerangkatDetail, setSelectedPerangkatDetail] = useState(null);
@@ -266,6 +276,19 @@ export default function TiketServisForm() {
 
         setLoading(true);
 
+        const newMediaFiles = fotos.filter(f => f instanceof File);
+        if (newMediaFiles.length > 0) {
+            setUploadModal({
+                isOpen: true,
+                stage: "uploading",
+                title: "Mengunggah Berkas & Mendaftarkan Tiket...",
+                subtitle: `Mentransfer data tiket beserta ${newMediaFiles.length} berkas foto/video ke server.`,
+                progressPercent: 5,
+                uploadedBytes: 0,
+                totalBytes: 0
+            });
+        }
+
         try {
             const formData = new FormData();
             formData.append("perangkat_id", form.perangkat_id);
@@ -297,8 +320,31 @@ export default function TiketServisForm() {
             formData.append("sla_paket", slaPaket);
 
             const res = await api.post("/tiket-servis", formData, {
-                headers: { "Content-Type": "multipart/form-data" }
+                headers: { "Content-Type": "multipart/form-data" },
+                onUploadProgress: (progressEvent) => {
+                    if (progressEvent.total) {
+                        const percent = Math.min(99, Math.round((progressEvent.loaded * 100) / progressEvent.total));
+                        setUploadModal(prev => ({
+                            ...prev,
+                            progressPercent: percent,
+                            uploadedBytes: progressEvent.loaded,
+                            totalBytes: progressEvent.total
+                        }));
+                    }
+                }
             });
+
+            if (newMediaFiles.length > 0) {
+                setUploadModal(prev => ({
+                    ...prev,
+                    progressPercent: 100,
+                    stage: "done",
+                    title: "Tiket & Berkas Berhasil Disimpan!",
+                    subtitle: "Mengarahkan ke halaman rincian tiket..."
+                }));
+                await new Promise(r => setTimeout(r, 450));
+            }
+
             toast.success("Tiket servis berhasil dibuat!");
             if (res.data?.id) {
                 navigate(`/tiket-servis/${res.data.id}`);
@@ -309,6 +355,7 @@ export default function TiketServisForm() {
             toast.error(err.response?.data?.message || "Terjadi kesalahan");
         } finally {
             setLoading(false);
+            setUploadModal(prev => ({ ...prev, isOpen: false }));
         }
     }
 
@@ -1498,6 +1545,9 @@ export default function TiketServisForm() {
                     </div>
                 </div>
             )}
+
+            {/* Network Media Upload Loading Modal */}
+            <MediaProcessingModal {...uploadModal} />
         </div>
     );
 }

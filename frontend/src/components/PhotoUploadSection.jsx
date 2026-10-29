@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { Camera, Upload, Trash2, X, Plus, ZoomIn, Image as ImageIcon, Video, Play, Sparkles } from "lucide-react";
 import CameraCaptureModal from "./CameraCaptureModal";
+import MediaProcessingModal from "./MediaProcessingModal";
 import { isVideo, getMediaUrl, compressImage } from "../utils/mediaUtils";
 
 export default function PhotoUploadSection({
@@ -16,6 +17,20 @@ export default function PhotoUploadSection({
     const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
     const [previewMedia, setPreviewMedia] = useState(null);
     const [isCompressing, setIsCompressing] = useState(false);
+    const [processingModal, setProcessingModal] = useState({
+        isOpen: false,
+        stage: "compressing",
+        title: "",
+        subtitle: "",
+        currentFileIndex: 1,
+        totalFiles: 1,
+        currentFileName: "",
+        currentFileType: "image",
+        currentOriginalSize: 0,
+        currentCompressedSize: 0,
+        progressPercent: 0,
+        items: []
+    });
 
     const fileInputRef = useRef(null);
     const nativeCameraInputRef = useRef(null);
@@ -27,10 +42,55 @@ export default function PhotoUploadSection({
             return;
         }
 
-        // Auto compress if image
+        const isVid = isVideo(newFile);
         let finalFile = newFile;
-        if (newFile instanceof File && !isVideo(newFile)) {
-            finalFile = await compressImage(newFile);
+
+        // Auto compress if image
+        if (newFile instanceof File && !isVid) {
+            setIsCompressing(true);
+            setProcessingModal({
+                isOpen: true,
+                stage: "compressing",
+                title: "Mengoptimalkan Foto Kamera...",
+                subtitle: "Mengompresi hasil foto agar cepat diunggah dan hemat penyimpanan.",
+                currentFileIndex: 1,
+                totalFiles: 1,
+                currentFileName: newFile.name || "foto_kamera.jpg",
+                currentFileType: "image",
+                currentOriginalSize: newFile.size,
+                currentCompressedSize: 0,
+                progressPercent: 40,
+                items: [{
+                    name: newFile.name || "foto_kamera.jpg",
+                    originalSize: newFile.size,
+                    finalSize: null,
+                    isVideo: false,
+                    status: "processing"
+                }]
+            });
+
+            try {
+                finalFile = await compressImage(newFile);
+                setProcessingModal(prev => ({
+                    ...prev,
+                    currentCompressedSize: finalFile.size,
+                    progressPercent: 100,
+                    stage: "done",
+                    items: [{
+                        name: newFile.name || "foto_kamera.jpg",
+                        originalSize: newFile.size,
+                        finalSize: finalFile.size,
+                        isVideo: false,
+                        status: "done"
+                    }]
+                }));
+                await new Promise(r => setTimeout(r, 400));
+            } catch (err) {
+                console.error("Gagal kompresi foto kamera:", err);
+            } finally {
+                setIsCompressing(false);
+                setProcessingModal(prev => ({ ...prev, isOpen: false }));
+            }
         }
 
         const updated = [...photos, finalFile];
@@ -59,36 +119,97 @@ export default function PhotoUploadSection({
         }
 
         setIsCompressing(true);
-        const toastId = toast.loading("Mengoptimalkan & mengompresi media...");
+
+        const initialItems = filesToProcess.map(file => ({
+            name: file.name,
+            originalSize: file.size,
+            finalSize: null,
+            isVideo: isVideo(file),
+            status: "pending"
+        }));
+
+        setProcessingModal({
+            isOpen: true,
+            stage: "compressing",
+            title: "Mengoptimalkan & Mengompresi Media...",
+            subtitle: `Memproses ${filesToProcess.length} berkas foto/video secara otomatis.`,
+            currentFileIndex: 1,
+            totalFiles: filesToProcess.length,
+            currentFileName: filesToProcess[0]?.name || "",
+            currentFileType: isVideo(filesToProcess[0]) ? "video" : "image",
+            currentOriginalSize: filesToProcess[0]?.size || 0,
+            currentCompressedSize: 0,
+            progressPercent: 5,
+            items: initialItems
+        });
 
         try {
             const processedFiles = [];
-            for (const file of filesToProcess) {
-                // If video, check max size 100MB
-                if (isVideo(file)) {
+            for (let i = 0; i < filesToProcess.length; i++) {
+                const file = filesToProcess[i];
+                const isVid = isVideo(file);
+
+                setProcessingModal(prev => ({
+                    ...prev,
+                    currentFileIndex: i + 1,
+                    currentFileName: file.name,
+                    currentFileType: isVid ? "video" : "image",
+                    currentOriginalSize: file.size,
+                    currentCompressedSize: 0,
+                    progressPercent: Math.round(((i) / filesToProcess.length) * 95) + 5,
+                    items: prev.items.map((it, idx) => idx === i ? { ...it, status: "processing" } : it)
+                }));
+
+                if (isVid) {
+                    // If video, check max size 100MB
                     if (file.size > 100 * 1024 * 1024) {
                         toast.error(`Video "${file.name}" melebihi batas 100 MB!`);
+                        setProcessingModal(prev => ({
+                            ...prev,
+                            items: prev.items.map((it, idx) => idx === i ? { ...it, status: "error" } : it)
+                        }));
                         continue;
                     }
                     processedFiles.push(file);
+                    setProcessingModal(prev => ({
+                        ...prev,
+                        items: prev.items.map((it, idx) => idx === i ? { ...it, status: "done", finalSize: file.size } : it)
+                    }));
                 } else {
                     // WhatsApp-style automatic image compression
                     const compressed = await compressImage(file);
                     processedFiles.push(compressed);
+                    setProcessingModal(prev => ({
+                        ...prev,
+                        currentCompressedSize: compressed.size,
+                        items: prev.items.map((it, idx) => idx === i ? { ...it, status: "done", finalSize: compressed.size } : it)
+                    }));
                 }
+
+                // Smooth brief pause so the UI is responsive & visually informative
+                await new Promise(r => setTimeout(r, 70));
             }
+
+            setProcessingModal(prev => ({
+                ...prev,
+                progressPercent: 100,
+                stage: "done",
+                title: "Semua Media Berhasil Dioptimalkan!",
+                subtitle: `${processedFiles.length} berkas siap disimpan.`
+            }));
+
+            await new Promise(r => setTimeout(r, 600));
 
             if (processedFiles.length > 0) {
                 onChange([...photos, ...processedFiles]);
-                toast.success(`${processedFiles.length} media berhasil ditambahkan (terkompresi)!`, { id: toastId });
-            } else {
-                toast.dismiss(toastId);
+                toast.success(`${processedFiles.length} media berhasil dioptimalkan & ditambahkan!`);
             }
         } catch (err) {
             console.error("Gagal memproses media:", err);
-            toast.error("Terjadi kesalahan saat memproses media", { id: toastId });
+            toast.error("Terjadi kesalahan saat memproses media");
         } finally {
             setIsCompressing(false);
+            setProcessingModal(prev => ({ ...prev, isOpen: false }));
             e.target.value = "";
         }
     }
@@ -335,6 +456,9 @@ export default function PhotoUploadSection({
                     </div>
                 </div>
             )}
+
+            {/* Live Media Processing & Compression Loading Modal */}
+            <MediaProcessingModal {...processingModal} />
         </div>
     );
 }
