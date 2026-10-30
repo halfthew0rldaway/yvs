@@ -98,16 +98,16 @@ export default function ManageCustomerBadgesModal({
         >
             {/* Backdrop */}
             <div 
-                className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" 
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop" 
                 onClick={(e) => {
                     e.stopPropagation();
                     onClose();
                 }}
             />
 
-            {/* Modal Dialog: Wide to edge format */}
+            {/* Modal Dialog: Wide to edge format (60fps Spring Modal Surface) */}
             <div 
-                className="relative bg-white rounded-3xl shadow-2xl max-w-4xl lg:max-w-5xl xl:max-w-6xl w-full flex flex-col overflow-hidden z-10 border border-slate-200 animate-fadeIn my-auto max-h-[92vh] whitespace-normal text-slate-800"
+                className="relative bg-white rounded-3xl shadow-2xl max-w-4xl lg:max-w-5xl xl:max-w-6xl w-full flex flex-col overflow-hidden z-10 border border-slate-200 modal-surface my-auto max-h-[92vh] whitespace-normal text-slate-800"
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
             >

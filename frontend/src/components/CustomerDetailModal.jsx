@@ -90,12 +90,12 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
             {/* Backdrop */}
             <div 
-                className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" 
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
                 onClick={onClose}
             ></div>
 
-            {/* Modal Dialog */}
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden z-10 border border-slate-200 animate-fadeIn">
+            {/* Modal Dialog (60fps Spring Modal Surface) */}
+            <div className="relative bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden z-10 border border-slate-200 modal-surface">
                 {/* Header */}
                 <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">

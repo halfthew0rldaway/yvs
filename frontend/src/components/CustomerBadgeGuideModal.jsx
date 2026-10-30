@@ -16,16 +16,16 @@ export default function CustomerBadgeGuideModal({ isOpen, onClose }) {
         >
             {/* Backdrop */}
             <div 
-                className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity" 
+                className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs modal-backdrop" 
                 onClick={(e) => {
                     e.stopPropagation();
                     onClose();
                 }}
             />
 
-            {/* Modal Dialog */}
+            {/* Modal Dialog (60fps Spring Modal Surface) */}
             <div 
-                className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden z-10 border border-slate-200 animate-fadeIn whitespace-normal text-slate-800"
+                className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden z-10 border border-slate-200 modal-surface whitespace-normal text-slate-800"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

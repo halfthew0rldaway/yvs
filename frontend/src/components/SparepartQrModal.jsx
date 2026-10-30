@@ -85,7 +85,13 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
     const distriName = sparepart.distributor_nama || sparepart.supplier?.nama || "-";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+            {/* 60fps Hardware-Accelerated Backdrop */}
+            <div 
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop no-print" 
+                onClick={onClose} 
+            />
+
             {/* Print Stylesheet injection */}
             <style>{`
                 @media print {
@@ -117,7 +123,7 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                 }
             `}</style>
 
-            <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+            <div className="relative bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] modal-surface z-10">
                 
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">

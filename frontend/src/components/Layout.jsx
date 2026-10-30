@@ -368,7 +368,7 @@ export default function Layout({ children }) {
                                 </button>
 
                                 {isOpen && (
-                                    <div className="space-y-0.5 mt-1 pl-2.5 ml-2 border-l border-slate-200/90 animate-fade-in">
+                                    <div className="space-y-0.5 mt-1 pl-2.5 ml-2 border-l border-slate-200/90 accordion-surface">
                                         {group.items.map((item) => {
                                             const Icon = item.icon;
                                             const isActive = location.pathname.startsWith(item.path);

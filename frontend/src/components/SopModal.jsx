@@ -7,8 +7,14 @@ export default function SopModal({ isOpen, onClose }) {
     const [activeTab, setActiveTab] = useState("motto");
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-3xl w-full flex flex-col max-h-[92vh] overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            {/* 60fps Hardware-Accelerated Backdrop */}
+            <div 
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
+                onClick={onClose} 
+            />
+
+            <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200 max-w-3xl w-full flex flex-col max-h-[92vh] overflow-hidden modal-surface z-10">
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/70">
                     <div className="flex items-center gap-3">

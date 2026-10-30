@@ -983,11 +983,11 @@ export default function SparepartList() {
             {restockModalTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                     <div 
-                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
                         onClick={() => !submittingRestock && setRestockModalTarget(null)}
                     ></div>
 
-                    <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden z-10 border border-slate-200">
+                    <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden z-10 border border-slate-200 modal-surface">
                         <div className="px-6 py-4.5 bg-white text-slate-900 border-b border-slate-200 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
@@ -1145,11 +1145,11 @@ export default function SparepartList() {
             {historyModalTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                     <div 
-                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
                         onClick={() => setHistoryModalTarget(null)}
                     ></div>
 
-                    <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden z-10 border border-slate-200">
+                    <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden z-10 border border-slate-200 modal-surface">
                         <div className="px-6 py-4.5 bg-white text-slate-900 border-b border-slate-200 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">

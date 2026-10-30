@@ -54,12 +54,12 @@ export default function RevisiAccModal({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
             {/* Backdrop */}
             <div 
-                className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity" 
+                className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs modal-backdrop" 
                 onClick={handleClose}
             />
 
-            {/* Modal Dialog */}
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full flex flex-col overflow-hidden z-10 border border-rose-200 animate-fadeIn">
+            {/* Modal Dialog (60fps Spring Modal Surface) */}
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full flex flex-col overflow-hidden z-10 border border-rose-200 modal-surface">
                 {/* Header */}
                 <div className="px-5 sm:px-6 py-4.5 bg-rose-50/80 border-b border-rose-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">

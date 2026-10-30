@@ -28,6 +28,15 @@ export default function KlaimGaransiModal({
     const [kelengkapan, setKelengkapan] = useState(() => tiket?.kelengkapan || "");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    React.useEffect(() => {
+        if (!isOpen) return;
+        function handleKeyDown(e) {
+            if (e.key === "Escape" && !isSubmitting) onClose?.();
+        }
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, isSubmitting, onClose]);
+
     if (!isOpen || !tiket) return null;
 
     const warrantyInfo = tiket.warranty_status || {};
@@ -91,8 +100,15 @@ export default function KlaimGaransiModal({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            {/* 60fps Hardware-Accelerated Backdrop */}
+            <div 
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop"
+                onClick={() => !isSubmitting && onClose?.()}
+            />
+
+            {/* 60fps Spring Modal Surface */}
+            <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col my-8 modal-surface z-10">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 p-6 text-white relative">
                     <button

@@ -1820,7 +1820,7 @@ export default function TiketServisDetail() {
                                 </div>
 
                                 {isIntakeChecklistOpen && (
-                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-1.5 bg-slate-50/70 p-3 rounded-xl border border-slate-200 text-xs mt-2 transition-all">
+                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-1.5 bg-slate-50/70 p-3 rounded-xl border border-slate-200 text-xs mt-2 transition-all accordion-surface">
                                         {CHECKLIST_ITEMS.map(item => {
                                             const val = getChecklistValue(tiket.checklist_intake, item.key, item.legacyKey);
                                             const ItemIcon = item.Icon;
@@ -2696,7 +2696,7 @@ export default function TiketServisDetail() {
                     </div>
 
                     {isSopOpen && (
-                        <div className="p-5 pt-0 border-t border-slate-100">
+                        <div className="p-5 pt-0 border-t border-slate-100 accordion-surface">
                             {isEditingSopPermissions ? (
                                 <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 mt-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -2975,7 +2975,7 @@ export default function TiketServisDetail() {
                     </div>
 
                     {isHistoryOpen && (
-                        <div className="p-5 pt-0 border-t border-slate-100">
+                        <div className="p-5 pt-0 border-t border-slate-100 accordion-surface">
                             {tiket.perangkat?.tiket_servis && tiket.perangkat.tiket_servis.length > 0 ? (
                                 <div className="space-y-3 mt-4">
                                     {tiket.perangkat.tiket_servis.map((hist) => (
@@ -3096,7 +3096,7 @@ export default function TiketServisDetail() {
                     </div>
 
                     {isWikiOpen && (
-                        <div className="p-5 pt-0 border-t border-slate-100">
+                        <div className="p-5 pt-0 border-t border-slate-100 accordion-surface">
                             {loadingWikiSuggestions ? (
                                 <div className="py-6 flex items-center justify-center gap-2 text-xs text-slate-400 mt-4">
                                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-500 border-t-transparent"></div>
@@ -3210,7 +3210,7 @@ export default function TiketServisDetail() {
                     </div>
 
                     {isQcOpen && (
-                        <div className="p-5 pt-0 border-t border-slate-100">
+                        <div className="p-5 pt-0 border-t border-slate-100 accordion-surface">
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 text-xs my-4">
                                 {QC_CHECKLIST_ITEMS.map(item => {
                                     const isChecked = getChecklistValue(tiket.checklist_qc, item.key, item.legacyKey);

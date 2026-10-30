@@ -1,17 +1,29 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { AlertTriangle, X } from "lucide-react";
 
 export default function ConfirmModal({ isOpen, title, message, onConfirm, onCancel, confirmText = "OK", cancelText = "Batal", isDanger = false }) {
+    useEffect(() => {
+        if (!isOpen) return;
+        function handleKeyDown(e) {
+            if (e.key === "Escape") onCancel?.();
+        }
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, onCancel]);
+
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 sm:p-0">
-            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={onCancel}></div>
+            <div 
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
+                onClick={onCancel}
+            ></div>
             
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 overflow-hidden transform transition-all">
+            <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 overflow-hidden modal-surface border border-slate-100">
                 <button 
                     onClick={onCancel}
-                    className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 >
                     <X className="w-5 h-5" />
                 </button>

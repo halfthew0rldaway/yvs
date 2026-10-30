@@ -64,12 +64,12 @@ export default function MediaProcessingModal({
 
     return (
         <div 
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs modal-backdrop"
             role="dialog"
             aria-modal="true"
         >
             <div 
-                className="relative bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden p-6 sm:p-7 animate-in zoom-in-95 duration-200"
+                className="relative bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden p-6 sm:p-7 modal-surface"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Decorative Top Accent Bar */}

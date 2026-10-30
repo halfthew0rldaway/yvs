@@ -22,7 +22,7 @@ export default function TableContainer({
         <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col w-full max-w-full ${className}`}>
             {/* Scrollable Table Area with Contained Horizontal & Vertical Momentum Scroll */}
             <div 
-                className={`w-full max-w-full overflow-x-auto overflow-y-auto ${minHeight} ${maxHeight} custom-scrollbar relative overscroll-x-contain`}
+                className={`w-full max-w-full overflow-x-auto overflow-y-auto ${minHeight} ${maxHeight} custom-scrollbar relative overscroll-x-contain gpu-layer`}
                 style={{ WebkitOverflowScrolling: "touch" }}
             >
                 {children}

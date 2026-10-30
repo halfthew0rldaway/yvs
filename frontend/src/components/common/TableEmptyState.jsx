@@ -12,7 +12,7 @@ export default function TableEmptyState({
     onAction,
 }) {
     return (
-        <div className="text-center py-16 px-4">
+        <div className="text-center py-16 px-4 animate-fade-in gpu-layer">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-100 mb-3 text-slate-400">
                 <Icon className="w-7 h-7" />
             </div>

@@ -75,7 +75,7 @@ function CustomerBadges({
                                             setIsManageOpen(true);
                                         }
                                     }}
-                                    className={`inline-flex items-center justify-center transition-all cursor-pointer rounded-lg border shadow-2xs hover:scale-105 active:scale-95 ${
+                                    className={`inline-flex items-center justify-center transition-all duration-150 ease-spring-out cursor-pointer rounded-lg border shadow-2xs hover:scale-110 active:scale-95 gpu-layer ${
                                         size === "compact"
                                             ? "w-6 h-6 text-[10px]"
                                             : size === "large"
@@ -101,7 +101,7 @@ function CustomerBadges({
                                         setIsManageOpen(true);
                                     }
                                 }}
-                                className={`group relative inline-flex items-center gap-1 font-semibold rounded-full border transition-all cursor-pointer select-none hover:opacity-90 ${
+                                className={`group relative inline-flex items-center gap-1 font-semibold rounded-full border transition-all duration-150 ease-spring-out cursor-pointer select-none hover:opacity-90 hover:scale-[1.02] active:scale-95 gpu-layer ${
                                     size === "compact" 
                                         ? "px-2 py-0.5 text-[10px]" 
                                         : size === "large"

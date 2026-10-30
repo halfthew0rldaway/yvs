@@ -39,7 +39,13 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
         : "-";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            {/* 60fps Hardware-Accelerated Backdrop */}
+            <div 
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop no-print" 
+                onClick={onClose} 
+            />
+
             {/* Print Stylesheet injection */}
             <style>{`
                 @media print {
@@ -68,7 +74,7 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                 }
             `}</style>
 
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-8">
+            <div className="relative bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-8 modal-surface z-10">
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <div className="flex items-center gap-2.5">

@@ -18,6 +18,15 @@ export default function HireApplicantModal({ isOpen, onClose, applicant, onSucce
         }
     }, [applicant, isOpen]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        function handleKeyDown(e) {
+            if (e.key === "Escape" && !submitting) onClose();
+        }
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, submitting, onClose]);
+
     if (!isOpen || !applicant) return null;
 
     const handleSubmit = async (e) => {
@@ -48,8 +57,15 @@ export default function HireApplicantModal({ isOpen, onClose, applicant, onSucce
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-            <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            {/* 60fps Hardware-Accelerated Backdrop */}
+            <div 
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop"
+                onClick={() => !submitting && onClose()}
+            />
+
+            {/* 60fps Spring Modal Surface */}
+            <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[90vh] modal-surface z-10">
                 
                 {/* Header */}
                 <div className="px-5 sm:px-6 py-4 border-b border-slate-100 bg-emerald-50/70 flex items-center justify-between">

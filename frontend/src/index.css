@@ -80,6 +80,80 @@
   .safe-bottom-nav {
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   }
+
+  /* 60fps GPU Hardware-Accelerated Compositing & Spring Transitions */
+  .gpu-layer {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    will-change: transform, opacity;
+  }
+
+  .modal-backdrop {
+    will-change: opacity;
+    animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .modal-surface {
+    will-change: transform, opacity;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    animation: modalEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .popover-surface {
+    will-change: transform, opacity;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    animation: popoverEnter 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .accordion-surface {
+    will-change: transform, opacity;
+    animation: accordionDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Compatibility aliases for shadcn-style animation classes */
+  .animate-in {
+    animation-duration: 200ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+    will-change: transform, opacity;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+
+  .fade-in {
+    animation-name: fadeIn;
+  }
+
+  .zoom-in-95 {
+    animation-name: modalEnter;
+  }
+
+  .zoom-in-50 {
+    animation-name: scaleUp;
+  }
+
+  .slide-in-from-bottom-2, .slide-in-from-bottom-4 {
+    animation-name: slideUp;
+  }
+
+  /* Content-visibility optimization for high-density tables & offscreen cards */
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 450px;
+  }
+}
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @media print {

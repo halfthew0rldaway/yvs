@@ -200,13 +200,13 @@ export default function CameraScannerModal({
 
     return (
         <div 
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs modal-backdrop"
             role="dialog"
             aria-modal="true"
             onClick={onClose}
         >
             <div 
-                className="relative bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+                className="relative bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden flex flex-col modal-surface"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -240,10 +240,8 @@ export default function CameraScannerModal({
                     {isScanning && !scanError && (
                         <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
                             <div className="relative w-56 h-56 border-2 border-blue-400/80 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden">
-                                {/* Animated Laser Scanning Line */}
-                                <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_8px_#38bdf8] animate-pulse transition-all duration-700" 
-                                     style={{ animation: "scanLine 2s ease-in-out infinite" }}
-                                />
+                                {/* Animated Laser Scanning Line (60fps GPU Composited) */}
+                                <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_10px_#38bdf8] animate-laser-scan gpu-layer" />
                                 {/* Target Corner Brackets */}
                                 <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-white rounded-tl" />
                                 <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-white rounded-tr" />
