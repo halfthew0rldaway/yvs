@@ -66,6 +66,7 @@ async function getOverviewStats(req, res) {
         let diterima = 0;
         let ditolak = 0;
         let activeJobsCount = 0;
+        let sumberStats = [];
 
         try {
             totalApplicants = await prisma.applicant.count();
@@ -76,6 +77,16 @@ async function getOverviewStats(req, res) {
             diterima = await prisma.applicant.count({ where: { status: "Diterima" } });
             ditolak = await prisma.applicant.count({ where: { status: "Ditolak" } });
             activeJobsCount = await prisma.jobPosting.count({ where: { status: "Aktif" } });
+
+            const sumberGroup = await prisma.applicant.groupBy({
+                by: ["sumber_lamaran"],
+                _count: { id: true }
+            }).catch(() => []);
+
+            sumberStats = (sumberGroup || []).map(g => ({
+                sumber: g.sumber_lamaran || "Walk-in",
+                total: g._count?.id || 0
+            })).sort((a, b) => b.total - a.total);
         } catch (dbErr) {
             // In-memory defaults
             activeJobsCount = DEFAULT_JOBS.length;
@@ -91,7 +102,8 @@ async function getOverviewStats(req, res) {
                 trial_wawancara: trialWawancara,
                 diterima: diterima,
                 ditolak: ditolak,
-                lowongan_aktif: activeJobsCount
+                lowongan_aktif: activeJobsCount,
+                sumber_stats: sumberStats
             }
         });
     } catch (error) {
@@ -236,7 +248,7 @@ async function deleteJobPosting(req, res) {
 // GET all applicants
 async function getApplicants(req, res) {
     try {
-        const { job_id, status, search } = req.query;
+        const { job_id, status, search, sumber } = req.query;
         const where = {};
 
         if (job_id && job_id !== "all") {
@@ -247,13 +259,18 @@ async function getApplicants(req, res) {
             where.status = status;
         }
 
+        if (sumber && sumber !== "all") {
+            where.sumber_lamaran = sumber;
+        }
+
         if (search && search.trim() !== "") {
             const q = search.trim();
             where.OR = [
                 { nama_lengkap: { contains: q } },
                 { nomor_telepon: { contains: q } },
                 { email: { contains: q } },
-                { pendidikan: { contains: q } }
+                { pendidikan: { contains: q } },
+                { sumber_lamaran: { contains: q } }
             ];
         }
 
@@ -315,7 +332,7 @@ async function getApplicantById(req, res) {
 // CREATE applicant (Walk-in or Manual entry by Admin)
 async function createApplicant(req, res) {
     try {
-        const { job_posting_id, nama_lengkap, email, nomor_telepon, alamat, pendidikan, pengalaman_thn, resume_url, portofolio_url, status } = req.body;
+        const { job_posting_id, nama_lengkap, email, nomor_telepon, alamat, pendidikan, pengalaman_thn, resume_url, portofolio_url, status, sumber_lamaran } = req.body;
 
         if (!job_posting_id || !nama_lengkap || !nomor_telepon) {
             return res.status(400).json({ success: false, message: "Posisi lowongan, nama lengkap, dan nomor WhatsApp/telepon wajib diisi" });
@@ -332,6 +349,7 @@ async function createApplicant(req, res) {
                 pengalaman_thn: parseInt(pengalaman_thn) || 0,
                 resume_url: resume_url?.trim() || null,
                 portofolio_url: portofolio_url?.trim() || null,
+                sumber_lamaran: (sumber_lamaran || "Walk-in").trim(),
                 status: status || "Baru Masuk"
             },
             include: {
@@ -354,7 +372,7 @@ async function createApplicant(req, res) {
 async function updateApplicant(req, res) {
     try {
         const id = parseInt(req.params.id);
-        const { nama_lengkap, email, nomor_telepon, alamat, pendidikan, pengalaman_thn, status, resume_url, portofolio_url } = req.body;
+        const { nama_lengkap, email, nomor_telepon, alamat, pendidikan, pengalaman_thn, status, resume_url, portofolio_url, sumber_lamaran } = req.body;
 
         const updated = await prisma.applicant.update({
             where: { id },
@@ -367,7 +385,8 @@ async function updateApplicant(req, res) {
                 ...(pengalaman_thn !== undefined && { pengalaman_thn: parseInt(pengalaman_thn) || 0 }),
                 ...(status && { status }),
                 ...(resume_url !== undefined && { resume_url: resume_url?.trim() || null }),
-                ...(portofolio_url !== undefined && { portofolio_url: portofolio_url?.trim() || null })
+                ...(portofolio_url !== undefined && { portofolio_url: portofolio_url?.trim() || null }),
+                ...(sumber_lamaran !== undefined && { sumber_lamaran: (sumber_lamaran || "Walk-in").trim() })
             },
             include: { job_posting: true }
         });
@@ -386,7 +405,7 @@ async function updateApplicant(req, res) {
 async function evaluateApplicant(req, res) {
     try {
         const id = parseInt(req.params.id);
-        const { skor_logika, skor_teknis, skor_attitude, skor_sop, catatan_evaluasi, status } = req.body;
+        const { skor_logika, skor_teknis, skor_attitude, skor_sop, catatan_evaluasi, status, sumber_lamaran } = req.body;
 
         const updated = await prisma.applicant.update({
             where: { id },
@@ -396,7 +415,8 @@ async function evaluateApplicant(req, res) {
                 ...(skor_attitude !== undefined && { skor_attitude: Math.max(0, Math.min(100, parseInt(skor_attitude) || 0)) }),
                 ...(skor_sop !== undefined && { skor_sop: Math.max(0, Math.min(100, parseInt(skor_sop) || 0)) }),
                 ...(catatan_evaluasi !== undefined && { catatan_evaluasi: catatan_evaluasi?.trim() || null }),
-                ...(status && { status })
+                ...(status && { status }),
+                ...(sumber_lamaran !== undefined && { sumber_lamaran: (sumber_lamaran || "Walk-in").trim() })
             },
             include: { job_posting: true }
         });

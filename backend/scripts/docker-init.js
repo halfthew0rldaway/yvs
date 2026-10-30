@@ -54,6 +54,11 @@ async function main() {
                 await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN tgl_revisi_acc DATETIME NULL;`).catch(() => {});
             });
         }
+        for (const tbl of ["Applicant", "applicant"]) {
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS sumber_lamaran VARCHAR(100) DEFAULT 'Walk-in';`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN sumber_lamaran VARCHAR(100) DEFAULT 'Walk-in';`).catch(() => {});
+            });
+        }
     } catch (e) {
         // Kolom sudah ada atau variasi casing diabaikan
     }

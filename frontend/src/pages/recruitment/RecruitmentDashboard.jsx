@@ -6,7 +6,6 @@ import {
     UserPlus, 
     Search, 
     Plus, 
-    Filter, 
     CheckCircle2, 
     Clock, 
     ChevronRight, 
@@ -25,17 +24,19 @@ import {
     Edit3,
     Share2,
     ExternalLink,
-    Link2
+    Link2,
+    Compass,
+    RotateCcw
 } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
 
-import JobPostingModal from "./JobPostingModal";
 import AddApplicantModal from "./AddApplicantModal";
 import ApplicantDetailModal from "./ApplicantDetailModal";
 import HireApplicantModal from "./HireApplicantModal";
 import ShareJobModal from "./ShareJobModal";
+import { RECRUITMENT_SOURCES } from "./jobPresets";
 
 const STATUS_TABS = [
     { id: "all", label: "Semua Status" },
@@ -72,14 +73,13 @@ export default function RecruitmentDashboard() {
         trial_wawancara: 0,
         diterima: 0,
         ditolak: 0,
-        lowongan_aktif: 0
+        lowongan_aktif: 0,
+        sumber_stats: []
     });
 
     // Jobs state
     const [jobs, setJobs] = useState([]);
     const [loadingJobs, setLoadingJobs] = useState(true);
-    const [isJobModalOpen, setIsJobModalOpen] = useState(false);
-    const [jobToEdit, setJobToEdit] = useState(null);
 
     // Applicants state
     const [applicants, setApplicants] = useState([]);
@@ -87,6 +87,7 @@ export default function RecruitmentDashboard() {
     const [search, setSearch] = useState("");
     const [selectedJobFilter, setSelectedJobFilter] = useState("all");
     const [selectedStatusFilter, setSelectedStatusFilter] = useState("all");
+    const [selectedSourceFilter, setSelectedSourceFilter] = useState("all");
 
     // Modals
     const [isAddApplicantOpen, setIsAddApplicantOpen] = useState(false);
@@ -101,8 +102,8 @@ export default function RecruitmentDashboard() {
     }, []);
 
     useEffect(() => {
-        fetchApplicants();
-    }, [selectedJobFilter, selectedStatusFilter]);
+        fetchApplicants(search, selectedJobFilter, selectedStatusFilter, selectedSourceFilter);
+    }, [selectedJobFilter, selectedStatusFilter, selectedSourceFilter]);
 
     async function fetchStats() {
         try {
@@ -127,13 +128,19 @@ export default function RecruitmentDashboard() {
         }
     }
 
-    async function fetchApplicants(searchQuery = search) {
+    async function fetchApplicants(
+        searchQuery = search,
+        targetJob = selectedJobFilter,
+        targetStatus = selectedStatusFilter,
+        targetSource = selectedSourceFilter
+    ) {
         try {
             setLoadingApplicants(true);
             const params = {};
             if (searchQuery && searchQuery.trim() !== "") params.search = searchQuery.trim();
-            if (selectedJobFilter !== "all") params.job_id = selectedJobFilter;
-            if (selectedStatusFilter !== "all") params.status = selectedStatusFilter;
+            if (targetJob !== "all") params.job_id = targetJob;
+            if (targetStatus !== "all") params.status = targetStatus;
+            if (targetSource !== "all") params.sumber = targetSource;
 
             const res = await api.get("/recruitment/applicants", { params });
             setApplicants(res.data?.data || []);
@@ -149,10 +156,31 @@ export default function RecruitmentDashboard() {
         fetchApplicants();
     }
 
+    function handleResetFilters() {
+        setSearch("");
+        setSelectedJobFilter("all");
+        setSelectedStatusFilter("all");
+        setSelectedSourceFilter("all");
+        fetchApplicants("", "all", "all", "all");
+    }
+
     const formatRupiah = (val) => {
         if (!val) return "0";
         return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val);
     };
+
+    // Calculate source counts map from stats
+    const sourceCounts = (stats.sumber_stats || []).reduce((acc, item) => {
+        acc[item.sumber] = item.count;
+        return acc;
+    }, {});
+
+    const hasActiveFilters = Boolean(
+        search.trim() || 
+        selectedJobFilter !== "all" || 
+        selectedStatusFilter !== "all" || 
+        selectedSourceFilter !== "all"
+    );
 
     return (
         <div className="space-y-6">
@@ -173,7 +201,7 @@ export default function RecruitmentDashboard() {
                             </span>
                         </div>
                         <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                            Pipeline seleksi teknisi & staf berdasarkan standar Position Design dan Uji Logika Troubleshooting.
+                            Pipeline seleksi teknisi & staf berdasarkan standar Position Design, Uji Logika Troubleshooting, dan Pelacakan Saluran Pelamar.
                         </p>
                     </div>
                 </div>
@@ -185,7 +213,7 @@ export default function RecruitmentDashboard() {
                         className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs flex items-center gap-2 transition-colors cursor-pointer"
                     >
                         <UserPlus className="w-4 h-4 text-slate-600" />
-                        <span>Catat Pelamar Walk-in</span>
+                        <span>Catat Pelamar Baru</span>
                     </button>
                     <button
                         type="button"
@@ -275,6 +303,72 @@ export default function RecruitmentDashboard() {
             {/* ======================================================== */}
             {activeTab === "pipeline" && (
                 <div className="space-y-4">
+
+                    {/* Sebaran Sumber Pelamar (Channel Origin Tracker) */}
+                    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Compass className="w-4 h-4 text-blue-600" />
+                                <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                    Sebaran Saluran Pelamar (Dari Mana Saja Pelamar Masuk?)
+                                </span>
+                            </div>
+                            <span className="text-3xs text-slate-400">
+                                Klik salah satu untuk memfilter pipeline
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedSourceFilter("all")}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer border ${
+                                    selectedSourceFilter === "all"
+                                        ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                                }`}
+                            >
+                                <span>Semua Saluran</span>
+                                <span className={`px-1.5 py-0.2 rounded-full text-3xs font-bold ${
+                                    selectedSourceFilter === "all" ? "bg-slate-700 text-white" : "bg-slate-200 text-slate-700"
+                                }`}>
+                                    {stats.total_pelamar}
+                                </span>
+                            </button>
+
+                            {RECRUITMENT_SOURCES.map((source) => {
+                                const count = sourceCounts[source.id] || 0;
+                                const isSelected = selectedSourceFilter === source.id;
+
+                                return (
+                                    <button
+                                        key={source.id}
+                                        type="button"
+                                        onClick={() => setSelectedSourceFilter(isSelected ? "all" : source.id)}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer border ${
+                                            isSelected
+                                                ? "bg-blue-600 text-white border-blue-600 shadow-xs ring-2 ring-blue-500/20"
+                                                : count > 0
+                                                    ? `${source.color} hover:opacity-90 shadow-2xs`
+                                                    : "bg-slate-50 text-slate-400 border-slate-200/80 hover:bg-slate-100"
+                                        }`}
+                                    >
+                                        <span>{source.short}</span>
+                                        <span className={`px-1.5 py-0.2 rounded-full text-3xs font-bold ${
+                                            isSelected
+                                                ? "bg-blue-700 text-white"
+                                                : count > 0
+                                                    ? "bg-white/80 text-current"
+                                                    : "bg-slate-200/60 text-slate-500"
+                                        }`}>
+                                            {count}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
                     {/* Search & Filters */}
                     <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
                         <div className="flex flex-col md:flex-row items-center gap-3">
@@ -282,7 +376,7 @@ export default function RecruitmentDashboard() {
                                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
                                     type="text"
-                                    placeholder="Cari nama kandidat, nomor telepon WhatsApp, atau pendidikan..."
+                                    placeholder="Cari nama kandidat, nomor WhatsApp, pendidikan, atau sumber..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -292,7 +386,7 @@ export default function RecruitmentDashboard() {
                                         type="button"
                                         onClick={() => {
                                             setSearch("");
-                                            fetchApplicants("");
+                                            fetchApplicants("", selectedJobFilter, selectedStatusFilter, selectedSourceFilter);
                                         }}
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                                     >
@@ -301,17 +395,42 @@ export default function RecruitmentDashboard() {
                                 )}
                             </form>
 
-                            <div className="flex items-center gap-2 w-full md:w-auto">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full md:w-auto">
                                 <select
                                     value={selectedJobFilter}
                                     onChange={(e) => setSelectedJobFilter(e.target.value)}
-                                    className="w-full md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full sm:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                                 >
                                     <option value="all">Semua Posisi Lowongan</option>
                                     {jobs.map(j => (
                                         <option key={j.id} value={j.id}>{j.judul_posisi}</option>
                                     ))}
                                 </select>
+
+                                <select
+                                    value={selectedSourceFilter}
+                                    onChange={(e) => setSelectedSourceFilter(e.target.value)}
+                                    className="w-full sm:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                >
+                                    <option value="all">Semua Saluran (Sumber)</option>
+                                    {RECRUITMENT_SOURCES.map(src => (
+                                        <option key={src.id} value={src.id}>
+                                            {src.label} {sourceCounts[src.id] ? `(${sourceCounts[src.id]})` : ""}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {hasActiveFilters && (
+                                    <button
+                                        type="button"
+                                        onClick={handleResetFilters}
+                                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                                        title="Reset semua filter"
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <span>Reset</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -347,14 +466,31 @@ export default function RecruitmentDashboard() {
                             </div>
                             <h3 className="text-sm font-bold text-slate-800">Tidak ada pelamar pada filter ini</h3>
                             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                                Belum ada berkas pelamar terdaftar. Catat pelamar walk-in atau sesuaikan filter status di atas.
+                                Belum ada berkas pelamar terdaftar pada kriteria ini. Ubah saluran/posisi atau catat pelamar baru.
                             </p>
+                            {hasActiveFilters && (
+                                <button
+                                    type="button"
+                                    onClick={handleResetFilters}
+                                    className="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5" />
+                                    <span>Reset Semua Filter</span>
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {applicants.map((app) => {
                                 const avgScore = Math.round((Number(app.skor_logika || 0) + Number(app.skor_teknis || 0) + Number(app.skor_attitude || 0) + Number(app.skor_sop || 0)) / 4);
                                 const hasEvaluation = avgScore > 0;
+
+                                const matchedSource = RECRUITMENT_SOURCES.find(s => s.id === app.sumber_lamaran) || {
+                                    id: app.sumber_lamaran || "Walk-in",
+                                    label: app.sumber_lamaran || "Walk-in",
+                                    short: app.sumber_lamaran || "Walk-in",
+                                    color: "bg-slate-100 text-slate-700 border-slate-200"
+                                };
 
                                 return (
                                     <div
@@ -363,10 +499,16 @@ export default function RecruitmentDashboard() {
                                         className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all cursor-pointer flex flex-col justify-between group"
                                     >
                                         <div className="space-y-3">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="px-2 py-0.5 rounded-md text-2xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 truncate max-w-[170px]">
-                                                    {app.job_posting?.judul_posisi || "Posisi"}
-                                                </span>
+                                            <div className="flex flex-wrap items-center justify-between gap-1.5">
+                                                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                                    <span className="px-2 py-0.5 rounded-md text-2xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 truncate max-w-[130px]">
+                                                        {app.job_posting?.judul_posisi || "Posisi"}
+                                                    </span>
+                                                    <span className={`px-2 py-0.5 rounded-md text-3xs font-semibold border ${matchedSource.color} flex items-center gap-1`}>
+                                                        <Compass className="w-2.5 h-2.5 opacity-70" />
+                                                        <span>{matchedSource.short}</span>
+                                                    </span>
+                                                </div>
                                                 <span className={`px-2 py-0.5 rounded-md text-3xs font-bold border shrink-0 ${STATUS_BADGES[app.status] || STATUS_BADGES["Baru Masuk"]}`}>
                                                     {app.status}
                                                 </span>
@@ -536,19 +678,6 @@ export default function RecruitmentDashboard() {
             )}
 
             {/* Modals */}
-            <JobPostingModal
-                isOpen={isJobModalOpen}
-                onClose={() => {
-                    setIsJobModalOpen(false);
-                    setJobToEdit(null);
-                }}
-                jobToEdit={jobToEdit}
-                onSuccess={() => {
-                    fetchJobs();
-                    fetchStats();
-                }}
-            />
-
             <AddApplicantModal
                 isOpen={isAddApplicantOpen}
                 onClose={() => setIsAddApplicantOpen(false)}

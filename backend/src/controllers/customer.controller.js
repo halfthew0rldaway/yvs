@@ -45,10 +45,12 @@ function enrichCustomerWithBadges(c) {
 // Mengambil seluruh data customer dengan pencarian dan paginasi
 async function getAll(req, res) {
     try {
-        const { search } = req.query;
+        const { search, tipe_kepribadian, has_perangkat, sortBy } = req.query;
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
 
         let where = {};
+        const andList = [];
+
         if (search) {
             const trimmedSearch = search.trim();
             const normalizedPhone = normalizePhone(trimmedSearch);
@@ -59,7 +61,34 @@ async function getAll(req, res) {
             if (normalizedPhone && normalizedPhone !== trimmedSearch) {
                 orList.push({ nomor_telepon: { contains: normalizedPhone } });
             }
-            where = { OR: orList };
+            andList.push({ OR: orList });
+        }
+
+        if (tipe_kepribadian && tipe_kepribadian !== "all") {
+            andList.push({ tipe_kepribadian: tipe_kepribadian });
+        }
+
+        if (has_perangkat === "yes") {
+            andList.push({ perangkat: { some: {} } });
+        } else if (has_perangkat === "no") {
+            andList.push({ perangkat: { none: {} } });
+        }
+
+        if (andList.length > 0) {
+            where = { AND: andList };
+        }
+
+        let orderBy = [{ created_at: "desc" }, { id: "desc" }];
+        if (sortBy === "created_at_asc") {
+            orderBy = [{ created_at: "asc" }, { id: "asc" }];
+        } else if (sortBy === "nama_asc") {
+            orderBy = [{ nama: "asc" }, { id: "asc" }];
+        } else if (sortBy === "nama_desc") {
+            orderBy = [{ nama: "desc" }, { id: "desc" }];
+        } else if (sortBy === "perangkat_desc") {
+            orderBy = [{ perangkat: { _count: "desc" } }, { id: "desc" }];
+        } else if (sortBy === "perangkat_asc") {
+            orderBy = [{ perangkat: { _count: "asc" } }, { id: "desc" }];
         }
 
         const includeCustomerRelations = {
@@ -78,7 +107,7 @@ async function getAll(req, res) {
             const customers = await prisma.customer.findMany({
                 where,
                 include: includeCustomerRelations,
-                orderBy: [{ created_at: "desc" }, { id: "desc" }],
+                orderBy,
             });
             const enriched = customers.map(enrichCustomerWithBadges);
             return res.json(enriched);
@@ -89,7 +118,7 @@ async function getAll(req, res) {
             prisma.customer.findMany({
                 where,
                 include: includeCustomerRelations,
-                orderBy: [{ created_at: "desc" }, { id: "desc" }],
+                orderBy,
                 skip,
                 take: limit,
             }),

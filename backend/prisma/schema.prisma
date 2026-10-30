@@ -516,6 +516,7 @@ model Applicant {
   pengalaman_thn   Int?        @default(0)
   resume_url       String?     @db.VarChar(255)
   portofolio_url   String?     @db.VarChar(255)
+  sumber_lamaran   String?     @default("Walk-in") @db.VarChar(100) // Walk-in, Instagram, JobStreet, LinkedIn, Glints, KitaLulus, WhatsApp, Rekomendasi, Website, Lainnya
   status           String      @default("Baru Masuk") // Baru Masuk, Screening, Tes Logika & Teknis, Wawancara / Trial, Diterima, Ditolak
   
   // Rubrik Evaluasi KEOS (Skor 0 - 100)
@@ -536,6 +537,7 @@ model Applicant {
 
   @@index([job_posting_id])
   @@index([status])
+  @@index([sumber_lamaran])
 }
 
 
