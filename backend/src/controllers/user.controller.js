@@ -193,6 +193,153 @@ async function getTechnicianPerformance(req, res) {
     }
 }
 
+// Detail analitik performa seorang teknisi beserta daftar tiket lengkap
+async function getSingleTechnicianPerformanceDetail(req, res) {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "ID teknisi tidak valid" });
+        }
+
+        const teknisi = await prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                nama: true,
+                email: true,
+                role: true,
+                foto_profile: true,
+                created_at: true,
+                tiket_servis: {
+                    include: {
+                        perangkat: {
+                            include: {
+                                customer: {
+                                    select: { id: true, nama: true, nomor_telepon: true }
+                                }
+                            }
+                        },
+                        invoice: {
+                            select: { id: true, nomor_invoice: true, total_biaya: true, status_pembayaran: true }
+                        },
+                        penggunaan_sparepart: {
+                            select: { id: true, jumlah: true }
+                        }
+                    },
+                    orderBy: { created_at: "desc" }
+                }
+            }
+        });
+
+        if (!teknisi) {
+            return res.status(404).json({ message: "Teknisi tidak ditemukan" });
+        }
+
+        const allTickets = teknisi.tiket_servis || [];
+        const totalAssigned = allTickets.length;
+        const completedTikets = allTickets.filter(t => ["selesai", "diambil"].includes(t.status));
+        const inProgressTikets = allTickets.filter(t => t.status === "dalam_perbaikan");
+        const inDiagnosisTikets = allTickets.filter(t => t.status === "didiagnosis");
+        const waitingApprovalTikets = allTickets.filter(t => t.status === "menunggu_persetujuan");
+        const approvedTikets = allTickets.filter(t => t.status === "disetujui");
+        const cancelledTikets = allTickets.filter(t => t.status === "dibatalkan");
+
+        let totalRevenue = 0;
+        let totalHours = 0;
+        let validDurationCount = 0;
+        let totalRating = 0;
+        let ratingCount = 0;
+
+        allTickets.forEach(tk => {
+            if (tk.rating_teknisi) {
+                totalRating += tk.rating_teknisi;
+                ratingCount++;
+            }
+            if (["selesai", "diambil"].includes(tk.status) && tk.invoice?.total_biaya) {
+                totalRevenue += tk.invoice.total_biaya;
+            }
+            if (tk.completed_at && tk.created_at) {
+                const hrs = (new Date(tk.completed_at).getTime() - new Date(tk.created_at).getTime()) / (3600 * 1000);
+                if (hrs > 0) {
+                    totalHours += hrs;
+                    validDurationCount++;
+                }
+            }
+        });
+
+        const avgRepairHours = validDurationCount > 0 ? Number((totalHours / validDurationCount).toFixed(1)) : 0;
+        const avgRating = ratingCount > 0 ? Number((totalRating / ratingCount).toFixed(1)) : null;
+        const completionRate = totalAssigned > 0 ? Math.round((completedTikets.length / totalAssigned) * 100) : 0;
+
+        // Map tickets with structured presentation data
+        const mappedTickets = allTickets.map(tk => {
+            let durationHours = null;
+            if (tk.completed_at && tk.created_at) {
+                const hrs = (new Date(tk.completed_at).getTime() - new Date(tk.created_at).getTime()) / (3600 * 1000);
+                durationHours = hrs > 0 ? Number(hrs.toFixed(1)) : null;
+            }
+
+            return {
+                id: tk.id,
+                nomor_tiket: tk.nomor_tiket,
+                status: tk.status,
+                keluhan: tk.keluhan,
+                created_at: tk.created_at,
+                completed_at: tk.completed_at,
+                duration_hours: durationHours,
+                rating_teknisi: tk.rating_teknisi,
+                is_garansi_claim: tk.is_garansi_claim,
+                sla_paket: tk.sla_paket,
+                perangkat: tk.perangkat ? {
+                    merek: tk.perangkat.merek,
+                    model: tk.perangkat.model,
+                    jenis_perangkat: tk.perangkat.jenis_perangkat
+                } : null,
+                customer: tk.perangkat?.customer ? {
+                    id: tk.perangkat.customer.id,
+                    nama: tk.perangkat.customer.nama,
+                    nomor_telepon: tk.perangkat.customer.nomor_telepon
+                } : null,
+                invoice: tk.invoice ? {
+                    id: tk.invoice.id,
+                    nomor_invoice: tk.invoice.nomor_invoice,
+                    total_biaya: tk.invoice.total_biaya,
+                    status_pembayaran: tk.invoice.status_pembayaran
+                } : null,
+                sparepart_count: tk.penggunaan_sparepart?.length || 0
+            };
+        });
+
+        return res.json({
+            teknisi: {
+                id: teknisi.id,
+                nama: teknisi.nama,
+                email: teknisi.email,
+                role: teknisi.role,
+                foto_profile: teknisi.foto_profile || null,
+                created_at: teknisi.created_at
+            },
+            summary: {
+                totalAssigned,
+                completedCount: completedTikets.length,
+                inProgressCount: inProgressTikets.length,
+                inDiagnosisCount: inDiagnosisTikets.length,
+                waitingApprovalCount: waitingApprovalTikets.length,
+                approvedCount: approvedTikets.length,
+                cancelledCount: cancelledTikets.length,
+                totalRevenue,
+                avgRepairHours,
+                avgRating,
+                ratingCount,
+                completionRate
+            },
+            tickets: mappedTickets
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal memuat detail performa teknisi", error: error.message });
+    }
+}
+
 // Menambah user baru (Admin)
 async function createUser(req, res) {
     try {
@@ -353,6 +500,7 @@ async function uploadUserPhoto(req, res) {
 module.exports = {
     getAllUsers,
     getTechnicianPerformance,
+    getSingleTechnicianPerformanceDetail,
     createUser,
     updateUser,
     deleteUser,

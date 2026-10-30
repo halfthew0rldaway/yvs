@@ -18,13 +18,15 @@ import {
     TrendingUp,
     UserCheck,
     Briefcase,
-    Camera
+    Camera,
+    ChevronRight
 } from "lucide-react";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
 import UserAvatar from "../../components/common/UserAvatar";
+import TechnicianPerformanceModal from "../../components/TechnicianPerformanceModal";
 
 export default function UserList() {
     const [users, setUsers] = useState([]);
@@ -33,6 +35,7 @@ export default function UserList() {
     const [activeTab, setActiveTab] = useState("users"); // 'users' | 'performance'
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
+    const [selectedTechnicianPerfId, setSelectedTechnicianPerfId] = useState(null);
 
     // Standardized Pagination State
     const [currentPage, setCurrentPage] = useState(1);
@@ -411,13 +414,22 @@ export default function UserList() {
                                             </td>
                                             <td className="px-6 py-4 text-xs text-slate-600">
                                                 {u.role === "teknisi" ? (
-                                                    <div className="flex items-center gap-3">
+                                                    <div className="flex items-center gap-2">
                                                         <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-medium">
                                                             Assigned: {u.stats?.totalAssigned || 0}
                                                         </span>
-                                                        <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-semibold">
-                                                            Selesai: {u.stats?.completedCount || 0}
-                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedTechnicianPerfId(u.id);
+                                                            }}
+                                                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                                                            title="Klik untuk melihat detail tiket yang diselesaikan teknisi ini"
+                                                        >
+                                                            <span>Selesai: {u.stats?.completedCount || 0}</span>
+                                                            <ChevronRight className="w-3 h-3 text-emerald-600" />
+                                                        </button>
                                                     </div>
                                                 ) : (
                                                     <span className="text-slate-400 italic">Administrator</span>
@@ -466,10 +478,27 @@ export default function UserList() {
             {/* TAB 2: TECHNICIAN PERFORMANCE ANALYTICS */}
             {activeTab === "performance" && (
                 <div className="space-y-6">
+                    {/* Section Header Hint */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-2xs shrink-0">
+                                <TrendingUp className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-900">Peringkat & Kinerja Teknisi</h3>
+                                <p className="text-xs text-slate-500">Klik pada kartu teknisi untuk melihat rincian tiket yang telah diselesaikan, durasi servis, dan nilai pekerjaan.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Performance Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {performance.map((item, idx) => (
-                            <div key={item.id} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+                            <div 
+                                key={item.id} 
+                                onClick={() => setSelectedTechnicianPerfId(item.id)}
+                                className="bg-white rounded-2xl border border-slate-200 hover:border-blue-300 p-6 shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all cursor-pointer"
+                            >
                                 {idx === 0 && (
                                     <div className="absolute top-0 right-0 bg-amber-500 text-white text-3xs font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1 shadow-sm">
                                         <Trophy className="w-3 h-3" /> #1 Top Performer
@@ -479,9 +508,11 @@ export default function UserList() {
                                 <div>
                                     <div className="flex items-center gap-3 mb-4">
                                         <UserAvatar user={item} size="w-12 h-12" textSize="text-base" rounded="rounded-2xl" />
-                                        <div>
-                                            <h3 className="font-bold text-slate-900 text-base">{item.nama}</h3>
-                                            <p className="text-xs text-slate-500">{item.email}</p>
+                                        <div className="min-w-0">
+                                            <h3 className="font-bold text-slate-900 text-base group-hover:text-blue-600 transition-colors truncate">
+                                                {item.nama}
+                                            </h3>
+                                            <p className="text-xs text-slate-500 font-mono truncate">{item.email}</p>
                                         </div>
                                     </div>
 
@@ -504,7 +535,7 @@ export default function UserList() {
 
                                         <div className="bg-amber-50 p-2.5 rounded-xl">
                                             <span className="text-amber-600 block font-medium">Nilai Pekerjaan</span>
-                                            <span className="text-xs font-bold text-amber-800">{formatCurrency(item.totalRevenue)}</span>
+                                            <span className="text-xs font-bold text-amber-800 truncate block">{formatCurrency(item.totalRevenue)}</span>
                                         </div>
                                     </div>
 
@@ -523,14 +554,18 @@ export default function UserList() {
                                     </div>
                                 </div>
 
-                                {/* Bottom Speed Metric */}
+                                {/* Bottom Speed Metric & Action Hint */}
                                 <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                                     <div className="flex items-center gap-1.5">
                                         <Clock className="w-4 h-4 text-slate-400" />
-                                        <span>Rata-rata Waktu Perbaikan:</span>
+                                        <span>Rata-rata Waktu:</span>
+                                        <span className="font-semibold text-slate-800">
+                                            {item.avgRepairHours > 0 ? `${item.avgRepairHours} jam` : "N/A"}
+                                        </span>
                                     </div>
-                                    <span className="font-semibold text-slate-800">
-                                        {item.avgRepairHours > 0 ? `${item.avgRepairHours} jam` : "N/A"}
+                                    <span className="text-blue-600 font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1 text-2xs">
+                                        <span>Detail Tiket</span>
+                                        <ChevronRight className="w-3.5 h-3.5" />
                                     </span>
                                 </div>
                             </div>
@@ -710,6 +745,12 @@ export default function UserList() {
                     </div>
                 </div>
             )}
+            {/* TECHNICIAN PERFORMANCE DETAIL MODAL */}
+            <TechnicianPerformanceModal
+                isOpen={Boolean(selectedTechnicianPerfId)}
+                onClose={() => setSelectedTechnicianPerfId(null)}
+                technicianId={selectedTechnicianPerfId}
+            />
         </div>
     );
 }
