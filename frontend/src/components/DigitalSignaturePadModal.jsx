@@ -294,7 +294,7 @@ export default function DigitalSignaturePadModal({
 
                             {/* Baseline Guide Line */}
                             <div className="absolute bottom-8 left-8 right-8 border-b-2 border-slate-200/80 pointer-events-none flex justify-between text-[10px] text-slate-400 font-mono">
-                                <span>✕ Tanda Tangan</span>
+                                <span className="flex items-center gap-1"><X className="w-2.5 h-2.5" /> Tanda Tangan</span>
                                 <span>Garis Dasar</span>
                             </div>
                         </div>

@@ -349,7 +349,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                             >
                                 <CheckCircle2 className="w-4 h-4" />
-                                <span>Terima & Buat Akun Staf 🚀</span>
+                                <span>Terima & Buat Akun Staf</span>
                             </button>
                         )}
                         <button

@@ -1,5 +1,5 @@
 import React from "react";
-import { PenTool, CheckCheck, UserCheck } from "lucide-react";
+import { PenTool, CheckCheck, UserCheck, Pencil } from "lucide-react";
 import { DEFAULT_WORKSHOP_SIGNATURE } from "./AdminSignatureSelectorModal";
 
 /**
@@ -85,7 +85,10 @@ export function DigitalSignatureToggleBar({ isDigital, onToggle, onOpenSelector,
                     title="Pilih petugas yang menandatangani dokumen ini"
                 >
                     <UserCheck className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Petugas: {adminName || "Pilih"} ✎</span>
+                    <span className="inline-flex items-center gap-1">
+                        Petugas: {adminName || "Pilih"}
+                        <Pencil className="w-2.5 h-2.5 text-indigo-500" />
+                    </span>
                 </button>
             )}
         </div>

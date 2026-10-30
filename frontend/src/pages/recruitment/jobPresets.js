@@ -123,34 +123,34 @@ export function generateBroadcastText(job, companyName = "KomputerAwet / Yangver
     const waLink = cleanDigits ? `wa.me/${cleanDigits}` : "wa.me/628123456789";
     const phoneLabel = rawPhone ? rawPhone : "0812-3456-7890 (WhatsApp HR)";
 
-    return `📢 LOWONGAN KERJA: ${job.judul_posisi.toUpperCase()}
-🏢 Perusahaan: ${companyName}
-📍 Lokasi: ${job.lokasi || "Workshop Utama"} (${job.tipe_kerja || "Full Time"})
-💼 Departemen: ${job.departemen || "Teknisi"}
-💰 Estimasi Gaji: ${gajiText}
+    return `*INFORMASI LOWONGAN KERJA: ${job.judul_posisi.toUpperCase()}*
+• Perusahaan: ${companyName}
+• Lokasi: ${job.lokasi || "Workshop Utama"} (${job.tipe_kerja || "Full Time"})
+• Departemen: ${job.departemen || "Teknisi"}
+• Estimasi Gaji: ${gajiText}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 DESKRIPSI & TANGGUNG JAWAB:
+*DESKRIPSI & TANGGUNG JAWAB:*
 ${job.deskripsi || "- Bertanggung jawab sesuai posisi pekerjaan."}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 KUALIFIKASI & SYARAT:
+*KUALIFIKASI & SYARAT:*
 ${job.kualifikasi || "- Disiplin, jujur, dan memiliki motivasi kerja tinggi."}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎁 BENEFIT & FASILITAS:
-✅ Gaji pokok + Insentif performa unit servis
-✅ Lingkungan kerja modern & workshop ber-AC
-✅ Sistem kerja terstruktur (SOP & sistem Serv.io)
-✅ Akses modul training & pengembangan karir tim
+*BENEFIT & FASILITAS:*
+• Gaji pokok + Insentif performa unit servis
+• Lingkungan kerja modern & workshop ber-AC
+• Sistem kerja terstruktur (SOP & sistem Serv.io)
+• Akses modul training & pengembangan karir tim
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-📩 CARA MELAMAR:
+*CARA MELAMAR:*
 Kirimkan CV / Biodata singkat Anda langsung ke WhatsApp kami:
-📲 Hubungi Narahubung / HR: ${phoneLabel}
-🔗 Link Cepat: ${waLink}?text=Halo%20Admin,%20saya%20ingin%20melamar%20posisi%20${encodeURIComponent(job.judul_posisi)}
+• Narahubung / HR: ${phoneLabel}
+• Link Pendaftaran Cepat: ${waLink}?text=Halo%20Admin,%20saya%20ingin%20melamar%20posisi%20${encodeURIComponent(job.judul_posisi)}
 Atau datang langsung membawa berkas CV ke Workshop ${companyName}.
 
-*Lowongan ini tidak dipungut biaya apapun (GRATIS). Silakan bagikan ke teman atau kerabat yang membutuhkan!*`;
+*Lowongan ini tidak dipungut biaya apapun (GRATIS). Silakan bagikan ke rekan atau kerabat yang membutuhkan!*`;
 }
 

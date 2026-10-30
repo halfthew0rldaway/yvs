@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useDeferredValue, useTransition, useCallb
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
-import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw, QrCode, Camera } from "lucide-react";
+import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw, QrCode, Camera, ShieldCheck, Award } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
@@ -847,7 +847,17 @@ export default function SparepartList() {
                                                                 ? "bg-amber-50 text-amber-700 border-amber-200"
                                                                 : "bg-emerald-50 text-emerald-700 border-emerald-200"
                                                         }`}>
-                                                            {s.tipe_garansi_distri === "Lifetime" || s.sistem_perhitungan_garansi === "lifetime" ? "✨ Garansi Lifetime" : `🛡️ Distri: ${s.tipe_garansi_distri || "1 Thn"}`}
+                                                            {s.tipe_garansi_distri === "Lifetime" || s.sistem_perhitungan_garansi === "lifetime" ? (
+                                                                <>
+                                                                    <Award className="w-3 h-3 text-blue-600" />
+                                                                    <span>Garansi Lifetime</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <ShieldCheck className="w-3 h-3 text-current" />
+                                                                    <span>Distri: {s.tipe_garansi_distri || "1 Thn"}</span>
+                                                                </>
+                                                            )}
                                                             {s.sistem_perhitungan_garansi === "sejak_segel_distri" && " (Segel)"}
                                                             {s.sistem_perhitungan_garansi === "sejak_nota_customer" && " (Nota)"}
                                                         </span>
@@ -1189,7 +1199,10 @@ export default function SparepartList() {
                         {historyModalTarget.has_garansi_distri && (
                             <div className="px-6 py-2.5 bg-blue-50/70 border-b border-blue-100 flex flex-wrap items-center justify-between gap-2 text-xs">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-bold text-blue-900">🛡️ Garansi Distri:</span>
+                                    <span className="font-bold text-blue-900 inline-flex items-center gap-1">
+                                        <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                                        <span>Garansi Distri:</span>
+                                    </span>
                                     <span className="px-2 py-0.5 rounded-md bg-white border border-blue-200 text-blue-800 font-semibold text-[11px]">
                                         {historyModalTarget.tipe_garansi_distri || "1 Tahun"}
                                     </span>

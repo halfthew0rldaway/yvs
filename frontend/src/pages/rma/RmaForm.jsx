@@ -687,7 +687,7 @@ export default function RmaForm() {
                                             </div>
                                             <div>
                                                 <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-wider">
-                                                    ✓ Data Distributor & Garansi Terdeteksi Otomatis
+                                                    Data Distributor & Garansi Terdeteksi Otomatis
                                                 </h4>
                                                 <p className="text-[11px] text-emerald-700">
                                                     Anda tidak perlu input ulang informasi distributor atau skenario garansi.

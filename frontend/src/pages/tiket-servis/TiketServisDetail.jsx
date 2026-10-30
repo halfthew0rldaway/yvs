@@ -2115,18 +2115,26 @@ export default function TiketServisDetail() {
                                             Status Serah Terima Sparepart Bekas (SOP Yangversa)
                                         </span>
                                     </div>
-                                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 ${
                                         (partBekasStatus || tiket.status_part_bekas) === "diserahkan_ke_pelanggan"
                                             ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                                             : (partBekasStatus || tiket.status_part_bekas) === "titip_buang_ewaste"
                                                 ? "bg-amber-100 text-amber-800 border border-amber-200"
                                                 : "bg-slate-200 text-slate-700"
                                     }`}>
-                                        {(partBekasStatus || tiket.status_part_bekas) === "diserahkan_ke_pelanggan"
-                                            ? "✓ Diserahkan ke Pelanggan"
-                                            : (partBekasStatus || tiket.status_part_bekas) === "titip_buang_ewaste"
-                                                ? "♻ Titip Buang Bengkel (E-Waste)"
-                                                : "Belum Diserahkan"}
+                                        {(partBekasStatus || tiket.status_part_bekas) === "diserahkan_ke_pelanggan" ? (
+                                            <>
+                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                                                <span>Diserahkan ke Pelanggan</span>
+                                            </>
+                                        ) : (partBekasStatus || tiket.status_part_bekas) === "titip_buang_ewaste" ? (
+                                            <>
+                                                <Trash2 className="w-3.5 h-3.5 text-amber-700" />
+                                                <span>Titip Buang Bengkel (E-Waste)</span>
+                                            </>
+                                        ) : (
+                                            <span>Belum Diserahkan</span>
+                                        )}
                                     </span>
                                 </div>
                                 <p className="text-[11px] text-slate-500 mb-3">

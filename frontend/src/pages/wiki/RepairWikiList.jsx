@@ -17,7 +17,8 @@ import {
     Layers, 
     FileText, 
     Wrench, 
-    Printer 
+    Printer,
+    Check 
 } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
@@ -375,7 +376,7 @@ export default function RepairWikiList() {
                                                 <ul className="space-y-1">
                                                     {sop.poin_kunci_list.slice(0, 2).map((pt, i) => (
                                                         <li key={i} className="text-[11px] text-slate-600 flex items-start gap-1.5">
-                                                            <span className="text-emerald-500 font-bold mt-0.5">✓</span>
+                                                            <Check className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
                                                             <span className="line-clamp-1">{pt}</span>
                                                         </li>
                                                     ))}

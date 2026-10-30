@@ -479,7 +479,7 @@ export default function TiketServisForm() {
                 const topItem = filteredPerangkats[0];
                 setForm(prev => ({ ...prev, perangkat_id: topItem.id }));
                 setSearchQuery("");
-                toast.success(`Unit ${topItem.merek} ${topItem.model} (${topItem.customer?.nama}) terpilih!`, { icon: "⚡" });
+                toast.success(`Unit ${topItem.merek} ${topItem.model} (${topItem.customer?.nama}) terpilih!`);
             } else if (searchQuery.trim().length >= 3) {
                 handleOpenQuickAdd();
             }

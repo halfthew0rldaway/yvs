@@ -219,11 +219,15 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-700">
                             <div className="flex items-center gap-2">
-                                <span className="w-4 h-4 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[10px]">✓</span>
+                                <span className="w-4 h-4 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                                </span>
                                 <span>Izin Bongkar Casing: <strong>{tiket.izin_bongkar ? "Diizinkan" : "Tidak Diizinkan"}</strong></span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="w-4 h-4 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[10px]">✓</span>
+                                <span className="w-4 h-4 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                                </span>
                                 <span>Izin Cek Windows: <strong>{tiket.izin_akses_os ? "Pengecekan Teknis Saja" : "Tidak Diizinkan"}</strong></span>
                             </div>
                         </div>

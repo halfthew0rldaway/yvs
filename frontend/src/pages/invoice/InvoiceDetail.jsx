@@ -286,8 +286,17 @@ export default function InvoiceDetail() {
                         }`}
                         title={invoice?.ttd_customer ? "Pelanggan sudah tanda tangan digital (Klik untuk perbarui)" : "Minta tanda tangan pelanggan di kasir"}
                     >
-                        <PenTool className="w-3.5 h-3.5" />
-                        <span>{invoice?.ttd_customer ? "TTD Pelanggan: Terisi ✓" : "+ TTD Pelanggan"}</span>
+                        {invoice?.ttd_customer ? (
+                            <>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>TTD Pelanggan: Terisi</span>
+                            </>
+                        ) : (
+                            <>
+                                <PenTool className="w-3.5 h-3.5" />
+                                <span>+ TTD Pelanggan</span>
+                            </>
+                        )}
                     </button>
 
                     {/* Print Document Button */}

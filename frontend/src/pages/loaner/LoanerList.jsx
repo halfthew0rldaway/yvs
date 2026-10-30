@@ -27,7 +27,8 @@ import {
     MessageCircle,
     Smartphone,
     Monitor,
-    Layers
+    Layers,
+    Package
 } from "lucide-react";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
@@ -638,8 +639,9 @@ export default function LoanerList() {
                                                         <p className="font-medium text-slate-800 text-xs truncate" title={d.spesifikasi || "-"}>
                                                             {d.spesifikasi || "-"}
                                                         </p>
-                                                        <p className="text-[11px] text-slate-500 truncate mt-0.5" title={d.kelengkapan || "-"}>
-                                                            🎒 {d.kelengkapan || "Unit Only"}
+                                                        <p className="text-[11px] text-slate-500 truncate mt-0.5 flex items-center gap-1" title={d.kelengkapan || "-"}>
+                                                            <Package className="w-3 h-3 text-slate-400 shrink-0" />
+                                                            <span>{d.kelengkapan || "Unit Only"}</span>
                                                         </p>
                                                     </div>
                                                 </td>

@@ -818,7 +818,7 @@ export default function SparepartForm() {
                                     </label>
                                     <div className="flex flex-wrap gap-2">
                                         {[
-                                            { label: "⭐ Lifetime Warranty", value: "Lifetime" },
+                                            { label: "Lifetime Warranty", value: "Lifetime" },
                                             { label: "5 Tahun", value: "5 Tahun" },
                                             { label: "3 Tahun", value: "3 Tahun" },
                                             { label: "2 Tahun", value: "2 Tahun" },
