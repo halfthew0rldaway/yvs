@@ -79,8 +79,8 @@ export default function InvoiceForm() {
                     <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Buat Invoice</h1>
-                    <p className="text-sm text-slate-500">Buat tagihan pembayaran untuk perbaikan selesai</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Buat Invoice</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Buat tagihan pembayaran untuk perbaikan selesai</p>
                 </div>
             </div>
 

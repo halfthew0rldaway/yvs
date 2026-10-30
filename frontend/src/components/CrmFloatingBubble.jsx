@@ -227,7 +227,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                                             <h4 className="text-sm font-bold text-slate-900 tracking-tight">
                                                 Recall Servis
                                             </h4>
-                                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                                            <span className={`text-3xs font-extrabold px-2 py-0.5 rounded-full border ${
                                                 urgentCount > 0 
                                                     ? "bg-rose-50 text-rose-700 border-rose-200" 
                                                     : "bg-blue-50 text-blue-700 border-blue-200"
@@ -235,7 +235,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                                                 {totalDue} Unit
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-400 truncate">
+                                        <p className="text-2xs text-slate-400 truncate">
                                             Siklus Perawatan 6–12 Bulan
                                         </p>
                                     </div>
@@ -268,7 +268,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                             <div className="p-4 space-y-3.5 max-h-[380px] overflow-y-auto custom-scrollbar">
                                 {/* Component 1: Visual Split Ratio Bar */}
                                 <div className="space-y-1.5">
-                                    <div className="flex items-center justify-between text-[11px] font-bold">
+                                    <div className="flex items-center justify-between text-2xs font-bold">
                                         <span className="flex items-center gap-1.5 text-blue-700">
                                             <span className="w-2 h-2 rounded-full bg-blue-500" />
                                             Rutin: {routineCount}
@@ -296,8 +296,8 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="p-2.5 bg-blue-50/70 border border-blue-100/90 rounded-2xl flex items-center justify-between">
                                         <div className="min-w-0">
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600">6–12 Bulan</p>
-                                            <p className="text-lg font-black text-slate-800 leading-tight mt-0.5">{routineCount} <span className="text-[10px] font-normal text-slate-500">Unit</span></p>
+                                            <p className="text-3xs font-bold uppercase tracking-wider text-blue-600">6–12 Bulan</p>
+                                            <p className="text-lg font-black text-slate-800 leading-tight mt-0.5">{routineCount} <span className="text-3xs font-normal text-slate-500">Unit</span></p>
                                         </div>
                                         <div className="p-2 bg-blue-100 text-blue-600 rounded-xl shrink-0">
                                             <Clock className="w-4 h-4" />
@@ -306,8 +306,8 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
 
                                     <div className="p-2.5 bg-rose-50/70 border border-rose-100/90 rounded-2xl flex items-center justify-between">
                                         <div className="min-w-0">
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600">&gt; 1 Thn Kritis</p>
-                                            <p className="text-lg font-black text-rose-600 leading-tight mt-0.5">{urgentCount} <span className="text-[10px] font-normal text-rose-400">Unit</span></p>
+                                            <p className="text-3xs font-bold uppercase tracking-wider text-rose-600">&gt; 1 Thn Kritis</p>
+                                            <p className="text-lg font-black text-rose-600 leading-tight mt-0.5">{urgentCount} <span className="text-3xs font-normal text-rose-400">Unit</span></p>
                                         </div>
                                         <div className="p-2 bg-rose-100 text-rose-600 rounded-xl shrink-0">
                                             <ShieldAlert className="w-4 h-4" />
@@ -318,7 +318,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                                 {/* Component 3: Quick Recall Action Cards (Max 3 Units) */}
                                 {previewItems.length > 0 ? (
                                     <div className="space-y-1.5 pt-0.5">
-                                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <div className="flex items-center justify-between text-2xs font-bold text-slate-400 uppercase tracking-wider">
                                             <span>Prioritas Hubungi</span>
                                             <span>{previewItems.length} dari {totalDue}</span>
                                         </div>
@@ -347,7 +347,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex items-center gap-1.5">
                                                                 <p className="font-bold text-slate-900 truncate">{customerName}</p>
-                                                                <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold border ${
+                                                                <span className={`px-1.5 py-0.2 rounded-full text-4xs font-bold border ${
                                                                     isCritical 
                                                                         ? "bg-rose-50 text-rose-700 border-rose-200" 
                                                                         : "bg-blue-50 text-blue-700 border-blue-200"
@@ -355,7 +355,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                                                                     {months} bln
                                                                 </span>
                                                             </div>
-                                                            <p className="text-[11px] text-slate-500 truncate mt-0.5">{deviceStr}</p>
+                                                            <p className="text-2xs text-slate-500 truncate mt-0.5">{deviceStr}</p>
                                                         </div>
 
                                                         {phone ? (
@@ -370,7 +370,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                                                                 <MessageCircle className="w-4 h-4" />
                                                             </a>
                                                         ) : (
-                                                            <span className="text-[10px] text-slate-400 italic shrink-0">-</span>
+                                                            <span className="text-3xs text-slate-400 italic shrink-0">-</span>
                                                         )}
                                                     </div>
                                                 );
@@ -466,7 +466,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                         </motion.div>
 
                         {/* Notification Pill Badge on Robot */}
-                        <div className={`absolute top-0 right-1 px-2 py-0.5 rounded-full text-[11px] font-black shadow-lg border-2 border-white flex items-center gap-0.5 text-white ${
+                        <div className={`absolute top-0 right-1 px-2 py-0.5 rounded-full text-2xs font-black shadow-lg border-2 border-white flex items-center gap-0.5 text-white ${
                             urgentCount > 0 ? "bg-rose-500" : totalDue > 0 ? "bg-blue-600" : "bg-emerald-600"
                         }`}>
                             <span>{totalDue > 0 ? totalDue : "OK"}</span>

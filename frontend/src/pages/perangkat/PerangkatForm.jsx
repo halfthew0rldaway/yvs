@@ -238,10 +238,10 @@ export default function PerangkatForm() {
                     <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                         {isEdit ? "Edit Data Perangkat" : "Tambah Perangkat Baru"}
                     </h1>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
                         {isEdit ? "Perbarui informasi spesifikasi perangkat pelanggan" : "Daftarkan unit perangkat servis baru ke sistem"}
                     </p>
                 </div>
@@ -278,10 +278,10 @@ export default function PerangkatForm() {
                                 <div className="space-y-0.5">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-bold text-slate-900 text-base">{selectedCustomer.nama}</span>
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-blue-100 text-blue-700">
                                             {selectedCustomer.tipe_kepribadian || "Pelanggan"}
                                         </span>
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-semibold bg-emerald-100 text-emerald-700 flex items-center gap-1">
                                             <Check className="w-3 h-3" /> Terpilih
                                         </span>
                                     </div>
@@ -335,7 +335,7 @@ export default function PerangkatForm() {
                             </div>
 
                             <div className="border border-slate-200 rounded-xl bg-slate-50/50 p-2 space-y-1 max-h-[220px] overflow-y-auto custom-scrollbar">
-                                <div className="px-2 py-1 flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                                <div className="px-2 py-1 flex items-center justify-between text-2xs font-semibold text-slate-400 uppercase tracking-wider">
                                     <span>{customerSearch ? "Hasil Pencarian Pelanggan" : "Rekomendasi Pelanggan Terdaftar"}</span>
                                     <span>{filteredCustomers.length} ditemukan</span>
                                 </div>
@@ -359,12 +359,12 @@ export default function PerangkatForm() {
                                                     <div className="font-bold text-slate-800 text-xs truncate group-hover:text-blue-700">
                                                         {c.nama}
                                                     </div>
-                                                    <div className="text-[11px] text-slate-500 font-mono">
+                                                    <div className="text-2xs text-slate-500 font-mono">
                                                         {c.nomor_telepon} {c.alamat ? `• ${c.alamat.substring(0, 30)}...` : ""}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <span className="text-[11px] font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0 ml-2">
+                                            <span className="text-2xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0 ml-2">
                                                 Pilih <Check className="w-3.5 h-3.5" />
                                             </span>
                                         </button>
@@ -429,7 +429,7 @@ export default function PerangkatForm() {
                                             <div className="font-bold text-xs text-slate-900 leading-tight">
                                                 {type.label}
                                             </div>
-                                            <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1 leading-tight">
+                                            <p className="text-3xs text-slate-500 mt-0.5 line-clamp-1 leading-tight">
                                                 {type.sub}
                                             </p>
                                         </div>
@@ -448,7 +448,7 @@ export default function PerangkatForm() {
                                 <Box className="w-4 h-4 text-blue-600" />
                                 Merek Perangkat <span className="text-red-500">*</span>
                             </label>
-                            <span className="text-[11px] text-slate-400">Otomatis ternormalisasi</span>
+                            <span className="text-2xs text-slate-400">Otomatis ternormalisasi</span>
                         </div>
                         <input
                             type="text"
@@ -467,7 +467,7 @@ export default function PerangkatForm() {
 
                         {/* Quick Brand Badges */}
                         <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
-                            <span className="text-[10px] text-slate-400 font-semibold mr-0.5">Pilihan Populer:</span>
+                            <span className="text-3xs text-slate-400 font-semibold mr-0.5">Pilihan Populer:</span>
                             {POPULAR_BRANDS.map(brand => {
                                 const isBrandActive = form.merek.trim().toUpperCase() === brand.toUpperCase();
                                 return (
@@ -475,7 +475,7 @@ export default function PerangkatForm() {
                                         key={brand}
                                         type="button"
                                         onClick={() => setForm({ ...form, merek: brand })}
-                                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                                        className={`px-2.5 py-1 rounded-lg text-3xs font-bold transition-all cursor-pointer ${
                                             isBrandActive
                                                 ? "bg-blue-600 text-white shadow-2xs scale-105"
                                                 : "bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200/60"
@@ -494,7 +494,7 @@ export default function PerangkatForm() {
                                 <MonitorSmartphone className="w-4 h-4 text-blue-600" />
                                 Model / Seri Spesifik <span className="text-red-500">*</span>
                             </label>
-                            <span className="text-[11px] text-slate-400">Maksimal 100 karakter</span>
+                            <span className="text-2xs text-slate-400">Maksimal 100 karakter</span>
                         </div>
                         <input
                             type="text"
@@ -504,7 +504,7 @@ export default function PerangkatForm() {
                             placeholder="Contoh: ROG Zephyrus G14 / ThinkPad T490 / L3210"
                             required
                         />
-                        <p className="text-[11px] text-slate-400 mt-2">
+                        <p className="text-2xs text-slate-400 mt-2">
                             Masukkan seri detail unit untuk memudahkan pencarian kompatibilitas sparepart.
                         </p>
                     </div>
@@ -518,7 +518,7 @@ export default function PerangkatForm() {
                                 <Hash className="w-4 h-4 text-blue-600" />
                                 Serial Number (S/N)
                             </label>
-                            <span className="text-[11px] text-slate-400 font-medium">Opsional tapi disarankan</span>
+                            <span className="text-2xs text-slate-400 font-medium">Opsional tapi disarankan</span>
                         </div>
                         <input
                             type="text"
@@ -527,7 +527,7 @@ export default function PerangkatForm() {
                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400 font-mono text-sm uppercase"
                             placeholder="Contoh: SN-8924018247 (atau nomor seri di bawah stiker unit)"
                         />
-                        <p className="text-[11px] text-slate-400 mt-1.5">
+                        <p className="text-2xs text-slate-400 mt-1.5">
                             Serial number digunakan untuk mencegah tertukarnya unit antar pelanggan dan validasi garansi.
                         </p>
                     </div>
@@ -600,7 +600,7 @@ export default function PerangkatForm() {
                                             <td className="px-6 py-4 text-xs">{new Date(tiket.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
                                             <td className="px-6 py-4 truncate max-w-[220px] text-xs" title={tiket.keluhan}>{tiket.keluhan}</td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                                                <span className={`px-2.5 py-1 rounded-lg text-3xs font-bold uppercase tracking-wider ${
                                                     tiket.status === 'selesai' || tiket.status === 'diambil' 
                                                         ? 'bg-emerald-100 text-emerald-700' 
                                                         : tiket.status === 'dibatalkan'
@@ -688,7 +688,7 @@ export default function PerangkatForm() {
                                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                                 <div>
                                     <strong className="font-bold text-amber-950 block">Penting: Dampak Perubahan Data Unit</strong>
-                                    <p className="text-amber-800 text-[11px] leading-relaxed mt-0.5">
+                                    <p className="text-amber-800 text-2xs leading-relaxed mt-0.5">
                                         Perubahan nomor seri atau data unit akan memengaruhi pencarian barcode/QR, histori pengerjaan teknisi, dan validasi klaim garansi di masa mendatang.
                                     </p>
                                 </div>
@@ -704,7 +704,7 @@ export default function PerangkatForm() {
                                 />
                                 <div className="text-xs text-slate-700 leading-snug">
                                     <span className="font-bold text-slate-900 block">Saya telah memverifikasi unit fisik</span>
-                                    <span className="text-slate-500 text-[11px]">Saya yakin merek, tipe, nomor seri, dan kepemilikan unit sudah sesuai fisik perangkat.</span>
+                                    <span className="text-slate-500 text-2xs">Saya yakin merek, tipe, nomor seri, dan kepemilikan unit sudah sesuai fisik perangkat.</span>
                                 </div>
                             </label>
                         </div>

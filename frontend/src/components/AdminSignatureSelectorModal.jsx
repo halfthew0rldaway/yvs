@@ -230,7 +230,7 @@ export default function AdminSignatureSelectorModal({
                                                     <p className="text-xs font-bold text-slate-900 truncate">
                                                         {item.nama}
                                                     </p>
-                                                    <p className="text-[10px] text-slate-500 truncate">
+                                                    <p className="text-3xs text-slate-500 truncate">
                                                         {item.role || "Admin Kasir"}
                                                     </p>
                                                 </div>
@@ -259,8 +259,8 @@ export default function AdminSignatureSelectorModal({
                                         </div>
 
                                         {/* Selection Indicator */}
-                                        <div className="flex items-center justify-between text-[11px] pt-1">
-                                            <span className="text-slate-400 text-[10px]">
+                                        <div className="flex items-center justify-between text-2xs pt-1">
+                                            <span className="text-slate-400 text-3xs">
                                                 {item.is_system_default ? "Default Sistem" : "Tersimpan"}
                                             </span>
                                             {isCurrent ? (
@@ -281,7 +281,7 @@ export default function AdminSignatureSelectorModal({
 
                     {/* Footer */}
                     <div className="p-4 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between">
-                        <span className="text-[11px] text-slate-500">
+                        <span className="text-2xs text-slate-500">
                             Tanda tangan yang dipilih akan otomatis tercetak di lembar Invoice & Garansi.
                         </span>
                         <button

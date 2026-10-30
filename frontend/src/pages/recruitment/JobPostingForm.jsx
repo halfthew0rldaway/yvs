@@ -287,12 +287,12 @@ export default function JobPostingForm() {
                                         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
                                             Preset Standar Posisi KEOS KomputerAwet
                                         </h3>
-                                        <p className="text-[11px] text-slate-500">
+                                        <p className="text-2xs text-slate-500">
                                             Klik tombol posisi di bawah untuk mengisi otomatis tugas, kualifikasi, dan estimasi gaji
                                         </p>
                                     </div>
                                 </div>
-                                <span className="text-[11px] text-blue-600 font-semibold bg-blue-50/80 px-2 py-0.5 rounded-md border border-blue-100 self-start sm:self-auto">
+                                <span className="text-2xs text-blue-600 font-semibold bg-blue-50/80 px-2 py-0.5 rounded-md border border-blue-100 self-start sm:self-auto">
                                     1-Klik Autofill
                                 </span>
                             </div>
@@ -326,7 +326,7 @@ export default function JobPostingForm() {
                                                     </span>
                                                     {isSelected && <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />}
                                                 </div>
-                                                <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                                                <p className="text-2xs text-slate-500 truncate mt-0.5">
                                                     {preset.departemen} • {preset.tipe_kerja}
                                                 </p>
                                             </div>
@@ -442,7 +442,7 @@ export default function JobPostingForm() {
                                             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                             required
                                         />
-                                        <p className="text-[11px] text-slate-400 mt-1">
+                                        <p className="text-2xs text-slate-400 mt-1">
                                             Otomatis disematkan pada link WhatsApp di template siaran iklan
                                         </p>
                                     </div>
@@ -482,7 +482,7 @@ export default function JobPostingForm() {
                                         />
                                     </div>
                                     {gajiMin > 0 && (
-                                        <p className="text-[11px] text-blue-600 mt-1 font-semibold">
+                                        <p className="text-2xs text-blue-600 mt-1 font-semibold">
                                             {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(gajiMin)}
                                         </p>
                                     )}
@@ -503,7 +503,7 @@ export default function JobPostingForm() {
                                         />
                                     </div>
                                     {gajiMax > 0 && (
-                                        <p className="text-[11px] text-blue-600 mt-1 font-semibold">
+                                        <p className="text-2xs text-blue-600 mt-1 font-semibold">
                                             {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(gajiMax)}
                                         </p>
                                     )}
@@ -533,7 +533,7 @@ export default function JobPostingForm() {
                                         <label className="text-xs font-bold text-slate-700">
                                             Tugas & Tanggung Jawab Utama
                                         </label>
-                                        <span className="text-[11px] text-slate-400">Gunakan bullet points (•)</span>
+                                        <span className="text-2xs text-slate-400">Gunakan bullet points (•)</span>
                                     </div>
                                     <textarea
                                         rows={6}
@@ -549,7 +549,7 @@ export default function JobPostingForm() {
                                         <label className="text-xs font-bold text-slate-700">
                                             Kualifikasi & Syarat Kompetensi Pelamar
                                         </label>
-                                        <span className="text-[11px] text-slate-400">Syarat pendidikan & attitude</span>
+                                        <span className="text-2xs text-slate-400">Syarat pendidikan & attitude</span>
                                     </div>
                                     <textarea
                                         rows={6}
@@ -593,7 +593,7 @@ export default function JobPostingForm() {
                                     <p className="text-xs text-slate-500 font-medium">
                                         Belum ada link platform eksternal yang disimpan.
                                     </p>
-                                    <p className="text-[11px] text-slate-400 mt-0.5">
+                                    <p className="text-2xs text-slate-400 mt-0.5">
                                         Klik tombol <span className="font-semibold text-blue-600">+ Tambah Link Platform</span> jika lowongan ini juga Anda pasang di Glints, Jobstreet, KitaLulus, atau media sosial.
                                     </p>
                                 </div>
@@ -666,12 +666,12 @@ export default function JobPostingForm() {
                                         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
                                             Format Iklan Siap Copas
                                         </h3>
-                                        <p className="text-[11px] text-slate-500">
+                                        <p className="text-2xs text-slate-500">
                                             Real-time broadcast generator
                                         </p>
                                     </div>
                                 </div>
-                                <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-200">
+                                <span className="text-3xs bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-200">
                                     Live
                                 </span>
                             </div>
@@ -682,7 +682,7 @@ export default function JobPostingForm() {
                                 </p>
 
                                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 max-h-72 overflow-y-auto">
-                                    <pre className="text-[11.5px] text-slate-800 font-mono whitespace-pre-wrap leading-relaxed select-all">
+                                    <pre className="text-2xs text-slate-800 font-mono whitespace-pre-wrap leading-relaxed select-all">
                                         {liveBroadcastText}
                                     </pre>
                                 </div>

@@ -214,7 +214,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                                     onChange={(e) => setSkorLogika(e.target.value)}
                                     className="w-full accent-blue-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
                                 />
-                                <p className="text-[10px] text-slate-400">Pola pikir diagnosa akar masalah, bukan tebak-tebak.</p>
+                                <p className="text-3xs text-slate-400">Pola pikir diagnosa akar masalah, bukan tebak-tebak.</p>
                             </div>
 
                             {/* Kemampuan Teknis */}
@@ -231,7 +231,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                                     onChange={(e) => setSkorTeknis(e.target.value)}
                                     className="w-full accent-blue-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
                                 />
-                                <p className="text-[10px] text-slate-400">Penguasaan OS, skematik, solder, rakitan & kebersihan.</p>
+                                <p className="text-3xs text-slate-400">Penguasaan OS, skematik, solder, rakitan & kebersihan.</p>
                             </div>
 
                             {/* Attitude & Integritas */}
@@ -248,7 +248,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                                     onChange={(e) => setSkorAttitude(e.target.value)}
                                     className="w-full accent-blue-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
                                 />
-                                <p className="text-[10px] text-slate-400">Kejujuran sparepart, tata krama, dan rasa hormat ke tim.</p>
+                                <p className="text-3xs text-slate-400">Kejujuran sparepart, tata krama, dan rasa hormat ke tim.</p>
                             </div>
 
                             {/* Kepatuhan SOP */}
@@ -265,7 +265,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                                     onChange={(e) => setSkorSop(e.target.value)}
                                     className="w-full accent-blue-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
                                 />
-                                <p className="text-[10px] text-slate-400">Kedisiplinan mengisi tiket, Defect Map & 8 Titik QC.</p>
+                                <p className="text-3xs text-slate-400">Kedisiplinan mengisi tiket, Defect Map & 8 Titik QC.</p>
                             </div>
                         </div>
                     </div>

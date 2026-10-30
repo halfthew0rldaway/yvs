@@ -216,10 +216,10 @@ export default function AuditLogList() {
                             <ShieldAlert className="w-5 h-5 text-rose-600" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                                 Log Audit Aktivitas (Anti-Fraud)
                             </h1>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs sm:text-sm text-slate-500 mt-1">
                                 Rekam jejak seluruh mutasi data sensitif, revisi ACC, klaim garansi, invoice, dan master data
                             </p>
                         </div>
@@ -409,7 +409,7 @@ export default function AuditLogList() {
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
-                        <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0]">
+                        <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5">Waktu & Tanggal</th>
                                 <th className="px-6 py-3.5">Operator</th>
@@ -439,18 +439,18 @@ export default function AuditLogList() {
                                             <div className="flex items-center gap-1.5">
                                                 <Clock className="w-3.5 h-3.5 text-slate-400" />
                                                 <span className="font-semibold text-slate-800">{dateStr}</span>
-                                                <span className="text-slate-400 text-[11px]">{timeStr}</span>
+                                                <span className="text-slate-400 text-2xs">{timeStr}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-3.5">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[10px]">
+                                                <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-3xs">
                                                     {(log.user_nama || "S").charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-slate-800 text-xs">{log.user_nama || "Sistem"}</p>
                                                     {log.user?.role && (
-                                                        <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                                                        <span className="text-3xs text-slate-400 uppercase font-semibold">
                                                             {log.user.role}
                                                         </span>
                                                     )}

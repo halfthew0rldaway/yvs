@@ -239,7 +239,7 @@ export default function DigitalSignaturePadModal({
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                                 <span>Area Tanda Tangan</span>
-                                <span className="text-[10px] text-blue-600 font-semibold">(Tinta Biru Resmi)</span>
+                                <span className="text-3xs text-blue-600 font-semibold">(Tinta Biru Resmi)</span>
                             </span>
                             <div className="flex items-center gap-2">
                                 <button
@@ -286,14 +286,14 @@ export default function DigitalSignaturePadModal({
                                     <span className="text-xs sm:text-sm font-medium tracking-wide">
                                         Bubuhkan tanda tangan di sini (Layar Sentuh / Stylus / Mouse)
                                     </span>
-                                    <span className="text-[11px] text-slate-400 mt-1">
+                                    <span className="text-2xs text-slate-400 mt-1">
                                         Area lebih lega • Gunakan Undo jika ada goresan yang salah
                                     </span>
                                 </div>
                             )}
 
                             {/* Baseline Guide Line */}
-                            <div className="absolute bottom-8 left-8 right-8 border-b-2 border-slate-200/80 pointer-events-none flex justify-between text-[10px] text-slate-400 font-mono">
+                            <div className="absolute bottom-8 left-8 right-8 border-b-2 border-slate-200/80 pointer-events-none flex justify-between text-3xs text-slate-400 font-mono">
                                 <span className="flex items-center gap-1"><X className="w-2.5 h-2.5" /> Tanda Tangan</span>
                                 <span>Garis Dasar</span>
                             </div>
@@ -334,7 +334,7 @@ export default function DigitalSignaturePadModal({
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 tracking-widest outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all text-center"
                             />
                             {phoneError && (
-                                <p className="text-[11px] text-rose-600 mt-1 font-medium">{phoneError}</p>
+                                <p className="text-2xs text-rose-600 mt-1 font-medium">{phoneError}</p>
                             )}
                         </div>
                     )}
@@ -342,7 +342,7 @@ export default function DigitalSignaturePadModal({
                     {/* Disclaimer Agreement */}
                     <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-start gap-2.5">
                         <ShieldCheck className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                        <p className="text-[11px] text-blue-900 leading-relaxed">
+                        <p className="text-2xs text-blue-900 leading-relaxed">
                             {agreementText}
                         </p>
                     </div>

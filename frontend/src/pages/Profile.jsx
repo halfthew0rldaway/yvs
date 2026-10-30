@@ -52,8 +52,8 @@ export default function Profile() {
     return (
         <div className="w-full space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Pengaturan Profil</h1>
-                <p className="text-sm text-slate-500 mt-1">Sesuaikan informasi dasar dan keamanan akun Anda.</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Pengaturan Profil</h1>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">Sesuaikan informasi dasar dan keamanan akun Anda.</p>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">

@@ -35,7 +35,7 @@ export function WorkshopSignatureStamp({
                 ) : (
                     /* Mode Fisik (Cetak di Kertas) - Kosong untuk tanda tangan basah */
                     <div className="w-full h-full flex items-end justify-center pb-2 border-b border-dashed border-slate-300 print:border-none">
-                        <span className="text-[10px] print:text-[8px] text-slate-300 print:text-slate-200 italic">
+                        <span className="text-3xs print:text-[8px] text-slate-300 print:text-slate-200 italic">
                             [ Tanda Tangan Fisik ]
                         </span>
                     </div>
@@ -49,7 +49,7 @@ export function WorkshopSignatureStamp({
             <p className="font-bold text-slate-900 text-xs print:text-[9px] w-full truncate max-w-[160px]">
                 {name}
             </p>
-            <p className="text-[10px] print:text-[7.5px] text-slate-400 mt-0.5">
+            <p className="text-3xs print:text-[7.5px] text-slate-400 mt-0.5">
                 Yangversa Computer
             </p>
         </div>

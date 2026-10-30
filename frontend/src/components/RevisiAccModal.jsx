@@ -120,7 +120,7 @@ export default function RevisiAccModal({
                             disabled={isSubmitting}
                             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all"
                         />
-                        <p className="text-[11px] text-slate-500 mt-1">
+                        <p className="text-2xs text-slate-500 mt-1">
                             Minimal 5 karakter. Catatan ini akan disimpan permanen di Log Audit Perbaikan.
                         </p>
                     </div>

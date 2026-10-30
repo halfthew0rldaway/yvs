@@ -197,7 +197,7 @@ export default function RestockManifestModal({ isOpen, onClose }) {
                         <div>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h2 className="text-base font-bold text-slate-900">Manifest Belanja Suku Cadang ke Supplier</h2>
-                                <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                                <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-3xs font-bold px-2.5 py-0.5 rounded-full">
                                     1-Click Restock Manifest
                                 </span>
                             </div>
@@ -378,26 +378,26 @@ export default function RestockManifestModal({ isOpen, onClose }) {
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-bold text-slate-800">{item.nama}</span>
                                                         {item.urgency === "urgent_tiket" && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
                                                                 <Zap className="w-3 h-3 text-blue-600 fill-current" />
                                                                 Dibutuhkan {item.demand_active}x Tiket
                                                             </span>
                                                         )}
                                                         {item.urgency === "habis" && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
                                                                 <AlertCircle className="w-3 h-3 text-rose-600" />
                                                                 Habis
                                                             </span>
                                                         )}
                                                         {item.urgency === "menipis" && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
                                                                 <Clock className="w-3 h-3 text-amber-600" />
                                                                 Menipis
                                                             </span>
                                                         )}
                                                     </div>
                                                     {item.last_supplier && (
-                                                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                                                        <span className="text-3xs text-slate-400 block mt-0.5">
                                                             Supplier terakhir: {item.last_supplier}
                                                         </span>
                                                     )}

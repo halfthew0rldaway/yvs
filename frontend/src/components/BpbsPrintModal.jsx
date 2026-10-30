@@ -65,7 +65,7 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                         </div>
                         <div className="min-w-0">
                             <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">Surat Tanda Terima Masuk (BPBS)</h3>
-                            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">Bukti Penerimaan Barang Servis resmi untuk pelanggan</p>
+                            <p className="text-2xs sm:text-xs text-slate-500 mt-0.5 truncate">Bukti Penerimaan Barang Servis resmi untuk pelanggan</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 justify-end">
@@ -96,10 +96,10 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                                 <span className="text-xl font-black tracking-tight text-slate-900 font-mono">KOMPUTERAWET.COM</span>
                                 <span className="text-xs font-bold px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-mono">YANGVERSA</span>
                             </div>
-                            <p className="text-[11px] text-slate-600 font-medium mt-0.5">
+                            <p className="text-2xs text-slate-600 font-medium mt-0.5">
                                 Pusat Reparasi Laptop, PC Desktop & Solusi Hardware Spesialis
                             </p>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
+                            <p className="text-3xs text-slate-500 mt-0.5">
                                 Motto Layanan: <span className="font-semibold text-blue-700">Transparent · Trusted · WOW</span>
                             </p>
                         </div>
@@ -108,26 +108,26 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                                 Tanda Terima Masuk (BPBS)
                             </span>
                             <p className="text-xs font-mono font-bold text-blue-700 mt-1">{tiket.nomor_tiket}</p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">{tglMasuk}</p>
+                            <p className="text-2xs text-slate-500 mt-0.5">{tglMasuk}</p>
                         </div>
                     </div>
 
                     {/* Quick Metadata Bar */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 px-4 bg-slate-50 rounded-xl border border-slate-200 mt-4 text-xs">
                         <div>
-                            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Paket SLA</span>
+                            <span className="text-slate-400 block text-3xs uppercase font-semibold">Paket SLA</span>
                             <span className="font-bold text-slate-800 uppercase">{tiket.sla_paket || "Reguler"}</span>
                         </div>
                         <div>
-                            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Prioritas Harapan</span>
+                            <span className="text-slate-400 block text-3xs uppercase font-semibold">Prioritas Harapan</span>
                             <span className="font-bold text-slate-800">{tiket.prioritas_pelanggan || "Standar"}</span>
                         </div>
                         <div>
-                            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Teknisi PIC</span>
+                            <span className="text-slate-400 block text-3xs uppercase font-semibold">Teknisi PIC</span>
                             <span className="font-bold text-slate-800">{tiket.teknisi?.nama || "Tim Teknisi"}</span>
                         </div>
                         <div>
-                            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Status Awal</span>
+                            <span className="text-slate-400 block text-3xs uppercase font-semibold">Status Awal</span>
                             <span className="font-bold text-blue-700">Diterima di Toko</span>
                         </div>
                     </div>
@@ -183,7 +183,7 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                     <div className="border border-slate-200 rounded-xl p-4 bg-white mt-4 text-xs">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <span className="text-slate-500 block uppercase font-semibold text-[10px] mb-1">
+                                <span className="text-slate-500 block uppercase font-semibold text-3xs mb-1">
                                     Kelengkapan Yang Dititipkan:
                                 </span>
                                 <p className="font-medium text-slate-800 bg-slate-50 p-2.5 rounded-lg border border-slate-200/80">
@@ -191,7 +191,7 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                                 </p>
                             </div>
                             <div>
-                                <span className="text-slate-500 block uppercase font-semibold text-[10px] mb-1">
+                                <span className="text-slate-500 block uppercase font-semibold text-3xs mb-1">
                                     Kondisi Fisik Saat Intake:
                                 </span>
                                 <p className="font-medium text-slate-800 bg-slate-50 p-2.5 rounded-lg border border-slate-200/80">
@@ -202,7 +202,7 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                         </div>
 
                         <div className="mt-3 pt-3 border-t border-slate-100">
-                            <span className="text-slate-500 block uppercase font-semibold text-[10px] mb-1">
+                            <span className="text-slate-500 block uppercase font-semibold text-3xs mb-1">
                                 Keluhan / Gejala Kerusakan Awal:
                             </span>
                             <p className="text-slate-900 font-medium bg-amber-50/50 p-2.5 rounded-lg border border-amber-200/60 leading-relaxed whitespace-pre-line">
@@ -213,11 +213,11 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
 
                     {/* SOP Permission (Bab 9 Privasi & Izin) */}
                     <div className="border border-blue-200 bg-blue-50/30 rounded-xl p-3.5 mt-4 text-xs">
-                        <div className="flex items-center gap-2 mb-2 font-bold text-blue-900 text-[11px] uppercase tracking-wider">
+                        <div className="flex items-center gap-2 mb-2 font-bold text-blue-900 text-2xs uppercase tracking-wider">
                             <ShieldCheck className="w-4 h-4 text-blue-600" />
                             <span>Persetujuan Izin & Jaminan Privasi (SOP Service Excellent Yangversa)</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-700">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-2xs text-slate-700">
                             <div className="flex items-center gap-2">
                                 <span className="w-4 h-4 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                                     <CheckCircle2 className="w-3 h-3 text-emerald-700" />
@@ -231,7 +231,7 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                                 <span>Izin Cek Windows: <strong>{tiket.izin_akses_os ? "Pengecekan Teknis Saja" : "Tidak Diizinkan"}</strong></span>
                             </div>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-2 italic">
+                        <p className="text-3xs text-slate-500 mt-2 italic">
                             * Jaminan Toko: Kami tidak pernah membuka, menyalin, atau mendistribusikan file pribadi/foto pelanggan. Pengecekan OS murni teknis diagnostik.
                         </p>
                     </div>
@@ -246,22 +246,22 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                             />
                             <div>
                                 <h5 className="font-bold text-slate-900 text-xs sm:text-sm">Pantau Status Servis Secara Real-Time</h5>
-                                <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                                <p className="text-2xs text-slate-600 mt-0.5 leading-relaxed">
                                     Scan QR code di samping menggunakan kamera smartphone Anda atau buka:
                                 </p>
-                                <p className="text-[11px] font-mono font-bold text-blue-700 mt-0.5">
+                                <p className="text-2xs font-mono font-bold text-blue-700 mt-0.5">
                                     {typeof window !== "undefined" ? window.location.origin : "https://komputerawet.com"}/tracking
                                 </p>
                             </div>
                         </div>
-                        <div className="text-right text-[10px] text-slate-500 shrink-0">
+                        <div className="text-right text-3xs text-slate-500 shrink-0">
                             <span>Estimasi Konfirmasi Penawaran:</span>
                             <span className="block font-bold text-slate-800 text-xs">Maksimal 1 x 24 Jam Kerja</span>
                         </div>
                     </div>
 
                     {/* Syarat & Ketentuan Workshop */}
-                    <div className="mt-4 pt-3 border-t border-slate-200 text-[9.5px] text-slate-500 space-y-1 leading-normal">
+                    <div className="mt-4 pt-3 border-t border-slate-200 text-4xs text-slate-500 space-y-1 leading-normal">
                         <p className="font-bold text-slate-700 uppercase">Syarat & Ketentuan Penerimaan Servis:</p>
                         <ol className="list-decimal pl-4 space-y-0.5">
                             <li>Surat Tanda Terima Masuk (BPBS) ini merupakan bukti sah penyerahan barang dan <strong>wajib dibawa saat pengambilan unit</strong>.</li>
@@ -274,18 +274,18 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                     {/* Kolom Tanda Tangan */}
                     <div className="grid grid-cols-2 gap-8 mt-6 pt-4 border-t border-slate-200 text-center text-xs">
                         <div>
-                            <p className="text-slate-500 text-[11px]">Yang Menyerahkan (Pelanggan),</p>
+                            <p className="text-slate-500 text-2xs">Yang Menyerahkan (Pelanggan),</p>
                             <div className="h-16 flex items-end justify-center">
-                                <span className="text-[10px] text-slate-300 italic mb-1">[ Tanda Tangan / Paraf ]</span>
+                                <span className="text-3xs text-slate-300 italic mb-1">[ Tanda Tangan / Paraf ]</span>
                             </div>
                             <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 inline-block min-w-[140px]">
                                 ( {customer?.nama || "Pelanggan"} )
                             </p>
                         </div>
                         <div>
-                            <p className="text-slate-500 text-[11px]">Petugas Penerima (Frontliner),</p>
+                            <p className="text-slate-500 text-2xs">Petugas Penerima (Frontliner),</p>
                             <div className="h-16 flex items-end justify-center">
-                                <span className="text-[10px] text-slate-300 italic mb-1">[ Cap & Paraf Toko ]</span>
+                                <span className="text-3xs text-slate-300 italic mb-1">[ Cap & Paraf Toko ]</span>
                             </div>
                             <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 inline-block min-w-[140px]">
                                 ( {tiket.teknisi?.nama || "Frontliner Yangversa"} )

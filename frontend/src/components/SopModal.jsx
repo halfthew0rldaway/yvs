@@ -24,7 +24,7 @@ export default function SopModal({ isOpen, onClose }) {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-base font-bold text-slate-900">Buku Saku Panduan Service Excellent YVS</h2>
-                                <span className="bg-blue-100 text-blue-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                <span className="bg-blue-100 text-blue-700 text-3xs font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
                                     Versi 1.0
                                 </span>
                             </div>
@@ -189,12 +189,12 @@ export default function SopModal({ isOpen, onClose }) {
                                 <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/40">
                                     <div className="flex items-center justify-between mb-1.5">
                                         <h4 className="font-bold text-rose-900 text-sm">1. Koleris (Tegas & Cepat)</h4>
-                                        <span className="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">Fokus Solusi</span>
+                                        <span className="text-3xs font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">Fokus Solusi</span>
                                     </div>
                                     <p className="text-slate-600 mb-2">
                                         Karakter: To the point, menghargai efisiensi waktu, tidak suka basa-basi panjang, berorientasi hasil.
                                     </p>
-                                    <div className="bg-white/80 p-2.5 rounded-lg border border-rose-100 text-[11px] text-slate-700">
+                                    <div className="bg-white/80 p-2.5 rounded-lg border border-rose-100 text-2xs text-slate-700">
                                         <strong>Cara Menghadapi:</strong> Langsung sampaikan pokok masalah, solusi, estimasi biaya angka pasti, dan tanggal selesai. Hindari penjelasan bertele-tele.
                                     </div>
                                 </div>
@@ -202,12 +202,12 @@ export default function SopModal({ isOpen, onClose }) {
                                 <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/40">
                                     <div className="flex items-center justify-between mb-1.5">
                                         <h4 className="font-bold text-amber-900 text-sm">2. Sanguinis (Ramah & Ekspresif)</h4>
-                                        <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Hubungan Akrab</span>
+                                        <span className="text-3xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Hubungan Akrab</span>
                                     </div>
                                     <p className="text-slate-600 mb-2">
                                         Karakter: Suka bercerita, ceria, antusias, menghargai perhatian personal dan sambutan bersahabat.
                                     </p>
-                                    <div className="bg-white/80 p-2.5 rounded-lg border border-amber-100 text-[11px] text-slate-700">
+                                    <div className="bg-white/80 p-2.5 rounded-lg border border-amber-100 text-2xs text-slate-700">
                                         <strong>Cara Menghadapi:</strong> Berikan sambutan hangat, tunjukkan antusiasme, puji unitnya, lampirkan foto kondisi unit, dan gunakan kalimat ramah bersahabat.
                                     </div>
                                 </div>
@@ -215,12 +215,12 @@ export default function SopModal({ isOpen, onClose }) {
                                 <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/40">
                                     <div className="flex items-center justify-between mb-1.5">
                                         <h4 className="font-bold text-emerald-900 text-sm">3. Plegmatis (Tenang & Sabar)</h4>
-                                        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Rasa Aman</span>
+                                        <span className="text-3xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Rasa Aman</span>
                                     </div>
                                     <p className="text-slate-600 mb-2">
                                         Karakter: Tidak suka konflik, butuh kepastian dan ketenangan, butuh waktu dalam mengambil keputusan.
                                     </p>
-                                    <div className="bg-white/80 p-2.5 rounded-lg border border-emerald-100 text-[11px] text-slate-700">
+                                    <div className="bg-white/80 p-2.5 rounded-lg border border-emerald-100 text-2xs text-slate-700">
                                         <strong>Cara Menghadapi:</strong> Bicara dengan tenang, sabar, jangan mendesak konfirmasi, beri rasa aman bahwa unit dipegang oleh teknisi berpengalaman.
                                     </div>
                                 </div>
@@ -228,12 +228,12 @@ export default function SopModal({ isOpen, onClose }) {
                                 <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/40">
                                     <div className="flex items-center justify-between mb-1.5">
                                         <h4 className="font-bold text-indigo-900 text-sm">4. Melankolis (Kritis & Rinci)</h4>
-                                        <span className="text-[10px] font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">Detail Logis</span>
+                                        <span className="text-3xs font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">Detail Logis</span>
                                     </div>
                                     <p className="text-slate-600 mb-2">
                                         Karakter: Teliti, menyukai data, kritis terhadap biaya, ingin memahami penyebab masalah secara teknis logis.
                                     </p>
-                                    <div className="bg-white/80 p-2.5 rounded-lg border border-indigo-100 text-[11px] text-slate-700">
+                                    <div className="bg-white/80 p-2.5 rounded-lg border border-indigo-100 text-2xs text-slate-700">
                                         <strong>Cara Menghadapi:</strong> Jelaskan secara runut dan logis: temuan, penyebab, tindakan, rincian biaya sparepart vs jasa, serta syarat garansi tertulis.
                                     </div>
                                 </div>
@@ -298,7 +298,7 @@ export default function SopModal({ isOpen, onClose }) {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/50 space-y-2">
                                     <div className="flex items-center gap-1.5 font-bold text-blue-900 text-sm">
-                                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
+                                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xs">1</span>
                                         Level 1: Frontliner / Admin
                                     </div>
                                     <ul className="text-slate-600 space-y-1 list-disc list-inside">
@@ -310,7 +310,7 @@ export default function SopModal({ isOpen, onClose }) {
 
                                 <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 space-y-2">
                                     <div className="flex items-center gap-1.5 font-bold text-amber-900 text-sm">
-                                        <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px]">2</span>
+                                        <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-3xs">2</span>
                                         Level 2: Kepala Teknisi / SPV
                                     </div>
                                     <ul className="text-slate-600 space-y-1 list-disc list-inside">
@@ -322,7 +322,7 @@ export default function SopModal({ isOpen, onClose }) {
 
                                 <div className="p-4 rounded-xl border border-red-200 bg-red-50/50 space-y-2">
                                     <div className="flex items-center gap-1.5 font-bold text-red-900 text-sm">
-                                        <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]">3</span>
+                                        <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-3xs">3</span>
                                         Level 3: Pimpinan Workshop
                                     </div>
                                     <ul className="text-slate-600 space-y-1 list-disc list-inside">
@@ -342,7 +342,7 @@ export default function SopModal({ isOpen, onClose }) {
                                 <h4 className="font-bold text-emerald-900 text-sm flex items-center gap-1.5">
                                     <CheckCircle2 className="w-4 h-4 text-emerald-600" /> HAL YANG WAJIB DILAKUKAN (DO)
                                 </h4>
-                                <ul className="space-y-1.5 text-slate-700 list-disc list-inside text-[11px]">
+                                <ul className="space-y-1.5 text-slate-700 list-disc list-inside text-2xs">
                                     <li>Menyapa dengan sebutan hormat Bapak/Ibu dan menyebut nama pelanggan.</li>
                                     <li>Meminta izin tertulis/lisan jelas sebelum membongkar atau tes login OS.</li>
                                     <li>Mendokumentasikan foto fisik unit saat diterima di depan pelanggan.</li>
@@ -355,7 +355,7 @@ export default function SopModal({ isOpen, onClose }) {
                                 <h4 className="font-bold text-red-900 text-sm flex items-center gap-1.5">
                                     <AlertTriangle className="w-4 h-4 text-red-600" /> HAL YANG DILARANG (DON'T)
                                 </h4>
-                                <ul className="space-y-1.5 text-slate-700 list-disc list-inside text-[11px]">
+                                <ul className="space-y-1.5 text-slate-700 list-disc list-inside text-2xs">
                                     <li>Mengirim stiker atau emoji di pesan WhatsApp resmi workshop kepada pelanggan.</li>
                                     <li>Membantah pelanggan dengan kata 'Kan sudah saya bilang' atau 'Itu salah Bapak'.</li>
                                     <li>Menyentuh atau membuka file pribadi (foto/dokumen) pelanggan di luar izin teknis.</li>

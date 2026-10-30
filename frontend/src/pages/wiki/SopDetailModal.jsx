@@ -49,7 +49,7 @@ export default function SopDetailModal({ isOpen, onClose, sop, onEdit, canModify
                                     <Users className="w-3 h-3 mr-1" />
                                     <span>Untuk: {sop.target_role}</span>
                                 </span>
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
                                     v{sop.versi || "1.0"}
                                 </span>
                             </div>
@@ -149,7 +149,7 @@ export default function SopDetailModal({ isOpen, onClose, sop, onEdit, canModify
 
                 {/* Footer Actions */}
                 <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
-                    <div className="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
+                    <div className="text-2xs text-slate-400 flex items-center gap-1.5 font-medium">
                         <Calendar className="w-3.5 h-3.5" />
                         <span>Dokumen Resmi KomputerAwet / Serv.io KEOS</span>
                     </div>

@@ -75,7 +75,7 @@ export default function CustomerBadgeGuideModal({ isOpen, onClose }) {
                                                 <span>{badge.label}</span>
                                             </span>
                                         </div>
-                                        <span className="text-[11px] text-slate-500 font-medium bg-slate-100 px-2.5 py-0.5 rounded-md">
+                                        <span className="text-2xs text-slate-500 font-medium bg-slate-100 px-2.5 py-0.5 rounded-md">
                                             Syarat: {badge.criteria}
                                         </span>
                                     </div>
@@ -91,7 +91,7 @@ export default function CustomerBadgeGuideModal({ isOpen, onClose }) {
                                         className="pt-2 border-t border-slate-100 flex items-start gap-2 text-xs whitespace-normal break-words"
                                         style={{ whiteSpace: "normal", wordBreak: "break-word" }}
                                     >
-                                        <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider shrink-0 mt-0.5">SOP Tindakan:</span>
+                                        <span className="text-2xs font-bold text-slate-700 uppercase tracking-wider shrink-0 mt-0.5">SOP Tindakan:</span>
                                         <span className="text-slate-600 flex-1 min-w-0">{badge.sopGuidance}</span>
                                     </div>
                                 </div>

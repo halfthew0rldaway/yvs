@@ -240,7 +240,7 @@ export default function ManageCustomerBadgesModal({
 
                                                 {/* Saran Sistem Tag */}
                                                 {isAuto && (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-2xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
                                                         <Sparkles className="w-3 h-3 text-amber-600" />
                                                         Saran Sistem
                                                     </span>
@@ -249,14 +249,14 @@ export default function ManageCustomerBadgesModal({
 
                                             {/* Short Label Tag on Right */}
                                             {badge.shortLabel && (
-                                                <span className="text-[11px] font-semibold text-slate-400 shrink-0 ml-auto">
+                                                <span className="text-2xs font-semibold text-slate-400 shrink-0 ml-auto">
                                                     {badge.shortLabel}
                                                 </span>
                                             )}
                                         </div>
 
                                         {/* Badge Description */}
-                                        <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed break-words">
+                                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed break-words">
                                             {badge.description}
                                         </p>
                                     </div>
@@ -264,10 +264,10 @@ export default function ManageCustomerBadgesModal({
                                     {/* SOP Guidance Callout */}
                                     {badge.sopGuidance && (
                                         <div className="mt-1 p-2.5 sm:p-3 bg-slate-50/90 rounded-xl border border-slate-200/70 text-xs flex items-start gap-2.5">
-                                            <span className="font-bold text-slate-700 uppercase tracking-wider text-[10px] shrink-0 mt-0.5 px-1.5 py-0.5 bg-slate-200/70 rounded">
+                                            <span className="font-bold text-slate-700 uppercase tracking-wider text-3xs shrink-0 mt-0.5 px-1.5 py-0.5 bg-slate-200/70 rounded">
                                                 SOP
                                             </span>
-                                            <span className="leading-relaxed flex-1 text-[11.5px] text-slate-600 break-words">
+                                            <span className="leading-relaxed flex-1 text-2xs text-slate-600 break-words">
                                                 {badge.sopGuidance}
                                             </span>
                                         </div>

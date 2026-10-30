@@ -46,7 +46,7 @@ const CustomerRow = memo(function CustomerRow({
                     {customer.nama}
                 </button>
                 {customer.catatan_khusus && (
-                    <p className="text-[11px] text-slate-500 truncate max-w-[240px] mt-0.5" title={customer.catatan_khusus}>
+                    <p className="text-2xs text-slate-500 truncate max-w-[240px] mt-0.5" title={customer.catatan_khusus}>
                         <span className="text-slate-400 font-medium">Catatan:</span> {customer.catatan_khusus}
                     </p>
                 )}
@@ -208,8 +208,8 @@ export default function CustomerList() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Data Pelanggan</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Kelola data pelanggan, profil komunikasi, dan unit perangkat yang terdaftar</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Data Pelanggan</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Kelola data pelanggan, profil komunikasi, dan unit perangkat yang terdaftar</p>
                 </div>
                 <div className="flex items-center gap-2.5 shrink-0">
                     <button
@@ -302,7 +302,7 @@ export default function CustomerList() {
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
-                        <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0]">
+                        <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5 w-16">No</th>
                                 <th className="px-6 py-3.5">Nama Pelanggan</th>

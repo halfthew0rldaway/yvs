@@ -237,7 +237,7 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                         <div className="space-y-2">
                             {poinKunciList.map((point, idx) => (
                                 <div key={idx} className="flex items-center gap-2">
-                                    <span className="w-5 text-[11px] font-bold text-slate-400 text-center font-mono">
+                                    <span className="w-5 text-2xs font-bold text-slate-400 text-center font-mono">
                                         {idx + 1}.
                                     </span>
                                     <input

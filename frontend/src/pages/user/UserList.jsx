@@ -211,8 +211,8 @@ export default function UserList() {
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Manajemen Staf & Performa</h1>
-                    <p className="text-sm text-slate-500 mt-1">Kelola akun staf, teknisi, dan pantau indikator kinerja (KPI)</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Manajemen Staf & Performa</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Kelola akun staf, teknisi, dan pantau indikator kinerja (KPI)</p>
                 </div>
                 <button
                     onClick={handleOpenCreateModal}
@@ -265,7 +265,7 @@ export default function UserList() {
                             {topPerformer ? topPerformer.nama : "-"}
                         </p>
                         {topPerformer && (
-                            <p className="text-[11px] text-emerald-600 font-semibold">{topPerformer.completedCount} tiket selesai</p>
+                            <p className="text-2xs text-emerald-600 font-semibold">{topPerformer.completedCount} tiket selesai</p>
                         )}
                     </div>
                 </div>
@@ -370,7 +370,7 @@ export default function UserList() {
                             />
                         ) : (
                             <table className="w-full text-sm text-left whitespace-nowrap">
-                                <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0]">
+                                <thead className="table-header">
                                     <tr>
                                         <th className="px-6 py-3.5">User</th>
                                         <th className="px-6 py-3.5">Email</th>
@@ -473,7 +473,7 @@ export default function UserList() {
                         {performance.map((item, idx) => (
                             <div key={item.id} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
                                 {idx === 0 && (
-                                    <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                    <div className="absolute top-0 right-0 bg-amber-500 text-white text-3xs font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1 shadow-sm">
                                         <Trophy className="w-3 h-3" /> #1 Top Performer
                                     </div>
                                 )}

@@ -256,7 +256,7 @@ export default function AddApplicantModal({ isOpen, onClose, jobs = [], onSucces
                             <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
                                 2. Latar Belakang Pendidikan
                             </div>
-                            <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                            <span className="text-2xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
                                 Pilih salah satu
                             </span>
                         </div>
@@ -293,7 +293,7 @@ export default function AddApplicantModal({ isOpen, onClose, jobs = [], onSucces
                                             <div className={`text-xs font-bold leading-tight ${isSelected ? "text-blue-950" : "text-slate-800"}`}>
                                                 {tile.title}
                                             </div>
-                                            <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                                            <div className="text-3xs text-slate-500 mt-0.5 leading-tight">
                                                 {tile.subtitle}
                                             </div>
                                         </div>

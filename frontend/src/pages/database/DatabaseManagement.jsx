@@ -314,8 +314,8 @@ export default function DatabaseManagement() {
                             <Database className="w-5 h-5 text-emerald-400" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Manajemen & Cadangan Database</h1>
-                            <p className="text-sm text-slate-500 mt-0.5">
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Manajemen & Cadangan Database</h1>
+                            <p className="text-xs sm:text-sm text-slate-500 mt-1">
                                 Pusat ekspor data, cadangan terenkripsi, dan pemantauan kapasitas penyimpanan sistem
                             </p>
                         </div>
@@ -565,7 +565,7 @@ export default function DatabaseManagement() {
                     {dateRange === "custom" && (
                         <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
                             <div className="w-full sm:w-auto">
-                                <label className="text-[11px] text-slate-500 font-medium block mb-1">Dari Tanggal:</label>
+                                <label className="text-2xs text-slate-500 font-medium block mb-1">Dari Tanggal:</label>
                                 <input
                                     type="date"
                                     value={startDate}
@@ -575,7 +575,7 @@ export default function DatabaseManagement() {
                             </div>
                             <span className="text-slate-400 hidden sm:inline pt-5">&mdash;</span>
                             <div className="w-full sm:w-auto">
-                                <label className="text-[11px] text-slate-500 font-medium block mb-1">Sampai Tanggal:</label>
+                                <label className="text-2xs text-slate-500 font-medium block mb-1">Sampai Tanggal:</label>
                                 <input
                                     type="date"
                                     value={endDate}
@@ -656,11 +656,11 @@ export default function DatabaseManagement() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2">
                                             <h4 className="font-bold text-slate-900 text-xs truncate">{mod.name}</h4>
-                                            <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md shrink-0">
+                                            <span className="text-2xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md shrink-0">
                                                 {count.toLocaleString("id-ID")} baris
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-500 mt-0.5 leading-snug line-clamp-1">
+                                        <p className="text-2xs text-slate-500 mt-0.5 leading-snug line-clamp-1">
                                             {mod.desc}
                                         </p>
                                     </div>
@@ -749,7 +749,7 @@ export default function DatabaseManagement() {
                             </select>
                         </div>
 
-                        <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 flex items-start gap-2">
+                        <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-2xs text-amber-800 flex items-start gap-2">
                             <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-700" />
                             <span>
                                 <strong>Penting:</strong> Tindakan ini permanen. Sebaiknya Anda mengunduh cadangan (*backup*) data log terlebih dahulu sebelum melakukan pembersihan.

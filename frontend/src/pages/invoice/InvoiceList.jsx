@@ -108,8 +108,8 @@ export default function InvoiceList() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Data & Laporan Invoice</h1>
-                    <p className="text-sm text-slate-500 mt-1">Rekapitulasi transaksi, pendapatan periodik, dan performa servis</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Data & Laporan Invoice</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Rekapitulasi transaksi, pendapatan periodik, dan performa servis</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2.5 shrink-0">
                     <button
@@ -140,7 +140,7 @@ export default function InvoiceList() {
                                 Rp
                             </div>
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900">{formatRupiah(reportData.summary.totalPendapatan)}</h3>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{formatRupiah(reportData.summary.totalPendapatan)}</h3>
                         <p className="text-xs text-slate-500 mt-1">{reportData.summary.totalInvoices} invoice tercatat</p>
                     </div>
 
@@ -151,7 +151,7 @@ export default function InvoiceList() {
                                 <TrendingUp className="w-4 h-4" />
                             </div>
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900">{formatRupiah(reportData.summary.totalJasa)}</h3>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{formatRupiah(reportData.summary.totalJasa)}</h3>
                         <p className="text-xs text-emerald-600 font-medium mt-1">Laba murni pengerjaan</p>
                     </div>
 
@@ -162,7 +162,7 @@ export default function InvoiceList() {
                                 <Wrench className="w-4 h-4" />
                             </div>
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900">{formatRupiah(reportData.summary.totalSparepart)}</h3>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{formatRupiah(reportData.summary.totalSparepart)}</h3>
                         <p className="text-xs text-slate-500 mt-1">Komponen & sparepart</p>
                     </div>
 
@@ -173,7 +173,7 @@ export default function InvoiceList() {
                                 <CheckCircle className="w-4 h-4" />
                             </div>
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900">{reportData.summary.tiketSelesai} Unit</h3>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{reportData.summary.tiketSelesai} Unit</h3>
                         <p className="text-xs text-slate-500 mt-1">Dari {reportData.summary.totalTiketMasuk} tiket masuk</p>
                     </div>
                 </div>
@@ -286,7 +286,7 @@ export default function InvoiceList() {
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
-                        <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0]">
+                        <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5">No Tiket</th>
                                 <th className="px-6 py-3.5">Customer</th>
@@ -447,7 +447,7 @@ export default function InvoiceList() {
                                 </div>
                             </div>
 
-                            <p className="text-[11px] text-slate-400 text-center pt-2">
+                            <p className="text-2xs text-slate-400 text-center pt-2">
                                 Dokumen ini dihasilkan secara otomatis oleh Serv.io Workshop Management System.
                             </p>
                         </div>

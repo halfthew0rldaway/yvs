@@ -351,7 +351,7 @@ export default function SparepartForm() {
                                 {isEdit ? `ID #${id}` : "Inventaris Baru"}
                             </span>
                         </div>
-                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1">
                             Pencatatan spesifikasi komponen, harga modal & jual, manajemen asal supplier/distributor, serta skenario garansi resmi.
                         </p>
                     </div>
@@ -430,7 +430,7 @@ export default function SparepartForm() {
                                     <button
                                         type="button"
                                         onClick={() => setIsAddBrandModalOpen(true)}
-                                        className="text-[11px] text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-0.5 cursor-pointer"
+                                        className="text-2xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-0.5 cursor-pointer"
                                     >
                                         <Plus className="w-3 h-3" />
                                         <span>Brand Baru</span>
@@ -495,7 +495,7 @@ export default function SparepartForm() {
                                     placeholder="Contoh: FURY Beast DDR4 16GB 3200MHz"
                                     required
                                 />
-                                <p className="text-[11px] text-slate-400 mt-1">Jangan ulangi nama merek di kolom ini (cukup seri/model).</p>
+                                <p className="text-2xs text-slate-400 mt-1">Jangan ulangi nama merek di kolom ini (cukup seri/model).</p>
                             </div>
 
                             {/* Kompatibilitas Perangkat */}
@@ -551,7 +551,7 @@ export default function SparepartForm() {
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                                         <span>Asal-Usul Pengadaan & Mitra Distributor</span>
-                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        <span className="px-2 py-0.5 rounded-md text-3xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                                             Direktori Supplier
                                         </span>
                                     </h3>
@@ -637,7 +637,7 @@ export default function SparepartForm() {
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-bold text-sm text-slate-900">{activeSupplierObj.nama}</span>
-                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                                                    <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-blue-100 text-blue-800">
                                                         {activeSupplierObj.kategori || "Distributor"}
                                                     </span>
                                                 </div>
@@ -681,7 +681,7 @@ export default function SparepartForm() {
                                             >
                                                 <div>
                                                     <div className="flex items-start justify-between gap-1.5 mb-1">
-                                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                                                        <span className={`text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
                                                             sup.kategori === "Distributor Resmi"
                                                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                                                 : sup.kategori?.includes("Paralel")
@@ -702,13 +702,13 @@ export default function SparepartForm() {
                                                     </h4>
 
                                                     {sup.kontak_person && (
-                                                        <p className="text-[11px] text-slate-500 mt-0.5">
+                                                        <p className="text-2xs text-slate-500 mt-0.5">
                                                             PIC: <span className="font-semibold text-slate-700">{sup.kontak_person}</span>
                                                         </p>
                                                     )}
                                                 </div>
 
-                                                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                                                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-2xs">
                                                     {sup.telepon ? (
                                                         <span className="font-mono text-slate-600 flex items-center gap-1">
                                                             <Phone className="w-3 h-3 text-emerald-600" />
@@ -724,7 +724,7 @@ export default function SparepartForm() {
                                                             target="_blank" 
                                                             rel="noreferrer"
                                                             onClick={(e) => e.stopPropagation()}
-                                                            className="text-blue-600 hover:underline flex items-center gap-0.5 font-semibold text-[10px]"
+                                                            className="text-blue-600 hover:underline flex items-center gap-0.5 font-semibold text-3xs"
                                                         >
                                                             <span>Portal/Web</span>
                                                             <ExternalLink className="w-2.5 h-2.5" />
@@ -873,7 +873,7 @@ export default function SparepartForm() {
                                         >
                                             <div>
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    <span className="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                         Authorized / Resmi
                                                     </span>
                                                     {form.sistem_perhitungan_garansi === "sejak_nota_customer" && (
@@ -883,7 +883,7 @@ export default function SparepartForm() {
                                                 <h5 className="text-xs sm:text-sm font-bold text-slate-900 mb-1">
                                                     Sejak Nota End-User
                                                 </h5>
-                                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                                <p className="text-2xs text-slate-500 leading-relaxed">
                                                     Hari pertama (Day 1) dihitung sejak toko mencetak nota penjualan/servis ke pelanggan. Sesuai perlindungan konsumen & distributor resmi.
                                                 </p>
                                             </div>
@@ -900,7 +900,7 @@ export default function SparepartForm() {
                                         >
                                             <div>
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+                                                    <span className="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
                                                         Distri Independen / Grosir
                                                     </span>
                                                     {form.sistem_perhitungan_garansi === "sejak_segel_distri" && (
@@ -910,7 +910,7 @@ export default function SparepartForm() {
                                                 <h5 className="text-xs sm:text-sm font-bold text-slate-900 mb-1">
                                                     Sejak Segel Distributor
                                                 </h5>
-                                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                                <p className="text-2xs text-slate-500 leading-relaxed">
                                                     Garansi sudah berjalan sejak distributor menempelkan stiker segel (saat keluar dari gudang). Jika lama di rak toko, masa garansi sisa ke end-user terpotong.
                                                 </p>
                                             </div>
@@ -927,7 +927,7 @@ export default function SparepartForm() {
                                         >
                                             <div>
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                                                    <span className="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
                                                         <Sparkles className="w-3 h-3 text-blue-600" />
                                                         <span>Bantu Klaim Toko</span>
                                                     </span>
@@ -938,7 +938,7 @@ export default function SparepartForm() {
                                                 <h5 className="text-xs sm:text-sm font-bold text-slate-900 mb-1">
                                                     Garansi Seumur Hidup
                                                 </h5>
-                                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                                <p className="text-2xs text-slate-500 leading-relaxed">
                                                     Untuk RAM/Memori kit. Toko berkomitmen menjembatani proses klaim ke vendor resmi di kemudian hari selama stiker segel utuh.
                                                 </p>
                                             </div>
@@ -980,7 +980,7 @@ export default function SparepartForm() {
                                 <DollarSign className="w-4 h-4 text-emerald-600" />
                                 <span>Finansial & Margin Laba</span>
                             </h3>
-                            <span className="text-[11px] font-bold text-slate-500 font-mono">
+                            <span className="text-2xs font-bold text-slate-500 font-mono">
                                 HPP vs Jual
                             </span>
                         </div>
@@ -1024,7 +1024,7 @@ export default function SparepartForm() {
 
                         {/* Quick Markup Presets */}
                         <div>
-                            <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
+                            <label className="block text-2xs font-semibold text-slate-500 mb-1.5">
                                 1-Klik Preset Margin Keuntungan:
                             </label>
                             <div className="grid grid-cols-4 gap-1.5">
@@ -1078,7 +1078,7 @@ export default function SparepartForm() {
                                 <Hash className="w-4 h-4 text-blue-600" />
                                 <span>Stok Fisik & Logistik</span>
                             </h3>
-                            <span className="text-[11px] font-bold text-slate-500">
+                            <span className="text-2xs font-bold text-slate-500">
                                 Gudang Workshop
                             </span>
                         </div>

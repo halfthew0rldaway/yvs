@@ -92,7 +92,7 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
                         {tiket.perangkat?.merek} {tiket.perangkat?.model}
                     </span>
                     {tiket.defect_map?.items?.length > 0 && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200" title={`${tiket.defect_map.items.length} cacat fisik tercatat`}>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-semibold bg-amber-50 text-amber-700 border border-amber-200" title={`${tiket.defect_map.items.length} cacat fisik tercatat`}>
                             <Laptop className="w-2.5 h-2.5" />
                             {tiket.defect_map.items.length} Defek
                         </span>
@@ -109,25 +109,25 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
                         {STATUS_LABELS[tiket.status]?.label || tiket.status}
                     </span>
                     {tiket.is_garansi_claim && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title={`Klaim Garansi Retur dari #${tiket.parent_tiket?.nomor_tiket || 'Lama'}`}>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title={`Klaim Garansi Retur dari #${tiket.parent_tiket?.nomor_tiket || 'Lama'}`}>
                             <ShieldCheck className="w-3 h-3 text-indigo-600" />
                             Klaim Garansi
                         </span>
                     )}
                     {tiket.is_revisi_acc && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200" title={`Pernah 1x Revisi ACC: ${tiket.alasan_revisi_acc || '-'}`}>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-rose-50 text-rose-700 border border-rose-200" title={`Pernah 1x Revisi ACC: ${tiket.alasan_revisi_acc || '-'}`}>
                             <RotateCcw className="w-3 h-3 text-rose-600" />
                             Revisi ACC
                         </span>
                     )}
                     {tiket.checklist_qc?.passed_qc && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Telah Lulus QC">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Telah Lulus QC">
                             <Award className="w-3 h-3 text-emerald-600" />
                             QC
                         </span>
                     )}
                     {tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300" title={`Garansi tersisa ${tiket.warranty_status.sisaHari} hari`}>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-300" title={`Garansi tersisa ${tiket.warranty_status.sisaHari} hari`}>
                             <Clock className="w-3 h-3 text-amber-700" />
                             H-{tiket.warranty_status.sisaHari}
                         </span>
@@ -327,8 +327,8 @@ export default function TiketServisList() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Tiket Servis</h1>
-                    <p className="text-sm text-slate-500 mt-1">Kelola tiket perbaikan perangkat pelanggan</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Tiket Servis</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Kelola tiket perbaikan perangkat pelanggan</p>
                 </div>
                 {isAdmin && (
                     <div className="flex items-center gap-2.5">
@@ -405,7 +405,7 @@ export default function TiketServisList() {
                 <div className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-2.5 sm:p-3 space-y-2.5 shadow-2xs">
                     {/* Row 1: Workflow Status */}
                     <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-20 shrink-0 uppercase tracking-wider select-none">
+                        <div className="flex items-center gap-1.5 text-2xs font-bold text-slate-400 w-20 shrink-0 uppercase tracking-wider select-none">
                             <Ticket className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span>Status</span>
                         </div>
@@ -457,7 +457,7 @@ export default function TiketServisList() {
                                     >
                                         <span>{val.label}</span>
                                         {showBadge && (
-                                            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold animate-pulse ${
+                                            <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold animate-pulse ${
                                                 isActive ? "bg-red-500 text-white" : "bg-red-100 text-red-600"
                                             }`}>
                                                 {unassignedCount}
@@ -472,7 +472,7 @@ export default function TiketServisList() {
                     {/* Row 2: Priority Queues & Technician Scope */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-200/60 min-w-0">
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-20 shrink-0 uppercase tracking-wider select-none">
+                            <div className="flex items-center gap-1.5 text-2xs font-bold text-slate-400 w-20 shrink-0 uppercase tracking-wider select-none">
                                 <Zap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                 <span>Antrean</span>
                             </div>
@@ -492,7 +492,7 @@ export default function TiketServisList() {
                                 >
                                     <Zap className={`w-3.5 h-3.5 ${slaFilter === "express" ? "text-white fill-white" : "text-amber-500 fill-amber-500"}`} />
                                     <span>Express Queue</span>
-                                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                                    <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold ${
                                         slaFilter === "express" ? "bg-amber-600 text-white" : "bg-amber-100 text-amber-700"
                                     }`}>
                                         {expressCount}
@@ -514,7 +514,7 @@ export default function TiketServisList() {
                                 >
                                     <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
                                     <span>Overdue SLA</span>
-                                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                                    <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold ${
                                         slaFilter === "overdue" ? "bg-rose-700 text-white" : "bg-rose-100 text-rose-700"
                                     }`}>
                                         {overdueCount}
@@ -537,7 +537,7 @@ export default function TiketServisList() {
                                 >
                                     <Clock className="w-3.5 h-3.5 text-amber-600" />
                                     <span>Garansi H-3 CRM</span>
-                                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                                    <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold ${
                                         filter === "garansi_expiring" ? "bg-amber-700 text-white" : "bg-amber-100 text-amber-800"
                                     }`}>
                                         {expiringWarrantyCount}
@@ -648,7 +648,7 @@ export default function TiketServisList() {
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
-                        <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0]">
+                        <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5">No Tiket</th>
                                 <th className="px-6 py-3.5">Tgl Masuk</th>

@@ -398,8 +398,8 @@ export default function SparepartList() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Manajemen Sparepart & Logistik</h1>
-                    <p className="text-sm text-slate-500 mt-1">Kelola stok, harga modal (HPP), quick restock, dan audit pemakaian suku cadang</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Manajemen Sparepart & Logistik</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Kelola stok, harga modal (HPP), quick restock, dan audit pemakaian suku cadang</p>
                 </div>
                 {isAdmin && (
                     <div className="flex flex-wrap items-center gap-2.5">
@@ -451,7 +451,7 @@ export default function SparepartList() {
                             <Wrench className="w-4 h-4" />
                         </div>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900">{spareparts.length} Jenis</h3>
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{spareparts.length} Jenis</h3>
                     <p className="text-xs text-slate-500 mt-1">Total {totalUnitsInStock} unit fisik di gudang</p>
                 </div>
 
@@ -464,7 +464,7 @@ export default function SparepartList() {
                                     <DollarSign className="w-4 h-4" />
                                 </div>
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900">{formatRupiah(totalInventoryValue)}</h3>
+                            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{formatRupiah(totalInventoryValue)}</h3>
                             <p className="text-xs text-emerald-600 font-medium mt-1">Nilai modal aset tersimpan</p>
                         </div>
 
@@ -475,7 +475,7 @@ export default function SparepartList() {
                                     <TrendingUp className="w-4 h-4" />
                                 </div>
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900">{formatRupiah(totalPotentialRevenue)}</h3>
+                            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{formatRupiah(totalPotentialRevenue)}</h3>
                             <p className="text-xs text-slate-500 mt-1">Potensi margin: {formatRupiah(totalPotentialRevenue - totalInventoryValue)}</p>
                         </div>
                     </>
@@ -550,7 +550,7 @@ export default function SparepartList() {
                 >
                     <AlertTriangle className="w-3.5 h-3.5" />
                     <span>Stok Menipis (≤ 5)</span>
-                    <span className="ml-1 px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{lowStockCount}</span>
+                    <span className="ml-1 px-1.5 py-0.2 bg-white/20 rounded-full text-3xs">{lowStockCount}</span>
                 </button>
                 <button
                     onClick={() => setStockStatusFilter("out")}
@@ -561,7 +561,7 @@ export default function SparepartList() {
                     }`}
                 >
                     <span>Stok Habis (0)</span>
-                    <span className="ml-1 px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{outOfStockCount}</span>
+                    <span className="ml-1 px-1.5 py-0.2 bg-white/20 rounded-full text-3xs">{outOfStockCount}</span>
                 </button>
                 <button
                     onClick={() => setStockStatusFilter("available")}
@@ -794,7 +794,7 @@ export default function SparepartList() {
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
-                        <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0]">
+                        <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5 font-semibold">No</th>
                                 <th className="px-6 py-3.5 font-semibold">Nama Sparepart</th>
@@ -834,13 +834,13 @@ export default function SparepartList() {
                                                 <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                                     <p className="text-xs text-slate-500">{s.kategori}</p>
                                                     {(s.supplier?.nama || s.distributor_nama) && (
-                                                        <span className="inline-flex items-center gap-1 text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md font-medium">
+                                                        <span className="inline-flex items-center gap-1 text-2xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md font-medium">
                                                             <Building2 className="w-3 h-3 text-slate-400" />
                                                             <span>{s.supplier?.nama || s.distributor_nama}</span>
                                                         </span>
                                                     )}
                                                     {s.has_garansi_distri && (
-                                                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${
+                                                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold border ${
                                                             s.tipe_garansi_distri === "Lifetime" || s.sistem_perhitungan_garansi === "lifetime"
                                                                 ? "bg-blue-50 text-blue-700 border-blue-200"
                                                                 : s.sistem_perhitungan_garansi === "sejak_segel_distri"
@@ -891,7 +891,7 @@ export default function SparepartList() {
                                             {isAdmin && (
                                                 <td className="px-6 py-4 text-right">
                                                     <span className="font-semibold text-emerald-600 text-xs">+{formatRupiah(margin)}</span>
-                                                    <span className="block text-[10px] text-slate-400">({marginPercent}%)</span>
+                                                    <span className="block text-3xs text-slate-400">({marginPercent}%)</span>
                                                 </td>
                                             )}
                                             <td className="px-6 py-4 text-center">
@@ -1043,7 +1043,7 @@ export default function SparepartList() {
                                     placeholder="Contoh: 10"
                                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                                 />
-                                <p className="text-[11px] text-slate-400 mt-1">
+                                <p className="text-2xs text-slate-400 mt-1">
                                     Stok akhir setelah restock: <strong>{Number(restockModalTarget.stok) + (Number(restockQty) || 0)} unit</strong>
                                 </p>
                             </div>
@@ -1080,7 +1080,7 @@ export default function SparepartList() {
                                     <label className="block text-xs font-bold text-slate-700">
                                         Nama Supplier / Distributor
                                     </label>
-                                    <span className="text-[10px] text-slate-400">Pilih cepat:</span>
+                                    <span className="text-3xs text-slate-400">Pilih cepat:</span>
                                 </div>
                                 <input
                                     type="text"
@@ -1095,7 +1095,7 @@ export default function SparepartList() {
                                             key={s}
                                             type="button"
                                             onClick={() => setRestockSupplier(s)}
-                                            className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-[10px] transition-colors"
+                                            className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-3xs transition-colors"
                                         >
                                             {s}
                                         </button>
@@ -1203,15 +1203,15 @@ export default function SparepartList() {
                                         <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
                                         <span>Garansi Distri:</span>
                                     </span>
-                                    <span className="px-2 py-0.5 rounded-md bg-white border border-blue-200 text-blue-800 font-semibold text-[11px]">
+                                    <span className="px-2 py-0.5 rounded-md bg-white border border-blue-200 text-blue-800 font-semibold text-2xs">
                                         {historyModalTarget.tipe_garansi_distri || "1 Tahun"}
                                     </span>
-                                    <span className="text-slate-500 text-[11px]">
+                                    <span className="text-slate-500 text-2xs">
                                         {historyModalTarget.sistem_perhitungan_garansi === "lifetime" ? "(Lifetime Support / Toko Bantu Klaim)" : historyModalTarget.sistem_perhitungan_garansi === "sejak_segel_distri" ? "(Dihitung Sejak Segel Distri)" : "(Dihitung Sejak Nota End-User)"}
                                     </span>
                                 </div>
                                 {historyModalTarget.distributor_nama && (
-                                    <div className="text-[11px] text-slate-600">
+                                    <div className="text-2xs text-slate-600">
                                         Distri: <strong className="text-slate-800">{historyModalTarget.distributor_nama}</strong>
                                         {historyModalTarget.distributor_kontak && ` (${historyModalTarget.distributor_kontak})`}
                                     </div>
@@ -1269,14 +1269,14 @@ export default function SparepartList() {
                                                 <div>
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-mono font-bold text-slate-900 text-xs">{h.nomor_tiket}</span>
-                                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white border border-slate-200 text-slate-700">
+                                                        <span className="px-2 py-0.5 rounded-full text-3xs font-semibold bg-white border border-slate-200 text-slate-700">
                                                             {h.status_tiket}
                                                         </span>
                                                     </div>
                                                     <p className="text-slate-600 mt-1">
                                                         {h.perangkat} — Pemilik: <strong className="text-slate-800">{h.customer}</strong>
                                                     </p>
-                                                    <p className="text-[11px] text-slate-400 mt-0.5">
+                                                    <p className="text-2xs text-slate-400 mt-0.5">
                                                         Teknisi: {h.teknisi} &bull; {new Date(h.tanggal).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
                                                     </p>
                                                 </div>
@@ -1287,7 +1287,7 @@ export default function SparepartList() {
                                                     </span>
                                                     <Link
                                                         to={`/tiket-servis/${h.tiket_id}`}
-                                                        className="block text-[11px] text-blue-600 hover:text-blue-800 font-semibold mt-1"
+                                                        className="block text-2xs text-blue-600 hover:text-blue-800 font-semibold mt-1"
                                                     >
                                                         Buka Tiket &rarr;
                                                     </Link>
@@ -1320,11 +1320,11 @@ export default function SparepartList() {
                                                             {formatRupiah(log.harga_beli_pcs)} / unit
                                                         </span>
                                                     </div>
-                                                    <span className="text-[11px] text-slate-500">
+                                                    <span className="text-2xs text-slate-500">
                                                         {new Date(log.tanggal_beli || log.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
                                                     </span>
                                                 </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-600 mt-2 pt-2 border-t border-slate-200/60">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-2xs text-slate-600 mt-2 pt-2 border-t border-slate-200/60">
                                                     <div>
                                                         <span className="text-slate-400">Supplier:</span> <strong className="text-slate-700">{log.supplier_nama || "Supplier Umum"}</strong>
                                                     </div>
@@ -1339,7 +1339,7 @@ export default function SparepartList() {
                                                     </div>
                                                 </div>
                                                 {log.catatan && (
-                                                    <p className="mt-2 text-[11px] text-slate-500 italic bg-white p-2 rounded-lg border border-slate-200/80">
+                                                    <p className="mt-2 text-2xs text-slate-500 italic bg-white p-2 rounded-lg border border-slate-200/80">
                                                         Catatan: {log.catatan}
                                                     </p>
                                                 )}
@@ -1398,7 +1398,7 @@ export default function SparepartList() {
                         <div className="px-6 py-3.5 bg-slate-50/80 border-b border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
                                 <div>
-                                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Transaksi</p>
+                                    <p className="text-2xs font-semibold text-slate-400 uppercase tracking-wider">Total Transaksi</p>
                                     <p className="text-base font-bold text-slate-900 mt-0.5">{totalRestockEntries} <span className="text-xs font-normal text-slate-500">entri</span></p>
                                 </div>
                                 <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -1408,7 +1408,7 @@ export default function SparepartList() {
 
                             <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
                                 <div>
-                                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Unit Masuk</p>
+                                    <p className="text-2xs font-semibold text-slate-400 uppercase tracking-wider">Total Unit Masuk</p>
                                     <p className="text-base font-bold text-emerald-700 mt-0.5">+{totalRestockUnits} <span className="text-xs font-normal text-slate-500">pcs</span></p>
                                 </div>
                                 <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -1418,7 +1418,7 @@ export default function SparepartList() {
 
                             <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
                                 <div>
-                                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Nilai Pembelian</p>
+                                    <p className="text-2xs font-semibold text-slate-400 uppercase tracking-wider">Total Nilai Pembelian</p>
                                     <p className="text-base font-bold text-slate-900 mt-0.5">{formatRupiah(totalRestockSpend)}</p>
                                 </div>
                                 <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
@@ -1460,7 +1460,7 @@ export default function SparepartList() {
                                 {/* Date Range: Start */}
                                 <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 focus-within:bg-white">
                                     <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                    <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">Dari:</span>
+                                    <span className="text-3xs uppercase font-bold text-slate-400 shrink-0">Dari:</span>
                                     <input
                                         type="date"
                                         value={globalRestockStartDate}
@@ -1472,7 +1472,7 @@ export default function SparepartList() {
                                 {/* Date Range: End */}
                                 <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 focus-within:bg-white">
                                     <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                    <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">Sampai:</span>
+                                    <span className="text-3xs uppercase font-bold text-slate-400 shrink-0">Sampai:</span>
                                     <input
                                         type="date"
                                         value={globalRestockEndDate}
@@ -1485,7 +1485,7 @@ export default function SparepartList() {
                             {/* Active Filter Chips / Reset */}
                             {(globalRestockSearch || globalRestockSupplier !== "all" || globalRestockStartDate || globalRestockEndDate) && (
                                 <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100">
-                                    <span className="text-[11px]">
+                                    <span className="text-2xs">
                                         Menampilkan <strong>{filteredGlobalRestockLogs.length}</strong> dari {globalRestockLogs.length} total entri log pengadaan
                                     </span>
                                     <button
@@ -1495,7 +1495,7 @@ export default function SparepartList() {
                                             setGlobalRestockStartDate("");
                                             setGlobalRestockEndDate("");
                                         }}
-                                        className="text-[11px] font-bold text-red-600 hover:text-red-700 hover:underline"
+                                        className="text-2xs font-bold text-red-600 hover:text-red-700 hover:underline"
                                     >
                                         Reset Semua Filter
                                     </button>
@@ -1545,7 +1545,7 @@ export default function SparepartList() {
                                 <div className="overflow-x-auto overflow-y-auto max-h-[480px] custom-scrollbar border border-slate-200 rounded-xl">
                                     <table className="w-full text-left whitespace-nowrap">
                                         <thead className="sticky top-0 bg-slate-50 z-10 shadow-[0_1px_0_0_#e2e8f0]">
-                                            <tr className="border-b border-slate-200 text-slate-600 font-bold text-[11px] uppercase tracking-wider">
+                                            <tr className="border-b border-slate-200 text-slate-600 font-bold text-2xs uppercase tracking-wider">
                                                 <th className="py-3 px-3.5">Tanggal</th>
                                                 <th className="py-3 px-3.5">No. Faktur</th>
                                                 <th className="py-3 px-3.5">Nama Suku Cadang</th>
@@ -1564,7 +1564,7 @@ export default function SparepartList() {
                                                     </td>
                                                     <td className="py-3 px-3.5 font-mono text-slate-700">
                                                         {log.nomor_faktur ? (
-                                                            <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-semibold text-[11px]">
+                                                            <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-semibold text-2xs">
                                                                 {log.nomor_faktur}
                                                             </span>
                                                         ) : (
@@ -1573,10 +1573,10 @@ export default function SparepartList() {
                                                     </td>
                                                     <td className="py-3 px-3.5">
                                                         <div className="font-bold text-slate-900">{log.sparepart?.nama || "Sparepart"}</div>
-                                                        <span className="text-[10px] text-slate-400">{log.sparepart?.brand?.nama || log.sparepart?.kategori}</span>
+                                                        <span className="text-3xs text-slate-400">{log.sparepart?.brand?.nama || log.sparepart?.kategori}</span>
                                                     </td>
                                                     <td className="py-3 px-3.5 text-slate-700 font-medium">
-                                                        <span className="inline-flex items-center gap-1 bg-slate-100 px-2.5 py-0.5 rounded-full text-[11px] border border-slate-200">
+                                                        <span className="inline-flex items-center gap-1 bg-slate-100 px-2.5 py-0.5 rounded-full text-2xs border border-slate-200">
                                                             <Building2 className="w-3 h-3 text-slate-500" />
                                                             {log.supplier_nama || "Distributor Umum"}
                                                         </span>
@@ -1595,7 +1595,7 @@ export default function SparepartList() {
                                                     <td className="py-3 px-3.5 text-slate-500 max-w-[200px]">
                                                         <span className="font-semibold text-slate-700">{log.user_nama || "Admin"}</span>
                                                         {log.catatan && (
-                                                            <p className="text-[10px] text-slate-400 italic truncate" title={log.catatan}>
+                                                            <p className="text-3xs text-slate-400 italic truncate" title={log.catatan}>
                                                                 {log.catatan}
                                                             </p>
                                                         )}
@@ -1605,7 +1605,7 @@ export default function SparepartList() {
                                         </tbody>
                                         <tfoot className="bg-slate-100/90 font-bold text-slate-800 border-t-2 border-slate-200 sticky bottom-0 z-10">
                                             <tr>
-                                                <td colSpan={4} className="py-2.5 px-3.5 text-right uppercase tracking-wider text-[11px]">
+                                                <td colSpan={4} className="py-2.5 px-3.5 text-right uppercase tracking-wider text-2xs">
                                                     Total Terfilter ({filteredGlobalRestockLogs.length} transaksi):
                                                 </td>
                                                 <td className="py-2.5 px-3.5 text-center text-emerald-700 font-mono text-xs">

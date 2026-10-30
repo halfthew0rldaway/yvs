@@ -245,7 +245,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                                 <h2 className="text-base font-bold text-slate-900 leading-tight">
                                     CRM Pengingat Perawatan Berkala Pelanggan
                                 </h2>
-                                <span className="bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                <span className="bg-blue-50 text-blue-800 border border-blue-200 text-3xs font-bold px-2 py-0.5 rounded-full">
                                     Siklus 6 Bulan - 1 Tahun
                                 </span>
                             </div>
@@ -339,7 +339,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                             <div className="text-center py-12 px-4 bg-white rounded-xl border border-dashed border-slate-200">
                                 <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                                 <p className="text-xs font-bold text-slate-800">Tidak Ada Perangkat Jatuh Tempo</p>
-                                <p className="text-[11px] text-slate-500 mt-1">Belum ada unit yang mencapai siklus pemakaian 6-12 bulan saat ini.</p>
+                                <p className="text-2xs text-slate-500 mt-1">Belum ada unit yang mencapai siklus pemakaian 6-12 bulan saat ini.</p>
                             </div>
                         ) : (
                             filteredItems.map((item) => {
@@ -363,16 +363,16 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                                                     <span className="text-xs font-bold text-slate-900 truncate">
                                                         {item.customer_nama}
                                                     </span>
-                                                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-semibold border ${persConfig.badge}`}>
+                                                    <span className={`px-1.5 py-0.2 rounded text-4xs font-semibold border ${persConfig.badge}`}>
                                                         {persConfig.label}
                                                     </span>
                                                 </div>
-                                                <p className="text-[11px] font-medium text-slate-600 truncate mt-0.5">
+                                                <p className="text-2xs font-medium text-slate-600 truncate mt-0.5">
                                                     {item.merek} {item.model}
                                                 </p>
                                             </div>
 
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border shrink-0 ${
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold border shrink-0 ${
                                                 isCritical 
                                                     ? "bg-rose-50 text-rose-700 border-rose-200" 
                                                     : "bg-amber-50 text-amber-700 border-amber-200"
@@ -382,7 +382,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                                             </span>
                                         </div>
 
-                                        <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1.5 border-t border-slate-100 mt-2">
+                                        <div className="flex items-center justify-between text-3xs text-slate-500 pt-1.5 border-t border-slate-100 mt-2">
                                             <span className="font-mono text-slate-600">#{item.nomor_tiket}</span>
                                             {item.is_follow_up_sent ? (
                                                 <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
@@ -422,7 +422,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                                         </div>
 
                                         <div className="text-right">
-                                            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Selesai Diservis:</span>
+                                            <span className="text-3xs text-slate-400 uppercase font-semibold block">Selesai Diservis:</span>
                                             <span className="text-xs font-bold text-slate-800">
                                                 {formatDate(selectedItem.tgl_diambil)} ({selectedItem.diff_months} bulan / {selectedItem.diff_days} hari lalu)
                                             </span>
@@ -433,7 +433,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                                     <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
                                         <Wrench className="w-3.5 h-3.5 text-blue-600 mt-0.5 shrink-0" />
                                         <div className="min-w-0">
-                                            <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider block">
+                                            <span className="text-3xs font-bold text-blue-800 uppercase tracking-wider block">
                                                 Fokus Perawatan Berkala:
                                             </span>
                                             <p className="text-xs font-semibold text-blue-950 mt-0.5">
@@ -443,12 +443,12 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                                     </div>
 
                                     {selectedItem.is_follow_up_sent && (
-                                        <div className="text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200 flex items-center justify-between">
+                                        <div className="text-2xs text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200 flex items-center justify-between">
                                             <span className="flex items-center gap-1.5 font-medium">
                                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                                 <span>Pengingat terkirim ({formatDate(selectedItem.last_follow_up_at)})</span>
                                             </span>
-                                            <span className="text-[10px] text-emerald-700 italic truncate max-w-[200px]">
+                                            <span className="text-3xs text-emerald-700 italic truncate max-w-[200px]">
                                                 {selectedItem.last_follow_up_note}
                                             </span>
                                         </div>
@@ -459,7 +459,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                                 <div className="space-y-3 p-3.5 rounded-xl border border-slate-200 bg-white shadow-2xs">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                                         <div>
-                                            <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                            <label className="block text-2xs font-semibold text-slate-700 mb-1">
                                                 Gaya Bahasa Pesan
                                             </label>
                                             <select
@@ -489,7 +489,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                                     </div>
 
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                        <label className="block text-2xs font-semibold text-slate-700 mb-1">
                                             Catatan Tambahan untuk Pelanggan (Opsional)
                                         </label>
                                         <input
@@ -505,14 +505,14 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                                 {/* C. Clean WhatsApp Chat Preview */}
                                 <div className="space-y-1.5">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                        <label className="text-2xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                                             <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                                             <span>Pratinjau Pesan WhatsApp</span>
                                         </label>
                                         <button
                                             type="button"
                                             onClick={handleCopyMessage}
-                                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition-colors"
+                                            className="inline-flex items-center gap-1 text-2xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition-colors"
                                         >
                                             {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                                             <span>{copied ? "Tersalin!" : "Salin Pesan"}</span>

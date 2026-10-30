@@ -242,7 +242,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                             <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
                                 {totalActive}
                             </span>
-                            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
+                            <span className="text-2xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
                                 Tiket Aktif
                             </span>
                         </div>
@@ -278,7 +278,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                                 </div>
                                 <span className="text-xs font-bold text-slate-700">Melewati Estimasi</span>
                             </div>
-                            <p className="text-[11px] text-slate-400 pl-0.5">Overdue batas waktu servis</p>
+                            <p className="text-2xs text-slate-400 pl-0.5">Overdue batas waktu servis</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className={`text-xl font-extrabold ${overdueCount > 0 ? "text-rose-600" : "text-slate-400"}`}>
@@ -304,7 +304,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                                 </div>
                                 <span className="text-xs font-bold text-slate-700">Prioritas Express</span>
                             </div>
-                            <p className="text-[11px] text-slate-400 pl-0.5">Antrean cepat paket kilat</p>
+                            <p className="text-2xs text-slate-400 pl-0.5">Antrean cepat paket kilat</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className={`text-xl font-extrabold ${expressCount > 0 ? "text-amber-600" : "text-slate-400"}`}>
@@ -330,7 +330,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                                 </div>
                                 <span className="text-xs font-bold text-slate-700">Menunggu Persetujuan</span>
                             </div>
-                            <p className="text-[11px] text-slate-400 pl-0.5">Estimasi SLA dijeda (ACC)</p>
+                            <p className="text-2xs text-slate-400 pl-0.5">Estimasi SLA dijeda (ACC)</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className={`text-xl font-extrabold ${pendingApprovalCount > 0 ? "text-slate-700" : "text-slate-400"}`}>
@@ -356,7 +356,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                                 </div>
                                 <span className="text-xs font-bold text-slate-700">Sesuai Estimasi</span>
                             </div>
-                            <p className="text-[11px] text-slate-400 pl-0.5">Pengerjaan tepat waktu</p>
+                            <p className="text-2xs text-slate-400 pl-0.5">Pengerjaan tepat waktu</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className={`text-xl font-extrabold ${onTrackCount > 0 ? "text-emerald-600" : "text-slate-400"}`}>
@@ -824,7 +824,7 @@ export default function Dashboard() {
                                     <div key={log.id} className="relative flex items-start gap-6 group">
                                         <div className={`absolute left-0 w-[14px] h-[14px] rounded-full border-[3px] border-white ring-1 mt-1 shadow-sm transition-transform ${userColor}`} />
                                         <div className="ml-6 flex-1 bg-white">
-                                            <p className="text-[15px] font-medium text-slate-700 leading-tight">{log.action}</p>
+                                            <p className="text-sm font-medium text-slate-700 leading-tight">{log.action}</p>
                                             <div className="flex items-center gap-2 mt-1.5">
                                                 <span className="text-xs text-slate-500 font-bold">{log.user_nama}</span>
                                                 <span className="w-1 h-1 rounded-full bg-slate-300" />

@@ -77,7 +77,7 @@ function CustomerBadges({
                                     }}
                                     className={`inline-flex items-center justify-center transition-all duration-150 ease-spring-out cursor-pointer rounded-lg border shadow-2xs hover:scale-110 active:scale-95 gpu-layer ${
                                         size === "compact"
-                                            ? "w-6 h-6 text-[10px]"
+                                            ? "w-6 h-6 text-3xs"
                                             : size === "large"
                                             ? "w-8 h-8 text-sm"
                                             : "w-7 h-7 text-xs"
@@ -103,7 +103,7 @@ function CustomerBadges({
                                 }}
                                 className={`group relative inline-flex items-center gap-1 font-semibold rounded-full border transition-all duration-150 ease-spring-out cursor-pointer select-none hover:opacity-90 hover:scale-[1.02] active:scale-95 gpu-layer ${
                                     size === "compact" 
-                                        ? "px-2 py-0.5 text-[10px]" 
+                                        ? "px-2 py-0.5 text-3xs" 
                                         : size === "large"
                                         ? "px-3.5 py-1 text-xs"
                                         : "px-2.5 py-0.5 text-xs"
@@ -125,7 +125,7 @@ function CustomerBadges({
                                 e.stopPropagation();
                                 setIsManageOpen(true);
                             }}
-                            className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg border border-dashed border-slate-300 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/50 text-slate-400 hover:text-blue-600 text-[11px] font-semibold transition-all cursor-pointer"
+                            className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg border border-dashed border-slate-300 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/50 text-slate-400 hover:text-blue-600 text-2xs font-semibold transition-all cursor-pointer"
                             title="Beri badge reputasi untuk pelanggan ini"
                         >
                             <Plus className="w-3 h-3" />

@@ -248,7 +248,7 @@ export default function CameraScannerModal({
                                 <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-white rounded-bl" />
                                 <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-white rounded-br" />
                             </div>
-                            <span className="mt-4 px-3 py-1 rounded-full text-[11px] font-bold bg-black/60 text-white/90 backdrop-blur-sm border border-white/20 flex items-center gap-1.5 shadow">
+                            <span className="mt-4 px-3 py-1 rounded-full text-2xs font-bold bg-black/60 text-white/90 backdrop-blur-sm border border-white/20 flex items-center gap-1.5 shadow">
                                 <ScanLine className="w-3.5 h-3.5 text-blue-400" />
                                 Posisikan barcode atau QR di dalam kotak
                             </span>
@@ -277,7 +277,7 @@ export default function CameraScannerModal({
                                 <button
                                     type="button"
                                     onClick={handleSwitchCamera}
-                                    className="px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white text-[11px] font-bold rounded-xl border border-white/20 backdrop-blur-sm flex items-center gap-1.5 cursor-pointer shadow"
+                                    className="px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white text-2xs font-bold rounded-xl border border-white/20 backdrop-blur-sm flex items-center gap-1.5 cursor-pointer shadow"
                                     title="Ganti kamera depan / belakang"
                                 >
                                     <RefreshCw className="w-3.5 h-3.5" />
@@ -288,7 +288,7 @@ export default function CameraScannerModal({
                                 <button
                                     type="button"
                                     onClick={handleToggleTorch}
-                                    className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border backdrop-blur-sm flex items-center gap-1.5 cursor-pointer shadow ml-auto ${
+                                    className={`px-3 py-1.5 text-2xs font-bold rounded-xl border backdrop-blur-sm flex items-center gap-1.5 cursor-pointer shadow ml-auto ${
                                         torchOn 
                                             ? "bg-amber-500 text-white border-amber-400" 
                                             : "bg-black/60 hover:bg-black/80 text-white border-white/20"
@@ -306,7 +306,7 @@ export default function CameraScannerModal({
                 {/* Manual Input Fallback */}
                 <div className="p-4 sm:p-5 bg-white border-t border-slate-100">
                     <form onSubmit={handleManualSubmit} className="space-y-2">
-                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500">
                             Atau Masukkan Nomor / Kode Manual
                         </label>
                         <div className="flex gap-2">

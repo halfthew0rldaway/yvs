@@ -137,7 +137,7 @@ export default function MediaProcessingModal({
 
                     {/* Network Upload Byte Counter (if available) */}
                     {isUploading && totalBytes > 0 && (
-                        <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2 font-mono">
+                        <div className="flex items-center justify-between text-2xs text-slate-500 mt-2 font-mono">
                             <span>Ukuran Terunggah:</span>
                             <span className="font-semibold text-slate-700">
                                 {formatBytes(uploadedBytes)} / {formatBytes(totalBytes)}
@@ -161,12 +161,12 @@ export default function MediaProcessingModal({
                                 <p className="text-xs font-bold text-slate-800 truncate" title={currentFileName}>
                                     {currentFileName}
                                 </p>
-                                <p className="text-[11px] text-slate-400">
+                                <p className="text-2xs text-slate-400">
                                     {currentFileType === "video" ? "Berkas Video" : "Foto Kamera / Gambar"}
                                 </p>
                             </div>
                             {savingsPercent > 0 && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                                     -{savingsPercent}%
                                 </span>
                             )}
@@ -174,7 +174,7 @@ export default function MediaProcessingModal({
 
                         {/* Compression Size Comparison */}
                         {currentFileType !== "video" && (
-                            <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
+                            <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-2xs">
                                 <span className="text-slate-500">Ukuran Berkas:</span>
                                 <div className="flex items-center gap-1.5 font-mono">
                                     <span className="text-slate-500 line-through">
@@ -207,7 +207,7 @@ export default function MediaProcessingModal({
                             return (
                                 <div 
                                     key={idx} 
-                                    className={`flex items-center justify-between gap-2 p-2 rounded-lg border text-[11px] transition-colors ${
+                                    className={`flex items-center justify-between gap-2 p-2 rounded-lg border text-2xs transition-colors ${
                                         isCurrent 
                                             ? "bg-blue-50/70 border-blue-200 text-blue-900 font-semibold"
                                             : isFinished 
@@ -229,7 +229,7 @@ export default function MediaProcessingModal({
                                         )}
                                         <span className="truncate">{it.name}</span>
                                     </div>
-                                    <span className="font-mono text-[10px] shrink-0 text-slate-500">
+                                    <span className="font-mono text-3xs shrink-0 text-slate-500">
                                         {it.finalSize ? formatBytes(it.finalSize) : formatBytes(it.originalSize)}
                                     </span>
                                 </div>
@@ -239,7 +239,7 @@ export default function MediaProcessingModal({
                 )}
 
                 {/* Reassurance Footer Badge */}
-                <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 bg-slate-50 py-2 px-3 rounded-xl border border-slate-200/60">
+                <div className="flex items-center justify-center gap-1.5 text-2xs text-slate-500 bg-slate-50 py-2 px-3 rounded-xl border border-slate-200/60">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                     <span>Auto-compress cerdas: Resolusi tajam, beban server ringan.</span>
                 </div>

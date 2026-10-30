@@ -483,7 +483,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                                     Adaptasi Gaya Bahasa Pelanggan
                                 </span>
                                 {customer?.tipe_kepribadian && (
-                                    <span className="text-[10px] font-bold bg-white text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                                    <span className="text-3xs font-bold bg-white text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
                                         Profil: {customer.tipe_kepribadian}
                                     </span>
                                 )}
@@ -504,7 +504,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                                     </button>
                                 ))}
                             </div>
-                            <p className="text-[11px] text-slate-500 pt-0.5">
+                            <p className="text-2xs text-slate-500 pt-0.5">
                                 {personalityMode === "Koleris" && "Gaya ringkas, tegas, to the point, langsung biaya dan waktu pengerjaan."}
                                 {personalityMode === "Sanguinis" && "Gaya hangat, ramah, antusias, apresiatif, sertakan foto unit."}
                                 {personalityMode === "Plegmatis" && "Gaya tenang, sabar, suportif, tanpa mendesak keputusan."}
@@ -522,7 +522,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                             </span>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                                 <div>
-                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tindakan</label>
+                                    <label className="block text-2xs font-semibold text-slate-700 mb-1">Tindakan</label>
                                     <input
                                         type="text"
                                         value={tindakanTambahan}
@@ -532,7 +532,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Potensi Risiko</label>
+                                    <label className="block text-2xs font-semibold text-slate-700 mb-1">Potensi Risiko</label>
                                     <input
                                         type="text"
                                         value={risikoTambahan}
@@ -542,7 +542,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tambahan Biaya (Rp)</label>
+                                    <label className="block text-2xs font-semibold text-slate-700 mb-1">Tambahan Biaya (Rp)</label>
                                     <input
                                         type="number"
                                         value={biayaTambahan}
@@ -585,7 +585,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                             <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
                                 Teks Pesan WhatsApp (Dapat Diedit Langsung)
                             </label>
-                            <span className="text-[11px] text-slate-400">
+                            <span className="text-2xs text-slate-400">
                                 Ditujukan ke: <span className="font-semibold text-slate-700">{customer?.nama} ({customer?.nomor_telepon})</span>
                             </span>
                         </div>

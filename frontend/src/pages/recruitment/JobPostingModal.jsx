@@ -200,7 +200,7 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                                 <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                                 <span>Isi Otomatis Dari Standar Posisi KEOS:</span>
                             </div>
-                            <span className="text-[11px] text-blue-600 font-medium">Klik untuk isi otomatis</span>
+                            <span className="text-2xs text-blue-600 font-medium">Klik untuk isi otomatis</span>
                         </div>
 
                         <div className="flex flex-wrap gap-2 pt-1">
@@ -316,7 +316,7 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
                                     required
                                 />
-                                <p className="text-[10.5px] text-slate-400 mt-1">Disematkan otomatis pada tautan siaran lowongan untuk pelamar.</p>
+                                <p className="text-3xs text-slate-400 mt-1">Disematkan otomatis pada tautan siaran lowongan untuk pelamar.</p>
                             </div>
                         </div>
 
@@ -389,7 +389,7 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                                 <label className="text-xs font-bold text-slate-800">
                                     Simpan Shortcut Listing Platform Cari Kerja
                                 </label>
-                                <p className="text-[11px] text-slate-500">
+                                <p className="text-2xs text-slate-500">
                                     Simpan link postingan loker di Glints, Jobstreet, atau LinkedIn agar mudah dibuka kembali
                                 </p>
                             </div>
@@ -404,7 +404,7 @@ export default function JobPostingModal({ isOpen, onClose, jobToEdit, onSuccess 
                         </div>
 
                         {externalLinks.length === 0 ? (
-                            <div className="text-[11px] text-slate-400 italic py-1">
+                            <div className="text-2xs text-slate-400 italic py-1">
                                 Belum ada shortcut link platform eksternal. Klik 'Tambah Platform' jika sudah diposting di Glints/Jobstreet.
                             </div>
                         ) : (

@@ -252,7 +252,7 @@ export default function SupplierModal({ isOpen, onClose, supplierToEdit, onSucce
                             onChange={(e) => setKebijakanKlaim(e.target.value)}
                             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
                         />
-                        <p className="text-[11px] text-slate-400 mt-1">
+                        <p className="text-2xs text-slate-400 mt-1">
                             Catatan ini akan otomatis muncul sebagai panduan saat staf mengajukan klaim garansi (RMA).
                         </p>
                     </div>

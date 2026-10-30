@@ -91,7 +91,7 @@ export default function ShareJobModal({ isOpen, onClose, job }) {
                             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                                 Shortcut Platform Cari Kerja:
                             </span>
-                            <span className="text-[11px] text-slate-400">
+                            <span className="text-2xs text-slate-400">
                                 Buka tab baru & langsung paste
                             </span>
                         </div>

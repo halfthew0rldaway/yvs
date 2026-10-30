@@ -48,7 +48,7 @@ function AlignedSignatureRow({
                         />
                     ) : (
                         <div className="w-full h-full flex items-end justify-center pb-2 border-b border-dashed border-slate-300 print:border-none">
-                            <span className="text-[10px] print:text-[8px] text-slate-300 print:text-slate-200 italic">
+                            <span className="text-3xs print:text-[8px] text-slate-300 print:text-slate-200 italic">
                                 {isDigital ? "[ Belum TTD Digital ]" : "[ Tanda Tangan Fisik ]"}
                             </span>
                         </div>
@@ -62,7 +62,7 @@ function AlignedSignatureRow({
                 <p className="font-bold text-slate-900 text-xs print:text-[9px] w-full truncate max-w-[160px]">
                     {customerName || "Pelanggan"}
                 </p>
-                <p className="text-[10px] print:text-[7.5px] text-slate-400 font-mono mt-0.5">
+                <p className="text-3xs print:text-[7.5px] text-slate-400 font-mono mt-0.5">
                     {customerSignedAt 
                         ? new Date(customerSignedAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
                         : "Pelanggan Yangversa"}
@@ -85,7 +85,7 @@ function AlignedSignatureRow({
                         />
                     ) : (
                         <div className="w-full h-full flex items-end justify-center pb-2 border-b border-dashed border-slate-300 print:border-none">
-                            <span className="text-[10px] print:text-[8px] text-slate-300 print:text-slate-200 italic">
+                            <span className="text-3xs print:text-[8px] text-slate-300 print:text-slate-200 italic">
                                 [ Tanda Tangan Petugas ]
                             </span>
                         </div>
@@ -99,7 +99,7 @@ function AlignedSignatureRow({
                 <p className="font-bold text-slate-900 text-xs print:text-[9px] w-full truncate max-w-[160px]">
                     {adminName || "Yangversa Computer"}
                 </p>
-                <p className="text-[10px] print:text-[7.5px] text-slate-400 mt-0.5">
+                <p className="text-3xs print:text-[7.5px] text-slate-400 mt-0.5">
                     Yangversa Computer
                 </p>
             </div>
@@ -406,7 +406,7 @@ export default function InvoiceDetail() {
                                 <tr>
                                     <td className="py-3 print:py-1 text-slate-800">
                                         <span className="font-bold block">Biaya Jasa Servis & Penanganan</span>
-                                        <span className="text-slate-500 text-[11px] print:text-[8px]">Tindakan teknis reparasi, instalasi & pengujian fungsi</span>
+                                        <span className="text-slate-500 text-2xs print:text-[8px]">Tindakan teknis reparasi, instalasi & pengujian fungsi</span>
                                     </td>
                                     <td className="py-3 print:py-1 text-right text-slate-600 font-mono">{formatRupiah(invoice.biaya_jasa)}</td>
                                     <td className="py-3 print:py-1 text-center text-slate-600">1</td>
@@ -417,7 +417,7 @@ export default function InvoiceDetail() {
                                     <tr key={index}>
                                         <td className="py-3 print:py-1 text-slate-800">
                                             <span className="font-bold block">{p.sparepart.nama}</span>
-                                            <span className="text-slate-500 text-[11px] print:text-[8px]">Suku cadang / Sparepart resmi</span>
+                                            <span className="text-slate-500 text-2xs print:text-[8px]">Suku cadang / Sparepart resmi</span>
                                         </td>
                                         <td className="py-3 print:py-1 text-right text-slate-600 font-mono">{formatRupiah(p.sparepart.harga)}</td>
                                         <td className="py-3 print:py-1 text-center text-slate-600">{p.jumlah}</td>
@@ -480,7 +480,7 @@ export default function InvoiceDetail() {
                     {/* Unit & Owner Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-6 border-b border-slate-200 text-xs print:text-[10px]">
                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
-                            <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b border-slate-200 pb-1 mb-2">
+                            <p className="font-bold text-slate-900 uppercase tracking-wider text-2xs border-b border-slate-200 pb-1 mb-2">
                                 Identitas Pelanggan & Perangkat
                             </p>
                             <p><span className="text-slate-500 w-28 inline-block">Nama Pemilik:</span> <strong className="text-slate-900">{customer.nama}</strong></p>
@@ -492,9 +492,9 @@ export default function InvoiceDetail() {
 
                         <div className="p-4 bg-emerald-50/60 rounded-xl border border-emerald-200 space-y-1.5 flex flex-col justify-between">
                             <div>
-                                <p className="font-bold text-emerald-950 uppercase tracking-wider text-[11px] border-b border-emerald-200 pb-1 mb-2 flex items-center justify-between">
+                                <p className="font-bold text-emerald-950 uppercase tracking-wider text-2xs border-b border-emerald-200 pb-1 mb-2 flex items-center justify-between">
                                     <span>Masa Berlaku Garansi</span>
-                                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                                    <span className="text-3xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
                                         Status: Garansi Aktif
                                     </span>
                                 </p>
@@ -502,7 +502,7 @@ export default function InvoiceDetail() {
                                 <p><span className="text-emerald-800 w-28 inline-block">Mulai Berlaku:</span> <span className="text-slate-800">{new Date(tiket.tgl_diambil || invoice.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</span></p>
                                 <p><span className="text-emerald-800 w-28 inline-block">Berakhir Pada:</span> <strong className="text-emerald-900">{tiket.garansi_berakhir_at ? new Date(tiket.garansi_berakhir_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}</strong></p>
                             </div>
-                            <p className="text-[10px] text-emerald-700/80 pt-2 border-t border-emerald-200/60">
+                            <p className="text-3xs text-emerald-700/80 pt-2 border-t border-emerald-200/60">
                                 &bull; Perlindungan garansi berlaku penuh selama segel workshop tidak rusak.
                             </p>
                         </div>
@@ -566,7 +566,7 @@ export default function InvoiceDetail() {
                             </div>
                             <div>
                                 <p className="font-bold text-slate-900">Scan Verifikasi Keaslian</p>
-                                <p className="text-slate-500 text-[10px] print:text-[8px] mt-0.5 max-w-[160px]">
+                                <p className="text-slate-500 text-3xs print:text-[8px] mt-0.5 max-w-[160px]">
                                     Pindai barcode untuk verifikasi status tiket & garansi real-time
                                 </p>
                             </div>

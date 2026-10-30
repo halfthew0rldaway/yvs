@@ -128,7 +128,7 @@ export default function NotificationBell() {
             >
                 <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 min-w-[18px] text-[10px] font-bold text-white bg-red-600 rounded-full flex items-center justify-center animate-pulse">
+                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 min-w-[18px] text-3xs font-bold text-white bg-red-600 rounded-full flex items-center justify-center animate-pulse">
                         {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                 )}
@@ -156,7 +156,7 @@ export default function NotificationBell() {
                                     title="Tandai Semua Dibaca"
                                 >
                                     <CheckCheck className="w-3.5 h-3.5" />
-                                    <span className="text-[11px] font-medium hidden sm:inline">Baca Semua</span>
+                                    <span className="text-2xs font-medium hidden sm:inline">Baca Semua</span>
                                 </button>
                             )}
                             <button
@@ -212,7 +212,7 @@ export default function NotificationBell() {
                                             <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                                                 {notif.pesan}
                                             </p>
-                                            <div className="flex items-center justify-between mt-1 text-[10px] text-slate-400">
+                                            <div className="flex items-center justify-between mt-1 text-3xs text-slate-400">
                                                 <span>Dari: {notif.sender_nama}</span>
                                                 <span>{new Date(notif.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
                                             </div>

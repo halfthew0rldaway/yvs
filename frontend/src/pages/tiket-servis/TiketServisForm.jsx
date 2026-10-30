@@ -510,8 +510,8 @@ export default function TiketServisForm() {
                     <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Buat Tiket Servis</h1>
-                    <p className="text-sm text-slate-500">Mulai proses perbaikan baru</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Buat Tiket Servis</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Mulai proses perbaikan baru</p>
                 </div>
             </div>
 
@@ -553,11 +553,11 @@ export default function TiketServisForm() {
                                             <h3 className="text-base font-black text-slate-900 tracking-tight">
                                                 {selectedPerangkat.merek} {selectedPerangkat.model}
                                             </h3>
-                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                                            <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
                                                 {selectedPerangkat.jenis_perangkat || "Laptop"}
                                             </span>
                                             {selectedPerangkat.serial_number && (
-                                                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-white text-slate-600 border border-slate-200">
+                                                <span className="px-2 py-0.5 rounded-md text-3xs font-mono font-semibold bg-white text-slate-600 border border-slate-200">
                                                     SN: {selectedPerangkat.serial_number}
                                                 </span>
                                             )}
@@ -568,12 +568,12 @@ export default function TiketServisForm() {
                                                 <User className="w-3.5 h-3.5 text-slate-500" />
                                                 {selectedPerangkat.customer?.nama}
                                             </span>
-                                            <span className="inline-flex items-center gap-1 font-mono text-[11px] bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
+                                            <span className="inline-flex items-center gap-1 font-mono text-2xs bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
                                                 <Phone className="w-3 h-3 text-emerald-600" />
                                                 {selectedPerangkat.customer?.nomor_telepon}
                                             </span>
                                             {selectedPerangkat._count?.tiket_servis > 0 && (
-                                                <span className="text-[11px] text-slate-500 font-medium">
+                                                <span className="text-2xs text-slate-500 font-medium">
                                                     &bull; {selectedPerangkat._count.tiket_servis}x Servis Sebelumnya
                                                 </span>
                                             )}
@@ -619,7 +619,7 @@ export default function TiketServisForm() {
                                             <X className="w-4 h-4" />
                                         </button>
                                     )}
-                                    <span className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                                    <span className="hidden sm:inline-flex items-center gap-0.5 text-3xs font-semibold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
                                         <CornerDownLeft className="w-2.5 h-2.5" /> Enter
                                     </span>
                                 </div>
@@ -639,8 +639,8 @@ export default function TiketServisForm() {
                                             <p className="text-xs font-bold text-blue-900 truncate">
                                                 Pelanggan / Unit "{searchQuery.trim()}" Belum Terdaftar
                                             </p>
-                                            <p className="text-[11px] text-blue-700">
-                                                Tekan <kbd className="px-1 py-0.5 bg-blue-200/90 text-blue-900 rounded font-bold text-[10px]">Enter ↵</kbd> atau klik di sini untuk registrasi kilat
+                                            <p className="text-2xs text-blue-700">
+                                                Tekan <kbd className="px-1 py-0.5 bg-blue-200/90 text-blue-900 rounded font-bold text-3xs">Enter ↵</kbd> atau klik di sini untuk registrasi kilat
                                             </p>
                                         </div>
                                     </div>
@@ -655,7 +655,7 @@ export default function TiketServisForm() {
                             <div className="bg-white/90 border border-slate-200/90 rounded-xl p-2.5 space-y-2.5 shadow-2xs">
                                 {/* Baris 1: Kategori Perangkat */}
                                 <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-16 shrink-0 uppercase tracking-wider">
+                                    <div className="flex items-center gap-1.5 text-2xs font-bold text-slate-400 w-16 shrink-0 uppercase tracking-wider">
                                         <Laptop className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                         <span>Tipe</span>
                                     </div>
@@ -683,7 +683,7 @@ export default function TiketServisForm() {
                                                     }`}
                                                 >
                                                     <span>{cat}</span>
-                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                                    <span className={`text-3xs px-1.5 py-0.5 rounded-full font-bold ${
                                                         isActive 
                                                             ? "bg-blue-500/80 text-white" 
                                                             : isEmpty
@@ -701,7 +701,7 @@ export default function TiketServisForm() {
                                 {/* Baris 2: Merek (Hanya tampil jika ada pilihan merek di kategori ini) */}
                                 {availableBrands.length > 1 && (
                                     <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 w-16 shrink-0 uppercase tracking-wider">
+                                        <div className="flex items-center gap-1.5 text-2xs font-bold text-slate-400 w-16 shrink-0 uppercase tracking-wider">
                                             <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                             <span>Merek</span>
                                         </div>
@@ -722,7 +722,7 @@ export default function TiketServisForm() {
                                                         }`}
                                                     >
                                                         <span>{brand}</span>
-                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                                        <span className={`text-3xs px-1.5 py-0.5 rounded-full font-bold ${
                                                             isActive 
                                                                 ? "bg-slate-700 text-white" 
                                                                 : "bg-slate-100 text-slate-600"
@@ -737,7 +737,7 @@ export default function TiketServisForm() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setBrandFilter("Semua")}
-                                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-lg transition-colors cursor-pointer shrink-0 ml-1"
+                                                    className="inline-flex items-center gap-1 text-2xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-lg transition-colors cursor-pointer shrink-0 ml-1"
                                                 >
                                                     <RotateCcw className="w-3 h-3" />
                                                     <span>Reset Merek</span>
@@ -784,21 +784,21 @@ export default function TiketServisForm() {
                                                                 <HighlightText text={p.merek} query={searchQuery} />{" "}
                                                                 <HighlightText text={p.model} query={searchQuery} />
                                                             </span>
-                                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                                            <span className="text-3xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                                                                 {p.jenis_perangkat || "Laptop"}
                                                             </span>
                                                             {p.serial_number && (
-                                                                <span className="text-[10px] font-mono text-slate-400">
+                                                                <span className="text-3xs font-mono text-slate-400">
                                                                     SN: <HighlightText text={p.serial_number} query={searchQuery} />
                                                                 </span>
                                                             )}
                                                             {isCurrentlyInService ? (
-                                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                                                <span className="inline-flex items-center gap-1 text-3xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                                                                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                                                     Sedang Diservis ({latestTicket.nomor_tiket})
                                                                 </span>
                                                             ) : (
-                                                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                <span className="inline-flex items-center gap-1 text-3xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                                                     Siap Diservis
                                                                 </span>
@@ -809,7 +809,7 @@ export default function TiketServisForm() {
                                                                 <User className="w-3 h-3 text-slate-400" />
                                                                 <HighlightText text={p.customer?.nama} query={searchQuery} />
                                                             </span>
-                                                            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                                            <span className="inline-flex items-center gap-1 text-2xs font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
                                                                 <Phone className="w-2.5 h-2.5 text-emerald-600" />
                                                                 <HighlightText text={p.customer?.nomor_telepon} query={searchQuery} />
                                                             </span>
@@ -819,11 +819,11 @@ export default function TiketServisForm() {
 
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     {isTopMatch && (
-                                                        <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 bg-blue-100/90 rounded border border-blue-200">
+                                                        <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-3xs font-bold text-blue-700 bg-blue-100/90 rounded border border-blue-200">
                                                             <CornerDownLeft className="w-2.5 h-2.5" /> Enter
                                                         </span>
                                                     )}
-                                                    <span className="text-[11px] font-medium text-slate-400 hidden sm:inline">
+                                                    <span className="text-2xs font-medium text-slate-400 hidden sm:inline">
                                                         {p._count?.tiket_servis ? `${p._count.tiket_servis}x Servis` : "Unit Baru"}
                                                     </span>
                                                     <span className="px-2.5 py-1 bg-slate-50 group-hover:bg-blue-600 group-hover:text-white text-slate-600 rounded-lg text-xs font-semibold border border-slate-200 group-hover:border-blue-600 transition-all flex items-center gap-1">
@@ -840,7 +840,7 @@ export default function TiketServisForm() {
                                         <p className="text-xs font-bold text-slate-800">
                                             Tidak ditemukan unit yang cocok {searchQuery && `dengan "${searchQuery}"`}
                                         </p>
-                                        <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+                                        <p className="text-2xs text-slate-500 max-w-sm mx-auto">
                                             Pelanggan baru datang atau membawa unit yang belum pernah terdaftar?
                                         </p>
                                         <button
@@ -874,12 +874,12 @@ export default function TiketServisForm() {
                                         <span className="text-xs font-bold text-slate-900 block">
                                             Profil Pelanggan & Rekam Servis
                                         </span>
-                                        <span className="text-[11px] text-slate-500 block">
+                                        <span className="text-2xs text-slate-500 block">
                                             Personalisasi pelayanan dan panduan adaptasi komunikasi
                                         </span>
                                     </div>
                                 </div>
-                                <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border self-start sm:self-auto ${
+                                <span className={`text-2xs font-bold px-2.5 py-1 rounded-full border self-start sm:self-auto ${
                                     (selectedPerangkatDetail.tiket_servis?.length || 0) > 0 
                                         ? "bg-amber-50 text-amber-800 border-amber-200" 
                                         : "bg-emerald-50 text-emerald-800 border-emerald-200"
@@ -893,12 +893,12 @@ export default function TiketServisForm() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                 <div className="bg-white p-3.5 rounded-lg border border-slate-200 flex flex-col justify-between">
                                     <div>
-                                        <span className="text-slate-500 block text-[11px] mb-1">Gaya Komunikasi Pelanggan:</span>
+                                        <span className="text-slate-500 block text-2xs mb-1">Gaya Komunikasi Pelanggan:</span>
                                         <div className="flex items-center gap-1.5 font-bold text-slate-900 mb-1.5">
                                             <Smile className="w-4 h-4 text-blue-600 shrink-0" />
                                             <span>{selectedPerangkatDetail.customer?.tipe_kepribadian || "Netral"}</span>
                                         </div>
-                                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                                        <p className="text-2xs text-slate-600 leading-relaxed">
                                             {selectedPerangkatDetail.customer?.tipe_kepribadian === "Koleris" && "Tegas & to the point. Sampaikan kepastian solusi dan estimasi waktu."}
                                             {selectedPerangkatDetail.customer?.tipe_kepribadian === "Sanguinis" && "Ramah & antusias. Berikan sambutan hangat dan komunikasi apresiatif."}
                                             {selectedPerangkatDetail.customer?.tipe_kepribadian === "Plegmatis" && "Tenang & sabar. Jangan mendesak keputusan dan berikan rasa aman."}
@@ -910,8 +910,8 @@ export default function TiketServisForm() {
 
                                 <div className="bg-white p-3.5 rounded-lg border border-slate-200 flex flex-col justify-between">
                                     <div>
-                                        <span className="text-slate-500 block text-[11px] mb-1">Catatan Khusus Pelanggan:</span>
-                                        <p className="text-[11px] text-slate-700 leading-relaxed break-words">
+                                        <span className="text-slate-500 block text-2xs mb-1">Catatan Khusus Pelanggan:</span>
+                                        <p className="text-2xs text-slate-700 leading-relaxed break-words">
                                             {selectedPerangkatDetail.customer?.catatan_khusus || "Tidak ada catatan khusus untuk pelanggan ini."}
                                         </p>
                                     </div>
@@ -953,7 +953,7 @@ export default function TiketServisForm() {
                             <MessageSquare className="w-4 h-4 text-slate-400" />
                             Keluhan <span className="text-red-500">*</span>
                         </label>
-                        <span className="text-[11px] text-slate-400">Min 10 - Max 1000 karakter</span>
+                        <span className="text-2xs text-slate-400">Min 10 - Max 1000 karakter</span>
                     </div>
                     <textarea
                         value={form.keluhan}
@@ -971,7 +971,7 @@ export default function TiketServisForm() {
                             <Package className="w-4 h-4 text-slate-400" />
                             Kelengkapan Perangkat
                         </label>
-                        <span className="text-[11px] text-slate-400">Maksimal 500 karakter</span>
+                        <span className="text-2xs text-slate-400">Maksimal 500 karakter</span>
                     </div>
                     <textarea
                         value={form.kelengkapan}
@@ -989,7 +989,7 @@ export default function TiketServisForm() {
                             <HardDrive className="w-5 h-5 text-blue-600" />
                             <h3 className="text-sm font-bold text-slate-900">Pengecekan Tahap Awal & Prioritas Layanan</h3>
                         </div>
-                        <span className="text-[11px] font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
+                        <span className="text-2xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
                             Inspeksi Fisik & Penyelarasan Kebutuhan
                         </span>
                     </div>
@@ -1034,11 +1034,11 @@ export default function TiketServisForm() {
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-bold text-slate-900">Peta Cacat Fisik (2D Defect Map)</span>
-                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                            <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
                                                 {defectMap.items.length} Titik Ditandai
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">
+                                        <p className="text-2xs text-slate-500 mt-0.5">
                                             {defectMap.items.length > 0
                                                 ? `${defectMap.items.length} titik cacat fisik (baret/penyok/retak) telah ditandai pada blueprint perangkat.`
                                                 : "Tandai titik goresan, retak layar, penyok sudut, atau baut hilang sebelum diservis."}
@@ -1081,7 +1081,7 @@ export default function TiketServisForm() {
                                         }`}
                                     >
                                         <div className="font-bold text-xs">{p.label}</div>
-                                        <div className="text-[10px] text-slate-500 mt-1 leading-tight">{p.desc}</div>
+                                        <div className="text-3xs text-slate-500 mt-1 leading-tight">{p.desc}</div>
                                     </button>
                                 );
                             })}
@@ -1094,7 +1094,7 @@ export default function TiketServisForm() {
                             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
                                 Paket Estimasi SLA Pengecekan & Diagnosis
                             </label>
-                            <span className="text-[11px] text-slate-500 font-medium">
+                            <span className="text-2xs text-slate-500 font-medium">
                                 {getPreviewTarget(slaPaket)}
                             </span>
                         </div>
@@ -1125,19 +1125,19 @@ export default function TiketServisForm() {
                                                 <span className="text-xs font-bold">{pkg.label}</span>
                                             </div>
                                             {pkg.id === "express" && (
-                                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white">
+                                                <span className="px-1.5 py-0.5 rounded text-3xs font-bold bg-amber-500 text-white">
                                                     PRIORITAS
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-[11px] text-slate-500 leading-relaxed font-normal">
+                                        <p className="text-2xs text-slate-500 leading-relaxed font-normal">
                                             {pkg.desc}
                                         </p>
                                     </button>
                                 );
                             })}
                         </div>
-                        <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                        <p className="text-2xs text-slate-500 mt-2 leading-relaxed">
                             * Estimasi SLA pengerjaan servis fisik akan ditentukan bersama pelanggan setelah hasil pemeriksaan awal selesai dirumuskan dan penawaran biaya disetujui (ACC).
                         </p>
                     </div>
@@ -1150,7 +1150,7 @@ export default function TiketServisForm() {
                             <KeyRound className="w-5 h-5 text-indigo-600" />
                             <h3 className="text-sm font-bold text-slate-900">Keamanan & Kredensial Perangkat (Vault)</h3>
                         </div>
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
+                        <span className="inline-flex items-center gap-1.5 text-2xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
                             <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
                             Hanya terlihat oleh Teknisi & Admin
                         </span>
@@ -1204,7 +1204,7 @@ export default function TiketServisForm() {
                             </div>
                         )}
                     </div>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-2xs text-slate-400">
                         * PIN/Password dibutuhkan oleh teknisi untuk melakukan pengujian fungsi internal (Keyboard, Audio, Kamera, WiFi, dan QC Akhir).
                     </p>
                 </div>
@@ -1216,7 +1216,7 @@ export default function TiketServisForm() {
                             <Shield className="w-5 h-5 text-emerald-600" />
                             <h3 className="text-sm font-bold text-slate-900">Protokol Izin & Batasan Privasi</h3>
                         </div>
-                        <span className="text-[11px] font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
+                        <span className="text-2xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
                             Persetujuan Formal Intake
                         </span>
                     </div>
@@ -1236,7 +1236,7 @@ export default function TiketServisForm() {
                                 />
                                 <div>
                                     <p className="text-xs font-bold text-slate-900">Izin Bongkar Hardware</p>
-                                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 leading-relaxed">Membuka casing & inspeksi motherboard / komponen internal</p>
+                                    <p className="text-2xs text-slate-500 font-normal mt-0.5 leading-relaxed">Membuka casing & inspeksi motherboard / komponen internal</p>
                                 </div>
                             </div>
                         </label>
@@ -1255,7 +1255,7 @@ export default function TiketServisForm() {
                                 />
                                 <div>
                                     <p className="text-xs font-bold text-slate-900">Izin Akses OS</p>
-                                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 leading-relaxed">Login ke Windows/OS untuk pengetesan fungsi hardware & QC</p>
+                                    <p className="text-2xs text-slate-500 font-normal mt-0.5 leading-relaxed">Login ke Windows/OS untuk pengetesan fungsi hardware & QC</p>
                                 </div>
                             </div>
                         </label>
@@ -1274,7 +1274,7 @@ export default function TiketServisForm() {
                                 />
                                 <div>
                                     <p className="text-xs font-bold text-slate-900">Izin / Konfirmasi Backup</p>
-                                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 leading-relaxed">Pelanggan memahami status data & backup mandiri / persetujuan teknisi</p>
+                                    <p className="text-2xs text-slate-500 font-normal mt-0.5 leading-relaxed">Pelanggan memahami status data & backup mandiri / persetujuan teknisi</p>
                                 </div>
                             </div>
                         </label>
@@ -1386,7 +1386,7 @@ export default function TiketServisForm() {
                             {/* Section A: Customer Details */}
                             {!quickIsExistingCustomer ? (
                                 <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-3">
-                                    <div className="flex items-center gap-1.5 font-bold text-slate-800 text-[11px] uppercase tracking-wider pb-1 border-b border-slate-200/60">
+                                    <div className="flex items-center gap-1.5 font-bold text-slate-800 text-2xs uppercase tracking-wider pb-1 border-b border-slate-200/60">
                                         <User className="w-3.5 h-3.5 text-blue-600" />
                                         <span>Identitas Pelanggan</span>
                                     </div>
@@ -1450,7 +1450,7 @@ export default function TiketServisForm() {
 
                             {/* Section B: Device Details */}
                             <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-3">
-                                <div className="flex items-center gap-1.5 font-bold text-slate-800 text-[11px] uppercase tracking-wider pb-1 border-b border-slate-200/60">
+                                <div className="flex items-center gap-1.5 font-bold text-slate-800 text-2xs uppercase tracking-wider pb-1 border-b border-slate-200/60">
                                     <Laptop className="w-3.5 h-3.5 text-indigo-600" />
                                     <span>Data Perangkat Baru</span>
                                 </div>
@@ -1485,13 +1485,13 @@ export default function TiketServisForm() {
 
                                 {/* Quick Brand Suggestion Chips */}
                                 <div className="flex items-center gap-1 flex-wrap">
-                                    <span className="text-[10px] text-slate-400 font-medium mr-1">Rekomendasi:</span>
+                                    <span className="text-3xs text-slate-400 font-medium mr-1">Rekomendasi:</span>
                                     {POPULAR_BRANDS.map(brand => (
                                         <button
                                             key={brand}
                                             type="button"
                                             onClick={() => setQuickForm({ ...quickForm, merek: brand })}
-                                            className="px-2 py-0.5 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-[10px] font-semibold text-slate-600 transition-colors cursor-pointer"
+                                            className="px-2 py-0.5 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-3xs font-semibold text-slate-600 transition-colors cursor-pointer"
                                         >
                                             {brand}
                                         </button>

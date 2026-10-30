@@ -1169,7 +1169,7 @@ export default function TiketServisDetail() {
                                     {tiket.catatan_batal}
                                 </p>
                             )}
-                            <p className="text-[11px] text-rose-700/80 mt-1.5 italic">
+                            <p className="text-2xs text-rose-700/80 mt-1.5 italic">
                                 * Unit dapat diserahkan kembali kepada pemilik di meja penyerahan toko.
                             </p>
                         </div>
@@ -1201,7 +1201,7 @@ export default function TiketServisDetail() {
                                     Diterbitkan pada: {new Date(tiket.tgl_revisi_acc).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                                 </p>
                             )}
-                            <p className="text-[11px] text-amber-700 mt-1">
+                            <p className="text-2xs text-amber-700 mt-1">
                                 * Tiket ini telah menggunakan hak 1x revisi ACC. Seluruh progres dan kesepakatan berikutnya bersifat mengikat.
                             </p>
                         </div>
@@ -1269,7 +1269,7 @@ export default function TiketServisDetail() {
                                         className="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition-colors shadow-2xs"
                                     >
                                         <span>#{claim.nomor_tiket}</span>
-                                        <span className="text-[10px] uppercase font-semibold text-amber-700">({claim.status})</span>
+                                        <span className="text-3xs uppercase font-semibold text-amber-700">({claim.status})</span>
                                         <ArrowRight className="w-3 h-3 text-amber-600" />
                                     </Link>
                                 ))}
@@ -1297,7 +1297,7 @@ export default function TiketServisDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsCustomerModalOpen(true)}
-                                                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+                                                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-2xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-all cursor-pointer shadow-2xs hover:shadow-xs"
                                                 title="Buka profil lengkap, riwayat unit & seluruh tiket servis pelanggan ini"
                                             >
                                                 <User className="w-3 h-3" />
@@ -1306,7 +1306,7 @@ export default function TiketServisDetail() {
                                             {isAdmin && (
                                                 <Link
                                                     to={`/customer/edit/${tiket.perangkat.customer.id}?returnUrl=/tiket-servis/${id}`}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-all shadow-2xs hover:shadow-xs"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-2xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-all shadow-2xs hover:shadow-xs"
                                                     title="Edit data pelanggan (nama, nomor telepon, alamat, profil)"
                                                 >
                                                     <Edit className="w-3 h-3 text-slate-500" />
@@ -1357,7 +1357,7 @@ export default function TiketServisDetail() {
                                         <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                                         <div className="space-y-0.5">
                                             <strong className="font-bold text-rose-950 block">Peringatan: Pelanggan Sering Revisi ACC</strong>
-                                            <p className="text-rose-800 text-[11px] leading-relaxed">
+                                            <p className="text-rose-800 text-2xs leading-relaxed">
                                                 Pelanggan memiliki rekam jejak membatalkan/merubah kesepakatan penawaran setelah unit selesai.
                                                 <span className="font-semibold block mt-0.5 text-rose-900">SOP: Wajibkan SPK tertulis atau DP 50% sebelum teknisi memulai pengerjaan.</span>
                                             </p>
@@ -1372,13 +1372,13 @@ export default function TiketServisDetail() {
                                                 <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                                                 Profil & Gaya Komunikasi
                                             </span>
-                                            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                            <span className="text-2xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                                                 {tiket.perangkat.customer.tipe_kepribadian || "Netral"}
                                             </span>
                                         </div>
                                         {tiket.perangkat.customer.catatan_khusus && (
                                             <div className="text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed">
-                                                <span className="font-semibold text-slate-800 block text-[11px] mb-0.5">Catatan Khusus:</span>
+                                                <span className="font-semibold text-slate-800 block text-2xs mb-0.5">Catatan Khusus:</span>
                                                 {tiket.perangkat.customer.catatan_khusus}
                                             </div>
                                         )}
@@ -1396,7 +1396,7 @@ export default function TiketServisDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsPerangkatModalOpen(true)}
-                                                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+                                                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-2xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-all cursor-pointer shadow-2xs hover:shadow-xs"
                                                 title="Buka spesifikasi & riwayat servis unit ini"
                                             >
                                                 <MonitorSmartphone className="w-3 h-3" />
@@ -1405,7 +1405,7 @@ export default function TiketServisDetail() {
                                             {isAdmin && (
                                                 <Link
                                                     to={`/perangkat/edit/${tiket.perangkat.id}?returnUrl=/tiket-servis/${id}`}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-all shadow-2xs hover:shadow-xs"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-2xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-all shadow-2xs hover:shadow-xs"
                                                     title="Edit data perangkat (merek, model, nomor seri, jenis)"
                                                 >
                                                     <Edit className="w-3 h-3 text-slate-500" />
@@ -1472,12 +1472,12 @@ export default function TiketServisDetail() {
                                 <div className="flex items-center justify-between mb-1.5">
                                     <div className="flex items-center gap-2">
                                         <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Kredensial / PIN Unit</p>
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                                             {tiket.tipe_kunci || "Tidak Ada"}
                                         </span>
                                     </div>
                                     {isLocked ? (
-                                        <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                                        <span className="text-2xs text-slate-400 font-medium flex items-center gap-1">
                                             <Lock className="w-3 h-3 text-slate-400" /> Terkunci
                                         </span>
                                     ) : (isAdmin || isAssignedToMe) && !isEditingVault && (
@@ -1497,7 +1497,7 @@ export default function TiketServisDetail() {
                                 {isEditingVault ? (
                                     <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 space-y-3 mt-1">
                                         <div>
-                                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Tipe Kunci</label>
+                                            <label className="block text-2xs font-semibold text-slate-600 mb-1">Tipe Kunci</label>
                                             <select
                                                 value={vaultTipeKunci}
                                                 onChange={(e) => setVaultTipeKunci(e.target.value)}
@@ -1512,7 +1512,7 @@ export default function TiketServisDetail() {
 
                                         {vaultTipeKunci !== "Tidak Ada" && (
                                             <div>
-                                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                                                <label className="block text-2xs font-semibold text-slate-600 mb-1">
                                                     {vaultTipeKunci === "PIN" ? "Kode PIN" : vaultTipeKunci === "Password" ? "Password Akun" : "Catatan Pola"}
                                                 </label>
                                                 <input
@@ -1589,11 +1589,11 @@ export default function TiketServisDetail() {
                                 <div className="flex items-center justify-between mb-1.5">
                                     <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Unit Pinjaman (Backup)</p>
                                     {activeLoan ? (
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
                                             Sedang Dipinjam
                                         </span>
                                     ) : (
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-slate-100 text-slate-600">
                                             Tidak Ada
                                         </span>
                                     )}
@@ -1604,17 +1604,17 @@ export default function TiketServisDetail() {
                                             <span className="font-bold text-slate-900 font-mono">[{activeLoan.loaner_device?.kode_unit || "LOAN"}] {activeLoan.loaner_device?.nama || "Unit Pinjaman"}</span>
                                             <Link 
                                                 to={`/loaner?tab=records&q=${encodeURIComponent(activeLoan.nomor_peminjaman || '')}`} 
-                                                className="text-blue-600 font-bold hover:underline text-[11px]"
+                                                className="text-blue-600 font-bold hover:underline text-2xs"
                                             >
                                                 Kelola Pinjaman →
                                             </Link>
                                         </div>
-                                        <p className="text-slate-600 text-[11px]">
+                                        <p className="text-slate-600 text-2xs">
                                             Dipinjam sejak: {activeLoan.tanggal_pinjam ? new Date(activeLoan.tanggal_pinjam).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "-"}
                                             {activeLoan.estimasi_kembali ? ` • Batas: ${new Date(activeLoan.estimasi_kembali).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}` : ""}
                                         </p>
                                         {activeLoan.deposit_uang > 0 && (
-                                            <p className="text-slate-500 text-[10px]">
+                                            <p className="text-slate-500 text-3xs">
                                                 Jaminan: {formatRupiah(activeLoan.deposit_uang)}
                                             </p>
                                         )}
@@ -1654,9 +1654,9 @@ export default function TiketServisDetail() {
                                 <div>
                                     <div className="flex items-center gap-1.5">
                                         <span className="text-xs font-bold text-slate-800">QR Code Unit</span>
-                                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded font-mono font-semibold">Label</span>
+                                        <span className="text-3xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded font-mono font-semibold">Label</span>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 font-mono mt-0.5">{tiket.nomor_tiket}</p>
+                                    <p className="text-2xs text-slate-500 font-mono mt-0.5">{tiket.nomor_tiket}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
@@ -1717,7 +1717,7 @@ export default function TiketServisDetail() {
                                                             <div className="absolute inset-0 flex items-center justify-center">
                                                                 <Play className="w-5 h-5 text-white fill-white drop-shadow" />
                                                             </div>
-                                                            <span className="absolute bottom-0.5 right-0.5 bg-purple-600 text-white text-[8px] font-bold px-1 rounded">VID</span>
+                                                            <span className="absolute bottom-0.5 right-0.5 bg-purple-600 text-white text-4xs font-bold px-1 rounded">VID</span>
                                                         </div>
                                                     ) : (
                                                         <img 
@@ -1767,7 +1767,7 @@ export default function TiketServisDetail() {
                                                                     <div className="absolute inset-0 flex items-center justify-center">
                                                                         <Play className="w-5 h-5 text-white fill-white drop-shadow" />
                                                                     </div>
-                                                                    <span className="absolute bottom-0.5 right-0.5 bg-emerald-600 text-white text-[8px] font-bold px-1 rounded">VID</span>
+                                                                    <span className="absolute bottom-0.5 right-0.5 bg-emerald-600 text-white text-4xs font-bold px-1 rounded">VID</span>
                                                                 </div>
                                                             ) : (
                                                                 <img 
@@ -1779,7 +1779,7 @@ export default function TiketServisDetail() {
                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
                                                                 <Search className="w-4 h-4 text-white" />
                                                             </div>
-                                                            <span className="absolute bottom-1 right-1 bg-slate-900/80 text-white text-[9px] font-mono px-1 rounded">
+                                                            <span className="absolute bottom-1 right-1 bg-slate-900/80 text-white text-4xs font-mono px-1 rounded">
                                                                 #{idx + 1}
                                                             </span>
                                                         </button>
@@ -1806,7 +1806,7 @@ export default function TiketServisDetail() {
                                         {(() => {
                                             const normalCount = CHECKLIST_ITEMS.filter(i => getChecklistValue(tiket.checklist_intake, i.key, i.legacyKey)).length;
                                             return (
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                                <span className={`text-3xs font-bold px-2 py-0.5 rounded-full border ${
                                                     normalCount === CHECKLIST_ITEMS.length
                                                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                                         : "bg-amber-50 text-amber-800 border-amber-300"
@@ -1909,7 +1909,7 @@ export default function TiketServisDetail() {
                                                         <div className="absolute inset-0 flex items-center justify-center">
                                                             <Play className="w-6 h-6 text-white fill-white drop-shadow" />
                                                         </div>
-                                                        <span className="absolute bottom-1 right-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">VIDEO</span>
+                                                        <span className="absolute bottom-1 right-1 bg-purple-600 text-white text-4xs font-bold px-1.5 py-0.5 rounded shadow">VIDEO</span>
                                                     </div>
                                                 ) : (
                                                     <img 
@@ -1921,7 +1921,7 @@ export default function TiketServisDetail() {
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
                                                     <Search className="w-4 h-4 text-white" />
                                                 </div>
-                                                <span className="absolute top-1 left-1 bg-slate-900/80 text-white text-[9px] font-mono px-1 rounded">
+                                                <span className="absolute top-1 left-1 bg-slate-900/80 text-white text-4xs font-mono px-1 rounded">
                                                     #{idx + 1}
                                                 </span>
                                             </button>
@@ -1998,7 +1998,7 @@ export default function TiketServisDetail() {
                                             
                                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm text-sm">
                                                 <div className="mb-2">
-                                                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${badgeColor}`}>{label}</span>
+                                                    <span className={`text-3xs uppercase font-bold px-2 py-0.5 rounded-md ${badgeColor}`}>{label}</span>
                                                 </div>
                                                 <p className="text-slate-800 mb-2 whitespace-pre-line">{log.catatan}</p>
                                             {log.foto_url && (
@@ -2115,7 +2115,7 @@ export default function TiketServisDetail() {
                                             Status Serah Terima Sparepart Bekas (SOP Yangversa)
                                         </span>
                                     </div>
-                                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 ${
+                                    <span className={`text-2xs font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 ${
                                         (partBekasStatus || tiket.status_part_bekas) === "diserahkan_ke_pelanggan"
                                             ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                                             : (partBekasStatus || tiket.status_part_bekas) === "titip_buang_ewaste"
@@ -2137,7 +2137,7 @@ export default function TiketServisDetail() {
                                         )}
                                     </span>
                                 </div>
-                                <p className="text-[11px] text-slate-500 mb-3">
+                                <p className="text-2xs text-slate-500 mb-3">
                                     SOP Transparansi Toko: Seluruh komponen lama yang diganti wajib ditunjukkan dan diserahkan kembali kepada pelanggan saat serah terima unit, kecuali jika pelanggan menitipkannya untuk dibuang.
                                 </p>
                                 {(isAdmin || isAssignedToMe) && ["dalam_perbaikan", "selesai"].includes(tiket.status) ? (
@@ -2278,8 +2278,8 @@ export default function TiketServisDetail() {
                                     <span className="text-slate-900 font-medium">{formatRupiah(tiket.invoice.biaya_sparepart)}</span>
                                 </div>
                                 <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
-                                    <span className="text-slate-800 font-bold uppercase tracking-wider text-sm">Total Tagihan</span>
-                                    <span className="text-emerald-700 font-bold text-xl">{formatRupiah(tiket.invoice.total_biaya)}</span>
+                                    <span className="text-slate-900 font-bold uppercase tracking-wider text-xs sm:text-sm">Total Tagihan</span>
+                                    <span className="text-emerald-700 font-extrabold text-xl sm:text-2xl font-mono tracking-tight">{formatRupiah(tiket.invoice.total_biaya)}</span>
                                 </div>
                             </div>
                         </div>
@@ -2412,7 +2412,7 @@ export default function TiketServisDetail() {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-sm font-bold text-amber-950">CRM: Pengingat Garansi Hampir Habis (H-{tiket.warranty_status.sisaHari})</h3>
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 uppercase">
+                                    <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-200 text-amber-900 uppercase">
                                         Proaktif
                                     </span>
                                 </div>
@@ -2509,17 +2509,17 @@ export default function TiketServisDetail() {
                     {/* Expiry Details Banner */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
                         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Durasi Garansi</p>
+                            <p className="text-2xs font-semibold text-slate-400 uppercase tracking-wider">Durasi Garansi</p>
                             <p className="text-base font-bold text-slate-800 mt-0.5">{tiket.durasi_garansi || "1 Bulan"}</p>
                         </div>
                         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tanggal Diambil</p>
+                            <p className="text-2xs font-semibold text-slate-400 uppercase tracking-wider">Tanggal Diambil</p>
                             <p className="text-sm font-bold text-slate-800 mt-0.5">
                                 {tiket.tgl_diambil ? new Date(tiket.tgl_diambil).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}
                             </p>
                         </div>
                         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Batas Garansi Berakhir</p>
+                            <p className="text-2xs font-semibold text-slate-400 uppercase tracking-wider">Batas Garansi Berakhir</p>
                             <p className={`text-sm font-bold mt-0.5 ${tiket.warranty_status?.isExpired ? "text-rose-600" : "text-emerald-700"}`}>
                                 {tiket.warranty_status?.garansi_berakhir_at 
                                     ? new Date(tiket.warranty_status.garansi_berakhir_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) 
@@ -2615,7 +2615,7 @@ export default function TiketServisDetail() {
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Informasi Pendukung & Kepatuhan Layanan
                     </h3>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-2xs text-slate-400">
                         Klik panel untuk melihat detail
                     </span>
                 </div>
@@ -2633,7 +2633,7 @@ export default function TiketServisDetail() {
                             <div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <h2 className="text-sm font-bold text-slate-900">Protokol Layanan & Izin Unit</h2>
-                                    <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                                    <span className="bg-blue-50 text-blue-700 border border-blue-200 text-3xs font-bold px-2.5 py-0.5 rounded-full">
                                         Standar Servis
                                     </span>
                                 </div>
@@ -2910,7 +2910,7 @@ export default function TiketServisDetail() {
                                             <div className="space-y-2 text-xs">
                                                 <div className="flex items-center justify-between gap-2 py-0.5">
                                                     <span className="text-slate-600">Bongkar Hardware:</span>
-                                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                                                    <span className={`px-2 py-0.5 rounded text-2xs font-bold border ${
                                                         tiket.izin_bongkar !== false ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"
                                                     }`}>
                                                         {tiket.izin_bongkar !== false ? "Diizinkan" : "Ditolak"}
@@ -2918,7 +2918,7 @@ export default function TiketServisDetail() {
                                                 </div>
                                                 <div className="flex items-center justify-between gap-2 py-0.5">
                                                     <span className="text-slate-600">Akses OS / Testing:</span>
-                                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                                                    <span className={`px-2 py-0.5 rounded text-2xs font-bold border ${
                                                         tiket.izin_akses_os !== false ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"
                                                     }`}>
                                                         {tiket.izin_akses_os !== false ? "Diizinkan" : "Ditolak"}
@@ -2926,7 +2926,7 @@ export default function TiketServisDetail() {
                                                 </div>
                                                 <div className="flex items-center justify-between gap-2 py-0.5">
                                                     <span className="text-slate-600">Konfirmasi Backup:</span>
-                                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                                                    <span className={`px-2 py-0.5 rounded text-2xs font-bold border ${
                                                         tiket.izin_backup_mandiri !== false ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
                                                     }`}>
                                                         {tiket.izin_backup_mandiri !== false ? "Disepakati" : "Belum Konfirmasi"}
@@ -2934,8 +2934,8 @@ export default function TiketServisDetail() {
                                                 </div>
                                                 {tiket.batasan_izin && (
                                                     <div className="mt-2 pt-2 border-t border-slate-200/80">
-                                                        <span className="text-[10px] font-bold text-amber-800 uppercase block mb-0.5">Batasan Khusus:</span>
-                                                        <p className="text-[11px] text-slate-700 bg-amber-50/80 p-2 rounded-lg border border-amber-200 leading-relaxed">
+                                                        <span className="text-3xs font-bold text-amber-800 uppercase block mb-0.5">Batasan Khusus:</span>
+                                                        <p className="text-2xs text-slate-700 bg-amber-50/80 p-2 rounded-lg border border-amber-200 leading-relaxed">
                                                             {tiket.batasan_izin}
                                                         </p>
                                                     </div>
@@ -2997,7 +2997,7 @@ export default function TiketServisDetail() {
                                                         {hist.nomor_tiket}
                                                         <ExternalLink className="w-3 h-3" />
                                                     </Link>
-                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${STATUS_LABELS[hist.status]?.color || "bg-slate-100 text-slate-700"}`}>
+                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border uppercase tracking-wider ${STATUS_LABELS[hist.status]?.color || "bg-slate-100 text-slate-700"}`}>
                                                         {STATUS_LABELS[hist.status]?.label || hist.status}
                                                     </span>
                                                     <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
@@ -3015,9 +3015,9 @@ export default function TiketServisDetail() {
                                                 )}
                                                 {hist.penggunaan_sparepart && hist.penggunaan_sparepart.length > 0 && (
                                                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                                                        <span className="text-[11px] text-slate-400">Sparepart diganti:</span>
+                                                        <span className="text-2xs text-slate-400">Sparepart diganti:</span>
                                                         {hist.penggunaan_sparepart.map(ps => (
-                                                            <span key={ps.id} className="bg-white px-2 py-0.5 rounded-md text-[10px] font-medium text-slate-700 border border-slate-200">
+                                                            <span key={ps.id} className="bg-white px-2 py-0.5 rounded-md text-3xs font-medium text-slate-700 border border-slate-200">
                                                                 {ps.sparepart?.nama} ({ps.jumlah}x)
                                                             </span>
                                                         ))}
@@ -3025,7 +3025,7 @@ export default function TiketServisDetail() {
                                                 )}
                                             </div>
                                             <div className="text-left md:text-right shrink-0 border-t md:border-t-0 pt-2 md:pt-0 border-slate-200">
-                                                <p className="text-[11px] text-slate-400">Teknisi</p>
+                                                <p className="text-2xs text-slate-400">Teknisi</p>
                                                 <p className="text-xs font-bold text-slate-800">{hist.teknisi?.nama || "Tidak tercatat"}</p>
                                                 {hist.invoice && (
                                                     <p className="text-xs font-semibold text-emerald-600 mt-1">{formatRupiah(hist.invoice.total_biaya)}</p>
@@ -3060,10 +3060,10 @@ export default function TiketServisDetail() {
                             <div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <h2 className="text-sm font-bold text-slate-900">Pustaka Solusi Wiki Toko</h2>
-                                    <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-3xs font-bold px-2 py-0.5 rounded-full">
                                         Hardware Knowledge Base
                                     </span>
-                                    <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                                    <span className="bg-slate-100 text-slate-700 border border-slate-200 text-3xs font-bold px-2.5 py-0.5 rounded-full">
                                         {wikiSuggestions?.length || 0} Solusi
                                     </span>
                                 </div>
@@ -3120,21 +3120,21 @@ export default function TiketServisDetail() {
                                         >
                                             <div>
                                                 <div className="flex items-center justify-between gap-1 mb-1.5">
-                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 border border-slate-200">
+                                                    <span className="text-3xs font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 border border-slate-200">
                                                         {wiki.kategori}
                                                     </span>
-                                                    <span className="text-[10px] font-bold text-indigo-600 group-hover:underline flex items-center gap-0.5">
+                                                    <span className="text-3xs font-bold text-indigo-600 group-hover:underline flex items-center gap-0.5">
                                                         Baca <ArrowRight className="w-3 h-3" />
                                                     </span>
                                                 </div>
                                                 <h4 className="text-xs font-bold text-slate-900 group-hover:text-indigo-950 line-clamp-1 mb-1">
                                                     {wiki.judul}
                                                 </h4>
-                                                <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                                                <p className="text-2xs text-slate-500 line-clamp-2 leading-relaxed">
                                                     {wiki.gejala || wiki.solusi_langkah}
                                                 </p>
                                             </div>
-                                            <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+                                            <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-3xs text-slate-400">
                                                 <span>{wiki.brand?.nama || "Semua Merek"}</span>
                                                 <span>{wiki.view_count || 0}x dibaca</span>
                                             </div>
@@ -3163,7 +3163,7 @@ export default function TiketServisDetail() {
                             <div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <h2 className="text-sm font-bold text-slate-900">Inspeksi Kendali Mutu (QC Pra-Penyerahan Unit)</h2>
-                                    <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    <span className="bg-blue-50 text-blue-700 border border-blue-200 text-3xs font-bold px-2 py-0.5 rounded-full">
                                         {QC_CHECKLIST_ITEMS.length} Poin Standar WOW
                                     </span>
                                 </div>
@@ -3241,7 +3241,7 @@ export default function TiketServisDetail() {
                                                     <ItemIcon className={`w-3.5 h-3.5 shrink-0 ${isChecked ? "text-emerald-600" : "text-slate-400"}`} />
                                                     <span className="font-bold text-slate-900 truncate">{item.label}</span>
                                                 </div>
-                                                <p className="text-[11px] text-slate-500 leading-tight font-normal">{item.desc}</p>
+                                                <p className="text-2xs text-slate-500 leading-tight font-normal">{item.desc}</p>
                                             </div>
                                         </label>
                                     );
@@ -3259,7 +3259,7 @@ export default function TiketServisDetail() {
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm">Quality Control PASSED (Final Approval Pra-Penyerahan)</span>
                                                 {isLocked && (
-                                                    <span className="text-[10px] font-semibold bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                                    <span className="text-3xs font-semibold bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                                                         <Lock className="w-3 h-3 text-slate-500" /> Terkunci
                                                     </span>
                                                 )}
@@ -3353,7 +3353,7 @@ export default function TiketServisDetail() {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-base font-bold text-slate-900">Checklist QC Pra-Penyerahan Unit</h2>
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                                             Target: {STATUS_LABELS[selectedStatus]?.label}
                                         </span>
                                     </div>
@@ -3424,7 +3424,7 @@ export default function TiketServisDetail() {
                                                     <ItemIcon className={`w-3.5 h-3.5 shrink-0 ${isChecked ? "text-emerald-600" : "text-slate-400"}`} />
                                                     <span className="text-xs font-bold text-slate-900 truncate">{item.label}</span>
                                                 </div>
-                                                <p className="text-[11px] text-slate-500 leading-tight">{item.desc}</p>
+                                                <p className="text-2xs text-slate-500 leading-tight">{item.desc}</p>
                                             </div>
                                         </label>
                                     );
@@ -3463,7 +3463,7 @@ export default function TiketServisDetail() {
                                     <Award className={`w-5 h-5 shrink-0 ${qcModalData.passed_qc ? "text-emerald-700" : "text-amber-600"}`} />
                                     <div>
                                         <p className="text-xs font-bold">Persetujuan Kendali Mutu (Final Approval)</p>
-                                        <p className="text-[11px] opacity-80">
+                                        <p className="text-2xs opacity-80">
                                             {qcModalData.passed_qc ? "Perangkat siap diserahkan kepada pelanggan" : "Centang persetujuan setelah seluruh pengujian diverifikasi"}
                                         </p>
                                     </div>
@@ -3612,7 +3612,7 @@ export default function TiketServisDetail() {
                                             <span className="font-bold text-xs text-slate-900">Disetujui (ACC)</span>
                                             {accTargetStatus === "disetujui" && <Check className="w-4 h-4 text-emerald-600" />}
                                         </div>
-                                        <p className="text-[11px] text-slate-500">
+                                        <p className="text-2xs text-slate-500">
                                             Antrean pengerjaan teknisi dibuka
                                         </p>
                                     </button>
@@ -3630,7 +3630,7 @@ export default function TiketServisDetail() {
                                             <span className="font-bold text-xs text-slate-900">Dalam Perbaikan</span>
                                             {accTargetStatus === "dalam_perbaikan" && <Check className="w-4 h-4 text-indigo-600" />}
                                         </div>
-                                        <p className="text-[11px] text-slate-500">
+                                        <p className="text-2xs text-slate-500">
                                             Teknisi langsung mulai membongkar/servis
                                         </p>
                                     </button>
@@ -3643,7 +3643,7 @@ export default function TiketServisDetail() {
                                     <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                                         Paket Estimasi SLA Pengerjaan Servis
                                     </label>
-                                    <span className="text-[11px] text-slate-500">
+                                    <span className="text-2xs text-slate-500">
                                         Timer dihitung sejak persetujuan pelanggan
                                     </span>
                                 </div>
@@ -3670,7 +3670,7 @@ export default function TiketServisDetail() {
                                                         <PkgIcon className="w-4 h-4" />
                                                         <span className="text-xs font-bold">{pkg.label}</span>
                                                         {pkg.id === "express" && (
-                                                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white uppercase tracking-wider">
+                                                            <span className="px-1.5 py-0.5 rounded text-3xs font-bold bg-amber-500 text-white uppercase tracking-wider">
                                                                 Prioritas Meja
                                                             </span>
                                                         )}
@@ -3681,7 +3681,7 @@ export default function TiketServisDetail() {
                                                         {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                                                     </div>
                                                 </div>
-                                                <p className="text-[11px] text-slate-500 pl-6 leading-relaxed">
+                                                <p className="text-2xs text-slate-500 pl-6 leading-relaxed">
                                                     {pkg.desc}
                                                 </p>
                                             </div>
@@ -3710,7 +3710,7 @@ export default function TiketServisDetail() {
                                             onChange={(e) => setAccCustomTargetDate(e.target.value)}
                                             className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
                                         />
-                                        <p className="text-[11px] text-slate-400">
+                                        <p className="text-2xs text-slate-400">
                                             Cocok untuk servis yang memerlukan pemesanan sparepart khusus (part indent).
                                         </p>
                                     </div>
@@ -3839,7 +3839,7 @@ export default function TiketServisDetail() {
                                         placeholder="0 jika bebas biaya cek"
                                     />
                                 </div>
-                                <p className="text-[11px] text-slate-400 mt-1">
+                                <p className="text-2xs text-slate-400 mt-1">
                                     Isi 0 jika toko menerapkan kebijakan gratis biaya pengecekan untuk unit batal.
                                 </p>
                             </div>

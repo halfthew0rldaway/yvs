@@ -484,7 +484,7 @@ export default function DiagnosisForm() {
                     </button>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                                 {diagnosisId ? "Edit Hasil Diagnosis" : "Input Hasil Diagnosis"}
                             </h1>
                             {tiket?.nomor_tiket && (
@@ -493,7 +493,7 @@ export default function DiagnosisForm() {
                                 </span>
                             )}
                         </div>
-                        <p className="text-sm text-slate-500 mt-0.5">
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1">
                             Catat temuan masalah teknis, cek fungsi komponen, dan ajukan estimasi penawaran servis
                         </p>
                     </div>
@@ -511,11 +511,11 @@ export default function DiagnosisForm() {
                                 <h2 className="text-base font-bold text-slate-900">
                                     Cek Fungsi Komponen (Auto-Type Laporan)
                                 </h2>
-                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                                     {checkedCount}/{HARDWARE_ITEMS.length} Dicek
                                 </span>
                                 {issueCount > 0 && (
-                                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                    <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
                                         {issueCount} Bermasalah
                                     </span>
                                 )}
@@ -655,7 +655,7 @@ export default function DiagnosisForm() {
                                                 >
                                                     <Minus className="w-2.5 h-2.5" />
                                                 </button>
-                                                <span className="text-[10px] font-bold px-1 text-slate-700">
+                                                <span className="text-3xs font-bold px-1 text-slate-700">
                                                     {qty} {item.unit}
                                                 </span>
                                                 <button
@@ -705,7 +705,7 @@ export default function DiagnosisForm() {
                                         value={note}
                                         onChange={(e) => handleNoteChange(item.key, e.target.value)}
                                         placeholder="Catatan (cth: 2 garis vertikal)"
-                                        className={`w-full px-2 py-1 text-[11px] rounded-lg border outline-none transition-all placeholder:text-slate-400 ${
+                                        className={`w-full px-2 py-1 text-2xs rounded-lg border outline-none transition-all placeholder:text-slate-400 ${
                                             isIssue 
                                                 ? "bg-white border-rose-200 text-rose-900 focus:border-rose-500" 
                                                 : isOk && note

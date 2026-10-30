@@ -240,7 +240,7 @@ export default function CameraCaptureModal({
                                     <div className="absolute -bottom-0.5 -left-0.5 w-5 h-5 border-b-2 border-l-2 border-blue-400 rounded-bl-md" />
                                     <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 border-b-2 border-r-2 border-blue-400 rounded-br-md" />
                                     
-                                    <div className="absolute top-2.5 left-1/2 -translate-x-1/2 bg-slate-900/70 backdrop-blur-xs px-3 py-1 rounded-full text-[11px] font-medium text-slate-200 border border-white/10">
+                                    <div className="absolute top-2.5 left-1/2 -translate-x-1/2 bg-slate-900/70 backdrop-blur-xs px-3 py-1 rounded-full text-2xs font-medium text-slate-200 border border-white/10">
                                         Posisikan objek di area kotak
                                     </div>
                                 </div>
@@ -274,7 +274,7 @@ export default function CameraCaptureModal({
                 {/* Bottom Thumbnails Strip */}
                 {currentPhotos.length > 0 && (
                     <div className="px-5 py-3 bg-white border-t border-slate-100 overflow-x-auto flex items-center gap-2.5 shrink-0">
-                        <span className="text-[11px] font-bold text-slate-500 shrink-0 uppercase tracking-wider">
+                        <span className="text-2xs font-bold text-slate-500 shrink-0 uppercase tracking-wider">
                             Foto ({currentPhotos.length}):
                         </span>
                         {currentPhotos.map((photo, idx) => (
@@ -284,7 +284,7 @@ export default function CameraCaptureModal({
                                     alt={`Foto ${idx + 1}`}
                                     className="w-12 h-12 object-cover rounded-xl border border-slate-200 shadow-2xs"
                                 />
-                                <span className="absolute bottom-0.5 right-0.5 bg-slate-900/80 text-white text-[9px] font-mono px-1 rounded">
+                                <span className="absolute bottom-0.5 right-0.5 bg-slate-900/80 text-white text-4xs font-mono px-1 rounded">
                                     #{idx + 1}
                                 </span>
                                 {onRemovePhoto && (

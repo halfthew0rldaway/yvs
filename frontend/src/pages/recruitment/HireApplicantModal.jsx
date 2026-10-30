@@ -147,7 +147,7 @@ export default function HireApplicantModal({ isOpen, onClose, applicant, onSucce
                                     required
                                 />
                             </div>
-                            <p className="text-[11px] text-slate-400 mt-1">
+                            <p className="text-2xs text-slate-400 mt-1">
                                 Staf dapat mengubah password ini saat pertama kali login.
                             </p>
                         </div>

@@ -123,7 +123,7 @@ export default function KlaimGaransiModal({
                             <ShieldCheck className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-200">
+                            <span className="text-2xs font-bold uppercase tracking-wider text-blue-200">
                                 Alur Re-work & Retur Servis
                             </span>
                             <h2 className="text-xl font-bold text-white tracking-tight">
@@ -160,7 +160,7 @@ export default function KlaimGaransiModal({
                                 <div>
                                     <p className="text-slate-400 font-medium">Unit Perangkat</p>
                                     <p className="font-bold text-slate-800">{tiket.perangkat?.merek} {tiket.perangkat?.model}</p>
-                                    <p className="text-slate-500 font-mono text-[11px]">SN: {tiket.perangkat?.serial_number || "-"}</p>
+                                    <p className="text-slate-500 font-mono text-2xs">SN: {tiket.perangkat?.serial_number || "-"}</p>
                                 </div>
                             </div>
                         </div>
@@ -181,14 +181,14 @@ export default function KlaimGaransiModal({
                                     <p className="text-xs font-bold">
                                         {isExpired ? "Masa Garansi Resmi Berakhir" : "Unit Dalam Masa Garansi Resmi"}
                                     </p>
-                                    <p className="text-[11px] opacity-80">
+                                    <p className="text-2xs opacity-80">
                                         {isExpired 
                                             ? "Tiket ini akan diproses sebagai diskresi kebijakan toko / SPK khusus."
                                             : `Sisa masa garansi: ${sisaHari ?? 0} hari kerja.`}
                                     </p>
                                 </div>
                             </div>
-                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase shrink-0 ${
+                            <span className={`text-2xs font-bold px-2 py-0.5 rounded-full uppercase shrink-0 ${
                                 isExpired ? "bg-amber-200 text-amber-900" : "bg-emerald-200 text-emerald-900"
                             }`}>
                                 {isExpired ? "Lewat Masa" : "Aktif"}
@@ -221,7 +221,7 @@ export default function KlaimGaransiModal({
                                                 <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                                             )}
                                         </div>
-                                        <p className="text-[11px] text-slate-500 leading-snug">{opt.desc}</p>
+                                        <p className="text-2xs text-slate-500 leading-snug">{opt.desc}</p>
                                     </button>
                                 );
                             })}
@@ -255,7 +255,7 @@ export default function KlaimGaransiModal({
                             placeholder="Contoh: Unit laptop, charger original, tanpa tas"
                             className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all text-xs text-slate-800"
                         />
-                        <p className="text-[11px] text-slate-400 mt-1">
+                        <p className="text-2xs text-slate-400 mt-1">
                             Disalin otomatis dari tiket sebelumnya. Sesuaikan bila pelanggan membawa kelengkapan berbeda.
                         </p>
                     </div>
@@ -265,7 +265,7 @@ export default function KlaimGaransiModal({
                         <Wrench className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                         <div className="space-y-0.5">
                             <span className="font-bold">Prioritas SLA Re-work (Express):</span>
-                            <p className="text-[11px] text-blue-800 leading-relaxed">
+                            <p className="text-2xs text-blue-800 leading-relaxed">
                                 Tiket klaim garansi otomatis diprioritaskan ke teknisi awal dengan paket pengerjaan Express untuk menjaga kepuasan dan kepercayaan pelanggan.
                             </p>
                         </div>

@@ -195,12 +195,12 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
 
                     {/* QR Code Payload Option */}
                     <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500 font-semibold">Isi QR:</span>
+                        <span className="text-2xs text-slate-500 font-semibold">Isi QR:</span>
                         <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5">
                             <button
                                 type="button"
                                 onClick={() => setQrDataType("sku")}
-                                className={`px-2 py-1 rounded text-[11px] font-semibold transition-all ${
+                                className={`px-2 py-1 rounded text-2xs font-semibold transition-all ${
                                     qrDataType === "sku" ? "bg-slate-800 text-white" : "text-slate-600 hover:text-slate-900"
                                 }`}
                                 title="QR berisi kode SKU untuk barcode scanner"
@@ -210,7 +210,7 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                             <button
                                 type="button"
                                 onClick={() => setQrDataType("url")}
-                                className={`px-2 py-1 rounded text-[11px] font-semibold transition-all ${
+                                className={`px-2 py-1 rounded text-2xs font-semibold transition-all ${
                                     qrDataType === "url" ? "bg-slate-800 text-white" : "text-slate-600 hover:text-slate-900"
                                 }`}
                                 title="QR membuka halaman servis & pencarian part saat discan kamera HP"
@@ -222,7 +222,7 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
 
                     {/* Qty Print Multiplier */}
                     <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500 font-semibold">Qty Cetak:</span>
+                        <span className="text-2xs text-slate-500 font-semibold">Qty Cetak:</span>
                         <div className="flex items-center gap-1">
                             {[1, 2, 5].map((num) => (
                                 <button
@@ -242,7 +242,7 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                                 <button
                                     type="button"
                                     onClick={() => setPrintCount(sparepart.stok)}
-                                    className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all border ${
+                                    className={`px-2 py-1 rounded-lg text-2xs font-bold transition-all border ${
                                         printCount === sparepart.stok
                                             ? "bg-blue-50 text-blue-700 border-blue-300 ring-1 ring-blue-300"
                                             : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
@@ -275,7 +275,7 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                                                 <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-900">
                                                     YANGVERSA SERVICE / KOMPUTERAWET
                                                 </h4>
-                                                <p className="text-[10px] text-slate-500 font-medium">Workshop & Pusat Komponen Laptop</p>
+                                                <p className="text-3xs text-slate-500 font-medium">Workshop & Pusat Komponen Laptop</p>
                                             </div>
                                             <div className="px-2.5 py-1 bg-slate-900 text-white rounded-lg font-mono font-extrabold text-xs tracking-wider shrink-0">
                                                 {skuCode}
@@ -291,14 +291,14 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                                                     alt={`QR ${skuCode}`}
                                                     className="w-28 h-28 object-contain"
                                                 />
-                                                <span className="text-[9px] font-mono font-bold text-slate-500 mt-1">
+                                                <span className="text-4xs font-mono font-bold text-slate-500 mt-1">
                                                     {skuCode}
                                                 </span>
                                             </div>
 
                                             {/* Info Suku Cadang */}
                                             <div className="col-span-7 space-y-1.5 min-w-0">
-                                                <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700">
+                                                <span className="inline-block px-2 py-0.5 rounded text-3xs font-bold uppercase tracking-wider bg-slate-100 text-slate-700">
                                                     {sparepart.kategori}
                                                 </span>
                                                 
@@ -307,13 +307,13 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                                                 </h5>
 
                                                 <div className="pt-1">
-                                                    <span className="text-[10px] text-slate-500 block uppercase font-semibold">Harga Jual / Servis</span>
+                                                    <span className="text-3xs text-slate-500 block uppercase font-semibold">Harga Jual / Servis</span>
                                                     <span className="font-mono font-extrabold text-base text-blue-700">
                                                         {formatRupiah(sparepart.harga)}
                                                     </span>
                                                 </div>
 
-                                                <div className="text-[10px] text-slate-600 space-y-0.5 pt-1 border-t border-slate-100">
+                                                <div className="text-3xs text-slate-600 space-y-0.5 pt-1 border-t border-slate-100">
                                                     <p className="flex items-center gap-1 truncate">
                                                         <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
                                                         <span className="font-semibold text-slate-800">{getWarrantyLabel()}</span>
@@ -327,7 +327,7 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                                         </div>
 
                                         {/* Footer Barcode / Instruction */}
-                                        <div className="pt-2 border-t-2 border-dashed border-slate-300 flex items-center justify-between text-[10px] text-slate-500">
+                                        <div className="pt-2 border-t-2 border-dashed border-slate-300 flex items-center justify-between text-3xs text-slate-500">
                                             <span>Scan QR untuk cek stok / spesifikasi</span>
                                             <span className="font-mono">Stok: {sparepart.stok} unit</span>
                                         </div>
@@ -348,7 +348,7 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                                         <div className="min-w-0 flex-1 space-y-0.5">
                                             <div className="flex items-center justify-between">
                                                 <span className="font-mono font-extrabold text-xs text-slate-900">{skuCode}</span>
-                                                <span className="text-[9px] font-bold text-slate-500 uppercase">{sparepart.kategori}</span>
+                                                <span className="text-4xs font-bold text-slate-500 uppercase">{sparepart.kategori}</span>
                                             </div>
                                             <p className="font-bold text-xs text-slate-900 leading-tight truncate">
                                                 {fullName}
@@ -356,7 +356,7 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                                             <p className="font-mono font-extrabold text-sm text-blue-700">
                                                 {formatRupiah(sparepart.harga)}
                                             </p>
-                                            <p className="text-[9.5px] text-emerald-700 font-semibold truncate">
+                                            <p className="text-4xs text-emerald-700 font-semibold truncate">
                                                 {getWarrantyLabel()}
                                             </p>
                                         </div>
@@ -394,11 +394,11 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
 
                                         <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
                                             <div>
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase block">Harga Eceran / Servis</span>
+                                                <span className="text-3xs text-slate-400 font-bold uppercase block">Harga Eceran / Servis</span>
                                                 <span className="font-mono font-extrabold text-lg text-blue-700">{formatRupiah(sparepart.harga)}</span>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase block">Kapasitas Stok</span>
+                                                <span className="text-3xs text-slate-400 font-bold uppercase block">Kapasitas Stok</span>
                                                 <span className="font-mono font-bold text-slate-800">{sparepart.stok} unit</span>
                                             </div>
                                         </div>

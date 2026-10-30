@@ -116,10 +116,10 @@ export default function CustomerForm() {
                     <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                         {isEdit ? "Edit Data Customer" : "Tambah Customer Baru"}
                     </h1>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
                         {isEdit ? "Perbarui informasi pelanggan yang sudah ada" : "Masukkan informasi pelanggan baru ke dalam sistem"}
                     </p>
                 </div>
@@ -132,7 +132,7 @@ export default function CustomerForm() {
                             <User className="w-4 h-4 text-slate-400" />
                             Nama Lengkap <span className="text-red-500">*</span>
                         </label>
-                        <span className="text-[11px] text-slate-400">Min 3 - Max 100 karakter</span>
+                        <span className="text-2xs text-slate-400">Min 3 - Max 100 karakter</span>
                     </div>
                     <input
                         type="text"
@@ -150,7 +150,7 @@ export default function CustomerForm() {
                             <Phone className="w-4 h-4 text-slate-400" />
                             Nomor Telepon <span className="text-red-500">*</span>
                         </label>
-                        <span className="text-[11px] text-slate-400">Hanya angka, 10-13 digit</span>
+                        <span className="text-2xs text-slate-400">Hanya angka, 10-13 digit</span>
                     </div>
                     <input
                         type="text"
@@ -168,7 +168,7 @@ export default function CustomerForm() {
                             <MapPin className="w-4 h-4 text-slate-400" />
                             Alamat
                         </label>
-                        <span className="text-[11px] text-slate-400">Maksimal 255 karakter</span>
+                        <span className="text-2xs text-slate-400">Maksimal 255 karakter</span>
                     </div>
                     <textarea
                         value={form.alamat}
@@ -186,7 +186,7 @@ export default function CustomerForm() {
                             <Sparkles className="w-5 h-5 text-indigo-600" />
                             <h3 className="text-sm font-bold text-slate-900">Profil Pelanggan & Gaya Komunikasi</h3>
                         </div>
-                        <span className="text-[11px] font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
+                        <span className="text-2xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
                             Panduan Adaptasi Pelayanan
                         </span>
                     </div>
@@ -208,7 +208,7 @@ export default function CustomerForm() {
                                 <option value="Plegmatis">Plegmatis (Tenang, Sabar, Butuh Kenyamanan & Kepastian)</option>
                                 <option value="Melankolis">Melankolis (Rinci, Teliti, Kritis, Paham Teknis)</option>
                             </select>
-                            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                            <p className="text-2xs text-slate-500 mt-1.5 leading-relaxed">
                                 {form.tipe_kepribadian === "Koleris" && "Panduan: Beri respon cepat, padat, fokus solusi & kepastian estimasi waktu."}
                                 {form.tipe_kepribadian === "Sanguinis" && "Panduan: Beri sambutan hangat, antusias, apresiasi, dan gaya bahasa ramah bersahabat."}
                                 {form.tipe_kepribadian === "Plegmatis" && "Panduan: Jelaskan dengan sabar, beri rasa aman, dan jangan terkesan mendesak keputusan."}
@@ -318,7 +318,7 @@ export default function CustomerForm() {
                                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                                 <div>
                                     <strong className="font-bold text-amber-950 block">Penting: Dampak Perubahan Data Master</strong>
-                                    <p className="text-amber-800 text-[11px] leading-relaxed mt-0.5">
+                                    <p className="text-amber-800 text-2xs leading-relaxed mt-0.5">
                                         Perubahan nama dan nomor telepon akan tersinkronisasi ke seluruh riwayat tiket servis aktif, faktur/invoice, serta kontak notifikasi WhatsApp otomatis.
                                     </p>
                                 </div>
@@ -334,7 +334,7 @@ export default function CustomerForm() {
                                 />
                                 <div className="text-xs text-slate-700 leading-snug">
                                     <span className="font-bold text-slate-900 block">Saya telah memverifikasi data di atas</span>
-                                    <span className="text-slate-500 text-[11px]">Saya yakin nomor telepon dan identitas pelanggan sudah valid dan benar.</span>
+                                    <span className="text-slate-500 text-2xs">Saya yakin nomor telepon dan identitas pelanggan sudah valid dan benar.</span>
                                 </div>
                             </label>
                         </div>

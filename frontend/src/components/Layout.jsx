@@ -299,8 +299,8 @@ export default function Layout({ children }) {
                             <Settings className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-bold text-slate-900 tracking-tight">Serv.io</h1>
-                            <p className="text-[10px] text-slate-400 font-medium">Workshop Platform</p>
+                            <div className="text-lg font-bold text-slate-900 tracking-tight leading-tight font-display">Serv.io</div>
+                            <p className="text-2xs text-slate-400 font-medium tracking-wide">Workshop Platform</p>
                         </div>
                     </div>
                     {/* Toggle button to close sidebar */}
@@ -325,7 +325,7 @@ export default function Layout({ children }) {
                                     <Link
                                         key={item.path}
                                         to={item.path}
-                                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-semibold transition-all mb-2 ${
+                                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all mb-2 ${
                                             isActive
                                                 ? "bg-blue-600 text-white shadow-xs"
                                                 : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
@@ -348,7 +348,7 @@ export default function Layout({ children }) {
                                 <button
                                     type="button"
                                     onClick={() => toggleGroup(group.id)}
-                                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer group ${
+                                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-2xs font-bold uppercase tracking-wider transition-colors cursor-pointer group ${
                                         hasActiveChild 
                                             ? "text-blue-600 hover:bg-blue-50/60" 
                                             : "text-slate-400 hover:text-slate-700 hover:bg-slate-100/60"
@@ -405,7 +405,7 @@ export default function Layout({ children }) {
                             <BookOpen className="w-4 h-4 text-blue-600" />
                             <span className="text-xs font-semibold text-slate-800">Panduan Standar Layanan</span>
                         </div>
-                        <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+                        <span className="text-3xs font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
                             WOW
                         </span>
                     </button>
@@ -420,7 +420,7 @@ export default function Layout({ children }) {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="font-bold text-slate-900 text-xs truncate">{user?.nama}</p>
-                                <p className="text-[11px] text-slate-500 capitalize truncate">{user?.role}</p>
+                                <p className="text-2xs text-slate-500 capitalize truncate">{user?.role}</p>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
@@ -484,7 +484,7 @@ export default function Layout({ children }) {
 
                         {/* Desktop Breadcrumbs */}
                         <div className="hidden md:flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-slate-400 min-w-0 overflow-hidden">
-                            <span className="text-slate-500 uppercase tracking-wider text-[11px] shrink-0">Workshop</span>
+                            <span className="text-slate-500 uppercase tracking-wider text-2xs font-bold shrink-0">Workshop</span>
                             <span className="text-slate-300 shrink-0">/</span>
                             <span className="text-slate-800 text-xs sm:text-sm font-bold tracking-tight truncate">
                                 {location.pathname.startsWith("/dashboard") && "Dashboard"}
@@ -565,7 +565,7 @@ export default function Layout({ children }) {
                         }`}
                     >
                         <LayoutDashboard className="w-5 h-5 mb-0.5" />
-                        <span className="text-[10px] tracking-tight">Home</span>
+                        <span className="text-3xs tracking-tight">Home</span>
                     </Link>
 
                     {/* Tiket Servis */}
@@ -578,7 +578,7 @@ export default function Layout({ children }) {
                         }`}
                     >
                         <Ticket className="w-5 h-5 mb-0.5" />
-                        <span className="text-[10px] tracking-tight">Tiket</span>
+                        <span className="text-3xs tracking-tight">Tiket</span>
                     </Link>
 
                     {/* Center Action: + Tiket Baru (Admin) or Sparepart (Teknisi) */}
@@ -591,7 +591,7 @@ export default function Layout({ children }) {
                             <div className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-blue-500/35 border-3 border-white transition-all">
                                 <Plus className="w-6 h-6 stroke-[2.5]" />
                             </div>
-                            <span className="text-[9.5px] font-bold text-blue-600 mt-0.5">Baru</span>
+                            <span className="text-3xs font-bold text-blue-600 mt-0.5">Baru</span>
                         </Link>
                     ) : (
                         <Link
@@ -601,7 +601,7 @@ export default function Layout({ children }) {
                             }`}
                         >
                             <Wrench className="w-5 h-5 mb-0.5" />
-                            <span className="text-[10px] tracking-tight">Sparepart</span>
+                            <span className="text-3xs tracking-tight">Sparepart</span>
                         </Link>
                     )}
 
@@ -613,7 +613,7 @@ export default function Layout({ children }) {
                         }`}
                     >
                         <FileText className="w-5 h-5 mb-0.5" />
-                        <span className="text-[10px] tracking-tight">Invoice</span>
+                        <span className="text-3xs tracking-tight">Invoice</span>
                     </Link>
 
                     {/* Menu Drawer Toggle */}
@@ -625,7 +625,7 @@ export default function Layout({ children }) {
                         }`}
                     >
                         <Menu className="w-5 h-5 mb-0.5" />
-                        <span className="text-[10px] tracking-tight">Menu</span>
+                        <span className="text-3xs tracking-tight">Menu</span>
                     </button>
                 </div>
             </nav>

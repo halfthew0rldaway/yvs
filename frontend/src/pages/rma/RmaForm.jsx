@@ -297,14 +297,14 @@ export default function RmaForm() {
                     </button>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                                 Formulir Pengajuan Klaim RMA Distributor
                             </h1>
                             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                                 Auto-Detect Distributor
                             </span>
                         </div>
-                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1">
                             Auto-detect suku cadang dari tiket servis, pencatatan nota end-user, serta fasilitas bantu klaim distributor resmi.
                         </p>
                     </div>
@@ -379,7 +379,7 @@ export default function RmaForm() {
                                         <CheckCircle2 className="w-4 h-4 text-blue-600" />
                                     )}
                                 </div>
-                                <p className="text-[11px] text-slate-500 leading-snug">
+                                <p className="text-2xs text-slate-500 leading-snug">
                                     Sparepart dipasang teknisi pada laptop/PC customer saat servis (RAM, SSD, LCD). <strong>Auto-detect tiket & part!</strong>
                                 </p>
                             </div>
@@ -410,7 +410,7 @@ export default function RmaForm() {
                                         <CheckCircle2 className="w-4 h-4 text-blue-600" />
                                     )}
                                 </div>
-                                <p className="text-[11px] text-slate-500 leading-snug">
+                                <p className="text-2xs text-slate-500 leading-snug">
                                     Customer beli sparepart lepas tanpa servis unit (misal beli charger / RAM sendiri), dengan nota toko.
                                 </p>
                             </div>
@@ -444,7 +444,7 @@ export default function RmaForm() {
                                         <CheckCircle2 className="w-4 h-4 text-blue-600" />
                                     )}
                                 </div>
-                                <p className="text-[11px] text-slate-500 leading-snug">
+                                <p className="text-2xs text-slate-500 leading-snug">
                                     Cacat pabrik langsung saat baru datang dari distributor (DoA) atau rusak di rak toko sebelum terjual.
                                 </p>
                             </div>
@@ -460,7 +460,7 @@ export default function RmaForm() {
                                             <Search className="w-3.5 h-3.5 text-blue-600" />
                                             <span>Pilih Tiket Servis Customer:</span>
                                         </span>
-                                        <span className="text-[11px] font-semibold text-blue-600">
+                                        <span className="text-2xs font-semibold text-blue-600">
                                             {ticketsWithParts.length} tiket memiliki riwayat sparepart
                                         </span>
                                     </label>
@@ -497,23 +497,23 @@ export default function RmaForm() {
                                     <div className="space-y-4 pt-2 border-t border-slate-200/60">
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                             <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Identitas Pelanggan</span>
+                                                <span className="text-3xs text-slate-400 font-bold uppercase block tracking-wider">Identitas Pelanggan</span>
                                                 <p className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5">{currentSelectedTicket.perangkat?.customer?.nama || "-"}</p>
                                                 <p className="text-xs text-blue-600 font-mono mt-0.5">{currentSelectedTicket.perangkat?.customer?.no_hp || "-"}</p>
                                             </div>
 
                                             <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Unit & Perangkat</span>
+                                                <span className="text-3xs text-slate-400 font-bold uppercase block tracking-wider">Unit & Perangkat</span>
                                                 <p className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 truncate">{currentSelectedTicket.perangkat?.tipe || "Unit"} {currentSelectedTicket.perangkat?.model || ""}</p>
                                                 <p className="text-xs text-slate-500 mt-0.5">Status: <strong className="text-slate-800">{currentSelectedTicket.status}</strong></p>
                                             </div>
 
                                             <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Tanggal Nota / Pengerjaan</span>
+                                                <span className="text-3xs text-slate-400 font-bold uppercase block tracking-wider">Tanggal Nota / Pengerjaan</span>
                                                 <p className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5">
                                                     {currentSelectedTicket.created_at ? new Date(currentSelectedTicket.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}
                                                 </p>
-                                                <span className="inline-block text-[10px] text-emerald-600 font-bold mt-0.5 bg-emerald-50 px-1.5 py-0.2 rounded">
+                                                <span className="inline-block text-3xs text-emerald-600 font-bold mt-0.5 bg-emerald-50 px-1.5 py-0.2 rounded">
                                                     Day 1 Garansi Konsumen
                                                 </span>
                                             </div>
@@ -527,7 +527,7 @@ export default function RmaForm() {
                                                         <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                                                         <span>Suku Cadang yang Terpasang pada Tiket Ini (Klik untuk Klaim):</span>
                                                     </span>
-                                                    <span className="text-[11px] text-blue-700 font-semibold">1-Klik Auto-Detect</span>
+                                                    <span className="text-2xs text-blue-700 font-semibold">1-Klik Auto-Detect</span>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -555,11 +555,11 @@ export default function RmaForm() {
                                                                     <div className="font-bold text-xs">
                                                                         {ps.sparepart?.nama || "Suku Cadang"}
                                                                     </div>
-                                                                    <div className={`text-[11px] mt-0.5 ${isSelected ? "text-blue-100" : "text-slate-500"}`}>
+                                                                    <div className={`text-2xs mt-0.5 ${isSelected ? "text-blue-100" : "text-slate-500"}`}>
                                                                         Distri: {ps.sparepart?.distributor_nama || "Resmi"} • {ps.sparepart?.tipe_garansi_distri || "Garansi"}
                                                                     </div>
                                                                     {ps.serial_number && (
-                                                                        <div className={`text-[10.5px] font-mono mt-0.5 ${isSelected ? "text-blue-200" : "text-blue-600 font-semibold"}`}>
+                                                                        <div className={`text-2xs font-mono mt-0.5 ${isSelected ? "text-blue-200" : "text-blue-600 font-semibold"}`}>
                                                                             SN: {ps.serial_number}
                                                                         </div>
                                                                     )}
@@ -653,7 +653,7 @@ export default function RmaForm() {
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                                     <span>Pilih Suku Cadang yang Mengalami Defek <span className="text-rose-500">*</span></span>
-                                    <span className="text-[11px] font-normal text-slate-400">Total {spareparts.length} item katalog</span>
+                                    <span className="text-2xs font-normal text-slate-400">Total {spareparts.length} item katalog</span>
                                 </label>
                                 <select
                                     value={formData.sparepart_id}
@@ -689,52 +689,52 @@ export default function RmaForm() {
                                                 <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-wider">
                                                     Data Distributor & Garansi Terdeteksi Otomatis
                                                 </h4>
-                                                <p className="text-[11px] text-emerald-700">
+                                                <p className="text-2xs text-emerald-700">
                                                     Anda tidak perlu input ulang informasi distributor atau skenario garansi.
                                                 </p>
                                             </div>
                                         </div>
-                                        <span className="text-[11px] font-bold bg-emerald-200/60 text-emerald-900 px-2.5 py-0.5 rounded-full">
+                                        <span className="text-2xs font-bold bg-emerald-200/60 text-emerald-900 px-2.5 py-0.5 rounded-full">
                                             Master Sync Valid
                                         </span>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
                                         <div className="bg-white p-3 rounded-xl border border-emerald-100">
-                                            <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Distributor Resmi</span>
+                                            <span className="text-3xs text-slate-400 font-bold uppercase block tracking-wider">Distributor Resmi</span>
                                             <p className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5">
                                                 {currentSelectedSparepart.distributor_nama || formData.supplier_nama || "Distributor Resmi"}
                                             </p>
                                             {currentSelectedSparepart.distributor_kontak && (
-                                                <p className="text-[11px] text-blue-600 font-mono mt-0.5 truncate">
+                                                <p className="text-2xs text-blue-600 font-mono mt-0.5 truncate">
                                                     {currentSelectedSparepart.distributor_kontak}
                                                 </p>
                                             )}
                                         </div>
 
                                         <div className="bg-white p-3 rounded-xl border border-emerald-100">
-                                            <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Status & Durasi Garansi</span>
+                                            <span className="text-3xs text-slate-400 font-bold uppercase block tracking-wider">Status & Durasi Garansi</span>
                                             <p className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5">
                                                 {currentSelectedSparepart.tipe_garansi_distri || "Garansi Distributor"}
                                             </p>
-                                            <p className="text-[11px] text-emerald-700 font-semibold mt-0.5">
+                                            <p className="text-2xs text-emerald-700 font-semibold mt-0.5">
                                                 {formData.kebijakan_garansi === "lifetime" ? "Lifetime Warranty (RAM)" : "Garansi Pabrik Resmi"}
                                             </p>
                                         </div>
 
                                         <div className="bg-white p-3 rounded-xl border border-emerald-100">
-                                            <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Skenario Perhitungan</span>
+                                            <span className="text-3xs text-slate-400 font-bold uppercase block tracking-wider">Skenario Perhitungan</span>
                                             <p className="font-bold text-blue-700 text-xs sm:text-sm mt-0.5">
                                                 {formData.kebijakan_garansi === "lifetime" ? "Seumur Hidup (Lifetime)" : formData.kebijakan_garansi === "sejak_segel_distri" ? "Sejak Segel Distri" : "Sejak Nota End-User"}
                                             </p>
-                                            <p className="text-[10.5px] text-slate-400 mt-0.5">
+                                            <p className="text-2xs text-slate-400 mt-0.5">
                                                 {formData.kebijakan_garansi === "sejak_nota_customer" ? "Day 1 dimulai saat nota jual customer" : "Mengikuti stiker/segel distributor"}
                                             </p>
                                         </div>
                                     </div>
 
                                     {currentSelectedSparepart.kebijakan_klaim && (
-                                        <div className="text-[11px] text-emerald-900 bg-white/80 p-2.5 rounded-xl border border-emerald-100 leading-relaxed">
+                                        <div className="text-2xs text-emerald-900 bg-white/80 p-2.5 rounded-xl border border-emerald-100 leading-relaxed">
                                             <strong>Prosedur / Ketentuan Retur Distributor:</strong> {currentSelectedSparepart.kebijakan_klaim}
                                         </div>
                                     )}
@@ -781,7 +781,7 @@ export default function RmaForm() {
                                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         required
                                     />
-                                    <p className="text-[11px] text-slate-400 mt-1">
+                                    <p className="text-2xs text-slate-400 mt-1">
                                         Nomor seri yang tertera pada badan IC / barcode komponen fisik untuk verifikasi distributor.
                                     </p>
                                 </div>
@@ -827,7 +827,7 @@ export default function RmaForm() {
                                     />
                                     <div className="text-xs">
                                         <span className="font-bold text-slate-800 block">Kondisi Fisik Lolos Syarat Garansi</span>
-                                        <span className="text-slate-500 text-[11px] leading-snug">
+                                        <span className="text-slate-500 text-2xs leading-snug">
                                             Segel distributor utuh, tidak ada pin patah, tidak ada korosi cairan, dan tidak gosong/terbakar.
                                         </span>
                                     </div>
@@ -842,7 +842,7 @@ export default function RmaForm() {
                                     />
                                     <div className="text-xs">
                                         <span className="font-bold text-slate-800 block">Fasilitas Bantu Klaim Toko</span>
-                                        <span className="text-slate-500 text-[11px] leading-snug">
+                                        <span className="text-slate-500 text-2xs leading-snug">
                                             Toko menjembatani komunikasi ke distributor menggunakan faktur toko untuk melindungi hak garansi pelanggan.
                                         </span>
                                     </div>
@@ -960,7 +960,7 @@ export default function RmaForm() {
                                 {formData.serial_number_lama ? (
                                     <span className="font-mono text-slate-900 font-bold truncate max-w-[170px]">{formData.serial_number_lama}</span>
                                 ) : (
-                                    <span className="font-sans text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-medium">Belum diisi</span>
+                                    <span className="font-sans text-2xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-medium">Belum diisi</span>
                                 )}
                             </div>
                             <div className="flex items-center justify-between">

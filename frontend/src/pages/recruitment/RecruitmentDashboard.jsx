@@ -165,14 +165,14 @@ export default function RecruitmentDashboard() {
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                                 Pusat Rekrutmen & Seleksi Tim
                             </h1>
                             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                                 KEOS Standard
                             </span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1">
                             Pipeline seleksi teknisi & staf berdasarkan standar Position Design dan Uji Logika Troubleshooting.
                         </p>
                     </div>
@@ -201,33 +201,33 @@ export default function RecruitmentDashboard() {
             {/* Quick Metrics Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-slate-400">Total Pelamar</div>
+                    <div className="text-2xs font-semibold text-slate-400">Total Pelamar</div>
                     <div className="text-xl font-bold text-slate-900 mt-1">{stats.total_pelamar}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">{stats.lowongan_aktif} Posisi Aktif</div>
+                    <div className="text-3xs text-slate-500 mt-0.5">{stats.lowongan_aktif} Posisi Aktif</div>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-blue-600">Screening Awal</div>
+                    <div className="text-2xs font-semibold text-blue-600">Screening Awal</div>
                     <div className="text-xl font-bold text-blue-700 mt-1">{stats.baru_masuk + stats.screening}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Menunggu review berkas</div>
+                    <div className="text-3xs text-slate-500 mt-0.5">Menunggu review berkas</div>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-amber-600">Uji Logika & Teknis</div>
+                    <div className="text-2xs font-semibold text-amber-600">Uji Logika & Teknis</div>
                     <div className="text-xl font-bold text-amber-700 mt-1">{stats.tes_teknis}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Tahap tes diagnosis</div>
+                    <div className="text-3xs text-slate-500 mt-0.5">Tahap tes diagnosis</div>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-sky-600">Wawancara & Trial</div>
+                    <div className="text-2xs font-semibold text-sky-600">Wawancara & Trial</div>
                     <div className="text-xl font-bold text-sky-700 mt-1">{stats.trial_wawancara}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Trial day di workshop</div>
+                    <div className="text-3xs text-slate-500 mt-0.5">Trial day di workshop</div>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs col-span-2 sm:col-span-1">
-                    <div className="text-[11px] font-semibold text-emerald-600">Diterima (Hired)</div>
+                    <div className="text-2xs font-semibold text-emerald-600">Diterima (Hired)</div>
                     <div className="text-xl font-bold text-emerald-700 mt-1">{stats.diterima}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Staf resmi aktif</div>
+                    <div className="text-3xs text-slate-500 mt-0.5">Staf resmi aktif</div>
                 </div>
             </div>
 
@@ -244,7 +244,7 @@ export default function RecruitmentDashboard() {
                 >
                     <Users className="w-4 h-4" />
                     <span>Pipeline Pelamar</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-semibold ${
+                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold ${
                         activeTab === "pipeline" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {applicants.length}
@@ -262,7 +262,7 @@ export default function RecruitmentDashboard() {
                 >
                     <Briefcase className="w-4 h-4" />
                     <span>Daftar Lowongan</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-semibold ${
+                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold ${
                         activeTab === "jobs" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {jobs.length}
@@ -364,10 +364,10 @@ export default function RecruitmentDashboard() {
                                     >
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-100 truncate max-w-[170px]">
+                                                <span className="px-2 py-0.5 rounded-md text-2xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 truncate max-w-[170px]">
                                                     {app.job_posting?.judul_posisi || "Posisi"}
                                                 </span>
-                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shrink-0 ${STATUS_BADGES[app.status] || STATUS_BADGES["Baru Masuk"]}`}>
+                                                <span className={`px-2 py-0.5 rounded-md text-3xs font-bold border shrink-0 ${STATUS_BADGES[app.status] || STATUS_BADGES["Baru Masuk"]}`}>
                                                     {app.status}
                                                 </span>
                                             </div>
@@ -396,7 +396,7 @@ export default function RecruitmentDashboard() {
                                             {/* Score Preview */}
                                             {hasEvaluation ? (
                                                 <div className="flex items-center justify-between px-3 py-2 bg-blue-50/70 rounded-xl border border-blue-100">
-                                                    <span className="text-[11px] font-semibold text-blue-900 flex items-center gap-1">
+                                                    <span className="text-2xs font-semibold text-blue-900 flex items-center gap-1">
                                                         <Award className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                                                         <span>Skor Evaluasi KEOS:</span>
                                                     </span>
@@ -405,14 +405,14 @@ export default function RecruitmentDashboard() {
                                                     </span>
                                                 </div>
                                             ) : (
-                                                <div className="text-[11px] text-slate-400 italic px-1">
+                                                <div className="text-2xs text-slate-400 italic px-1">
                                                     Belum dilakukan penilaian rubrik KEOS
                                                 </div>
                                             )}
                                         </div>
 
                                         <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                                            <span className="text-slate-400 text-[11px]">
+                                            <span className="text-slate-400 text-2xs">
                                                 {new Date(app.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
                                             </span>
                                             <span className="text-blue-600 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
@@ -457,10 +457,10 @@ export default function RecruitmentDashboard() {
                                 >
                                     <div className="space-y-2.5">
                                         <div className="flex items-center justify-between gap-2">
-                                            <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                            <span className="px-2 py-0.5 rounded-md text-2xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                                                 {job.departemen} • {job.tipe_kerja}
                                             </span>
-                                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                                            <span className={`px-2 py-0.5 rounded-md text-3xs font-bold border ${
                                                 job.status === "Aktif" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"
                                             }`}>
                                                 {job.status}
@@ -491,7 +491,7 @@ export default function RecruitmentDashboard() {
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
+                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
                                                         title={`Buka di ${link.platform}`}
                                                     >
                                                         <span>{link.platform}</span>

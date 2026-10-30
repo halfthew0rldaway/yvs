@@ -109,7 +109,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                 </h3>
                                 {customer?.tipe_kepribadian && (
                                     <span 
-                                        className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${personality.badge}`}
+                                        className={`px-2 py-0.5 rounded-full text-2xs font-semibold border ${personality.badge}`}
                                         title={personality.trait}
                                     >
                                         {personality.label}
@@ -167,7 +167,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                 <span className="text-slate-500">Riwayat Servis: </span>
                                 <strong className="text-blue-600 font-semibold">{customer.stats?.total_tiket ?? 0} Tiket</strong>
                                 {customer.stats?.tiket_selesai !== undefined && (
-                                    <span className="text-slate-500 text-[11px]"> ({customer.stats.tiket_selesai} Selesai)</span>
+                                    <span className="text-slate-500 text-2xs"> ({customer.stats.tiket_selesai} Selesai)</span>
                                 )}
                             </div>
                             <span className="text-slate-300">•</span>
@@ -321,12 +321,12 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                                         <h4 className="font-bold text-slate-900 text-sm leading-tight">
                                                                             {p.merek} {p.model}
                                                                         </h4>
-                                                                        <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
+                                                                        <span className="inline-block mt-1 px-2 py-0.5 rounded text-3xs font-semibold bg-slate-100 text-slate-600">
                                                                             {p.jenis_perangkat}
                                                                         </span>
                                                                     </div>
                                                                 </div>
-                                                                <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                                                                <span className={`px-2.5 py-1 rounded-full text-2xs font-semibold border ${
                                                                     ticketCount > 0 
                                                                         ? "bg-blue-50 text-blue-700 border-blue-200" 
                                                                         : "bg-slate-50 text-slate-500 border-slate-200"
@@ -398,7 +398,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
                                             <div className="overflow-x-auto overflow-y-auto max-h-[380px] custom-scrollbar">
                                                 <table className="w-full text-xs text-left whitespace-nowrap">
-                                                    <thead className="sticky top-0 bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold z-10 shadow-[0_1px_0_0_#e2e8f0]">
+                                                    <thead className="table-header">
                                                         <tr>
                                                             <th className="py-3 px-4">No. Tiket</th>
                                                             <th className="py-3 px-4">Perangkat</th>
@@ -436,19 +436,19 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                                     </td>
                                                                     <td className="py-3 px-4 font-semibold text-slate-800">
                                                                         {t.perangkat_merek} {t.perangkat_model}
-                                                                        {t.perangkat_sn && <span className="block text-[10px] font-mono text-slate-400">SN: {t.perangkat_sn}</span>}
+                                                                        {t.perangkat_sn && <span className="block text-3xs font-mono text-slate-400">SN: {t.perangkat_sn}</span>}
                                                                     </td>
                                                                     <td className="py-3 px-4 text-slate-600">
                                                                         {formatDate(t.created_at)}
                                                                     </td>
                                                                     <td className="py-3 px-4">
                                                                         <div className="flex flex-col gap-1 items-start">
-                                                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wider ${statusInfo.color}`}>
+                                                                            <span className={`px-2 py-0.5 rounded-full text-3xs font-semibold border uppercase tracking-wider ${statusInfo.color}`}>
                                                                                 {statusInfo.label}
                                                                             </span>
                                                                             {t.is_revisi_acc && (
                                                                                 <span 
-                                                                                    className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center gap-1"
+                                                                                    className="px-2 py-0.5 rounded-full text-4xs font-bold bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center gap-1"
                                                                                     title={t.alasan_revisi_acc ? `Alasan Revisi ACC: ${t.alasan_revisi_acc}` : "Pernah direvisi ACC"}
                                                                                 >
                                                                                     <RotateCcw className="w-2.5 h-2.5 text-amber-600" />
@@ -470,7 +470,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                                         <div className="flex items-center justify-center gap-1.5">
                                                                             <Link 
                                                                                 to={`/tiket-servis/${t.id}`}
-                                                                                className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 rounded-lg text-[11px] font-semibold transition-colors"
+                                                                                className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 rounded-lg text-2xs font-semibold transition-colors"
                                                                             >
                                                                                 Detail
                                                                             </Link>
@@ -481,7 +481,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                                                         setSelectedRecallTiketId(t.id);
                                                                                         setIsMaintenanceModalOpen(true);
                                                                                     }}
-                                                                                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[11px] font-semibold transition-colors shadow-2xs"
+                                                                                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-2xs font-semibold transition-colors shadow-2xs"
                                                                                     title={`Ingatkan Servis Berkala (Unit diservis ${diffMonths} bulan lalu)`}
                                                                                 >
                                                                                     <Calendar className="w-3 h-3 text-blue-600" />
@@ -520,7 +520,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                                             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1">
-                                                <span className="font-bold text-slate-700 block text-[11px] uppercase tracking-wider">
+                                                <span className="font-bold text-slate-700 block text-2xs uppercase tracking-wider">
                                                     Karakteristik Komunikasi:
                                                 </span>
                                                 <p className="text-slate-700 font-medium leading-relaxed">
@@ -529,7 +529,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                             </div>
 
                                             <div className="p-3.5 bg-blue-50/70 rounded-xl border border-blue-200/80 space-y-1">
-                                                <span className="font-bold text-blue-900 block text-[11px] uppercase tracking-wider">
+                                                <span className="font-bold text-blue-900 block text-2xs uppercase tracking-wider">
                                                     Panduan Pendekatan Pelayanan:
                                                 </span>
                                                 <p className="text-blue-950 font-medium leading-relaxed">
@@ -578,7 +578,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
 
                                             {customer.catatan_khusus && (
                                                 <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-1 sm:col-span-2">
-                                                    <span className="text-amber-800 font-semibold block text-[11px] uppercase tracking-wider">
+                                                    <span className="text-amber-800 font-semibold block text-2xs uppercase tracking-wider">
                                                         Catatan Khusus Pelanggan
                                                     </span>
                                                     <p className="text-amber-950 leading-relaxed font-medium">

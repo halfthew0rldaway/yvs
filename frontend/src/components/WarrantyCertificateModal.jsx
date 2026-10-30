@@ -138,11 +138,11 @@ export default function WarrantyCertificateModal({
                         <div className="min-w-0">
                             <h3 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 truncate">
                                 <span>Kartu Garansi Digital Resmi</span>
-                                <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
+                                <span className="text-3xs sm:text-2xs font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
                                     #{tiket.nomor_tiket}
                                 </span>
                             </h3>
-                            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">Yangversa Computer &bull; Service & Hardware Protection</p>
+                            <p className="text-2xs sm:text-xs text-slate-500 mt-0.5 truncate">Yangversa Computer &bull; Service & Hardware Protection</p>
                         </div>
                     </div>
 
@@ -197,11 +197,11 @@ export default function WarrantyCertificateModal({
                                                 Yangversa Computer
                                             </h1>
                                             <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-slate-300" />
-                                            <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline-block">
+                                            <span className="text-2xs font-semibold text-slate-500 hidden sm:inline-block">
                                                 Pusat Reparasi Laptop & PC
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-blue-700 font-bold uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
+                                        <p className="text-2xs text-blue-700 font-bold uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
                                             <Shield className="w-3 h-3 text-blue-600" />
                                             <span>Official Warranty & Service Protection Pass</span>
                                         </p>
@@ -210,7 +210,7 @@ export default function WarrantyCertificateModal({
 
                                 <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
                                     <div className="text-right">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">No. Tiket</span>
+                                        <span className="text-3xs font-bold text-slate-400 uppercase tracking-widest block">No. Tiket</span>
                                         <span className="font-mono font-bold text-xs text-slate-800">
                                             #{tiket.nomor_tiket}
                                         </span>
@@ -245,9 +245,9 @@ export default function WarrantyCertificateModal({
                                         <ShieldCheck className="w-5 h-5 text-emerald-600" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-800/80">Durasi Garansi</p>
+                                        <p className="text-3xs font-bold uppercase tracking-wider text-emerald-800/80">Durasi Garansi</p>
                                         <p className="text-lg font-black text-emerald-950 truncate">{durasi}</p>
-                                        <p className="text-[11px] text-emerald-700 font-medium truncate">
+                                        <p className="text-2xs text-emerald-700 font-medium truncate">
                                             {isExpired ? "Telah Berakhir" : tiket.warranty_status?.sisaHari !== undefined ? `Sisa ${tiket.warranty_status.sisaHari} hari lagi` : "Perlindungan Purnajual"}
                                         </p>
                                     </div>
@@ -259,11 +259,11 @@ export default function WarrantyCertificateModal({
                                         <Calendar className="w-5 h-5 text-blue-600" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-800/80">Periode Perlindungan</p>
+                                        <p className="text-3xs font-bold uppercase tracking-wider text-blue-800/80">Periode Perlindungan</p>
                                         <p className="text-xs font-bold text-blue-950 truncate mt-0.5">
                                             {tglMulaiFormatted} — {tglBerakhirFormatted}
                                         </p>
-                                        <p className="text-[11px] text-blue-700/90 font-medium truncate">
+                                        <p className="text-2xs text-blue-700/90 font-medium truncate">
                                             Dihitung sejak unit diserahterimakan
                                         </p>
                                     </div>
@@ -275,11 +275,11 @@ export default function WarrantyCertificateModal({
                                         <Wrench className="w-5 h-5 text-slate-600" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Kategori Servis</p>
+                                        <p className="text-3xs font-bold uppercase tracking-wider text-slate-500">Kategori Servis</p>
                                         <p className="text-xs font-bold text-slate-900 truncate mt-0.5">
                                             {tiket.kategori_perbaikan || "Servis Hardware / Komponen"}
                                         </p>
-                                        <p className="text-[11px] text-slate-500 font-medium truncate">
+                                        <p className="text-2xs text-slate-500 font-medium truncate">
                                             {tiket.diagnosis?.solusi ? tiket.diagnosis.solusi : "Sesuai standar QC Workshop"}
                                         </p>
                                     </div>
@@ -293,7 +293,7 @@ export default function WarrantyCertificateModal({
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                         {/* Unit Info */}
                                         <div className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80">
-                                            <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-slate-200/60 font-bold text-slate-800 uppercase text-[11px]">
+                                            <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-slate-200/60 font-bold text-slate-800 uppercase text-2xs">
                                                 <Laptop className="w-3.5 h-3.5 text-blue-600" />
                                                 <span>Data Perangkat</span>
                                             </div>
@@ -317,7 +317,7 @@ export default function WarrantyCertificateModal({
 
                                         {/* Owner Info */}
                                         <div className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80">
-                                            <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-slate-200/60 font-bold text-slate-800 uppercase text-[11px]">
+                                            <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-slate-200/60 font-bold text-slate-800 uppercase text-2xs">
                                                 <User className="w-3.5 h-3.5 text-emerald-600" />
                                                 <span>Data Pelanggan</span>
                                             </div>
@@ -342,7 +342,7 @@ export default function WarrantyCertificateModal({
 
                                     {/* Covered Spareparts */}
                                     <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/80 text-xs">
-                                        <div className="flex items-center gap-1.5 pb-1.5 mb-2 border-b border-slate-200/60 font-bold text-slate-800 uppercase text-[11px]">
+                                        <div className="flex items-center gap-1.5 pb-1.5 mb-2 border-b border-slate-200/60 font-bold text-slate-800 uppercase text-2xs">
                                             <Package className="w-3.5 h-3.5 text-indigo-600" />
                                             <span>Komponen / Suku Cadang Terlindungi:</span>
                                         </div>
@@ -351,7 +351,7 @@ export default function WarrantyCertificateModal({
                                                 {spareparts.map((p, idx) => (
                                                     <span 
                                                         key={idx} 
-                                                        className="inline-flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-800 shadow-2xs"
+                                                        className="inline-flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-2xs font-semibold text-slate-800 shadow-2xs"
                                                     >
                                                         <Check className="w-3 h-3 text-emerald-600" />
                                                         <span>{(p.sparepart?.brand?.nama && p.sparepart.brand.nama.toLowerCase() !== "lainnya" ? p.sparepart.brand.nama + " " : "") + (p.sparepart?.nama || p.nama)} ({p.jumlah} unit)</span>
@@ -359,7 +359,7 @@ export default function WarrantyCertificateModal({
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-[11px] text-slate-600 italic">
+                                            <p className="text-2xs text-slate-600 italic">
                                                 Perbaikan motherboard / modul komponen tanpa penggantian suku cadang baru (terlindungi jaminan fungsi).
                                             </p>
                                         )}
@@ -383,7 +383,7 @@ export default function WarrantyCertificateModal({
                                             <span>Scan Verifikasi Resmi</span>
                                             <Award className="w-3.5 h-3.5 text-blue-600" />
                                         </p>
-                                        <span className="mt-1 text-[9.5px] font-mono font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                        <span className="mt-1 text-4xs font-mono font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
                                             CERT-YVS-{tiket.nomor_tiket}
                                         </span>
                                     </div>
@@ -392,7 +392,7 @@ export default function WarrantyCertificateModal({
                                     <div className="w-full pt-2.5 mt-2.5 border-t border-slate-200/80 flex items-end justify-center gap-8">
                                         {/* Penerima Garansi */}
                                         <div className="flex flex-col items-center justify-end text-center w-28 print:w-24">
-                                            <p className="text-slate-500 text-[9.5px] print:text-[7.5px] font-medium mb-0.5">
+                                            <p className="text-slate-500 text-4xs print:text-[7.5px] font-medium mb-0.5">
                                                 Penerima Garansi
                                             </p>
                                             <div className="h-14 print:h-11 w-full flex items-center justify-center">
@@ -403,23 +403,23 @@ export default function WarrantyCertificateModal({
                                                         className="max-h-12 print:max-h-10 max-w-[90px] print:max-w-[75px] object-contain"
                                                     />
                                                 ) : (
-                                                    <span className="text-[8.5px] print:text-[7px] text-slate-300 print:text-slate-200 italic select-none">
+                                                    <span className="text-4xs print:text-[7px] text-slate-300 print:text-slate-200 italic select-none">
                                                         {isDigitalSignature ? "[ Belum TTD ]" : "[ TTD Fisik ]"}
                                                     </span>
                                                 )}
                                             </div>
                                             <div className="w-full border-b border-slate-300 my-0.5"></div>
-                                            <p className="font-bold text-slate-900 text-[9.5px] print:text-[8px] w-full truncate max-w-[105px]">
+                                            <p className="font-bold text-slate-900 text-4xs print:text-[8px] w-full truncate max-w-[105px]">
                                                 {tiket.invoice?.ttd_customer_nama || customer.nama || "Pelanggan"}
                                             </p>
-                                            <p className="text-[8px] print:text-[6.5px] text-slate-400">
+                                            <p className="text-4xs print:text-[6.5px] text-slate-400">
                                                 Pelanggan
                                             </p>
                                         </div>
 
                                         {/* Petugas Workshop */}
                                         <div className="flex flex-col items-center justify-end text-center w-28 print:w-24">
-                                            <p className="text-slate-500 text-[9.5px] print:text-[7.5px] font-medium mb-0.5">
+                                            <p className="text-slate-500 text-4xs print:text-[7.5px] font-medium mb-0.5">
                                                 Petugas Workshop
                                             </p>
                                             <div className="h-14 print:h-11 w-full flex items-center justify-center">
@@ -430,16 +430,16 @@ export default function WarrantyCertificateModal({
                                                         className="max-h-12 print:max-h-10 max-w-[90px] print:max-w-[75px] object-contain"
                                                     />
                                                 ) : (
-                                                    <span className="text-[8.5px] print:text-[7px] text-slate-300 print:text-slate-200 italic select-none">
+                                                    <span className="text-4xs print:text-[7px] text-slate-300 print:text-slate-200 italic select-none">
                                                         [ TTD Petugas ]
                                                     </span>
                                                 )}
                                             </div>
                                             <div className="w-full border-b border-slate-300 my-0.5"></div>
-                                            <p className="font-bold text-slate-900 text-[9.5px] print:text-[8px] w-full truncate max-w-[105px]">
+                                            <p className="font-bold text-slate-900 text-4xs print:text-[8px] w-full truncate max-w-[105px]">
                                                 {tiket.invoice?.ttd_admin_nama || "Yangversa Computer"}
                                             </p>
-                                            <p className="text-[8px] print:text-[6.5px] text-slate-400">
+                                            <p className="text-4xs print:text-[6.5px] text-slate-400">
                                                 Yangversa Computer
                                             </p>
                                         </div>
@@ -449,7 +449,7 @@ export default function WarrantyCertificateModal({
 
                             {/* Bottom Strip: Essential Warranty Terms (No Wall of Text!) */}
                             <div className="p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-600 font-medium">
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-2xs text-slate-600 font-medium">
                                     <span className="flex items-center gap-1 text-slate-800">
                                         <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                                         <strong>Segel Utuh:</strong> Segel workshop wajib tidak sobek/dibongkar.
@@ -464,7 +464,7 @@ export default function WarrantyCertificateModal({
                                     </span>
                                 </div>
 
-                                <div className="text-[11px] font-semibold text-slate-400 shrink-0 sm:text-right">
+                                <div className="text-2xs font-semibold text-slate-400 shrink-0 sm:text-right">
                                     Yangversa Quality Certified &bull; Service Excellence
                                 </div>
                             </div>

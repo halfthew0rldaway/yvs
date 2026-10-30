@@ -278,22 +278,22 @@ export default function SlaBadge({ tiket, className = "" }) {
             <div className="flex items-center gap-1.5 flex-wrap">
                 {/* SLA Package Pill */}
                 {isExpress ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
                         <Zap className="w-2.5 h-2.5 text-amber-600 fill-amber-500" />
                         <span>Express</span>
                     </span>
                 ) : sla.sla_paket === "kompleks" ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
                         <span>Kompleks</span>
                     </span>
                 ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
                         <span>Reguler</span>
                     </span>
                 )}
 
                 {/* Dual-Phase Urgency Pill */}
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] border ${urgencyStyle}`}>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs border ${urgencyStyle}`}>
                     <DotIcon className="w-3 h-3 flex-shrink-0" />
                     <span>{sla.status_label}</span>
                 </span>
@@ -357,7 +357,7 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                         <div className="flex items-center gap-2">
                             <span className="font-semibold text-slate-900 text-sm">Paket Estimasi SLA: {pkgCek.shortLabel}</span>
                             {sla.sla_paket === "express" && (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white uppercase tracking-wider">
+                                <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-500 text-white uppercase tracking-wider">
                                     Priority Queue
                                 </span>
                             )}
@@ -367,7 +367,7 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                 </div>
 
                 <div className="inline-flex items-center gap-2 self-start sm:self-auto">
-                    <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Fase Operasional:</span>
+                    <span className="text-2xs font-medium text-slate-500 uppercase tracking-wider">Fase Operasional:</span>
                     <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${
                         isPaused 
                             ? "bg-amber-50 text-amber-800 border-amber-300"
@@ -397,7 +397,7 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                             </div>
                             <h4 className="text-xs font-bold text-slate-900">Tahap 1: Estimasi Pengecekan & Diagnosis</h4>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        <span className={`px-2 py-0.5 rounded text-3xs font-bold border ${
                             sla.pengecekan?.is_completed
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : sla.pengecekan?.is_active && sla.is_overdue
@@ -408,17 +408,17 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                         </span>
                     </div>
 
-                    <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">
+                    <p className="text-2xs text-slate-500 mb-2 leading-relaxed">
                         Pemeriksaan hardware/software dan perumusan penawaran estimasi biaya untuk pelanggan.
                     </p>
 
                     <div className="text-xs space-y-1 pt-2 border-t border-slate-200/60">
                         <div className="flex items-center justify-between text-slate-600">
-                            <span className="text-[11px] text-slate-400">Estimasi Target Cek:</span>
+                            <span className="text-2xs text-slate-400">Estimasi Target Cek:</span>
                             <span className="font-semibold text-slate-800">{formatDate(sla.target_pengecekan_at)}</span>
                         </div>
                         <div className="flex items-center justify-between text-slate-600">
-                            <span className="text-[11px] text-slate-400">Status Waktu:</span>
+                            <span className="text-2xs text-slate-400">Status Waktu:</span>
                             <span className="font-semibold text-slate-700">{sla.pengecekan?.status_label}</span>
                         </div>
                     </div>
@@ -442,12 +442,12 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                                 <button
                                     type="button"
                                     onClick={onEditSla}
-                                    className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline px-1.5 py-0.5 rounded cursor-pointer"
+                                    className="text-2xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline px-1.5 py-0.5 rounded cursor-pointer"
                                 >
                                     Ubah Estimasi
                                 </button>
                             )}
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            <span className={`px-2 py-0.5 rounded text-3xs font-bold border ${
                                 sla.pengerjaan?.is_completed
                                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                     : isPaused
@@ -469,19 +469,19 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                         </div>
                     </div>
 
-                    <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">
+                    <p className="text-2xs text-slate-500 mb-2 leading-relaxed">
                         Pengerjaan fisik komponen. Timer pengerjaan dimulai HANYA setelah pelanggan menyetujui penawaran biaya.
                     </p>
 
                     <div className="text-xs space-y-1 pt-2 border-t border-slate-200/60">
                         <div className="flex items-center justify-between text-slate-600">
-                            <span className="text-[11px] text-slate-400">Persetujuan Pelanggan:</span>
+                            <span className="text-2xs text-slate-400">Persetujuan Pelanggan:</span>
                             <span className="font-semibold text-slate-800">
                                 {sla.disetujui_at ? formatDate(sla.disetujui_at) : "Belum di-ACC (Timer Belum Berjalan)"}
                             </span>
                         </div>
                         <div className="flex items-center justify-between text-slate-600">
-                            <span className="text-[11px] text-slate-400">Estimasi Target Selesai:</span>
+                            <span className="text-2xs text-slate-400">Estimasi Target Selesai:</span>
                             <span className="font-semibold text-slate-800">
                                 {sla.disetujui_at ? formatDate(sla.target_selesai_at) : "Ditentukan saat penawaran di-ACC"}
                             </span>
@@ -547,7 +547,7 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                         />
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center justify-between text-2xs text-slate-400">
                         <span>Waktu terpakai: {sla.percent_elapsed}%</span>
                         <span>{sla.is_overdue ? "Melewati Estimasi Waktu" : `Estimasi sisa ${sla.time_text}`}</span>
                     </div>

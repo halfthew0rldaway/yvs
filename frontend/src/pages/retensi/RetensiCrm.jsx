@@ -394,9 +394,9 @@ export default function RetensiCrm() {
                 <div>
                     <div className="flex items-center gap-2">
                         <HeartHandshake className="w-6 h-6 text-blue-600" />
-                        <h1 className="text-2xl font-bold text-slate-900">Retensi & Layanan CRM</h1>
+                        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Retensi & Layanan CRM</h1>
                     </div>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
                         Pusat komunikasi pelanggan purna-servis, pengingat perawatan berkala, dan manajemen penumpukan unit selesai
                     </p>
                 </div>
@@ -439,7 +439,7 @@ export default function RetensiCrm() {
                         <span className="text-2xl font-extrabold text-slate-900">{maintenanceData.total_due}</span>
                         <span className="text-xs font-medium text-slate-500">unit siap disapa</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-2.5 text-[11px] font-semibold text-slate-600">
+                    <div className="flex items-center gap-2 mt-2.5 text-2xs font-semibold text-slate-600">
                         <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
                             {maintenanceData.urgent_count} Kritis (≥ 1 Thn)
                         </span>
@@ -472,7 +472,7 @@ export default function RetensiCrm() {
                         <span className="text-2xl font-extrabold text-slate-900">{unclaimedData.total_unclaimed}</span>
                         <span className="text-xs font-medium text-slate-500">unit tersimpan</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-2.5 text-[11px] font-semibold text-slate-600">
+                    <div className="flex items-center gap-2 mt-2.5 text-2xs font-semibold text-slate-600">
                         <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
                             {unclaimedData.aging_count} Mengendap (&gt; 14 Hari)
                         </span>
@@ -507,7 +507,7 @@ export default function RetensiCrm() {
                         <span className="text-2xl font-extrabold text-slate-900">{warrantyData.length}</span>
                         <span className="text-xs font-medium text-slate-500">unit aktif garansi</span>
                     </div>
-                    <p className="mt-2.5 text-[11px] font-medium text-slate-500">
+                    <p className="mt-2.5 text-2xs font-medium text-slate-500">
                         Follow-up kepuasan pelanggan sebelum masa garansi toko kedaluwarsa
                     </p>
                 </button>
@@ -529,7 +529,7 @@ export default function RetensiCrm() {
                         >
                             <Calendar className="w-3.5 h-3.5" />
                             <span>Perawatan Berkala (6-12 Bln)</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === "perawatan" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                            <span className={`px-1.5 py-0.2 rounded-full text-3xs ${activeTab === "perawatan" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
                                 {maintenanceData.total_due}
                             </span>
                         </button>
@@ -545,7 +545,7 @@ export default function RetensiCrm() {
                         >
                             <PackageCheck className="w-3.5 h-3.5" />
                             <span>Unit Belum Diambil</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === "unclaimed" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                            <span className={`px-1.5 py-0.2 rounded-full text-3xs ${activeTab === "unclaimed" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
                                 {unclaimedData.total_unclaimed}
                             </span>
                         </button>
@@ -561,14 +561,14 @@ export default function RetensiCrm() {
                         >
                             <ShieldCheck className="w-3.5 h-3.5" />
                             <span>Follow-Up Garansi (H-7)</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === "garansi" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                            <span className={`px-1.5 py-0.2 rounded-full text-3xs ${activeTab === "garansi" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
                                 {warrantyData.length}
                             </span>
                         </button>
                     </div>
 
                     <div className="hidden sm:flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-slate-500">Template Komunikasi: WhatsApp</span>
+                        <span className="text-2xs font-semibold text-slate-500">Template Komunikasi: WhatsApp</span>
                     </div>
                 </div>
 
@@ -596,28 +596,28 @@ export default function RetensiCrm() {
                                         <button
                                             type="button"
                                             onClick={() => setMaintFilter("all")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${maintFilter === "all" ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${maintFilter === "all" ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Semua ({maintenanceData.total_due})
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setMaintFilter("urgent_1y")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${maintFilter === "urgent_1y" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${maintFilter === "urgent_1y" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"}`}
                                         >
                                             &ge; 1 Thn ({maintenanceData.urgent_count})
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setMaintFilter("routine_6m")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${maintFilter === "routine_6m" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${maintFilter === "routine_6m" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"}`}
                                         >
                                             6-11 Bln ({maintenanceData.routine_count})
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setMaintFilter("unsent")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${maintFilter === "unsent" ? "bg-indigo-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${maintFilter === "unsent" ? "bg-indigo-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Belum Diingatkan
                                         </button>
@@ -629,28 +629,28 @@ export default function RetensiCrm() {
                                         <button
                                             type="button"
                                             onClick={() => setUnclaimedFilter("all")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${unclaimedFilter === "all" ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${unclaimedFilter === "all" ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Semua ({unclaimedData.total_unclaimed})
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setUnclaimedFilter("aging_14d")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${unclaimedFilter === "aging_14d" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${unclaimedFilter === "aging_14d" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"}`}
                                         >
                                             &gt; 14 Hari ({unclaimedData.aging_count})
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setUnclaimedFilter("critical_30d")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${unclaimedFilter === "critical_30d" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${unclaimedFilter === "critical_30d" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"}`}
                                         >
                                             &ge; 30 Hari ({unclaimedData.critical_count})
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setUnclaimedFilter("unsent")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${unclaimedFilter === "unsent" ? "bg-indigo-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${unclaimedFilter === "unsent" ? "bg-indigo-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Belum Diingatkan
                                         </button>
@@ -662,21 +662,21 @@ export default function RetensiCrm() {
                                         <button
                                             type="button"
                                             onClick={() => setWarrantyFilter("all")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${warrantyFilter === "all" ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${warrantyFilter === "all" ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                                         >
                                             Semua ({warrantyData.length})
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setWarrantyFilter("h3")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${warrantyFilter === "h3" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${warrantyFilter === "h3" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"}`}
                                         >
                                             Kritis (H-3)
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setWarrantyFilter("h7")}
-                                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors shrink-0 ${warrantyFilter === "h7" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200"}`}
+                                            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors shrink-0 ${warrantyFilter === "h7" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200"}`}
                                         >
                                             Dalam H-7
                                         </button>
@@ -693,7 +693,7 @@ export default function RetensiCrm() {
                                     <div className="text-center py-12 px-4 text-slate-500">
                                         <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-80" />
                                         <p className="text-xs font-bold text-slate-700">Tidak ada antrean perawatan berkala</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5">Semua pelanggan telah disapa atau belum mencapai ambang 6 bulan.</p>
+                                        <p className="text-2xs text-slate-400 mt-0.5">Semua pelanggan telah disapa atau belum mencapai ambang 6 bulan.</p>
                                     </div>
                                 ) : (
                                     filteredMaintList.map((item) => {
@@ -715,15 +715,15 @@ export default function RetensiCrm() {
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-1.5">
                                                             <h4 className="text-xs font-bold text-slate-900 truncate">{item.customer_nama}</h4>
-                                                            <span className={`px-1.5 py-0.2 rounded text-[9px] font-semibold border ${persConfig.badge}`}>
+                                                            <span className={`px-1.5 py-0.2 rounded text-4xs font-semibold border ${persConfig.badge}`}>
                                                                 {persConfig.label}
                                                             </span>
                                                         </div>
-                                                        <p className="text-[11px] font-medium text-slate-600 truncate mt-0.5">
+                                                        <p className="text-2xs font-medium text-slate-600 truncate mt-0.5">
                                                             {item.merek} {item.model}
                                                         </p>
                                                     </div>
-                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border shrink-0 ${
                                                         isUrgent 
                                                             ? "bg-rose-50 text-rose-700 border-rose-200" 
                                                             : "bg-blue-50 text-blue-700 border-blue-200"
@@ -732,7 +732,7 @@ export default function RetensiCrm() {
                                                     </span>
                                                 </div>
 
-                                                <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mt-2 pt-2 border-t border-slate-100">
+                                                <div className="flex items-center justify-between text-3xs text-slate-400 font-medium mt-2 pt-2 border-t border-slate-100">
                                                     <span className="font-mono">#{item.nomor_tiket}</span>
                                                     {item.is_follow_up_sent ? (
                                                         <span className="text-emerald-700 font-semibold flex items-center gap-1">
@@ -758,7 +758,7 @@ export default function RetensiCrm() {
                                     <div className="text-center py-12 px-4 text-slate-500">
                                         <PackageCheck className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-80" />
                                         <p className="text-xs font-bold text-slate-700">Rak penyimpanan bersih!</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5">Tidak ada unit selesai yang menumpuk di bengkel.</p>
+                                        <p className="text-2xs text-slate-400 mt-0.5">Tidak ada unit selesai yang menumpuk di bengkel.</p>
                                     </div>
                                 ) : (
                                     filteredUnclaimedList.map((item) => {
@@ -779,11 +779,11 @@ export default function RetensiCrm() {
                                                 <div className="flex items-start justify-between gap-2">
                                                     <div className="min-w-0">
                                                         <h4 className="text-xs font-bold text-slate-900 truncate">{item.customer_nama}</h4>
-                                                        <p className="text-[11px] font-medium text-slate-600 truncate mt-0.5">
+                                                        <p className="text-2xs font-medium text-slate-600 truncate mt-0.5">
                                                             {item.merek} {item.model}
                                                         </p>
                                                     </div>
-                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border shrink-0 ${
                                                         isCritical
                                                             ? "bg-rose-50 text-rose-700 border-rose-200"
                                                             : isAging
@@ -794,7 +794,7 @@ export default function RetensiCrm() {
                                                     </span>
                                                 </div>
 
-                                                <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mt-2 pt-2 border-t border-slate-100">
+                                                <div className="flex items-center justify-between text-3xs text-slate-400 font-medium mt-2 pt-2 border-t border-slate-100">
                                                     <span className="font-mono">#{item.nomor_tiket}</span>
                                                     <span className="text-slate-700 font-bold">
                                                         Rp {Number(item.total_biaya || 0).toLocaleString("id-ID")}
@@ -821,7 +821,7 @@ export default function RetensiCrm() {
                                     <div className="text-center py-12 px-4 text-slate-500">
                                         <ShieldCheck className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-80" />
                                         <p className="text-xs font-bold text-slate-700">Tidak ada garansi yang hampir habis</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5">Semua garansi unit masih panjang atau sudah selesai.</p>
+                                        <p className="text-2xs text-slate-400 mt-0.5">Semua garansi unit masih panjang atau sudah selesai.</p>
                                     </div>
                                 ) : (
                                     filteredWarrantyList.map((item) => {
@@ -844,11 +844,11 @@ export default function RetensiCrm() {
                                                         <h4 className="text-xs font-bold text-slate-900 truncate">
                                                             {item.perangkat?.customer?.nama || "Pelanggan"}
                                                         </h4>
-                                                        <p className="text-[11px] font-medium text-slate-600 truncate mt-0.5">
+                                                        <p className="text-2xs font-medium text-slate-600 truncate mt-0.5">
                                                             {item.perangkat?.merek} {item.perangkat?.model}
                                                         </p>
                                                     </div>
-                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border shrink-0 ${
                                                         isCritical
                                                             ? "bg-amber-100 text-amber-900 border-amber-300 font-extrabold"
                                                             : "bg-emerald-50 text-emerald-800 border-emerald-200"
@@ -857,7 +857,7 @@ export default function RetensiCrm() {
                                                     </span>
                                                 </div>
 
-                                                <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mt-2 pt-2 border-t border-slate-100">
+                                                <div className="flex items-center justify-between text-3xs text-slate-400 font-medium mt-2 pt-2 border-t border-slate-100">
                                                     <span className="font-mono">#{item.nomor_tiket}</span>
                                                     <span className="text-slate-600 font-medium">
                                                         Garansi s/d: {item.warranty_status?.garansi_berakhir_at ? new Date(item.warranty_status.garansi_berakhir_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : "-"}
@@ -887,14 +887,14 @@ export default function RetensiCrm() {
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <h3 className="text-sm font-bold text-slate-900">{currentMaintItem.customer_nama}</h3>
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${PERSONALITY_MAP[currentMaintItem.customer_personality]?.badge || PERSONALITY_MAP.Netral.badge}`}>
+                                                <span className={`px-2 py-0.5 rounded text-3xs font-semibold border ${PERSONALITY_MAP[currentMaintItem.customer_personality]?.badge || PERSONALITY_MAP.Netral.badge}`}>
                                                     Tipe {currentMaintItem.customer_personality || "Netral"}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-slate-600 font-medium mt-0.5">
                                                 {currentMaintItem.merek} {currentMaintItem.model} • Tiket #{currentMaintItem.nomor_tiket}
                                             </p>
-                                            <p className="text-[11px] text-slate-400 mt-1">
+                                            <p className="text-2xs text-slate-400 mt-1">
                                                 WhatsApp: <span className="font-mono font-semibold text-slate-700">{currentMaintItem.customer_phone || "Tidak ada nomor"}</span>
                                             </p>
                                         </div>
@@ -906,7 +906,7 @@ export default function RetensiCrm() {
                                             }`}>
                                                 {currentMaintItem.urgency === "urgent_1y" ? "Kritis (≥ 1 Tahun)" : "Siklus Rutin (6-11 Bulan)"}
                                             </span>
-                                            <p className="text-[11px] text-slate-500 font-medium mt-1">
+                                            <p className="text-2xs text-slate-500 font-medium mt-1">
                                                 {currentMaintItem.diff_months} bulan ({currentMaintItem.diff_days} hari) lalu
                                             </p>
                                         </div>
@@ -914,12 +914,12 @@ export default function RetensiCrm() {
 
                                     {/* Technical Checklist Recommendation */}
                                     <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-3 text-xs space-y-1.5">
-                                        <span className="font-bold text-blue-900 flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
+                                        <span className="font-bold text-blue-900 flex items-center gap-1.5 uppercase tracking-wider text-3xs">
                                             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                                             <span>Rekomendasi Servis Periode 6-12 Bulan:</span>
                                         </span>
                                         <p className="font-semibold text-slate-800">{currentMaintItem.recommended_service}</p>
-                                        <p className="text-[11px] text-slate-600">
+                                        <p className="text-2xs text-slate-600">
                                             Pembersihan debu heatsink kipas, penggantian pasta termal kering, dan pengecekan kesehatan SSD.
                                         </p>
                                     </div>
@@ -927,7 +927,7 @@ export default function RetensiCrm() {
                                     {/* Tone Selector & Customization Controls */}
                                     <div className="space-y-3 pt-1">
                                         <div>
-                                            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                                            <label className="block text-2xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                                                 Gaya Bahasa Komunikasi WhatsApp:
                                             </label>
                                             <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
@@ -939,14 +939,14 @@ export default function RetensiCrm() {
                                                             key={toneKey}
                                                             type="button"
                                                             onClick={() => setSelectedTone(toneKey)}
-                                                            className={`p-1.5 rounded-lg text-center transition-all border text-[11px] font-semibold ${
+                                                            className={`p-1.5 rounded-lg text-center transition-all border text-2xs font-semibold ${
                                                                 isSelected
                                                                     ? p.btnActive + " shadow-2xs"
                                                                     : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                                                             }`}
                                                         >
                                                             <div>{p.label}</div>
-                                                            <div className={`text-[9px] truncate ${isSelected ? "text-white/80" : "text-slate-400"}`}>
+                                                            <div className={`text-4xs truncate ${isSelected ? "text-white/80" : "text-slate-400"}`}>
                                                                 {p.desc}
                                                             </div>
                                                         </button>
@@ -981,14 +981,14 @@ export default function RetensiCrm() {
                                     {/* Preview Chat Bubble */}
                                     <div className="space-y-1.5 pt-1">
                                         <div className="flex items-center justify-between">
-                                            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                            <label className="text-2xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                                                 <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                                                 <span>Pratinjau Pesan WhatsApp:</span>
                                             </label>
                                             <button
                                                 type="button"
                                                 onClick={handleCopy}
-                                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 px-2 py-0.5 rounded hover:bg-slate-100 transition-colors"
+                                                className="inline-flex items-center gap-1 text-2xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-0.5 rounded hover:bg-slate-100 transition-colors"
                                             >
                                                 {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                                                 <span>{copied ? "Tersalin" : "Salin Teks"}</span>
@@ -1046,7 +1046,7 @@ export default function RetensiCrm() {
                                             <p className="text-xs text-slate-600 font-medium mt-0.5">
                                                 {currentUnclaimedItem.merek} {currentUnclaimedItem.model} • Tiket #{currentUnclaimedItem.nomor_tiket}
                                             </p>
-                                            <p className="text-[11px] text-slate-400 mt-1">
+                                            <p className="text-2xs text-slate-400 mt-1">
                                                 WhatsApp: <span className="font-mono font-semibold text-slate-700">{currentUnclaimedItem.customer_phone || "Tidak ada nomor"}</span>
                                             </p>
                                         </div>
@@ -1060,7 +1060,7 @@ export default function RetensiCrm() {
                                             }`}>
                                                 {currentUnclaimedItem.stage_label}
                                             </span>
-                                            <p className="text-[11px] text-slate-500 font-medium mt-1">
+                                            <p className="text-2xs text-slate-500 font-medium mt-1">
                                                 Selesai {currentUnclaimedItem.diff_days} hari lalu
                                             </p>
                                         </div>
@@ -1068,7 +1068,7 @@ export default function RetensiCrm() {
 
                                     {/* Storage & Invoice Warning Banner */}
                                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs space-y-1">
-                                        <span className="font-bold text-amber-900 flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
+                                        <span className="font-bold text-amber-900 flex items-center gap-1.5 uppercase tracking-wider text-3xs">
                                             <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                                             <span>Informasi Penyimpanan & Tagihan:</span>
                                         </span>
@@ -1094,7 +1094,7 @@ export default function RetensiCrm() {
 
                                     {/* Custom Note Input */}
                                     <div>
-                                        <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                        <label className="block text-2xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                                             Catatan Tambahan untuk Pelanggan (Opsional):
                                         </label>
                                         <input
@@ -1109,14 +1109,14 @@ export default function RetensiCrm() {
                                     {/* Preview Chat Bubble */}
                                     <div className="space-y-1.5 pt-1">
                                         <div className="flex items-center justify-between">
-                                            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                            <label className="text-2xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                                                 <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                                                 <span>Pratinjau Pesan Pengingat Pengambilan:</span>
                                             </label>
                                             <button
                                                 type="button"
                                                 onClick={handleCopy}
-                                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 px-2 py-0.5 rounded hover:bg-slate-100 transition-colors"
+                                                className="inline-flex items-center gap-1 text-2xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-0.5 rounded hover:bg-slate-100 transition-colors"
                                             >
                                                 {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                                                 <span>{copied ? "Tersalin" : "Salin Teks"}</span>
@@ -1176,7 +1176,7 @@ export default function RetensiCrm() {
                                             <p className="text-xs text-slate-600 font-medium mt-0.5">
                                                 {currentWarrantyItem.perangkat?.merek} {currentWarrantyItem.perangkat?.model} • Tiket #{currentWarrantyItem.nomor_tiket}
                                             </p>
-                                            <p className="text-[11px] text-slate-400 mt-1">
+                                            <p className="text-2xs text-slate-400 mt-1">
                                                 WhatsApp: <span className="font-mono font-semibold text-slate-700">{currentWarrantyItem.perangkat?.customer?.nomor_telepon || "Tidak ada nomor"}</span>
                                             </p>
                                         </div>
@@ -1184,7 +1184,7 @@ export default function RetensiCrm() {
                                             <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                                                 Tersisa {currentWarrantyItem.warranty_status?.sisaHari ?? 0} Hari Garansi
                                             </span>
-                                            <p className="text-[11px] text-slate-500 font-medium mt-1">
+                                            <p className="text-2xs text-slate-500 font-medium mt-1">
                                                 Kedaluwarsa: {currentWarrantyItem.warranty_status?.garansi_berakhir_at ? new Date(currentWarrantyItem.warranty_status.garansi_berakhir_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}
                                             </p>
                                         </div>
@@ -1192,7 +1192,7 @@ export default function RetensiCrm() {
 
                                     {/* Evaluation Guidance */}
                                     <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3 text-xs space-y-1">
-                                        <span className="font-bold text-emerald-900 flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
+                                        <span className="font-bold text-emerald-900 flex items-center gap-1.5 uppercase tracking-wider text-3xs">
                                             <HeartHandshake className="w-3.5 h-3.5 text-emerald-600" />
                                             <span>Maksud Follow-Up Kepuasan Pelanggan:</span>
                                         </span>
@@ -1204,14 +1204,14 @@ export default function RetensiCrm() {
                                     {/* Preview Chat Bubble */}
                                     <div className="space-y-1.5 pt-1">
                                         <div className="flex items-center justify-between">
-                                            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                            <label className="text-2xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                                                 <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                                                 <span>Pratinjau Pesan Evaluasi Garansi:</span>
                                             </label>
                                             <button
                                                 type="button"
                                                 onClick={handleCopy}
-                                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 px-2 py-0.5 rounded hover:bg-slate-100 transition-colors"
+                                                className="inline-flex items-center gap-1 text-2xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-0.5 rounded hover:bg-slate-100 transition-colors"
                                             >
                                                 {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                                                 <span>{copied ? "Tersalin" : "Salin Teks"}</span>

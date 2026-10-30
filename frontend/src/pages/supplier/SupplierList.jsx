@@ -97,7 +97,7 @@ export default function SupplierList() {
                                 {totalSuppliers} Mitra
                             </span>
                         </div>
-                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1">
                             Pusat data distributor resmi, kontak meja klaim RMA, alamat service center & toko online
                         </p>
                     </div>
@@ -121,27 +121,27 @@ export default function SupplierList() {
             {/* Quick Metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-slate-400">Total Mitra Supplier</div>
+                    <div className="text-2xs font-semibold text-slate-400">Total Mitra Supplier</div>
                     <div className="text-xl font-bold text-slate-900 mt-1">{totalSuppliers}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Terdaftar aktif di sistem</div>
+                    <div className="text-3xs text-slate-500 mt-0.5">Terdaftar aktif di sistem</div>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-blue-600">Distributor Resmi (ATP)</div>
+                    <div className="text-2xs font-semibold text-blue-600">Distributor Resmi (ATP)</div>
                     <div className="text-xl font-bold text-blue-700 mt-1">{resmiCount}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Synnex, NJT, Astrindo, dll</div>
+                    <div className="text-3xs text-slate-500 mt-0.5">Synnex, NJT, Astrindo, dll</div>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-emerald-600">Katalog Terhubung</div>
+                    <div className="text-2xs font-semibold text-emerald-600">Katalog Terhubung</div>
                     <div className="text-xl font-bold text-emerald-700 mt-1">{totalSparepartsLinked}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Item sparepart terafiliasi</div>
+                    <div className="text-3xs text-slate-500 mt-0.5">Item sparepart terafiliasi</div>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-                    <div className="text-[11px] font-semibold text-amber-600">Riwayat Klaim RMA</div>
+                    <div className="text-2xs font-semibold text-amber-600">Riwayat Klaim RMA</div>
                     <div className="text-xl font-bold text-amber-700 mt-1">{totalRmaLinked}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Total retur garansi dicatat</div>
+                    <div className="text-3xs text-slate-500 mt-0.5">Total retur garansi dicatat</div>
                 </div>
             </div>
 
@@ -216,7 +216,7 @@ export default function SupplierList() {
                                 <div className="p-5 space-y-3.5">
                                     {/* Top Row: Category badge & Actions */}
                                     <div className="flex items-start justify-between gap-2">
-                                        <span className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border ${
+                                        <span className={`px-2.5 py-1 rounded-lg text-3xs font-bold border ${
                                             sup.kategori === "Distributor Resmi"
                                                 ? "bg-blue-50 text-blue-700 border-blue-200"
                                                 : sup.kategori === "Toko Online / Marketplace"
@@ -277,7 +277,7 @@ export default function SupplierList() {
                                                         href={`https://wa.me/${cleanPhone}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-md text-[11px] font-bold flex items-center gap-1 transition-colors"
+                                                        className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-md text-2xs font-bold flex items-center gap-1 transition-colors"
                                                     >
                                                         <MessageCircle className="w-3 h-3" />
                                                         <span>WA</span>
@@ -294,7 +294,7 @@ export default function SupplierList() {
                                         )}
 
                                         {sup.alamat && (
-                                            <div className="flex items-start gap-1.5 text-[11px] text-slate-500 leading-relaxed pt-0.5">
+                                            <div className="flex items-start gap-1.5 text-2xs text-slate-500 leading-relaxed pt-0.5">
                                                 <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                                                 <span className="line-clamp-2">{sup.alamat}</span>
                                             </div>
@@ -303,7 +303,7 @@ export default function SupplierList() {
 
                                     {/* Kebijakan Retur & RMA */}
                                     {sup.kebijakan_klaim && (
-                                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-[11px] space-y-1">
+                                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-2xs space-y-1">
                                             <div className="flex items-center gap-1 font-bold text-slate-700">
                                                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                                                 <span>Kebijakan Garansi / Prosedur Retur:</span>

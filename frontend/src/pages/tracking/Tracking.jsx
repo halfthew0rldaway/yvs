@@ -110,7 +110,7 @@ function TrackingProgress({ currentStatus }) {
                             } ${isActive ? 'ring-4 ring-blue-50/80 scale-110' : ''}`}>
                                 {isCompleted && !isActive ? <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6" /> : idx + 1}
                             </div>
-                            <span className={`text-[9px] xs:text-[10px] sm:text-xs md:text-sm font-bold absolute -bottom-6 sm:-bottom-8 whitespace-nowrap ${isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>{step.label}</span>
+                            <span className={`text-4xs xs:text-3xs sm:text-xs md:text-sm font-bold absolute -bottom-6 sm:-bottom-8 whitespace-nowrap ${isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>{step.label}</span>
                         </div>
                     );
                 })}
@@ -133,7 +133,7 @@ function TrackingListItem({ t, onClick }) {
             <div className="space-y-1 w-full">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                     <span className="font-mono font-bold text-base sm:text-lg text-slate-900">{t?.nomor_tiket}</span>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-[10px] font-bold uppercase tracking-wide">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-3xs font-bold uppercase tracking-wide">
                         <MonitorSmartphone className="w-3.5 h-3.5" />
                         {t?.jenis_perangkat || "Perangkat"}
                     </span>
@@ -152,7 +152,7 @@ function TrackingListItem({ t, onClick }) {
                 </div>
             </div>
             <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-100 mt-2 sm:mt-0 shrink-0">
-                <span className={`inline-flex px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold border uppercase tracking-widest text-center shrink-0 ${statusInfo.color}`}>
+                <span className={`inline-flex px-3 py-1.5 rounded-full text-3xs sm:text-xs font-bold border uppercase tracking-widest text-center shrink-0 ${statusInfo.color}`}>
                     {statusInfo.label}
                 </span>
                 <button className="p-2 bg-white border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 hover:text-slate-700 transition-colors shadow-sm hidden sm:flex shrink-0">
@@ -274,7 +274,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                         <div>
                             <div className="flex items-center gap-2 mb-0.5">
                                 <h5 className="font-bold text-slate-900 text-sm sm:text-base">Dokumentasi Media Perangkat</h5>
-                                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-blue-100 text-blue-700">
+                                <span className="px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-blue-100 text-blue-700">
                                     {allPhotos.length} Media
                                 </span>
                             </div>
@@ -380,7 +380,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                                             <Play className="w-4 h-4 fill-white ml-0.5" />
                                                         </div>
                                                     </div>
-                                                    <span className="absolute top-2 right-2 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                                                    <span className="absolute top-2 right-2 bg-purple-600 text-white text-4xs font-bold px-1.5 py-0.5 rounded shadow">
                                                         VIDEO
                                                     </span>
                                                 </div>
@@ -392,7 +392,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                                 />
                                             )}
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
-                                                <span className="text-[10px] uppercase font-bold text-blue-300 mb-0.5">{photo.categoryLabel}</span>
+                                                <span className="text-3xs uppercase font-bold text-blue-300 mb-0.5">{photo.categoryLabel}</span>
                                                 <span className="text-white text-xs font-semibold truncate">{photo.label}</span>
                                             </div>
                                         </button>
@@ -458,7 +458,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                         </div>
 
                         <div className="mt-4 text-center">
-                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/80 uppercase tracking-wider mb-1">
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-3xs font-bold bg-white/10 text-white/80 uppercase tracking-wider mb-1">
                                 {currentList[lightboxIdx]?.categoryLabel || "Dokumentasi"}
                             </span>
                             <p className="text-white/95 text-sm font-semibold">{currentList[lightboxIdx]?.label || ""}</p>
@@ -513,7 +513,7 @@ function CareTipsCard({ tips }) {
                         </div>
                         <div>
                             <h5 className="font-bold text-slate-900 text-sm sm:text-base">Tips Perawatan dari Teknisi</h5>
-                            <p className="text-[11px] text-amber-700 font-medium">Panduan khusus untuk menjaga perangkat Anda</p>
+                            <p className="text-2xs text-amber-700 font-medium">Panduan khusus untuk menjaga perangkat Anda</p>
                         </div>
                     </div>
                     <div className="bg-white rounded-xl p-4 border border-amber-100">
@@ -577,7 +577,7 @@ function AccessoriesChecklist({ kelengkapanDetail, kelengkapanText }) {
                                 <span className={`text-sm font-medium flex-1 min-w-0 break-words ${item && item.ada ? 'text-slate-800' : 'text-slate-400 line-through'}`}>
                                     {item?.item || "Barang"}
                                 </span>
-                                <span className={`text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-md shrink-0 ${item && item.ada ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-400 border border-red-100'}`}>
+                                <span className={`text-3xs uppercase font-bold tracking-wide px-2 py-0.5 rounded-md shrink-0 ${item && item.ada ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-400 border border-red-100'}`}>
                                     {item && item.ada ? 'Ada' : 'Tidak Ada'}
                                 </span>
                             </div>
@@ -754,7 +754,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                     <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-slate-100 pointer-events-none" />
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                                            <span className="px-2.5 py-1 rounded-full text-3xs font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
                                                 <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> Kedaluwarsa
                                             </span>
                                         </div>
@@ -780,7 +780,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                     <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-white/10" />
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/30 flex items-center gap-1.5">
+                                            <span className="px-2.5 py-1 rounded-full text-3xs font-bold bg-white/20 text-white border border-white/30 flex items-center gap-1.5">
                                                 <Clock className="w-3.5 h-3.5" /> Sisa {t.warranty_status?.sisaHari || 0} Hari Lagi
                                             </span>
                                         </div>
@@ -903,7 +903,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                         }`}>
                                             <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-rose-500"}`} />
                                             <div className="flex flex-col flex-1 min-w-0">
-                                                <span className={`font-bold text-[10px] mb-0.5 uppercase tracking-wide ${val ? "text-emerald-600" : "text-rose-600"}`}>
+                                                <span className={`font-bold text-3xs mb-0.5 uppercase tracking-wide ${val ? "text-emerald-600" : "text-rose-600"}`}>
                                                     {val ? "Normal / OK" : "Bermasalah"}
                                                 </span>
                                                 <span className={`truncate sm:whitespace-normal sm:break-words font-medium ${val ? "text-slate-800" : "text-rose-700 font-semibold"}`}>{item.label}</span>
@@ -1008,7 +1008,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                             <div className="flex flex-col gap-1.5">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-emerald-700 font-bold text-sm sm:text-base">Total Biaya Akhir (Real)</span>
-                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-300">
+                                                    <span className="inline-flex items-center gap-1 text-2xs font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-300">
                                                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                                                         Terverifikasi Digital
                                                     </span>
@@ -1070,7 +1070,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                                         <PenTool className="w-4 h-4" />
                                                         Tanda Tangani & Buka Dokumen
                                                     </button>
-                                                    <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                                                    <div className="flex items-center justify-center gap-1.5 text-2xs text-slate-500 font-medium">
                                                         <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
                                                         Aman • Verifikasi 4 Digit No HP
                                                     </div>
@@ -1116,7 +1116,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                     return (
                                         <div key={logIdx} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                                             <div className="mb-2">
-                                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${badgeColor}`}>{label}</span>
+                                                <span className={`text-3xs uppercase font-bold px-2 py-0.5 rounded-md ${badgeColor}`}>{label}</span>
                                             </div>
                                             <p className="text-slate-900 text-sm whitespace-pre-line mb-2 leading-relaxed">{log?.catatan}</p>
                                             
@@ -1212,7 +1212,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                         }`}>
                                             <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-slate-300"}`} />
                                             <div className="flex flex-col flex-1 min-w-0">
-                                                <span className={`font-bold text-[10px] mb-0.5 uppercase tracking-wide flex items-center gap-1 ${val ? "text-emerald-700" : "text-slate-400"}`}>
+                                                <span className={`font-bold text-3xs mb-0.5 uppercase tracking-wide flex items-center gap-1 ${val ? "text-emerald-700" : "text-slate-400"}`}>
                                                     {val ? (
                                                         <>
                                                             <CheckCircle className="w-3 h-3 text-emerald-600 inline shrink-0" />
@@ -1221,7 +1221,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                                     ) : "Belum diuji"}
                                                 </span>
                                                 <span className={`font-semibold text-slate-800 truncate sm:whitespace-normal`}>{item.label}</span>
-                                                <p className="text-[10px] text-slate-500 font-normal leading-tight mt-0.5">{item.desc}</p>
+                                                <p className="text-3xs text-slate-500 font-normal leading-tight mt-0.5">{item.desc}</p>
                                             </div>
                                         </div>
                                     );

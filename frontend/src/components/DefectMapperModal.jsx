@@ -127,11 +127,11 @@ export default function DefectMapperModal({
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="font-semibold text-slate-800 text-sm sm:text-base truncate">{title}</h3>
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
                                     {items.length} Cacat
                                 </span>
                             </div>
-                            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 line-clamp-1 sm:line-clamp-none">
+                            <p className="text-2xs sm:text-xs text-slate-500 mt-0.5 line-clamp-1 sm:line-clamp-none">
                                 {readOnly 
                                     ? "Visualisasi titik goresan dan kecacatan fisik perangkat saat diterima."
                                     : "Ketuk pada skema perangkat untuk menandai lokasi baret, retak, penyok, atau baut hilang."
@@ -167,7 +167,7 @@ export default function DefectMapperModal({
                                 >
                                     <span>{v.label}</span>
                                     {count > 0 && (
-                                        <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                                        <span className={`px-1.5 py-0.2 rounded-full text-3xs font-bold ${
                                             isActive ? "bg-indigo-100 text-indigo-700" : "bg-slate-200 text-slate-600"
                                         }`}>
                                             {count}
@@ -313,7 +313,7 @@ export default function DefectMapperModal({
                                         className="absolute -translate-x-1/2 -translate-y-1/2 group z-20 cursor-pointer"
                                     >
                                         {/* Pin Marker */}
-                                        <div className={`relative flex items-center justify-center w-6 h-6 rounded-full shadow-lg text-white text-[11px] font-bold transition-transform ${
+                                        <div className={`relative flex items-center justify-center w-6 h-6 rounded-full shadow-lg text-white text-2xs font-bold transition-transform ${
                                             isActive ? "scale-125 ring-4 ring-white" : "hover:scale-110"
                                         } ${typeMeta.bg}`}>
                                             {idx + 1}
@@ -326,9 +326,9 @@ export default function DefectMapperModal({
 
                                         {/* Tooltip on Hover */}
                                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center pointer-events-none z-30">
-                                            <div className="px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg shadow-xl whitespace-nowrap border border-slate-700">
+                                            <div className="px-2.5 py-1 bg-slate-900 text-white text-2xs font-medium rounded-lg shadow-xl whitespace-nowrap border border-slate-700">
                                                 <span className="font-semibold text-amber-400">#{idx + 1} {typeMeta.label}</span>
-                                                {item.note && <span className="block text-[10px] text-slate-300 max-w-[160px] truncate">{item.note}</span>}
+                                                {item.note && <span className="block text-3xs text-slate-300 max-w-[160px] truncate">{item.note}</span>}
                                             </div>
                                             <div className="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-1 border-r border-b border-slate-700" />
                                         </div>
@@ -339,7 +339,7 @@ export default function DefectMapperModal({
 
                         {/* Visual Helper Legend */}
                         <div className="mt-3 text-center">
-                            <span className="text-[11px] text-slate-400 font-medium inline-flex items-center justify-center gap-1">
+                            <span className="text-2xs text-slate-400 font-medium inline-flex items-center justify-center gap-1">
                                 {!readOnly ? (
                                     <>
                                         <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
@@ -393,7 +393,7 @@ export default function DefectMapperModal({
                                 <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
                                     Daftar Titik ({currentViewItems.length})
                                 </span>
-                                <span className="text-[11px] text-slate-500 font-medium">
+                                <span className="text-2xs text-slate-500 font-medium">
                                     {VIEWS.find(v => v.id === currentView)?.label}
                                 </span>
                             </div>
@@ -403,7 +403,7 @@ export default function DefectMapperModal({
                                     <Sparkles className="w-6 h-6 mb-1 text-slate-300" />
                                     <p className="text-xs font-medium">Belum ada titik cacat di tampilan ini.</p>
                                     {!readOnly && (
-                                        <p className="text-[11px] text-slate-400 mt-0.5">
+                                        <p className="text-2xs text-slate-400 mt-0.5">
                                             Klik area blueprint untuk menambahkan.
                                         </p>
                                     )}
@@ -425,7 +425,7 @@ export default function DefectMapperModal({
                                             >
                                                 <div className="flex items-center justify-between gap-1.5 mb-1.5">
                                                     <div className="flex items-center gap-1.5">
-                                                        <span className={`w-5 h-5 rounded-full ${typeMeta.bg} text-white font-bold flex items-center justify-center text-[10px]`}>
+                                                        <span className={`w-5 h-5 rounded-full ${typeMeta.bg} text-white font-bold flex items-center justify-center text-3xs`}>
                                                             {idx + 1}
                                                         </span>
                                                         <span className="font-semibold text-slate-800">{typeMeta.label}</span>
@@ -455,11 +455,11 @@ export default function DefectMapperModal({
                                                     />
                                                 ) : (
                                                     item.note ? (
-                                                        <p className="text-[11px] text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                                                        <p className="text-2xs text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-100">
                                                             {item.note}
                                                         </p>
                                                     ) : (
-                                                        <span className="text-[10px] text-slate-400 italic">Tanpa catatan tambahan</span>
+                                                        <span className="text-3xs text-slate-400 italic">Tanpa catatan tambahan</span>
                                                     )
                                                 )}
                                             </div>
@@ -512,7 +512,7 @@ export function DefectMapBadge({ value, onClick, readOnly = false }) {
         >
             <Laptop className="w-3.5 h-3.5 text-slate-500" />
             <span>Peta Cacat Fisik</span>
-            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+            <span className={`px-1.5 py-0.5 rounded-full text-3xs font-bold ${
                 count > 0 ? "bg-amber-500 text-white" : "bg-slate-200 text-slate-600"
             }`}>
                 {count} Titik

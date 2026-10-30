@@ -106,7 +106,7 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                             <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-900">
                                 Yangversa Service (YVS)
                             </h4>
-                            <p className="text-[11px] text-slate-500 font-medium">Spesialis Servis Laptop & Gadget</p>
+                            <p className="text-2xs text-slate-500 font-medium">Spesialis Servis Laptop & Gadget</p>
                             <div className="mt-2 inline-block px-3 py-1 bg-slate-900 text-white rounded-lg font-mono font-extrabold text-base tracking-widest">
                                 {tiket.nomor_tiket}
                             </div>
@@ -119,7 +119,7 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                 alt={`QR Code ${tiket.nomor_tiket}`}
                                 className="w-48 h-48 object-contain"
                             />
-                            <span className="text-[10px] font-mono font-semibold text-slate-400 mt-1">
+                            <span className="text-3xs font-mono font-semibold text-slate-400 mt-1">
                                 SCAN UNTUK KLAIM / TRACKING
                             </span>
                         </div>
@@ -157,14 +157,14 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                 <span className="text-slate-500 font-medium shrink-0 flex items-center gap-1">
                                     <Calendar className="w-3.5 h-3.5" /> Tgl Masuk:
                                 </span>
-                                <span className="font-mono text-slate-600 text-[11px] text-right">
+                                <span className="font-mono text-slate-600 text-2xs text-right">
                                     {tglMasuk}
                                 </span>
                             </div>
                         </div>
 
                         <div className="mt-3 pt-2 border-t border-slate-100 text-center w-full">
-                            <p className="text-[10px] text-slate-400 font-medium">
+                            <p className="text-3xs text-slate-400 font-medium">
                                 Tempel label stiker ini pada unit perangkat pelanggan
                             </p>
                         </div>

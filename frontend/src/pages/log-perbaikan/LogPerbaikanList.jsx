@@ -102,8 +102,8 @@ export default function LogPerbaikanList() {
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Log Perbaikan</h1>
-                        <p className="text-sm text-slate-500">Catatan riwayat perbaikan tiket</p>
+                        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Log Perbaikan</h1>
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1">Catatan riwayat perbaikan tiket</p>
                     </div>
                 </div>
             </div>
@@ -114,12 +114,12 @@ export default function LogPerbaikanList() {
                     <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
                     <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
                     <Plus className="w-5 h-5 text-blue-500" />
-                    <h2 className="text-base font-bold text-slate-900">Tambah Catatan Baru</h2>
+                    <h2 className="text-sm sm:text-base font-bold text-slate-900">Tambah Catatan Baru</h2>
                 </div>
                 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Catatan Perbaikan</label>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Catatan Perbaikan</label>
                         <textarea
                             value={catatan}
                             onChange={(e) => setCatatan(e.target.value)}
@@ -131,7 +131,7 @@ export default function LogPerbaikanList() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Foto Dokumentasi (Opsional)</label>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Foto Dokumentasi (Opsional)</label>
                         
                         {!fotoUrl ? (
                             <div 

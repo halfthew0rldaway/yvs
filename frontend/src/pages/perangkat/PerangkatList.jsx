@@ -112,8 +112,8 @@ export default function PerangkatList() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Data Perangkat</h1>
-                    <p className="text-sm text-slate-500 mt-1">Daftar perangkat beserta riwayat & rekam medis servis</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Data Perangkat</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Daftar perangkat beserta riwayat & rekam medis servis</p>
                 </div>
                 <Link
                     to="/perangkat/tambah"
@@ -221,7 +221,7 @@ export default function PerangkatList() {
                     />
                 ) : (
                     <table className="w-full text-sm text-left whitespace-nowrap">
-                        <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0]">
+                        <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5 w-16">No</th>
                                 <th className="px-6 py-3.5">Pemilik (Customer)</th>

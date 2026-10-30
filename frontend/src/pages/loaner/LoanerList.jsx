@@ -401,7 +401,7 @@ export default function LoanerList() {
                             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                                 Unit Pinjaman (Loaner Devices)
                             </h1>
-                            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                            <p className="text-xs sm:text-sm text-slate-500 mt-1">
                                 Manajemen inventori laptop/gadget cadangan untuk dipinjamkan ke pelanggan selama servis berjalan
                             </p>
                         </div>
@@ -508,7 +508,7 @@ export default function LoanerList() {
                         <FileText className="w-4 h-4" />
                         <span>Log & Riwayat Peminjaman</span>
                         {deviceStats.dipinjam > 0 && (
-                            <span className="px-2 py-0.5 text-[10px] font-extrabold bg-amber-100 text-amber-700 rounded-full">
+                            <span className="px-2 py-0.5 text-3xs font-extrabold bg-amber-100 text-amber-700 rounded-full">
                                 {deviceStats.dipinjam} Aktif
                             </span>
                         )}
@@ -584,7 +584,7 @@ export default function LoanerList() {
                             />
                         ) : (
                             <table className="w-full text-sm text-left whitespace-nowrap">
-                                <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200">
+                                <thead className="table-header">
                                     <tr>
                                         <th className="px-6 py-3.5">Kode & Unit</th>
                                         <th className="px-6 py-3.5">Spesifikasi & Kelengkapan</th>
@@ -639,7 +639,7 @@ export default function LoanerList() {
                                                         <p className="font-medium text-slate-800 text-xs truncate" title={d.spesifikasi || "-"}>
                                                             {d.spesifikasi || "-"}
                                                         </p>
-                                                        <p className="text-[11px] text-slate-500 truncate mt-0.5 flex items-center gap-1" title={d.kelengkapan || "-"}>
+                                                        <p className="text-2xs text-slate-500 truncate mt-0.5 flex items-center gap-1" title={d.kelengkapan || "-"}>
                                                             <Package className="w-3 h-3 text-slate-400 shrink-0" />
                                                             <span>{d.kelengkapan || "Unit Only"}</span>
                                                         </p>
@@ -680,7 +680,7 @@ export default function LoanerList() {
                                                             {activeLoan?.tiket && (
                                                                 <Link 
                                                                     to={`/tiket-servis/${activeLoan.tiket.id}`} 
-                                                                    className="block text-[11px] font-mono text-blue-600 hover:underline mt-1 font-semibold"
+                                                                    className="block text-2xs font-mono text-blue-600 hover:underline mt-1 font-semibold"
                                                                 >
                                                                     Tiket: {activeLoan.tiket.nomor_tiket} →
                                                                 </Link>
@@ -804,7 +804,7 @@ export default function LoanerList() {
                             />
                         ) : (
                             <table className="w-full text-sm text-left whitespace-nowrap">
-                                <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200">
+                                <thead className="table-header">
                                     <tr>
                                         <th className="px-6 py-3.5">No. Pinjam & Tanggal</th>
                                         <th className="px-6 py-3.5">Unit Cadangan</th>
@@ -873,7 +873,7 @@ export default function LoanerList() {
                                                 <div className="flex items-center gap-1.5 text-slate-500 mt-0.5">
                                                     <span>Deposit: {r.deposit_uang > 0 ? formatRupiah(r.deposit_uang) : "Tanpa Deposit"}</span>
                                                     {r.deposit_uang > 0 && (
-                                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${r.deposit_dikembalikan ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                        <span className={`text-3xs font-bold px-1.5 py-0.5 rounded ${r.deposit_dikembalikan ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                                                             {r.deposit_dikembalikan ? 'Dikembalikan' : 'Ditahan'}
                                                         </span>
                                                     )}
@@ -1131,7 +1131,7 @@ export default function LoanerList() {
                                         </option>
                                     ))}
                                 </select>
-                                <p className="text-[11px] text-slate-400 mt-1">Hanya menampilkan tiket yang berstatus servis aktif.</p>
+                                <p className="text-2xs text-slate-400 mt-1">Hanya menampilkan tiket yang berstatus servis aktif.</p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -1171,7 +1171,7 @@ export default function LoanerList() {
                                     <ShieldCheck className="w-4 h-4 text-amber-700" />
                                     Ketentuan Serah Terima Unit:
                                 </p>
-                                <p className="text-[11px] leading-relaxed">
+                                <p className="text-2xs leading-relaxed">
                                     Customer bertanggung jawab penuh atas keamanan fisik dan data unit pinjaman. Unit wajib dikembalikan dalam kondisi normal saat servis unit utama selesai.
                                 </p>
                             </div>
@@ -1323,18 +1323,18 @@ export default function LoanerList() {
                             <div id="printable-loan-agreement" className="border border-slate-300 rounded-xl p-6 text-slate-900 text-xs space-y-4">
                                 <div className="text-center pb-3 border-b border-slate-200">
                                     <h4 className="font-extrabold text-sm uppercase tracking-wider">YANGVERSA SERVICE (YVS)</h4>
-                                    <p className="text-[11px] text-slate-500">Formulir Serah Terima & Perjanjian Unit Cadangan</p>
+                                    <p className="text-2xs text-slate-500">Formulir Serah Terima & Perjanjian Unit Cadangan</p>
                                     <p className="font-mono font-bold text-slate-800 text-sm mt-1">{printTarget.nomor_peminjaman}</p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 text-xs">
                                     <div>
-                                        <p className="text-slate-500 font-semibold uppercase text-[10px]">Pihak Pertama (Workshop)</p>
+                                        <p className="text-slate-500 font-semibold uppercase text-3xs">Pihak Pertama (Workshop)</p>
                                         <p className="font-bold text-slate-900">Yangversa Service</p>
                                         <p className="text-slate-600">Petugas: {printTarget.created_by_nama || user?.nama}</p>
                                     </div>
                                     <div>
-                                        <p className="text-slate-500 font-semibold uppercase text-[10px]">Pihak Kedua (Pelanggan)</p>
+                                        <p className="text-slate-500 font-semibold uppercase text-3xs">Pihak Kedua (Pelanggan)</p>
                                         <p className="font-bold text-slate-900">{printTarget.customer?.nama}</p>
                                         <p className="text-slate-600">{printTarget.customer?.nomor_telepon}</p>
                                     </div>
@@ -1367,7 +1367,7 @@ export default function LoanerList() {
                                     </div>
                                 </div>
 
-                                <div className="text-[10px] text-slate-500 leading-relaxed border-t border-slate-200 pt-2 space-y-1">
+                                <div className="text-3xs text-slate-500 leading-relaxed border-t border-slate-200 pt-2 space-y-1">
                                     <p className="font-bold text-slate-700">Syarat & Ketentuan Peminjaman:</p>
                                     <ol className="list-decimal pl-3 space-y-0.5">
                                         <li>Pihak Kedua wajib menjaga kebersihan dan keutuhan unit yang dipinjamkan.</li>
@@ -1378,11 +1378,11 @@ export default function LoanerList() {
 
                                 <div className="grid grid-cols-2 gap-4 text-center pt-4">
                                     <div>
-                                        <p className="text-[11px] text-slate-600 mb-10">Petugas Workshop</p>
+                                        <p className="text-2xs text-slate-600 mb-10">Petugas Workshop</p>
                                         <p className="font-bold text-xs border-t border-slate-300 pt-1">({printTarget.created_by_nama || user?.nama})</p>
                                     </div>
                                     <div>
-                                        <p className="text-[11px] text-slate-600 mb-10">Pelanggan Penerima</p>
+                                        <p className="text-2xs text-slate-600 mb-10">Pelanggan Penerima</p>
                                         <p className="font-bold text-xs border-t border-slate-300 pt-1">({printTarget.customer?.nama})</p>
                                     </div>
                                 </div>
