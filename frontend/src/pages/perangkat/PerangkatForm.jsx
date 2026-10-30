@@ -131,6 +131,15 @@ export default function PerangkatForm() {
             .finally(() => setFetching(false));
     }, [id, isEdit, customerParam]);
 
+    useEffect(() => {
+        if (!isConfirmModalOpen) return;
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") setIsConfirmModalOpen(false);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isConfirmModalOpen]);
+
     // Pelanggan yang sedang terpilih
     const selectedCustomer = useMemo(() => {
         if (!form.customer_id) return null;
@@ -620,8 +629,14 @@ export default function PerangkatForm() {
             )}
             {/* Double Confirmation Modal for Crucial Device Data Edit */}
             {isConfirmModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-                    <div className="relative bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-150">
+                <div 
+                    className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+                    onClick={() => setIsConfirmModalOpen(false)}
+                >
+                    <div 
+                        className="modal-surface relative bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         {/* Modal Header */}
                         <div className="p-5 border-b border-slate-100 flex items-start justify-between gap-3 bg-amber-50/50">
                             <div className="flex items-center gap-3">
