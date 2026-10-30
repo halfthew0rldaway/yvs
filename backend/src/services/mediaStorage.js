@@ -4,11 +4,18 @@ const crypto = require("crypto");
 
 /**
  * Sanitizes ticket number to be safe for directory & file names across OS (Linux/Windows/macOS)
- * Example: "TKT/2026/001" or "TKT-202610-001" -> "TKT-202610-001"
+ * Completely eliminates directory traversal (..), path separators, and illegal filesystem characters.
+ * Example: "TKT/2026/001" or "../TKT-001" -> "TKT-2026-001" / "TKT-001"
  */
 function sanitizeTicketNumber(noTiket) {
     if (!noTiket) return "TKT-UNKNOWN";
-    return String(noTiket).trim().replace(/[/\\?%*:|"<>]/g, "-").replace(/\s+/g, "_");
+    const clean = String(noTiket)
+        .trim()
+        .replace(/[/\\?%*:|"<>.]/g, "-")
+        .replace(/\s+/g, "_")
+        .replace(/-+/g, "-")
+        .replace(/^[-_]+|[-_]+$/g, "");
+    return clean || "TKT-UNKNOWN";
 }
 
 /**
@@ -53,18 +60,34 @@ function getTicketMediaDirectory(noTiket, date = new Date()) {
 function relocateSingleFile(file, noTiket, stage = "MASUK", date = new Date()) {
     if (!file) return null;
 
-    const currentFilePath = typeof file === "string" ? file : file.path;
+    let currentFilePath = typeof file === "string" ? file : file.path;
     if (!currentFilePath) return null;
 
-    // If file does not exist at current path, check if it's already an active URL
-    if (!fs.existsSync(currentFilePath)) {
-        if (typeof file === "string" && file.startsWith("/uploads/")) {
+    // If file is not found directly, check if it's a relative /uploads URL mapping to disk
+    if (!fs.existsSync(currentFilePath) && typeof file === "string") {
+        const mappedDiskPath = path.join(__dirname, "../../", file.replace(/^\/+/, ""));
+        if (fs.existsSync(mappedDiskPath)) {
+            currentFilePath = mappedDiskPath;
+        } else if (file.startsWith("/uploads/")) {
+            // Already an active database URL (legacy or already moved)
             return file;
+        } else {
+            return null;
         }
+    }
+
+    if (!fs.existsSync(currentFilePath)) {
         return null;
     }
 
     const { absoluteDir, relativeUrlBase, cleanNo } = getTicketMediaDirectory(noTiket, date);
+
+    // Idempotency check: If file is ALREADY inside this ticket's target directory, preserve its existing name and URL
+    if (path.resolve(path.dirname(currentFilePath)) === path.resolve(absoluteDir)) {
+        const existingFilename = path.basename(currentFilePath);
+        return `${relativeUrlBase}/${existingFilename}`;
+    }
+
     const cleanStage = (stage || "MASUK").toUpperCase().replace(/[^A-Z0-9_]/g, "");
 
     // Format timestamp: YYYYMMDD_HHMMSS
@@ -73,12 +96,19 @@ function relocateSingleFile(file, noTiket, stage = "MASUK", date = new Date()) {
     const randomHex = crypto.randomBytes(2).toString("hex"); // 4 random hex chars for uniqueness
 
     const ext = (path.extname(currentFilePath) || (typeof file === "object" && file.originalname ? path.extname(file.originalname) : "") || ".jpg").toLowerCase();
-    const finalFilename = `${cleanNo}_${cleanStage}_${timestamp}_${randomHex}${ext}`;
-    const destinationPath = path.join(absoluteDir, finalFilename);
+    let finalFilename = `${cleanNo}_${cleanStage}_${timestamp}_${randomHex}${ext}`;
+    let destinationPath = path.join(absoluteDir, finalFilename);
 
-    // If destination already matches source (e.g. re-run), return existing relative URL
+    // If destination already matches source (e.g. re-run on same path), return existing relative URL
     if (path.resolve(currentFilePath) === path.resolve(destinationPath)) {
         return `${relativeUrlBase}/${finalFilename}`;
+    }
+
+    // Extra collision guarantee: If destination exists on disk, append extra salt
+    if (fs.existsSync(destinationPath)) {
+        const extraSalt = crypto.randomBytes(2).toString("hex");
+        finalFilename = `${cleanNo}_${cleanStage}_${timestamp}_${randomHex}${extraSalt}${ext}`;
+        destinationPath = path.join(absoluteDir, finalFilename);
     }
 
     // Atomically move the file with EXDEV (cross-device) fallback
