@@ -13,6 +13,7 @@ const { parsePagination, buildPaginationResponse } = require("../utils/paginatio
 const { broadcast } = require("../utils/sse");
 const { computeCustomerStatsAndBadges } = require("../utils/customerBadges");
 const { recordActivity } = require("../services/activityLog.service");
+const { relocateTicketMedia } = require("../services/mediaStorage");
 
 // Validasi transisi status yang diizinkan
 const STATUS_TRANSITIONS = {
@@ -395,10 +396,14 @@ async function create(req, res) {
             return res.status(404).json({ message: "Perangkat tidak ditemukan" });
         }
 
-        // Process uploaded files if any
-        let foto_kondisi = null;
-        if (req.files && req.files.length > 0) {
-            foto_kondisi = req.files.map(file => `/uploads/${file.filename}`);
+        // Process uploaded files or parse existing body if any
+        let initialFotoKondisi = null;
+        if (req.body.foto_kondisi && (!req.files || req.files.length === 0)) {
+            try {
+                initialFotoKondisi = typeof req.body.foto_kondisi === 'string' ? JSON.parse(req.body.foto_kondisi) : req.body.foto_kondisi;
+            } catch (e) {
+                initialFotoKondisi = null;
+            }
         }
 
         // Parse intake checklist if stringified
@@ -435,6 +440,12 @@ async function create(req, res) {
         while (retries > 0) {
             try {
                 const nomor_tiket = await getNextNomorTiket(prisma, offset);
+
+                let currentFotoKondisi = initialFotoKondisi;
+                if (req.files && req.files.length > 0) {
+                    currentFotoKondisi = relocateTicketMedia(req.files, nomor_tiket, "MASUK");
+                }
+
                 tiket = await prisma.tiketServis.create({
                     data: {
                         nomor_tiket,
@@ -443,7 +454,7 @@ async function create(req, res) {
                         keluhan,
                         kelengkapan,
                         kelengkapan_detail: parsedKelengkapanDetail,
-                        foto_kondisi: foto_kondisi ? JSON.stringify(foto_kondisi) : null,
+                        foto_kondisi: currentFotoKondisi && currentFotoKondisi.length > 0 ? JSON.stringify(currentFotoKondisi) : null,
                         checklist_intake: parsedIntake,
                         tipe_kunci: tipe_kunci || "Tidak Ada",
                         password_perangkat: password_perangkat || null,
@@ -1392,7 +1403,7 @@ async function uploadFotoSelesai(req, res) {
 
         let newUrls = [];
         if (req.files && req.files.length > 0) {
-            newUrls = req.files.map(file => `/uploads/${file.filename}`);
+            newUrls = relocateTicketMedia(req.files, tiket.nomor_tiket, "SELESAI");
         }
 
         let existing = [];
@@ -1435,7 +1446,7 @@ async function uploadFotoDiagnosis(req, res) {
 
         let newUrls = [];
         if (req.files && req.files.length > 0) {
-            newUrls = req.files.map(file => `/uploads/${file.filename}`);
+            newUrls = relocateTicketMedia(req.files, tiket.nomor_tiket, "DIAGNOSA");
         }
 
         let existing = [];

@@ -1,17 +1,20 @@
 const prisma = require("../config/database");
+const { relocateTicketMedia } = require("../services/mediaStorage");
 
 // Mencatat aktivitas perbaikan
 async function create(req, res) {
     try {
         const { tiket_id, catatan } = req.body;
-        let finalFotoUrl = req.body.foto_url || null;
-        if (req.file) {
-            finalFotoUrl = `/uploads/${req.file.filename}`;
-        }
 
         const tiket = await prisma.tiketServis.findUnique({ where: { id: Number(tiket_id) } });
         if (!tiket) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        }
+
+        let finalFotoUrl = req.body.foto_url || null;
+        if (req.file) {
+            const [relocatedUrl] = relocateTicketMedia([req.file], tiket.nomor_tiket, "PERBAIKAN");
+            finalFotoUrl = relocatedUrl || `/uploads/${req.file.filename}`;
         }
 
         if (!tiket.teknisi_id) {

@@ -5,7 +5,7 @@ const { processMediaFiles } = require("../services/videoCompressor");
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const dir = path.join(__dirname, "../../uploads");
+        const dir = path.join(__dirname, "../../uploads/tmp");
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'tiket-' + uniqueSuffix + path.extname(file.originalname));
+        cb(null, 'staged-' + uniqueSuffix + path.extname(file.originalname).toLowerCase());
     }
 });
 

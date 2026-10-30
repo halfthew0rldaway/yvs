@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const { broadcast } = require("../utils/sse");
+const { relocateTicketMedia } = require("../services/mediaStorage");
 
 // Input hasil diagnosis
 async function create(req, res) {
@@ -60,7 +61,7 @@ async function create(req, res) {
             } catch (e) { uploadedPhotos = []; }
         }
         if (req.files && req.files.length > 0) {
-            const newUrls = req.files.map(file => `/uploads/${file.filename}`);
+            const newUrls = relocateTicketMedia(req.files, tiket.nomor_tiket, "DIAGNOSA");
             uploadedPhotos = [...uploadedPhotos, ...newUrls];
         } else if (req.body.foto_diagnosis && uploadedPhotos.length === 0) {
             uploadedPhotos = typeof req.body.foto_diagnosis === 'string' ? JSON.parse(req.body.foto_diagnosis) : req.body.foto_diagnosis;
@@ -145,7 +146,8 @@ async function update(req, res) {
         }
 
         if (req.files && req.files.length > 0) {
-            const newFiles = req.files.map(file => `/uploads/${file.filename}`);
+            const ticketNumber = diagnosis.tiket?.nomor_tiket || `TIKET-${diagnosis.tiket_id}`;
+            const newFiles = relocateTicketMedia(req.files, ticketNumber, "DIAGNOSA");
             updateData.foto_diagnosis = JSON.stringify([...existing, ...newFiles].slice(0, 25));
         } else if (req.body.existing_foto_diagnosis !== undefined) {
             updateData.foto_diagnosis = JSON.stringify(existing.slice(0, 25));
