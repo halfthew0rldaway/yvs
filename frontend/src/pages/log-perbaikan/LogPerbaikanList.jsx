@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { ArrowLeft, Plus, Image as ImageIcon, X, History, ClipboardList } from "lucide-react";
+import { compressImage } from "../../utils/mediaUtils";
 
 export default function LogPerbaikanList() {
     const { user, isAdmin, isTeknisi } = useAuth();
@@ -37,7 +38,7 @@ export default function LogPerbaikanList() {
         }
     }
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -55,11 +56,13 @@ export default function LogPerbaikanList() {
 
         setFotoName(file.name);
 
+        const processed = await compressImage(file, { maxWidth: 2560, maxHeight: 2560, quality: 0.88 });
+
         const reader = new FileReader();
         reader.onloadend = () => {
             setFotoUrl(reader.result);
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(processed);
     };
 
     const removePhoto = () => {

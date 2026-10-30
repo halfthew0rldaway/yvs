@@ -33,6 +33,7 @@ export default function MediaProcessingModal({
     uploadedBytes = 0,
     totalBytes = 0,
     items = [],
+    isHd = false,
 }) {
     if (!isOpen) return null;
 
@@ -40,7 +41,7 @@ export default function MediaProcessingModal({
     const isDone = stage === "done" || progressPercent >= 100;
 
     // Derived savings calculation
-    const hasSizeData = currentOriginalSize > 0 && currentCompressedSize > 0;
+    const hasSizeData = currentOriginalSize > 0 && currentCompressedSize > 0 && !isHd;
     const savingsPercent = hasSizeData 
         ? Math.max(0, Math.round(((currentOriginalSize - currentCompressedSize) / currentOriginalSize) * 100))
         : 0;
@@ -48,10 +49,10 @@ export default function MediaProcessingModal({
     // Default titles & subtitles
     const displayTitle = title || (
         isDone 
-            ? "Pemrosesan Media Selesai!"
+            ? (isHd ? "Media HD Siap Digunakan!" : "Pemrosesan Media Selesai!")
             : isUploading 
                 ? "Mengunggah Media ke Server..." 
-                : "Mengoptimalkan & Mengompresi Media..."
+                : (isHd ? "Menyiapkan Media HD (Kualitas Asli)..." : "Mengoptimalkan Foto (Resolusi Tinggi 2.5K)...")
     );
 
     const displaySubtitle = subtitle || (
@@ -59,7 +60,9 @@ export default function MediaProcessingModal({
             ? "Semua berkas telah berhasil dipersiapkan dan siap digunakan."
             : isUploading
                 ? "Sedang mentransfer data & berkas ke sistem. Mohon jangan tutup halaman."
-                : "Mengubah ukuran foto agar ringan, hemat penyimpanan, dan cepat diakses."
+                : (isHd 
+                    ? "Mode HD aktif: Foto & video disimpan kualitas asli 100% tanpa kompresi." 
+                    : "Mengubah ukuran foto cerdas (2560px) agar tajam, jernih, dan hemat kuota.")
     );
 
     return (
@@ -162,33 +165,51 @@ export default function MediaProcessingModal({
                                     {currentFileName}
                                 </p>
                                 <p className="text-2xs text-slate-400">
-                                    {currentFileType === "video" ? "Berkas Video" : "Foto Kamera / Gambar"}
+                                    {currentFileType === "video" 
+                                        ? "Berkas Video" 
+                                        : isHd 
+                                            ? "Foto Kualitas Asli (HD Penuh)" 
+                                            : "Foto Kamera / Gambar"}
                                 </p>
                             </div>
-                            {savingsPercent > 0 && (
+                            {isHd ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold bg-amber-50 text-amber-800 border border-amber-200 shrink-0 uppercase tracking-wide">
+                                    HD Asli
+                                </span>
+                            ) : savingsPercent > 0 ? (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                                     -{savingsPercent}%
                                 </span>
-                            )}
+                            ) : null}
                         </div>
 
                         {/* Compression Size Comparison */}
                         {currentFileType !== "video" && (
                             <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-2xs">
-                                <span className="text-slate-500">Ukuran Berkas:</span>
+                                <span className="text-slate-500">
+                                    {isHd ? "Ukuran Berkas Penuh:" : "Ukuran Berkas:"}
+                                </span>
                                 <div className="flex items-center gap-1.5 font-mono">
-                                    <span className="text-slate-500 line-through">
-                                        {formatBytes(currentOriginalSize)}
-                                    </span>
-                                    {currentCompressedSize > 0 ? (
-                                        <>
-                                            <ArrowRight className="w-3 h-3 text-slate-400" />
-                                            <span className="font-bold text-emerald-600">
-                                                {formatBytes(currentCompressedSize)}
-                                            </span>
-                                        </>
+                                    {isHd ? (
+                                        <span className="font-bold text-amber-800">
+                                            {formatBytes(currentOriginalSize)} (Kualitas 100%)
+                                        </span>
                                     ) : (
-                                        <span className="text-blue-600 italic">mengompresi...</span>
+                                        <>
+                                            <span className="text-slate-500 line-through">
+                                                {formatBytes(currentOriginalSize)}
+                                            </span>
+                                            {currentCompressedSize > 0 ? (
+                                                <>
+                                                    <ArrowRight className="w-3 h-3 text-slate-400" />
+                                                    <span className="font-bold text-emerald-600">
+                                                        {formatBytes(currentCompressedSize)}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="text-blue-600 italic">mengompresi...</span>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             </div>
@@ -240,8 +261,12 @@ export default function MediaProcessingModal({
 
                 {/* Reassurance Footer Badge */}
                 <div className="flex items-center justify-center gap-1.5 text-2xs text-slate-500 bg-slate-50 py-2 px-3 rounded-xl border border-slate-200/60">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Auto-compress cerdas: Resolusi tajam, beban server ringan.</span>
+                    <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${isHd ? "text-amber-600" : "text-emerald-600"}`} />
+                    <span>
+                        {isHd 
+                            ? "Mode HD: Detail mikroskopis 1:1 terjaga untuk inspeksi sirkuit & segel."
+                            : "Auto-compress cerdas: Resolusi tajam hingga 2.5K, hemat penyimpanan."}
+                    </span>
                 </div>
             </div>
         </div>

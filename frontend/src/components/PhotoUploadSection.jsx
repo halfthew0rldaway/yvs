@@ -1,13 +1,26 @@
 import { useState, useRef } from "react";
 import toast from "react-hot-toast";
-import { Camera, Upload, Trash2, X, Plus, ZoomIn, Image as ImageIcon, Video, Play, Sparkles } from "lucide-react";
+import { 
+    Camera, 
+    Upload, 
+    Trash2, 
+    X, 
+    Plus, 
+    ZoomIn, 
+    ZoomOut,
+    RotateCcw,
+    Image as ImageIcon, 
+    Video, 
+    Play, 
+    Sparkles 
+} from "lucide-react";
 import CameraCaptureModal from "./CameraCaptureModal";
 import MediaProcessingModal from "./MediaProcessingModal";
 import { isVideo, getMediaUrl, compressImage } from "../utils/mediaUtils";
 
 export default function PhotoUploadSection({
     label = "Dokumentasi Foto & Video Perangkat",
-    sublabel = "Unggah foto/video atau ambil langsung melalui kamera (Kompresi otomatis)",
+    sublabel = "Unggah foto/video atau ambil langsung melalui kamera",
     maxPhotos = 10,
     photos = [],
     onChange,
@@ -16,7 +29,35 @@ export default function PhotoUploadSection({
 }) {
     const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
     const [previewMedia, setPreviewMedia] = useState(null);
+    const [zoomScale, setZoomScale] = useState(1);
     const [isCompressing, setIsCompressing] = useState(false);
+
+    // HD Quality toggle state (persisted in localStorage)
+    const [isHdMode, setIsHdMode] = useState(() => {
+        try {
+            return localStorage.getItem("yvs_upload_hd_mode") === "true";
+        } catch {
+            return false;
+        }
+    });
+
+    const toggleHdMode = () => {
+        setIsHdMode(prev => {
+            const next = !prev;
+            try {
+                localStorage.setItem("yvs_upload_hd_mode", String(next));
+            } catch {}
+            if (next) {
+                toast.success("Mode HD Aktif: Berkas foto & video akan diunggah dengan kualitas asli tanpa kompresi.");
+            } else {
+                toast("Mode Hemat Aktif: Foto otomatis dioptimalkan (resolusi 2.5K tajam, hemat ruang).", {
+                    icon: null
+                });
+            }
+            return next;
+        });
+    };
+
     const [processingModal, setProcessingModal] = useState({
         isOpen: false,
         stage: "compressing",
@@ -50,41 +91,49 @@ export default function PhotoUploadSection({
             setIsCompressing(true);
             setProcessingModal({
                 isOpen: true,
-                stage: "compressing",
-                title: "Mengoptimalkan Foto Kamera...",
-                subtitle: "Mengompresi hasil foto agar cepat diunggah dan hemat penyimpanan.",
+                stage: isHdMode ? "done" : "compressing",
+                isHd: isHdMode,
+                title: isHdMode ? "Menyiapkan Foto HD (Kualitas Asli)..." : "Mengoptimalkan Foto Kamera (2.5K)...",
+                subtitle: isHdMode 
+                    ? "Mode HD aktif: Foto disimpan tanpa kompresi dengan resolusi 100% penuh." 
+                    : "Mengompresi hasil foto cerdas agar tajam, jernih, dan cepat diunggah.",
                 currentFileIndex: 1,
                 totalFiles: 1,
                 currentFileName: newFile.name || "foto_kamera.jpg",
                 currentFileType: "image",
                 currentOriginalSize: newFile.size,
-                currentCompressedSize: 0,
-                progressPercent: 40,
+                currentCompressedSize: isHdMode ? newFile.size : 0,
+                progressPercent: isHdMode ? 100 : 40,
                 items: [{
                     name: newFile.name || "foto_kamera.jpg",
                     originalSize: newFile.size,
-                    finalSize: null,
+                    finalSize: isHdMode ? newFile.size : null,
                     isVideo: false,
-                    status: "processing"
+                    status: isHdMode ? "done" : "processing"
                 }]
             });
 
             try {
-                finalFile = await compressImage(newFile);
-                setProcessingModal(prev => ({
-                    ...prev,
-                    currentCompressedSize: finalFile.size,
-                    progressPercent: 100,
-                    stage: "done",
-                    items: [{
-                        name: newFile.name || "foto_kamera.jpg",
-                        originalSize: newFile.size,
-                        finalSize: finalFile.size,
-                        isVideo: false,
-                        status: "done"
-                    }]
-                }));
-                await new Promise(r => setTimeout(r, 400));
+                if (isHdMode) {
+                    finalFile = newFile;
+                    await new Promise(r => setTimeout(r, 350));
+                } else {
+                    finalFile = await compressImage(newFile, { isHd: false, maxWidth: 2560, maxHeight: 2560, quality: 0.88 });
+                    setProcessingModal(prev => ({
+                        ...prev,
+                        currentCompressedSize: finalFile.size,
+                        progressPercent: 100,
+                        stage: "done",
+                        items: [{
+                            name: newFile.name || "foto_kamera.jpg",
+                            originalSize: newFile.size,
+                            finalSize: finalFile.size,
+                            isVideo: false,
+                            status: "done"
+                        }]
+                    }));
+                    await new Promise(r => setTimeout(r, 400));
+                }
             } catch (err) {
                 console.error("Gagal kompresi foto kamera:", err);
             } finally {
@@ -130,16 +179,19 @@ export default function PhotoUploadSection({
 
         setProcessingModal({
             isOpen: true,
-            stage: "compressing",
-            title: "Mengoptimalkan & Mengompresi Media...",
-            subtitle: `Memproses ${filesToProcess.length} berkas foto/video secara otomatis.`,
+            stage: isHdMode ? "done" : "compressing",
+            isHd: isHdMode,
+            title: isHdMode ? "Menyiapkan Media HD (Kualitas Asli)..." : "Mengoptimalkan Foto (Resolusi Tinggi 2.5K)...",
+            subtitle: isHdMode 
+                ? `Mode HD aktif: ${filesToProcess.length} berkas disimpan kualitas penuh tanpa kompresi.`
+                : `Memproses ${filesToProcess.length} berkas foto/video dengan resolusi tajam & ukuran hemat.`,
             currentFileIndex: 1,
             totalFiles: filesToProcess.length,
             currentFileName: filesToProcess[0]?.name || "",
             currentFileType: isVideo(filesToProcess[0]) ? "video" : "image",
             currentOriginalSize: filesToProcess[0]?.size || 0,
-            currentCompressedSize: 0,
-            progressPercent: 5,
+            currentCompressedSize: isHdMode ? (filesToProcess[0]?.size || 0) : 0,
+            progressPercent: isHdMode ? 100 : 5,
             items: initialItems
         });
 
@@ -155,8 +207,8 @@ export default function PhotoUploadSection({
                     currentFileName: file.name,
                     currentFileType: isVid ? "video" : "image",
                     currentOriginalSize: file.size,
-                    currentCompressedSize: 0,
-                    progressPercent: Math.round(((i) / filesToProcess.length) * 95) + 5,
+                    currentCompressedSize: isHdMode ? file.size : 0,
+                    progressPercent: isHdMode ? 100 : Math.round(((i) / filesToProcess.length) * 95) + 5,
                     items: prev.items.map((it, idx) => idx === i ? { ...it, status: "processing" } : it)
                 }));
 
@@ -175,9 +227,17 @@ export default function PhotoUploadSection({
                         ...prev,
                         items: prev.items.map((it, idx) => idx === i ? { ...it, status: "done", finalSize: file.size } : it)
                     }));
+                } else if (isHdMode) {
+                    // In HD mode, keep original uncompressed file
+                    processedFiles.push(file);
+                    setProcessingModal(prev => ({
+                        ...prev,
+                        currentCompressedSize: file.size,
+                        items: prev.items.map((it, idx) => idx === i ? { ...it, status: "done", finalSize: file.size } : it)
+                    }));
                 } else {
-                    // WhatsApp-style automatic image compression
-                    const compressed = await compressImage(file);
+                    // Standard Mode: Smart 2.5K high-res compression
+                    const compressed = await compressImage(file, { isHd: false, maxWidth: 2560, maxHeight: 2560, quality: 0.88 });
                     processedFiles.push(compressed);
                     setProcessingModal(prev => ({
                         ...prev,
@@ -187,22 +247,26 @@ export default function PhotoUploadSection({
                 }
 
                 // Smooth brief pause so the UI is responsive & visually informative
-                await new Promise(r => setTimeout(r, 70));
+                await new Promise(r => setTimeout(r, isHdMode ? 30 : 70));
             }
 
             setProcessingModal(prev => ({
                 ...prev,
                 progressPercent: 100,
                 stage: "done",
-                title: "Semua Media Berhasil Dioptimalkan!",
+                title: isHdMode ? "Media HD Siap Disimpan!" : "Semua Media Berhasil Dioptimalkan!",
                 subtitle: `${processedFiles.length} berkas siap disimpan.`
             }));
 
-            await new Promise(r => setTimeout(r, 600));
+            await new Promise(r => setTimeout(r, 500));
 
             if (processedFiles.length > 0) {
                 onChange([...photos, ...processedFiles]);
-                toast.success(`${processedFiles.length} media berhasil dioptimalkan & ditambahkan!`);
+                toast.success(
+                    isHdMode
+                        ? `${processedFiles.length} media kualitas asli HD siap disimpan!`
+                        : `${processedFiles.length} media berhasil dioptimalkan & ditambahkan!`
+                );
             }
         } catch (err) {
             console.error("Gagal memproses media:", err);
@@ -219,7 +283,7 @@ export default function PhotoUploadSection({
             {/* Header & Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                 <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <label className="text-sm font-bold text-slate-900 flex items-center gap-2">
                             <Camera className="w-4 h-4 text-blue-600" />
                             <span>{label}</span>
@@ -231,13 +295,36 @@ export default function PhotoUploadSection({
                         }`}>
                             {photos.length} / {maxPhotos} Media
                         </span>
-                        <span className="hidden sm:inline-flex items-center gap-1 text-2xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                            <Sparkles className="w-3 h-3 text-emerald-600" />
-                            Auto-Compress
-                        </span>
+
+                        {/* Interactive HD Quality Toggle Button */}
+                        <button
+                            type="button"
+                            onClick={toggleHdMode}
+                            disabled={disabled || isCompressing}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer select-none ${
+                                isHdMode 
+                                    ? "bg-amber-500/10 text-amber-900 border-amber-300 shadow-2xs hover:bg-amber-500/20" 
+                                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                            }`}
+                            title={isHdMode ? "Klik untuk ganti ke Mode Hemat Cerdas" : "Klik untuk ganti ke Mode HD Kualitas Asli (100% resolusi penuh tanpa kompresi)"}
+                        >
+                            <div className={`w-2 h-2 rounded-full transition-colors ${isHdMode ? "bg-amber-500 ring-2 ring-amber-300 animate-pulse" : "bg-slate-400"}`} />
+                            <span className={`px-1.5 py-0.2 rounded text-3xs font-black uppercase tracking-wider ${
+                                isHdMode ? "bg-amber-500 text-white" : "bg-slate-200 text-slate-700"
+                            }`}>
+                                HD
+                            </span>
+                            <span className="hidden sm:inline">
+                                {isHdMode ? "Kualitas Asli" : "Hemat 2.5K"}
+                            </span>
+                        </button>
                     </div>
                     {sublabel && (
-                        <p className="text-xs text-slate-500 mt-0.5">{sublabel}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                            {isHdMode 
+                                ? "Mode HD aktif: Foto & video disimpan kualitas asli tanpa kompresi (ukuran berkas penuh)." 
+                                : sublabel}
+                        </p>
                     )}
                 </div>
 
@@ -318,41 +405,43 @@ export default function PhotoUploadSection({
                     onClick={() => !disabled && !isCompressing && fileInputRef.current?.click()}
                     className="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/20 rounded-2xl p-6 text-center transition-all cursor-pointer group"
                 >
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mx-auto mb-2 group-hover:scale-105 transition-transform">
-                        <Camera className="w-6 h-6" />
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <ImageIcon className="w-6 h-6" />
                     </div>
-                    <p className="text-xs font-bold text-slate-700">
-                        Klik untuk Ambil Foto, Rekam Video, atau Pilih File
+                    <p className="text-xs font-bold text-slate-800">
+                        Belum ada dokumentasi media
                     </p>
-                    <p className="text-2xs text-slate-400 mt-0.5">
-                        Mendukung foto JPG/PNG dan video MP4/MOV/WEBM (Auto-transcode ke streaming 720p H.264)
+                    <p className="text-2xs text-slate-400 mt-1 max-w-sm mx-auto">
+                        Klik untuk memilih berkas dari galeri atau gunakan tombol Foto Kamera di atas.
+                        {isHdMode 
+                            ? " Mode HD Kualitas Asli aktif." 
+                            : " Foto otomatis dioptimalkan resolusi tajam 2.5K."}
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 pt-1">
-                    {photos.map((foto, idx) => {
-                        const mediaUrl = getMediaUrl(foto);
-                        const isVid = isVideo(foto);
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {photos.map((item, idx) => {
+                        const mediaUrl = getMediaUrl(item);
+                        const isVid = isVideo(item);
 
                         return (
                             <div 
                                 key={idx} 
-                                className="relative group bg-slate-900 rounded-xl border border-slate-200 overflow-hidden shadow-2xs aspect-square flex items-center justify-center"
+                                className="group relative aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-2xs"
                             >
                                 {isVid ? (
-                                    <div className="relative w-full h-full bg-slate-950 flex items-center justify-center">
+                                    <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-2 text-white relative">
                                         <video 
                                             src={mediaUrl} 
-                                            className="w-full h-full object-cover opacity-80" 
+                                            className="w-full h-full object-cover opacity-80"
                                             preload="metadata"
                                         />
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <div className="w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center shadow-lg border border-white/20 backdrop-blur-xs">
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-xs flex items-center justify-center text-white border border-white/20">
                                                 <Play className="w-4 h-4 fill-white ml-0.5" />
                                             </div>
                                         </div>
-                                        <span className="absolute bottom-1.5 right-1.5 bg-purple-600/90 text-white font-mono font-bold text-4xs px-1.5 py-0.5 rounded shadow flex items-center gap-0.5">
-                                            <Video className="w-2.5 h-2.5" />
+                                        <span className="absolute bottom-1 right-1 text-3xs font-mono font-bold bg-black/70 px-1 py-0.5 rounded text-slate-200">
                                             VIDEO
                                         </span>
                                     </div>
@@ -368,9 +457,12 @@ export default function PhotoUploadSection({
                                 <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => setPreviewMedia({ url: mediaUrl, isVideo: isVid })}
+                                        onClick={() => {
+                                            setPreviewMedia({ url: mediaUrl, isVideo: isVid });
+                                            setZoomScale(1);
+                                        }}
                                         className="p-2 bg-white text-slate-900 rounded-lg shadow-sm hover:scale-110 transition-transform cursor-pointer"
-                                        title={isVid ? "Putar video" : "Perbesar foto"}
+                                        title={isVid ? "Putar video" : "Perbesar detail foto"}
                                     >
                                         {isVid ? <Play className="w-4 h-4 fill-slate-900" /> : <ZoomIn className="w-4 h-4" />}
                                     </button>
@@ -422,13 +514,19 @@ export default function PhotoUploadSection({
                 subtitle={`Maksimal ${maxPhotos} media dapat didokumentasikan.`}
             />
 
-            {/* Lightbox Media Preview Modal (Foto & Video) */}
+            {/* Lightbox Media Preview Modal (Foto & Video with Micro-Zoom) */}
             {previewMedia && (
                 <div 
-                    onClick={() => setPreviewMedia(null)}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in"
+                    onClick={() => {
+                        setPreviewMedia(null);
+                        setZoomScale(1);
+                    }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in"
                 >
-                    <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                    <div 
+                        className="relative max-w-5xl w-full max-h-[92vh] flex flex-col items-center justify-center select-none" 
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         {previewMedia.isVideo ? (
                             <div className="w-full flex flex-col items-center">
                                 <video 
@@ -440,16 +538,68 @@ export default function PhotoUploadSection({
                                 />
                             </div>
                         ) : (
-                            <img 
-                                src={previewMedia.url} 
-                                alt="Preview Full" 
-                                className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/20"
-                            />
+                            <div className="w-full flex flex-col items-center justify-center overflow-hidden">
+                                <div 
+                                    className={`relative max-w-full max-h-[78vh] overflow-auto rounded-2xl flex items-center justify-center transition-all ${
+                                        zoomScale > 1 ? "cursor-zoom-out" : "cursor-zoom-in"
+                                    }`}
+                                    onClick={() => setZoomScale(prev => prev === 1 ? 2 : prev === 2 ? 3 : 1)}
+                                    title="Klik untuk zoom in / zoom out"
+                                >
+                                    <img 
+                                        src={previewMedia.url} 
+                                        alt="Preview Full" 
+                                        style={{ transform: `scale(${zoomScale})`, transformOrigin: "center center" }}
+                                        className="max-w-full max-h-[78vh] object-contain transition-transform duration-200 ease-out"
+                                    />
+                                </div>
+
+                                {/* Floating Zoom Controls Bar for High Detail Inspection */}
+                                <div className="mt-3 inline-flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/20 shadow-2xl text-white text-xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => setZoomScale(prev => Math.max(1, prev - 0.5))}
+                                        disabled={zoomScale <= 1}
+                                        className="p-1 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-30 cursor-pointer"
+                                        title="Perkecil"
+                                    >
+                                        <ZoomOut className="w-4 h-4" />
+                                    </button>
+                                    <span className="font-mono font-bold text-2xs min-w-[45px] text-center">
+                                        {Math.round(zoomScale * 100)}%
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setZoomScale(prev => Math.min(3.5, prev + 0.5))}
+                                        disabled={zoomScale >= 3.5}
+                                        className="p-1 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-30 cursor-pointer"
+                                        title="Perbesar Detail (Hingga 350%)"
+                                    >
+                                        <ZoomIn className="w-4 h-4" />
+                                    </button>
+                                    <div className="w-px h-4 bg-white/20 mx-1" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setZoomScale(1)}
+                                        className="px-2 py-0.5 hover:bg-white/20 rounded-lg font-semibold text-2xs transition-colors cursor-pointer flex items-center gap-1"
+                                        title="Reset Skala 100%"
+                                    >
+                                        <RotateCcw className="w-3 h-3" />
+                                        <span>Reset</span>
+                                    </button>
+                                </div>
+                            </div>
                         )}
+
+                        {/* Close Button */}
                         <button
                             type="button"
-                            onClick={() => setPreviewMedia(null)}
+                            onClick={() => {
+                                setPreviewMedia(null);
+                                setZoomScale(1);
+                            }}
                             className="absolute -top-3 -right-3 p-2 bg-white text-slate-900 rounded-full hover:bg-slate-200 transition-colors shadow-xl cursor-pointer"
+                            title="Tutup Preview"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -458,7 +608,7 @@ export default function PhotoUploadSection({
             )}
 
             {/* Live Media Processing & Compression Loading Modal */}
-            <MediaProcessingModal {...processingModal} />
+            <MediaProcessingModal {...processingModal} isHd={isHdMode} />
         </div>
     );
 }
