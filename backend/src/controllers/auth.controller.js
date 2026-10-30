@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const path = require("path");
+const fs = require("fs");
 const prisma = require("../config/database");
 
 // Login
@@ -32,6 +34,7 @@ async function login(req, res) {
                 nama: user.nama,
                 email: user.email,
                 role: user.role,
+                foto_profile: user.foto_profile || null
             },
         });
     } catch (error) {
@@ -49,7 +52,7 @@ async function me(req, res) {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            select: { id: true, nama: true, email: true, role: true },
+            select: { id: true, nama: true, email: true, role: true, foto_profile: true },
         });
 
         if (!user) {
@@ -61,10 +64,11 @@ async function me(req, res) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
     }
 }
-// Update Profil
+
+// Update Profil (Nama, Email, Password, Foto Profile)
 async function updateProfile(req, res) {
     try {
-        const { nama, email, currentPassword, newPassword } = req.body;
+        const { nama, email, currentPassword, newPassword, foto_profile } = req.body;
         const userId = req.user.id;
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -80,6 +84,7 @@ async function updateProfile(req, res) {
         }
 
         if (nama) dataToUpdate.nama = nama;
+        if (foto_profile !== undefined) dataToUpdate.foto_profile = foto_profile;
 
         // Ubah password jika form diisi
         if (newPassword && !currentPassword) {
@@ -99,7 +104,7 @@ async function updateProfile(req, res) {
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: dataToUpdate,
-            select: { id: true, nama: true, email: true, role: true }
+            select: { id: true, nama: true, email: true, role: true, foto_profile: true }
         });
 
         return res.json({ message: "Profil berhasil diperbarui", user: updatedUser });
@@ -108,4 +113,70 @@ async function updateProfile(req, res) {
     }
 }
 
-module.exports = { login, logout, me, updateProfile };
+// Upload & update foto profil user aktif
+async function uploadProfilePhoto(req, res) {
+    try {
+        const userId = req.user.id;
+        if (!req.file) {
+            return res.status(400).json({ message: "Tidak ada file foto yang diunggah" });
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+
+        // Hapus avatar lama jika ada dan file berada di local uploads/avatars/
+        if (user.foto_profile && user.foto_profile.startsWith("/uploads/avatars/")) {
+            const oldFilePath = path.join(__dirname, "../../", user.foto_profile);
+            if (fs.existsSync(oldFilePath)) {
+                try { fs.unlinkSync(oldFilePath); } catch (_) {}
+            }
+        }
+
+        const newAvatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { foto_profile: newAvatarUrl },
+            select: { id: true, nama: true, email: true, role: true, foto_profile: true }
+        });
+
+        return res.json({
+            message: "Foto profil berhasil diperbarui",
+            foto_profile: newAvatarUrl,
+            user: updatedUser
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal mengunggah foto profil", error: error.message });
+    }
+}
+
+// Hapus foto profil user aktif (kembali ke avatar inisial)
+async function removeProfilePhoto(req, res) {
+    try {
+        const userId = req.user.id;
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+
+        if (user.foto_profile && user.foto_profile.startsWith("/uploads/avatars/")) {
+            const oldFilePath = path.join(__dirname, "../../", user.foto_profile);
+            if (fs.existsSync(oldFilePath)) {
+                try { fs.unlinkSync(oldFilePath); } catch (_) {}
+            }
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { foto_profile: null },
+            select: { id: true, nama: true, email: true, role: true, foto_profile: true }
+        });
+
+        return res.json({
+            message: "Foto profil berhasil dihapus",
+            user: updatedUser
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal menghapus foto profil", error: error.message });
+    }
+}
+
+module.exports = { login, logout, me, updateProfile, uploadProfilePhoto, removeProfilePhoto };

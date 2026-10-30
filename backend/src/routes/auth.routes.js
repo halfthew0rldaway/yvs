@@ -3,7 +3,8 @@ const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
 const { authLimiter } = require("../middleware/rateLimiter");
-const { login, logout, me, updateProfile } = require("../controllers/auth.controller");
+const { login, logout, me, updateProfile, uploadProfilePhoto, removeProfilePhoto } = require("../controllers/auth.controller");
+const { uploadAvatar } = require("../middleware/upload");
 
 const router = express.Router();
 
@@ -34,5 +35,9 @@ router.put(
     validate,
     updateProfile
 );
+
+// Profile photo management
+router.post("/profile/photo", authenticate, uploadAvatar.single("foto_profile"), uploadProfilePhoto);
+router.delete("/profile/photo", authenticate, removeProfilePhoto);
 
 module.exports = router;

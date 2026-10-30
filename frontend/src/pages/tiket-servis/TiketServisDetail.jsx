@@ -21,6 +21,7 @@ import CustomerDetailModal from "../../components/CustomerDetailModal";
 import PerangkatDetailModal from "../../components/PerangkatDetailModal";
 import KlaimGaransiModal from "../../components/KlaimGaransiModal";
 import { isVideo } from "../../utils/mediaUtils";
+import UserAvatar from "../../components/common/UserAvatar";
 
 
 const STATUS_LABELS = {
@@ -1685,7 +1686,10 @@ export default function TiketServisDetail() {
                             <Wrench className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                             <div>
                                 <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-0.5">Teknisi Penanggung Jawab</p>
-                                <p className="font-medium text-slate-900">{tiket.teknisi?.nama || <span className="text-amber-600 italic">Belum ditugaskan</span>}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    {tiket.teknisi && <UserAvatar user={tiket.teknisi} size="w-5 h-5" textSize="text-3xs" rounded="rounded-full" />}
+                                    <p className="font-medium text-slate-900">{tiket.teknisi?.nama || <span className="text-amber-600 italic">Belum ditugaskan</span>}</p>
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-start gap-3">

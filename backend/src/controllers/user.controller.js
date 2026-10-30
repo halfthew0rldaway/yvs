@@ -1,5 +1,7 @@
 const prisma = require("../config/database");
 const bcrypt = require("bcrypt");
+const path = require("path");
+const fs = require("fs");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 
 function formatUsersWithStats(users) {
@@ -66,6 +68,7 @@ async function getAllUsers(req, res) {
             nama: true,
             email: true,
             role: true,
+            foto_profile: true,
             created_at: true,
             tiket_servis: {
                 select: {
@@ -120,6 +123,7 @@ async function getTechnicianPerformance(req, res) {
                 id: true,
                 nama: true,
                 email: true,
+                foto_profile: true,
                 created_at: true,
                 tiket_servis: {
                     include: {
@@ -167,6 +171,7 @@ async function getTechnicianPerformance(req, res) {
                 id: t.id,
                 nama: t.nama,
                 email: t.email,
+                foto_profile: t.foto_profile || null,
                 totalAssigned: total,
                 completedCount: completed.length,
                 inProgressCount: inProgress.length,
@@ -208,13 +213,15 @@ async function createUser(req, res) {
                 nama,
                 email,
                 password: hashedPassword,
-                role: role || "teknisi"
+                role: role || "teknisi",
+                foto_profile: req.body.foto_profile || null
             },
             select: {
                 id: true,
                 nama: true,
                 email: true,
                 role: true,
+                foto_profile: true,
                 created_at: true
             }
         });
@@ -229,7 +236,7 @@ async function createUser(req, res) {
 async function updateUser(req, res) {
     try {
         const id = Number(req.params.id);
-        const { nama, email, password, role } = req.body;
+        const { nama, email, password, role, foto_profile } = req.body;
 
         const user = await prisma.user.findUnique({ where: { id } });
         if (!user) {
@@ -250,7 +257,8 @@ async function updateUser(req, res) {
         const updateData = {
             nama: nama || user.nama,
             email: email || user.email,
-            role: role || user.role
+            role: role || user.role,
+            ...(foto_profile !== undefined && { foto_profile })
         };
 
         if (password && password.trim() !== "") {
@@ -265,6 +273,7 @@ async function updateUser(req, res) {
                 nama: true,
                 email: true,
                 role: true,
+                foto_profile: true,
                 created_at: true
             }
         });
@@ -310,10 +319,42 @@ async function deleteUser(req, res) {
     }
 }
 
+// Upload foto profil user oleh Admin
+async function uploadUserPhoto(req, res) {
+    try {
+        const id = Number(req.params.id);
+        if (!req.file) {
+            return res.status(400).json({ message: "Tidak ada file foto yang diunggah" });
+        }
+
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+
+        if (user.foto_profile && user.foto_profile.startsWith("/uploads/avatars/")) {
+            const oldFilePath = path.join(__dirname, "../../", user.foto_profile);
+            if (fs.existsSync(oldFilePath)) {
+                try { fs.unlinkSync(oldFilePath); } catch (_) {}
+            }
+        }
+
+        const newAvatarUrl = `/uploads/avatars/${req.file.filename}`;
+        const updated = await prisma.user.update({
+            where: { id },
+            data: { foto_profile: newAvatarUrl },
+            select: { id: true, nama: true, email: true, role: true, foto_profile: true, created_at: true }
+        });
+
+        return res.json({ message: "Foto profil user berhasil diperbarui", data: updated, foto_profile: newAvatarUrl });
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal mengunggah foto profil", error: error.message });
+    }
+}
+
 module.exports = {
     getAllUsers,
     getTechnicianPerformance,
     createUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    uploadUserPhoto
 };

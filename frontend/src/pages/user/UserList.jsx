@@ -17,12 +17,14 @@ import {
     X,
     TrendingUp,
     UserCheck,
-    Briefcase
+    Briefcase,
+    Camera
 } from "lucide-react";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
+import UserAvatar from "../../components/common/UserAvatar";
 
 export default function UserList() {
     const [users, setUsers] = useState([]);
@@ -392,11 +394,7 @@ export default function UserList() {
                                         >
                                             <td className="px-6 py-4 font-medium text-slate-900">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm ${
-                                                        u.role === "admin" ? "bg-indigo-100 text-indigo-700" : "bg-blue-100 text-blue-700"
-                                                    }`}>
-                                                        {u.nama.charAt(0).toUpperCase()}
-                                                    </div>
+                                                    <UserAvatar user={u} size="w-9 h-9" textSize="text-xs" rounded="rounded-full" />
                                                     <span className="font-semibold text-slate-900">{u.nama}</span>
                                                 </div>
                                             </td>
@@ -480,9 +478,7 @@ export default function UserList() {
 
                                 <div>
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                                            {item.nama.charAt(0).toUpperCase()}
-                                        </div>
+                                        <UserAvatar user={item} size="w-12 h-12" textSize="text-base" rounded="rounded-2xl" />
                                         <div>
                                             <h3 className="font-bold text-slate-900 text-base">{item.nama}</h3>
                                             <p className="text-xs text-slate-500">{item.email}</p>
@@ -557,6 +553,44 @@ export default function UserList() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+                            {modalMode === "edit" && selectedUser && (
+                                <div className="flex items-center gap-3.5 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+                                    <UserAvatar user={selectedUser} size="w-12 h-12" textSize="text-sm" rounded="rounded-full" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-slate-900 truncate">{selectedUser.nama}</p>
+                                        <p className="text-2xs text-slate-500 font-mono truncate">{selectedUser.email}</p>
+                                        <label className="text-2xs text-blue-600 hover:text-blue-700 font-semibold cursor-pointer inline-flex items-center gap-1 mt-1">
+                                            <Camera className="w-3 h-3" />
+                                            <span>Ganti Foto Profil</span>
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    if (file.size > 5 * 1024 * 1024) {
+                                                        return toast.error("Ukuran foto maksimal 5 MB");
+                                                    }
+                                                    const fd = new FormData();
+                                                    fd.append("foto_profile", file);
+                                                    try {
+                                                        const res = await api.put(`/users/${selectedUser.id}/photo`, fd, {
+                                                            headers: { "Content-Type": "multipart/form-data" }
+                                                        });
+                                                        toast.success("Foto profil berhasil diperbarui!");
+                                                        setSelectedUser(res.data.data);
+                                                        fetchData();
+                                                    } catch (err) {
+                                                        toast.error("Gagal mengunggah foto profil user");
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
                                 <input

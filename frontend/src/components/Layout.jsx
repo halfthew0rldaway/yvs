@@ -36,6 +36,7 @@ import CrmFloatingBubble from "./CrmFloatingBubble";
 import MaintenanceRecallModal from "./MaintenanceRecallModal";
 import NotificationBell from "./NotificationBell";
 import CameraScannerModal from "./CameraScannerModal";
+import UserAvatar from "./common/UserAvatar";
 
 // Menu Groups untuk Admin (Struktur Navigasi Collapsible Terorganisir)
 const adminNavGroups = [
@@ -415,9 +416,7 @@ export default function Layout({ children }) {
                 <div className="p-4 border-t border-slate-100 shrink-0">
                     <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 flex flex-col gap-3">
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
-                                {user?.nama?.charAt(0)?.toUpperCase() || "U"}
-                            </div>
+                            <UserAvatar user={user} size="w-9 h-9" textSize="text-xs" rounded="rounded-xl" />
                             <div className="flex-1 min-w-0">
                                 <p className="font-bold text-slate-900 text-xs truncate">{user?.nama}</p>
                                 <p className="text-2xs text-slate-500 capitalize truncate">{user?.role}</p>

@@ -59,6 +59,11 @@ async function main() {
                 await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN sumber_lamaran VARCHAR(100) DEFAULT 'Walk-in';`).catch(() => {});
             });
         }
+        for (const tbl of ["User", "user"]) {
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS foto_profile VARCHAR(255) NULL;`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN foto_profile VARCHAR(255) NULL;`).catch(() => {});
+            });
+        }
     } catch (e) {
         // Kolom sudah ada atau variasi casing diabaikan
     }

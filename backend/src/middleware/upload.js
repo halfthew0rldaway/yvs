@@ -37,6 +37,38 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
+// Dedicated storage for user avatars / profile photos
+const avatarStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const dir = path.join(__dirname, "../../uploads/avatars");
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname).toLowerCase());
+    }
+});
+
+const avatarFilter = (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error("Hanya file gambar (JPG, PNG, WEBP) yang diizinkan untuk foto profil!"), false);
+    }
+};
+
+const uploadAvatar = multer({
+    storage: avatarStorage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5 MB max for avatar
+    },
+    fileFilter: avatarFilter
+});
+
 /**
  * Express middleware to automatically compress and transcode uploaded videos
  * into optimized web-streaming MP4 format (+faststart, max 720p).
@@ -58,4 +90,5 @@ const compressMedia = async (req, res, next) => {
 
 module.exports = upload;
 module.exports.upload = upload;
+module.exports.uploadAvatar = uploadAvatar;
 module.exports.compressMedia = compressMedia;

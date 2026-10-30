@@ -33,12 +33,19 @@ export function AuthProvider({ children }) {
         setUser(null);
     }
 
+    function updateUser(updatedData) {
+        const merged = { ...user, ...updatedData };
+        localStorage.setItem("user", JSON.stringify(merged));
+        setUser(merged);
+    }
+
     const value = {
         user,
         token,
         loading,
         login,
         logout,
+        updateUser,
         isAdmin: user?.role === "admin",
         isTeknisi: user?.role === "teknisi"
     };

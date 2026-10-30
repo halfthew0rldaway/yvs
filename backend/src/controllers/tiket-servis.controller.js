@@ -131,7 +131,7 @@ async function getAll(req, res) {
 
         const include = {
             perangkat: { include: { customer: true } },
-            teknisi: { select: { id: true, nama: true } },
+            teknisi: { select: { id: true, nama: true, foto_profile: true } },
             invoice: { select: { id: true, total_biaya: true } },
             penggunaan_sparepart: { include: { sparepart: { include: { brand: true } } } },
             parent_tiket: { select: { id: true, nomor_tiket: true, status: true } },
@@ -241,7 +241,7 @@ async function getById(req, res) {
                         tiket_servis: {
                             where: { id: { not: id } },
                             include: {
-                                teknisi: { select: { id: true, nama: true } },
+                                teknisi: { select: { id: true, nama: true, foto_profile: true } },
                                 diagnosis: true,
                                 penggunaan_sparepart: { include: { sparepart: true } },
                                 invoice: true
@@ -250,7 +250,7 @@ async function getById(req, res) {
                         }
                     }
                 },
-                teknisi: { select: { id: true, nama: true } },
+                teknisi: { select: { id: true, nama: true, foto_profile: true } },
                 diagnosis: true,
                 log_perbaikan: { orderBy: { created_at: "desc" } },
                 penggunaan_sparepart: { include: { sparepart: { include: { brand: true } } } },
@@ -462,7 +462,7 @@ async function create(req, res) {
                     },
                     include: {
                         perangkat: { include: { customer: true } },
-                        teknisi: { select: { id: true, nama: true } },
+                        teknisi: { select: { id: true, nama: true, foto_profile: true } },
                     },
                 });
                 break;
@@ -783,7 +783,7 @@ async function update(req, res) {
             data: updateData,
             include: {
                 perangkat: { include: { customer: true } },
-                teknisi: { select: { id: true, nama: true } },
+                teknisi: { select: { id: true, nama: true, foto_profile: true } },
             },
         });
 
@@ -951,7 +951,7 @@ async function createWarrantyClaim(req, res) {
                     },
                     include: {
                         perangkat: { include: { customer: true } },
-                        teknisi: { select: { id: true, nama: true } },
+                        teknisi: { select: { id: true, nama: true, foto_profile: true } },
                         parent_tiket: { select: { id: true, nomor_tiket: true } }
                     }
                 });
@@ -1017,7 +1017,7 @@ async function getExpiringWarranties(req, res) {
             },
             include: {
                 perangkat: { include: { customer: true } },
-                teknisi: { select: { id: true, nama: true } },
+                teknisi: { select: { id: true, nama: true, foto_profile: true } },
                 invoice: { select: { id: true, total_biaya: true } }
             },
             orderBy: { garansi_berakhir_at: "asc" }
@@ -1547,7 +1547,7 @@ async function revisiAcc(req, res) {
             },
             include: {
                 perangkat: { include: { customer: true } },
-                teknisi: { select: { id: true, nama: true } },
+                teknisi: { select: { id: true, nama: true, foto_profile: true } },
                 diagnosis: true,
                 invoice: true
             }
