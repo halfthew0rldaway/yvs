@@ -396,6 +396,22 @@ async function create(req, res) {
             return res.status(404).json({ message: "Perangkat tidak ditemukan" });
         }
 
+        // Validasi: pastikan perangkat tidak sedang memiliki tiket aktif yang masih berjalan (ongoing)
+        const ongoingTicket = await prisma.tiketServis.findFirst({
+            where: {
+                perangkat_id: Number(perangkat_id),
+                status: {
+                    in: ["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui", "dalam_perbaikan", "selesai"]
+                }
+            },
+            select: { id: true, nomor_tiket: true, status: true }
+        });
+        if (ongoingTicket) {
+            return res.status(400).json({
+                message: `Perangkat ini masih memiliki tiket servis yang sedang berjalan (${ongoingTicket.nomor_tiket}) dengan status '${ongoingTicket.status}'. Unit harus diambil atau diselesaikan terlebih dahulu sebelum dapat dibuatkan tiket baru.`
+            });
+        }
+
         // Process uploaded files or parse existing body if any
         let initialFotoKondisi = null;
         if (req.body.foto_kondisi && (!req.files || req.files.length === 0)) {

@@ -112,6 +112,10 @@ export default function TiketServisForm() {
     const [selectedPerangkatDetail, setSelectedPerangkatDetail] = useState(null);
     const [loadingPerangkatDetail, setLoadingPerangkatDetail] = useState(false);
 
+    const selectedPerangkat = perangkats.find(p => Number(p.id) === Number(form.perangkat_id));
+    const activeTicket = selectedPerangkat?.tiket_servis?.find(t => ACTIVE_STATUSES.includes(t.status)) 
+        || selectedPerangkatDetail?.tiket_servis?.find(t => ACTIVE_STATUSES.includes(t.status));
+
     // Smart Search & Filter State
     const [searchQuery, setSearchQuery] = useState("");
     const [categoryFilter, setCategoryFilter] = useState("Semua");
@@ -143,7 +147,7 @@ export default function TiketServisForm() {
 
     useEffect(() => {
         Promise.all([
-            api.get("/perangkat"), 
+            api.get("/perangkat?exclude_ongoing=true"), 
             api.get("/dashboard/teknisi-list"),
             api.get("/customer")
         ])
@@ -274,6 +278,11 @@ export default function TiketServisForm() {
             return;
         }
 
+        if (activeTicket) {
+            toast.error(`Perangkat ini masih memiliki tiket yang sedang berjalan (${activeTicket.nomor_tiket}). Tidak dapat membuat tiket baru.`);
+            return;
+        }
+
         setLoading(true);
 
         const newMediaFiles = fotos.filter(f => f instanceof File);
@@ -359,28 +368,36 @@ export default function TiketServisForm() {
         }
     }
 
+    // Filter perangkat yang siap servis (kecualikan perangkat yang sedang memiliki tiket aktif/ongoing)
+    const availablePerangkats = useMemo(() => {
+        return perangkats.filter(p => {
+            const hasOngoing = p.tiket_servis?.some(t => ACTIVE_STATUSES.includes(t.status));
+            return !hasOngoing;
+        });
+    }, [perangkats]);
+
     const categoryCounts = useMemo(() => ({
-        Semua: perangkats.length,
-        Laptop: perangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("laptop")).length,
-        "Desktop PC": perangkats.filter(p => {
+        Semua: availablePerangkats.length,
+        Laptop: availablePerangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("laptop")).length,
+        "Desktop PC": availablePerangkats.filter(p => {
             const j = (p.jenis_perangkat || "").toLowerCase();
             return j.includes("desktop") || j.includes("pc");
         }).length,
-        Printer: perangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("printer")).length,
-        Penyimpanan: perangkats.filter(p => {
+        Printer: availablePerangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("printer")).length,
+        Penyimpanan: availablePerangkats.filter(p => {
             const j = (p.jenis_perangkat || "").toLowerCase();
             return j.includes("hdd") || j.includes("ssd") || j.includes("penyimpanan");
         }).length,
-        Lainnya: perangkats.filter(p => {
+        Lainnya: availablePerangkats.filter(p => {
             const j = (p.jenis_perangkat || "").toLowerCase();
             return !j.includes("laptop") && !j.includes("desktop") && !j.includes("pc") && !j.includes("printer") && !j.includes("hdd") && !j.includes("ssd");
         }).length,
-    }), [perangkats]);
+    }), [availablePerangkats]);
 
-    // 1. Filter perangkat berdasarkan kategori aktif
+    // 1. Filter perangkat berdasarkan kategori aktif (hanya unit yang bebas dari tiket ongoing)
     const categoryDevices = useMemo(() => {
-        if (categoryFilter === "Semua") return perangkats;
-        return perangkats.filter(p => {
+        if (categoryFilter === "Semua") return availablePerangkats;
+        return availablePerangkats.filter(p => {
             const j = (p.jenis_perangkat || "").toLowerCase();
             if (categoryFilter === "Laptop") return j.includes("laptop");
             if (categoryFilter === "Desktop PC") return j.includes("desktop") || j.includes("pc");
@@ -391,7 +408,7 @@ export default function TiketServisForm() {
             }
             return true;
         });
-    }, [perangkats, categoryFilter]);
+    }, [availablePerangkats, categoryFilter]);
 
     // 2. Ekstrak merek secara dinamis HANYA dari perangkat yang ada di kategori terpilih
     const { availableBrands, brandCounts } = useMemo(() => {
@@ -488,8 +505,6 @@ export default function TiketServisForm() {
             setBrandFilter("Semua");
         }
     }
-
-    const selectedPerangkat = perangkats.find(p => Number(p.id) === Number(form.perangkat_id));
 
     if (fetching) {
         return (
@@ -590,6 +605,21 @@ export default function TiketServisForm() {
                                     <span>Ganti Unit</span>
                                 </button>
                             </div>
+
+                            {/* Warning Banner if Unit Has Ongoing Active Ticket */}
+                            {activeTicket && (
+                                <div className="mt-3.5 p-3.5 bg-amber-50/90 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
+                                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                    <div className="min-w-0">
+                                        <p className="font-bold">
+                                            Perangkat Ini Sedang Dalam Servis Aktif ({activeTicket.nomor_tiket})
+                                        </p>
+                                        <p className="text-2xs text-amber-700 mt-0.5 leading-relaxed">
+                                            Status saat ini: <span className="font-bold uppercase tracking-wide">{activeTicket.status.replace(/_/g, " ")}</span>. Unit ini belum dapat dibuatkan tiket baru karena servis sebelumnya belum berstatus diambil atau dibatalkan.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         /* State 2: Cari / Filter Perangkat (Smart Search & Category Picker) */
@@ -792,17 +822,10 @@ export default function TiketServisForm() {
                                                                     SN: <HighlightText text={p.serial_number} query={searchQuery} />
                                                                 </span>
                                                             )}
-                                                            {isCurrentlyInService ? (
-                                                                <span className="inline-flex items-center gap-1 text-3xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                                                    Sedang Diservis ({latestTicket.nomor_tiket})
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-1 text-3xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                                    Siap Diservis
-                                                                </span>
-                                                            )}
+                                                            <span className="inline-flex items-center gap-1 text-3xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                                Siap Diservis
+                                                            </span>
                                                         </div>
                                                         <div className="flex items-center gap-2.5 text-xs text-slate-500 mt-0.5 flex-wrap">
                                                             <span className="font-semibold text-slate-700 flex items-center gap-1">
@@ -841,7 +864,7 @@ export default function TiketServisForm() {
                                             Tidak ditemukan unit yang cocok {searchQuery && `dengan "${searchQuery}"`}
                                         </p>
                                         <p className="text-2xs text-slate-500 max-w-sm mx-auto">
-                                            Pelanggan baru datang atau membawa unit yang belum pernah terdaftar?
+                                            Pelanggan baru datang atau membawa unit yang belum pernah terdaftar? (Perangkat yang sedang dalam servis aktif otomatis disembunyikan).
                                         </p>
                                         <button
                                             type="button"
@@ -1313,8 +1336,9 @@ export default function TiketServisForm() {
                     </button>
                     <button
                         type="submit"
-                        disabled={loading}
-                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-50"
+                        disabled={loading || !!activeTicket}
+                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                        title={activeTicket ? `Tidak dapat membuat tiket: Unit masih berjalan di tiket ${activeTicket.nomor_tiket}` : "Buat Tiket"}
                     >
                         {loading ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>

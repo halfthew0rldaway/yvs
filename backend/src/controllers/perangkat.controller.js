@@ -6,7 +6,7 @@ const { normalizeBrand, normalizeDeviceType, normalizeSerialNumber, normalizeTex
 // Mengambil seluruh data perangkat
 async function getAll(req, res) {
     try {
-        const { customer_id, jenis_perangkat, search } = req.query;
+        const { customer_id, jenis_perangkat, search, exclude_ongoing } = req.query;
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
 
         const where = {};
@@ -21,6 +21,19 @@ async function getAll(req, res) {
             ];
         }
 
+        // Filter: kecualikan perangkat yang sedang memiliki tiket servis aktif/ongoing
+        if (exclude_ongoing === "true") {
+            where.NOT = {
+                tiket_servis: {
+                    some: {
+                        status: {
+                            in: ["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui", "dalam_perbaikan", "selesai"]
+                        }
+                    }
+                }
+            };
+        }
+
         const include = { 
             customer: true,
             _count: {
@@ -29,7 +42,7 @@ async function getAll(req, res) {
             tiket_servis: {
                 select: { id: true, nomor_tiket: true, status: true, created_at: true },
                 orderBy: { id: "desc" },
-                take: 1
+                take: 5
             }
         };
 
