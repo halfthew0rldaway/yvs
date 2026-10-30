@@ -50,8 +50,8 @@ async function compressVideo(filePath) {
     // FFmpeg compression arguments:
     // - scale='min(1920,iw)':-2 : scale down to max 1080p (Full HD), keep even height
     // - format=yuv420p : standard 8-bit chroma sub-sampling playable on all mobile & desktop browsers
-    // - libx264 -preset veryfast -crf 23 : visually crisp quality (lossless perception) with fast encoding
-    // - aac -b:a 128k : universal audio codec
+    // - libx264 -preset veryfast -crf 22 : visually lossless studio grade quality, pristine circuit & text fidelity
+    // - aac -b:a 160k : clean audio codec
     // - movflags +faststart : enables instant web streaming (moov atom at beginning)
     const args = [
         "-y",
@@ -59,9 +59,9 @@ async function compressVideo(filePath) {
         "-vf", "scale='min(1920,iw)':-2,format=yuv420p",
         "-c:v", "libx264",
         "-preset", "veryfast",
-        "-crf", "23",
+        "-crf", "22",
         "-c:a", "aac",
-        "-b:a", "128k",
+        "-b:a", "160k",
         "-movflags", "+faststart",
         outputPath
     ];

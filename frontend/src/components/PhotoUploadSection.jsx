@@ -50,7 +50,7 @@ export default function PhotoUploadSection({
             if (next) {
                 toast.success("Mode HD Aktif: Berkas foto & video akan diunggah dengan kualitas asli tanpa kompresi.");
             } else {
-                toast("Mode Hemat Aktif: Foto otomatis dioptimalkan (resolusi 2.5K tajam, hemat ruang).", {
+                toast("Mode Seimbang Aktif: Resolusi 2.5K tajam & jernih (kualitas 90%, anti-pecah).", {
                     icon: null
                 });
             }
@@ -118,7 +118,7 @@ export default function PhotoUploadSection({
                     finalFile = newFile;
                     await new Promise(r => setTimeout(r, 350));
                 } else {
-                    finalFile = await compressImage(newFile, { isHd: false, maxWidth: 2560, maxHeight: 2560, quality: 0.88 });
+                    finalFile = await compressImage(newFile, { isHd: false, maxWidth: 2560, maxHeight: 2560, quality: 0.90 });
                     setProcessingModal(prev => ({
                         ...prev,
                         currentCompressedSize: finalFile.size,
@@ -236,8 +236,8 @@ export default function PhotoUploadSection({
                         items: prev.items.map((it, idx) => idx === i ? { ...it, status: "done", finalSize: file.size } : it)
                     }));
                 } else {
-                    // Standard Mode: Smart 2.5K high-res compression
-                    const compressed = await compressImage(file, { isHd: false, maxWidth: 2560, maxHeight: 2560, quality: 0.88 });
+                    // Standard Mode: Smart balanced 2.5K high-res compression (anti-burik)
+                    const compressed = await compressImage(file, { isHd: false, maxWidth: 2560, maxHeight: 2560, quality: 0.90 });
                     processedFiles.push(compressed);
                     setProcessingModal(prev => ({
                         ...prev,
@@ -306,7 +306,7 @@ export default function PhotoUploadSection({
                                     ? "bg-amber-500/10 text-amber-900 border-amber-300 shadow-2xs hover:bg-amber-500/20" 
                                     : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
                             }`}
-                            title={isHdMode ? "Klik untuk ganti ke Mode Hemat Cerdas" : "Klik untuk ganti ke Mode HD Kualitas Asli (100% resolusi penuh tanpa kompresi)"}
+                            title={isHdMode ? "Mode HD aktif: 100% resolusi asli tanpa kompresi" : "Mode Standar Seimbang: Resolusi 2.5K tajam, kualitas 90% (anti-buram & hemat kuota)"}
                         >
                             <div className={`w-2 h-2 rounded-full transition-colors ${isHdMode ? "bg-amber-500 ring-2 ring-amber-300 animate-pulse" : "bg-slate-400"}`} />
                             <span className={`px-1.5 py-0.2 rounded text-3xs font-black uppercase tracking-wider ${
@@ -315,7 +315,7 @@ export default function PhotoUploadSection({
                                 HD
                             </span>
                             <span className="hidden sm:inline">
-                                {isHdMode ? "Kualitas Asli" : "Hemat 2.5K"}
+                                {isHdMode ? "Kualitas Asli" : "Seimbang 2.5K"}
                             </span>
                         </button>
                     </div>
