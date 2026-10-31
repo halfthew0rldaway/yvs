@@ -12,6 +12,7 @@ export default {
                 sans: ["Inter", "system-ui", "sans-serif"],
                 mono: ["'JetBrains Mono'", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
                 display: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+                grotesk: ["'Space Grotesk'", "'Plus Jakarta Sans'", "sans-serif"],
             },
             colors: {
                 primary: {

@@ -11,6 +11,14 @@ import SlaBadge, { SlaCountdownCard } from "../../components/SlaBadge";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import DigitalSignaturePadModal from "../../components/DigitalSignaturePadModal";
 import ErrorBoundary from "../../components/ErrorBoundary";
+import LandingNavbar from "../../components/landing/LandingNavbar";
+import LandingHero from "../../components/landing/LandingHero";
+import ServiceProcess3D from "../../components/landing/ServiceProcess3D";
+import ServiceSpecSheet from "../../components/landing/ServiceSpecSheet";
+import EngineeringStandards from "../../components/landing/EngineeringStandards";
+import WorkshopMetrics from "../../components/landing/WorkshopMetrics";
+import WorkshopLocation from "../../components/landing/WorkshopLocation";
+import LandingFooter from "../../components/landing/LandingFooter";
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-50 text-blue-700 border-blue-200" },
@@ -1502,96 +1510,227 @@ export default function Tracking() {
         await executeTrack(payload);
     }
 
-    return (
-        <div className="min-h-screen bg-slate-50 font-sans">
-            {/* Header */}
-            <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-                <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <div className="bg-blue-600 p-1.5 rounded-lg">
-                            <PenTool className="w-5 h-5 text-white" />
+    const scrollToLookup = () => {
+        const el = document.getElementById("track-lookup");
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth" });
+        }
+    };
+
+    const handleBackToLanding = () => {
+        setSelectedTicket(null);
+        setResults(null);
+        setError("");
+        if (window.history.pushState) {
+            window.history.pushState({}, "", window.location.pathname);
+        }
+    };
+
+    // --- VIEW 1: ACTIVE TICKET DETAIL OR MULTI-RESULT LIST ---
+    const isViewingTracking = selectedTicket || (results && results.length > 0);
+
+    if (isViewingTracking) {
+        return (
+            <div className="min-h-screen bg-slate-50 font-sans">
+                {/* Official YVS Tracking Header */}
+                <header className="bg-[#0c0d10] border-b border-zinc-800 sticky top-0 z-50 text-white">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={handleBackToLanding}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-mono font-bold transition-all cursor-pointer"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                <span>Portal YVS</span>
+                            </button>
+                            <span className="hidden sm:inline-block w-px h-5 bg-zinc-800" />
+                            <div className="hidden sm:flex items-center gap-2">
+                                <span className="font-grotesk font-bold text-sm tracking-tight text-white uppercase">
+                                    Yangversa Service (YVS)
+                                </span>
+                                <span className="text-3xs font-mono text-zinc-400">
+                                    // Live Telemetry Tracker
+                                </span>
+                            </div>
                         </div>
-                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Serv.io</h1>
+
+                        <div className="flex items-center gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSelectedTicket(null);
+                                    if (!results || results.length <= 1) {
+                                        setResults(null);
+                                    }
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 text-xs font-mono font-bold transition-all cursor-pointer"
+                            >
+                                <Search className="w-3.5 h-3.5 text-zinc-400" />
+                                <span>Lacak Tiket Lain</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </header>
+                </header>
 
-            <main className="w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-16 mx-auto max-w-none">
-                
-                <div className="text-center mb-10">
-                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
-                        Lacak Perbaikan Anda
-                    </h2>
-                    <p className="mt-4 text-lg text-slate-500">
-                        Masukkan nomor telepon atau nomor tiket untuk melihat status terkini perangkat Anda.
-                    </p>
-                </div>
+                <main className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 mx-auto max-w-7xl">
+                    {/* Multi-result list (when searched by phone number) */}
+                    {results && results.length > 0 && !selectedTicket && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 w-full">
+                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                        <CheckCircle className="w-5 h-5 text-emerald-600" />
+                                        <span>Ditemukan {results.length} Tiket Servis</span>
+                                    </h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Pilih salah satu tiket di bawah ini untuk melihat status dan riwayat pengerjaan lengkap.
+                                    </p>
+                                </div>
+                            </div>
 
-                {/* Form Section */}
-                <div className="max-w-3xl mx-auto mb-10">
-                    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-200 p-6 sm:p-8 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1.5 bg-blue-600"></div>
-                        
-                        {/* Tabs */}
-                        <div className="flex bg-slate-100 p-1.5 rounded-xl mb-8">
+                            <div className="flex flex-col gap-4 w-full">
+                                {results.map((t, i) => (
+                                    <TrackingListItem key={i} t={t} onClick={() => setSelectedTicket(t)} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Single Ticket Detail */}
+                    {selectedTicket && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 w-full">
+                            <ErrorBoundary>
+                                <TrackingDetail
+                                    t={selectedTicket}
+                                    onBack={() => {
+                                        if (results && results.length > 1) {
+                                            setSelectedTicket(null);
+                                        } else {
+                                            handleBackToLanding();
+                                        }
+                                    }}
+                                    onUpdateTicket={(updated) => {
+                                        setSelectedTicket(updated);
+                                        setResults((prev) =>
+                                            prev
+                                                ? prev.map((item) =>
+                                                      item.id === updated.id ? { ...item, ...updated } : item
+                                                  )
+                                                : [updated]
+                                        );
+                                    }}
+                                />
+                            </ErrorBoundary>
+                        </div>
+                    )}
+                </main>
+            </div>
+        );
+    }
+
+    // --- VIEW 2: EDITORIAL YVS COMPUTER BRAND PORTAL & LANDING EXPERIENCE ---
+    return (
+        <div className="min-h-screen bg-[#090a0d] text-zinc-100 font-sans selection:bg-zinc-800 selection:text-white">
+            {/* 1. Industrial Top Navigation */}
+            <LandingNavbar onSearchClick={scrollToLookup} />
+
+            {/* 2. Editorial Hero with Direct Instant Search */}
+            <LandingHero
+                onTrackSubmit={async (payload) => {
+                    await executeTrack(payload);
+                    if (!selectedTicket) {
+                        scrollToLookup();
+                    }
+                }}
+                loading={loading}
+            />
+
+            {/* 3. On-Scroll 3D Hardware Service Anatomy (Three.js) */}
+            <ServiceProcess3D />
+
+            {/* 4. Engineering Capabilities Spec Sheet Matrix */}
+            <ServiceSpecSheet />
+
+            {/* 5. The YVS Standard / Engineering Principles */}
+            <EngineeringStandards />
+
+            {/* 6. Live Dedicated Tracking Hub Section */}
+            <section className="relative w-full bg-[#0c0d10] py-16 sm:py-24 border-b border-zinc-800/80" id="track-lookup">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center space-y-3 mb-10">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800">
+                            <span className="w-2 h-2 rounded-full bg-amber-400" />
+                            <span className="font-mono text-3xs uppercase tracking-widest text-zinc-400">
+                                DIRECT TELEMETRY GATEWAY
+                            </span>
+                        </div>
+                        <h2 className="font-grotesk font-black text-2xl sm:text-4xl text-white tracking-tight">
+                            Lacak Status Pengerjaan Perangkat Anda
+                        </h2>
+                        <p className="text-zinc-400 text-xs sm:text-sm max-w-lg mx-auto">
+                            Masukkan nomor tiket servis atau nomor WhatsApp yang terdaftar untuk memantau perkembangan unit Anda secara real-time.
+                        </p>
+                    </div>
+
+                    <div className="bg-[#12141a] border border-zinc-800/90 rounded-2xl p-6 sm:p-8 shadow-2xl relative">
+                        {/* Tab Switcher */}
+                        <div className="grid grid-cols-2 gap-1.5 p-1 bg-zinc-900 rounded-xl border border-zinc-800 mb-6">
                             <button
                                 type="button"
                                 onClick={() => setTrackMethod("tiket")}
-                                className={`flex-1 flex justify-center items-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${
-                                    trackMethod === "tiket" 
-                                        ? "bg-white text-blue-700 shadow-sm" 
-                                        : "text-slate-500 hover:text-slate-700"
+                                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
+                                    trackMethod === "tiket"
+                                        ? "bg-zinc-800 text-white shadow-xs border border-zinc-700"
+                                        : "text-zinc-400 hover:text-zinc-200"
                                 }`}
                             >
                                 <TicketIcon className="w-4 h-4" />
-                                Nomor Tiket
+                                <span>Nomor Tiket</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setTrackMethod("telepon")}
-                                className={`flex-1 flex justify-center items-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${
-                                    trackMethod === "telepon" 
-                                        ? "bg-white text-blue-700 shadow-sm" 
-                                        : "text-slate-500 hover:text-slate-700"
+                                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
+                                    trackMethod === "telepon"
+                                        ? "bg-zinc-800 text-white shadow-xs border border-zinc-700"
+                                        : "text-zinc-400 hover:text-zinc-200"
                                 }`}
                             >
                                 <Phone className="w-4 h-4" />
-                                Nomor Telepon
+                                <span>Nomor Telepon</span>
                             </button>
                         </div>
 
-                        <form onSubmit={handleTrack} className="space-y-6">
+                        {/* Input Form */}
+                        <form onSubmit={handleTrack} className="space-y-5">
                             {trackMethod === "tiket" ? (
-                                <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
-                                    <label className="block text-sm font-semibold text-slate-700">Nomor Tiket Servis</label>
-                                    <div className="relative group">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <TicketIcon className="w-5 h-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        </div>
+                                <div className="space-y-1.5">
+                                    <label className="block font-mono text-2xs uppercase tracking-wider text-zinc-400 font-bold">
+                                        Nomor Tiket Servis YVS
+                                    </label>
+                                    <div className="relative">
                                         <input
                                             type="text"
                                             value={nomorTiket}
                                             onChange={(e) => setNomorTiket(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:bg-white outline-none text-slate-900 transition-all font-mono placeholder:font-sans placeholder:text-slate-400 text-base"
                                             placeholder="Contoh: SRV-2024-001"
-                                            autoFocus
+                                            className="w-full px-4 py-3.5 bg-zinc-900/90 border border-zinc-700/80 rounded-xl text-white font-mono text-sm placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 transition-all"
                                         />
                                     </div>
                                 </div>
                             ) : (
-                                <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
-                                    <label className="block text-sm font-semibold text-slate-700">Nomor Telepon Terdaftar</label>
-                                    <div className="relative group">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <Phone className="w-5 h-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        </div>
+                                <div className="space-y-1.5">
+                                    <label className="block font-mono text-2xs uppercase tracking-wider text-zinc-400 font-bold">
+                                        Nomor WhatsApp Terdaftar
+                                    </label>
+                                    <div className="relative">
                                         <input
                                             type="text"
                                             value={nomorTelepon}
                                             onChange={(e) => setNomorTelepon(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:bg-white outline-none text-slate-900 transition-all placeholder:text-slate-400 text-base"
-                                            placeholder="Contoh: 08123456789"
-                                            autoFocus
+                                            placeholder="Contoh: 081234567890"
+                                            className="w-full px-4 py-3.5 bg-zinc-900/90 border border-zinc-700/80 rounded-xl text-white font-mono text-sm placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 transition-all"
                                         />
                                     </div>
                                 </div>
@@ -1599,92 +1738,57 @@ export default function Tracking() {
 
                             <button
                                 type="submit"
-                                disabled={loading || (trackMethod === 'tiket' ? !nomorTiket : !nomorTelepon)}
-                                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-semibold transition-all disabled:opacity-50 shadow-md text-base"
+                                disabled={loading || (trackMethod === "tiket" ? !nomorTiket : !nomorTelepon)}
+                                className="w-full py-4 bg-zinc-100 hover:bg-white active:bg-zinc-200 text-zinc-950 font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                             >
                                 {loading ? (
                                     <>
-                                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white"></div>
-                                        <span>Memproses...</span>
+                                        <div className="w-4 h-4 border-2 border-zinc-900/20 border-t-zinc-900 rounded-full animate-spin" />
+                                        <span>Memeriksa Database Servis...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Search className="w-5 h-5" />
-                                        <span>Lacak Servis</span>
+                                        <Search className="w-4 h-4" />
+                                        <span>Lacak Telemetri Servis Sekarang</span>
                                     </>
                                 )}
                             </button>
                         </form>
-                    </div>
 
-                    {error && (
-                        <div className="mt-8 bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
-                            <SearchX className="w-6 h-6 shrink-0" />
-                            <p className="font-medium text-sm">{error}</p>
-                        </div>
-                    )}
+                        {/* Error Message */}
+                        {error && (
+                            <div className="mt-5 p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-200 flex items-center gap-3 font-mono text-xs">
+                                <SearchX className="w-5 h-5 shrink-0 text-red-400" />
+                                <p>{error}</p>
+                            </div>
+                        )}
+
+                        {/* Results Empty State */}
+                        {results && results.length === 0 && (
+                            <div className="mt-6 p-6 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-2">
+                                <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 mx-auto">
+                                    <PackageSearch className="w-5 h-5" />
+                                </div>
+                                <h4 className="font-grotesk font-bold text-sm text-white">
+                                    Tiket Servis Tidak Ditemukan
+                                </h4>
+                                <p className="text-2xs text-zinc-400 max-w-sm mx-auto font-sans leading-relaxed">
+                                    Tidak ada catatan servis yang cocok dengan input Anda. Mohon periksa kembali nomor tiket atau hubungi hotline WhatsApp kami.
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
+            </section>
 
-                {/* Results Section */}
-                {results && results.length > 0 && !selectedTicket && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 w-full mx-auto">
-                        <div className="flex items-center justify-between mb-8 px-2">
-                            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                                <CheckCircle className="w-6 h-6 text-emerald-500" />
-                                <span>Hasil Pencarian ({results.length})</span>
-                            </h3>
-                        </div>
-                        
-                        <div className="flex flex-col gap-4 w-full px-2">
-                            {results.map((t, i) => (
-                                <TrackingListItem key={i} t={t} onClick={() => setSelectedTicket(t)} />
-                            ))}
-                        </div>
-                    </div>
-                )}
+            {/* 7. Empirical Benchmarks & Customer Testimonials */}
+            <WorkshopMetrics />
 
-                {selectedTicket && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 max-w-none w-full">
-                        <ErrorBoundary>
-                            <TrackingDetail 
-                                t={selectedTicket} 
-                                onBack={() => setSelectedTicket(null)} 
-                                onUpdateTicket={(updated) => {
-                                    setSelectedTicket(updated);
-                                    setResults(prev => prev ? prev.map(item => item.id === updated.id ? { ...item, ...updated } : item) : [updated]);
-                                }}
-                            />
-                        </ErrorBoundary>
-                    </div>
-                )}
+            {/* 8. Workshop Location, Hours & Direct Contact */}
+            <WorkshopLocation />
 
-                {results && results.length === 0 && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center py-16 px-4 bg-white rounded-3xl border border-slate-200 mt-8 shadow-sm max-w-3xl mx-auto"
-                    >
-                        <motion.div 
-                            animate={{ 
-                                scale: [1, 1.1, 1],
-                                rotate: [0, -10, 10, -10, 0]
-                            }}
-                            transition={{ 
-                                duration: 2.5, 
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
-                            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-6 text-slate-400"
-                        >
-                            <PackageSearch className="w-8 h-8 text-slate-500" />
-                        </motion.div>
-                        <h3 className="text-lg font-bold text-slate-900 mb-2">Tidak Ditemukan</h3>
-                        <p className="text-slate-500 max-w-md mx-auto">
-                            Kami tidak dapat menemukan riwayat servis dengan nomor tersebut. Silakan periksa kembali ketikan Anda.
-                        </p>
-                    </motion.div>
-                )}
-            </main>
+            {/* 9. Architectural Technical Footer */}
+            <LandingFooter />
         </div>
     );
 }
