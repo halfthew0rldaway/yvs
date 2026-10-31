@@ -416,12 +416,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
                                     <span>Konsultasi WA</span>
                                 </a>
                             </div>
-
-                            {/* Subtle Scroll Hint */}
-                            <div className="flex items-center gap-2 text-3xs sm:text-xs font-mono text-slate-400 pt-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                                <span>Gulir ke bawah untuk melihat tahapan perbaikan perangkat</span>
-                            </div>
                         </div>
                     </div>
                 </div>
