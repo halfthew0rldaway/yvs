@@ -35,7 +35,7 @@ export default function LandingFooter() {
                             </div>
                         </div>
 
-                        <p className="text-sm text-slate-600 leading-relaxed max-w-sm text-justify [text-justify:inter-word]">
+                        <p className="text-sm text-slate-600 leading-relaxed max-w-sm text-left sm:text-justify [text-justify:inter-word]">
                             Pusat spesialis servis laptop, MacBook, dan PC desktop di Pekayon, Bekasi. Mengedepankan pemeriksaan jujur, estimasi transparan tanpa paksaan, dan pengembalian utuh seluruh komponen lama.
                         </p>
 
@@ -105,10 +105,14 @@ export default function LandingFooter() {
                                 <MessageCircle className="w-4 h-4 shrink-0 text-emerald-600" />
                                 <span>WhatsApp: 0812-1034-212</span>
                             </a>
-                            <div className="flex items-center gap-2 text-slate-600 font-medium">
+                            <a
+                                href="tel:0218270005"
+                                className="flex items-center gap-2 text-slate-600 hover:text-blue-600 font-medium transition-colors cursor-pointer"
+                                title="Panggil Telepon Workshop"
+                            >
                                 <Phone className="w-4 h-4 shrink-0 text-blue-600" />
                                 <span>Telepon: (021) 8270005</span>
-                            </div>
+                            </a>
                             <a
                                 href="https://instagram.com/komputerawet"
                                 target="_blank"

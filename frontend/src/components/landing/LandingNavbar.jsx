@@ -131,48 +131,72 @@ export default function LandingNavbar({ onSearchClick }) {
             {/* Mobile Drawer */}
             <AnimatePresence>
                 {mobileMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="md:hidden absolute top-full left-0 right-0 overflow-hidden bg-white/98 backdrop-blur-lg border-b border-slate-200 px-4 py-4 space-y-1 shadow-md"
-                    >
-                        {[
-                            { label: "Proses Perbaikan", id: "service-workflow" },
-                            { label: "Layanan Kami", id: "service-spec" },
-                            { label: "Standar Pemeriksaan", id: "engineering-standards" },
-                            { label: "Ulasan Pelanggan (4.7★)", id: "workshop-reviews" },
-                            { label: "Lokasi & Jadwal Layanan", id: "workshop-location" },
-                        ].map((item) => (
-                            <button
-                                key={item.id}
-                                type="button"
-                                onClick={() => scrollToSection(item.id)}
-                                className="block w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors"
-                            >
-                                {item.label}
-                            </button>
-                        ))}
+                    <>
+                        {/* Backdrop Scrim */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="md:hidden fixed inset-0 top-14 bg-slate-900/30 backdrop-blur-2xs z-40"
+                            onClick={() => setMobileMenuOpen(false)}
+                            aria-hidden="true"
+                        />
 
-                        <div className="pt-3 border-t border-slate-100 space-y-2">
-                            <div className="flex items-center gap-2 px-3.5 py-1.5 text-xs text-slate-500 font-mono">
-                                <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Buka Setiap Hari: 09:00 – 18:00 WIB</span>
+                        {/* Dropdown Menu */}
+                        <motion.div
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="md:hidden absolute top-full left-0 right-0 z-50 overflow-hidden bg-white/98 backdrop-blur-xl border-b border-slate-200 px-4 py-4 space-y-1 shadow-xl"
+                        >
+                            {[
+                                { num: "01", label: "Proses Perbaikan", id: "service-workflow" },
+                                { num: "02", label: "Layanan Kami", id: "service-spec" },
+                                { num: "03", label: "Standar Pemeriksaan", id: "engineering-standards" },
+                                { num: "04", label: "Ulasan Google Maps (4.7★)", id: "workshop-reviews" },
+                                { num: "05", label: "Lokasi & Jadwal Layanan", id: "workshop-location" },
+                            ].map((item) => (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => scrollToSection(item.id)}
+                                    className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold text-slate-800 hover:text-blue-600 hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer"
+                                >
+                                    <span>{item.label}</span>
+                                    <span className="font-mono text-xs font-bold text-slate-400">[{item.num}]</span>
+                                </button>
+                            ))}
+
+                            <div className="pt-3 border-t border-slate-100 space-y-2">
+                                <div className="flex items-center gap-2 px-3.5 py-1 text-xs text-slate-500 font-mono">
+                                    <Clock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                    <span>Buka Setiap Hari: 09:00 – 18:00 WIB</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setMobileMenuOpen(false);
+                                        if (onSearchClick) onSearchClick();
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-semibold text-sm transition-colors shadow-xs cursor-pointer min-h-[44px]"
+                                >
+                                    <Search className="w-4 h-4" />
+                                    <span>Lacak Status Servis Sekarang</span>
+                                </button>
+                                <a
+                                    href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl font-semibold text-sm transition-colors shadow-2xs min-h-[44px]"
+                                >
+                                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                                    <span>Konsultasi WhatsApp CS</span>
+                                </a>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setMobileMenuOpen(false);
-                                    if (onSearchClick) onSearchClick();
-                                }}
-                                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-semibold text-sm transition-colors shadow-xs cursor-pointer"
-                            >
-                                <Search className="w-4 h-4" />
-                                Lacak Status Servis Sekarang
-                            </button>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </header>

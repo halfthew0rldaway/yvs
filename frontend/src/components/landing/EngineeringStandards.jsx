@@ -58,7 +58,7 @@ export default function EngineeringStandards() {
                             </h2>
                         </div>
 
-                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-justify [text-justify:inter-word]">
+                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
                             Industri reparasi komputer kerap dibayangi oleh ketidakpastian biaya, penggantian komponen yang tidak transparan, dan ketiadaan jaminan tertulis. Di YVS Computer (komputerawet.com), kami mengutamakan pemeriksaan jujur, estimasi jelas di awal, dan bukti nyata pengerjaan.
                         </p>
 
@@ -69,7 +69,7 @@ export default function EngineeringStandards() {
                                     QC Matrix 25 Titik
                                 </span>
                             </div>
-                            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-sans text-justify [text-justify:inter-word]">
+                            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
                                 Setiap unit yang selesai diperbaiki wajib melewati 25 titik inspeksi mencakup kestabilan suhu, uji beban CPU/GPU, daya tahan baterai, dan fungsi port sebelum diserahkan kembali ke pemilik.
                             </p>
                         </div>
@@ -96,7 +96,7 @@ export default function EngineeringStandards() {
                                             <h3 className="font-display font-bold text-base sm:text-lg text-slate-900 mb-2 leading-snug">
                                                 {p.title}
                                             </h3>
-                                            <p className="text-sm text-slate-600 leading-relaxed font-sans text-justify [text-justify:inter-word]">
+                                            <p className="text-sm text-slate-600 leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
                                                 {p.desc}
                                             </p>
                                         </div>

@@ -78,7 +78,7 @@ export default function WorkshopMetrics() {
         <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 font-sans scroll-mt-14 sm:scroll-mt-16" id="workshop-reviews">
             <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 {/* Metrics Grid - Polished, Tactile & Interactive */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 pb-16 border-b border-slate-200/80">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 pb-12 sm:pb-16 border-b border-slate-200/80">
                     {/* Card 1: Flagship Google Maps Rating */}
                     <motion.a
                         href="https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"
@@ -86,41 +86,41 @@ export default function WorkshopMetrics() {
                         rel="noreferrer"
                         whileHover={{ y: -4 }}
                         transition={{ duration: 0.2 }}
-                        className="group relative bg-blue-600 text-white border border-blue-500/80 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-xs hover:shadow-md hover:shadow-blue-600/20 transition-all cursor-pointer overflow-hidden"
+                        className="group relative bg-blue-600 text-white border border-blue-500/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-6 flex flex-col justify-between shadow-xs hover:shadow-md hover:shadow-blue-600/20 transition-all cursor-pointer overflow-hidden"
                     >
-                        <div className="flex items-center justify-between gap-2 mb-4">
-                            <div className="flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                <span className="text-3xs sm:text-xs font-mono font-semibold uppercase tracking-wider text-blue-100">
-                                    Rating Google Maps
+                        <div className="flex items-center justify-between gap-1.5 mb-3 sm:mb-4">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                                <span className="text-3xs sm:text-xs font-mono font-semibold uppercase tracking-wider text-blue-100 truncate">
+                                    Rating G-Maps
                                 </span>
                             </div>
-                            <span className="inline-flex items-center gap-1 text-3xs font-mono font-semibold text-blue-100 bg-blue-700/80 group-hover:bg-white group-hover:text-blue-600 px-2 py-0.5 rounded-full border border-blue-400/40 transition-colors">
-                                <span>Profil</span>
+                            <span className="inline-flex items-center gap-1 text-3xs font-mono font-semibold text-blue-100 bg-blue-700/80 group-hover:bg-white group-hover:text-blue-600 px-1.5 sm:px-2 py-0.5 rounded-full border border-blue-400/40 transition-colors shrink-0">
+                                <span className="hidden sm:inline">Profil</span>
                                 <ArrowUpRight className="w-3 h-3" />
                             </span>
                         </div>
 
-                        <div className="space-y-2">
-                            <div className="flex items-baseline gap-1.5">
-                                <span className="font-display font-extrabold text-3xl sm:text-4xl lg:text-[2.65rem] tracking-tight leading-none text-white">
+                        <div className="space-y-1.5 sm:space-y-2">
+                            <div className="flex items-baseline gap-1">
+                                <span className="font-display font-extrabold text-2xl sm:text-3xl lg:text-[2.65rem] tracking-tight leading-none text-white">
                                     <AnimatedNumber to={4.7} decimals={1} />
                                 </span>
-                                <span className="font-mono text-sm sm:text-base text-blue-200/80 font-semibold">
+                                <span className="font-mono text-xs sm:text-base text-blue-200/80 font-semibold">
                                     / 5,0
                                 </span>
                             </div>
 
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-0.5 sm:gap-1">
                                 {[1, 2, 3, 4, 5].map((s) => (
-                                    <Star key={s} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 fill-amber-300 drop-shadow-2xs" />
+                                    <Star key={s} className="w-3 sm:w-3.5 lg:w-4 h-3 sm:h-3.5 lg:h-4 text-amber-300 fill-amber-300 drop-shadow-2xs" />
                                 ))}
-                                <span className="ml-1 text-3xs font-mono text-blue-100/90 font-medium">
+                                <span className="ml-1 text-3xs font-mono text-blue-100/90 font-medium hidden sm:inline">
                                     (4.7★)
                                 </span>
                             </div>
 
-                            <p className="text-xs font-sans text-blue-100/90 leading-snug pt-1">
+                            <p className="text-3xs sm:text-xs font-sans text-blue-100/90 leading-tight pt-0.5 sm:pt-1">
                                 <AnimatedNumber to={350} suffix="+" /> Ulasan Asli di Google Maps
                             </p>
                         </div>
@@ -130,27 +130,27 @@ export default function WorkshopMetrics() {
                     <motion.div
                         whileHover={{ y: -4 }}
                         transition={{ duration: 0.2 }}
-                        className="group relative bg-white border border-slate-200 hover:border-emerald-300 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all"
+                        className="group relative bg-white border border-slate-200 hover:border-emerald-300 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-6 flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all"
                     >
-                        <div className="flex items-center justify-between gap-2 mb-4">
-                            <span className="text-3xs sm:text-xs font-mono font-semibold uppercase tracking-wider text-slate-400 group-hover:text-slate-600 transition-colors">
+                        <div className="flex items-center justify-between gap-1.5 mb-3 sm:mb-4">
+                            <span className="text-3xs sm:text-xs font-mono font-semibold uppercase tracking-wider text-slate-400 group-hover:text-slate-600 transition-colors truncate">
                                 Biaya Diagnosis
                             </span>
-                            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-                                <SearchCheck className="w-4 h-4" />
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
+                                <SearchCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-2">
-                                <span className="font-display font-extrabold text-2xl sm:text-3xl lg:text-[1.85rem] tracking-tight text-slate-900 leading-tight">
+                        <div className="space-y-1 sm:space-y-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-display font-extrabold text-xl sm:text-2xl lg:text-[1.85rem] tracking-tight text-slate-900 leading-tight">
                                     Rp 0
                                 </span>
-                                <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-3xs font-mono font-semibold">
+                                <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-3xs font-mono font-semibold">
                                     Gratis Cek
                                 </span>
                             </div>
-                            <p className="text-xs font-sans text-slate-500 leading-snug text-justify [text-justify:inter-word]">
+                            <p className="text-3xs sm:text-xs font-sans text-slate-500 leading-normal text-left sm:text-justify [text-justify:inter-word]">
                                 Bebas biaya jika estimasi tidak disetujui, unit bisa langsung diambil kembali.
                             </p>
                         </div>
@@ -160,24 +160,24 @@ export default function WorkshopMetrics() {
                     <motion.div
                         whileHover={{ y: -4 }}
                         transition={{ duration: 0.2 }}
-                        className="group relative bg-white border border-slate-200 hover:border-blue-300 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all"
+                        className="group relative bg-white border border-slate-200 hover:border-blue-300 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-6 flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all"
                     >
-                        <div className="flex items-center justify-between gap-2 mb-4">
-                            <span className="text-3xs sm:text-xs font-mono font-semibold uppercase tracking-wider text-slate-400 group-hover:text-slate-600 transition-colors">
-                                Transparansi Biaya
+                        <div className="flex items-center justify-between gap-1.5 mb-3 sm:mb-4">
+                            <span className="text-3xs sm:text-xs font-mono font-semibold uppercase tracking-wider text-slate-400 group-hover:text-slate-600 transition-colors truncate">
+                                Transparansi
                             </span>
-                            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-                                <CheckCircle2 className="w-4 h-4" />
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+                                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-2">
-                                <span className="font-display font-extrabold text-2xl sm:text-3xl lg:text-[1.85rem] tracking-tight text-slate-900 leading-tight">
+                        <div className="space-y-1 sm:space-y-1.5">
+                            <div className="flex items-center gap-1.5">
+                                <span className="font-display font-extrabold text-xl sm:text-2xl lg:text-[1.85rem] tracking-tight text-slate-900 leading-tight">
                                     <AnimatedNumber to={100} suffix="%" /> Terbuka
                                 </span>
                             </div>
-                            <p className="text-xs font-sans text-slate-500 leading-snug text-justify [text-justify:inter-word]">
+                            <p className="text-3xs sm:text-xs font-sans text-slate-500 leading-normal text-left sm:text-justify [text-justify:inter-word]">
                                 Konfirmasi estimasi sebelum dikerjakan, tidak ada biaya siluman atau tak terduga.
                             </p>
                         </div>
@@ -187,27 +187,27 @@ export default function WorkshopMetrics() {
                     <motion.div
                         whileHover={{ y: -4 }}
                         transition={{ duration: 0.2 }}
-                        className="group relative bg-white border border-slate-200 hover:border-amber-300 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all"
+                        className="group relative bg-white border border-slate-200 hover:border-amber-300 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-6 flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all"
                     >
-                        <div className="flex items-center justify-between gap-2 mb-4">
-                            <span className="text-3xs sm:text-xs font-mono font-semibold uppercase tracking-wider text-slate-400 group-hover:text-slate-600 transition-colors">
-                                Garansi Pengerjaan
+                        <div className="flex items-center justify-between gap-1.5 mb-3 sm:mb-4">
+                            <span className="text-3xs sm:text-xs font-mono font-semibold uppercase tracking-wider text-slate-400 group-hover:text-slate-600 transition-colors truncate">
+                                Garansi Layanan
                             </span>
-                            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
-                                <ShieldCheck className="w-4 h-4" />
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
+                                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-2">
-                                <span className="font-display font-extrabold text-2xl sm:text-3xl lg:text-[1.85rem] tracking-tight text-slate-900 leading-tight">
+                        <div className="space-y-1 sm:space-y-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-display font-extrabold text-xl sm:text-2xl lg:text-[1.85rem] tracking-tight text-slate-900 leading-tight">
                                     Resmi Terbit
                                 </span>
-                                <span className="px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-3xs font-mono font-semibold">
-                                    Sertifikat Digital
+                                <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-3xs font-mono font-semibold">
+                                    Digital QR
                                 </span>
                             </div>
-                            <p className="text-xs font-sans text-slate-500 leading-snug text-justify [text-justify:inter-word]">
+                            <p className="text-3xs sm:text-xs font-sans text-slate-500 leading-normal text-left sm:text-justify [text-justify:inter-word]">
                                 Nota fisik dan sertifikat garansi resmi otomatis tersimpan di sistem pelacakan.
                             </p>
                         </div>
@@ -226,7 +226,7 @@ export default function WorkshopMetrics() {
                         <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
                             Kata Pelanggan di Google Maps Yangversa
                         </h2>
-                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-justify [text-justify:inter-word]">
+                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
                             Seluruh ulasan di bawah ini adalah review bintang 5 (★★★★★) murni dari pelanggan riil yang mempercayakan perangkat laptop dan komputernya ke workshop kami di Pekayon, Bekasi.
                         </p>
                     </div>
@@ -263,7 +263,7 @@ export default function WorkshopMetrics() {
                                     </span>
                                 </div>
 
-                                <p className="text-sm text-slate-700 leading-relaxed font-sans text-justify [text-justify:inter-word]">
+                                <p className="text-sm text-slate-700 leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
                                     &ldquo;{r.text}&rdquo;
                                 </p>
                             </div>

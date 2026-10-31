@@ -1942,7 +1942,7 @@ export default function Tracking() {
                             <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
                                 Pantau Perkembangan Servis Unit Anda
                             </h2>
-                            <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-justify [text-justify:inter-word]">
+                            <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
                                 Masukkan nomor tiket servis fisik atau nomor WhatsApp yang Anda daftarkan saat serah terima di toko. Seluruh foto kondisi awal, temuan mikroskop teknisi, transparansi sparepart, dan sertifikat garansi dapat Anda pantau secara langsung.
                             </p>
 
@@ -2136,7 +2136,7 @@ export default function Tracking() {
                                 <h4 className="font-display font-semibold text-sm text-slate-900">
                                     Tiket Servis Tidak Ditemukan
                                 </h4>
-                                <p className="text-xs text-slate-500 max-w-sm mx-auto font-sans leading-relaxed text-justify [text-justify:inter-word]">
+                                <p className="text-xs text-slate-500 max-w-sm mx-auto font-sans leading-relaxed text-left sm:text-justify [text-justify:inter-word]">
                                     Tidak ada catatan servis yang cocok dengan input Anda. Mohon periksa kembali nomor tiket atau hubungi hotline WhatsApp kami.
                                 </p>
                             </div>

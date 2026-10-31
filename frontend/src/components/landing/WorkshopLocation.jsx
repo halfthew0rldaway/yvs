@@ -43,7 +43,7 @@ export default function WorkshopLocation() {
                     <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
                         Lokasi Workshop dan Jadwal Pelayanan
                     </h2>
-                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-justify [text-justify:inter-word]">
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
                         Kunjungi workshop kami langsung di Pekayon Bekasi untuk konsultasi tatap muka, pengecekan gratis di depan Anda, atau kirimkan perangkat Anda secara aman melalui kurir instan / ekspedisi.
                     </p>
                 </div>
@@ -133,7 +133,7 @@ export default function WorkshopLocation() {
                                 </span>
                             </div>
 
-                            <p className="text-xs text-slate-500 leading-relaxed font-sans pt-1 text-justify [text-justify:inter-word]">
+                            <p className="text-xs text-slate-500 leading-relaxed font-sans pt-1 text-left sm:text-justify [text-justify:inter-word]">
                                 Kirim unit via kurir instan (Gojek / Grab Express) atau kargo (JNE / J&T) diterima setiap hari pada jam operasional kerja dengan mencantumkan nama dan nomor WhatsApp aktif Anda.
                             </p>
                         </div>
@@ -149,7 +149,7 @@ export default function WorkshopLocation() {
                                 <h3 className="font-display font-bold text-xl sm:text-2xl text-slate-900">
                                     Hubungi Langsung Tim Teknisi YVS
                                 </h3>
-                                <p className="text-sm text-slate-600 leading-relaxed font-sans text-justify [text-justify:inter-word]">
+                                <p className="text-sm text-slate-600 leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
                                     Konsultasikan masalah perangkat Anda sebelum datang. Kami siap membantu memperkirakan kemungkinan kerusakan (laptop mati total, layar gelap, overheat, engsel retak, upgrade komponen) secara transparan.
                                 </p>
                             </div>
@@ -174,10 +174,14 @@ export default function WorkshopLocation() {
                                     <ArrowUpRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                 </a>
 
-                                {/* Telephone Landline */}
-                                <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                                {/* Telephone Landline - Clickable for Instant Mobile Dialing */}
+                                <a
+                                    href="tel:0218270005"
+                                    className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 transition-colors group cursor-pointer"
+                                    title="Hubungi telepon workshop"
+                                >
                                     <div className="flex items-center gap-3.5">
-                                        <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center justify-center shadow-2xs shrink-0">
+                                        <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center justify-center shadow-2xs shrink-0 group-hover:border-blue-300">
                                             <Phone className="w-5 h-5 text-blue-600" />
                                         </div>
                                         <div>
@@ -185,10 +189,10 @@ export default function WorkshopLocation() {
                                             <div className="text-xs text-slate-600 font-mono font-semibold mt-0.5">(021) 8270005</div>
                                         </div>
                                     </div>
-                                    <span className="text-3xs font-mono font-semibold text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-200">
-                                        Pekayon
+                                    <span className="text-3xs font-mono font-semibold text-slate-500 bg-white px-2 py-1 rounded-md border border-slate-200 group-hover:border-blue-200 group-hover:text-blue-600 transition-colors">
+                                        Panggil
                                     </span>
-                                </div>
+                                </a>
 
                                 {/* Official Channels */}
                                 <div className="grid grid-cols-2 gap-3 pt-1">
