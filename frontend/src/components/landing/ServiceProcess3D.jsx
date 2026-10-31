@@ -1,115 +1,15 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { CheckCircle2, Cpu, Wrench, ShieldCheck, Search, Activity, Layers, RotateCcw, ChevronRight, Zap } from "lucide-react";
 
-const STAGES = [
-    {
-        id: "intake",
-        step: "01",
-        title: "Intake & Non-Destructive Scanning",
-        subtitle: "Pemeriksaan Fisik Awal & Uji Integritas Chassis",
-        badge: "Tahap 1 · Intake",
-        range: [0.0, 0.15],
-        description:
-            "Setiap perangkat yang masuk diperiksa secara menyeluruh tanpa intervensi invasif: nomor seri diverifikasi, integritas engsel diuji, dan chassis dianalisis untuk mencatat kondisi fisik presisi sebelum diagnosis.",
-        metrics: [
-            { label: "Inspeksi Chassis", value: "Toleransi 0.05mm" },
-            { label: "Deteksi Voltase", value: "3.3V / 5V / 19V Rail" },
-            { label: "Bukti Visual", value: "Foto Resolusi Tinggi" },
-        ],
-        statusText: "OPTICAL_SCAN_ACTIVE // CHASSIS_INTEGRITY_CHECK_PASS",
-    },
-    {
-        id: "clamshell_open",
-        step: "02",
-        title: "Clamshell Unfolding & Telemetri Layar",
-        subtitle: "Pembukaan Engsel & Diagnosis Jalur Daya Primer",
-        badge: "Tahap 2 · Diagnosis",
-        range: [0.15, 0.35],
-        description:
-            "Engsel laptop dibuka secara presisi. Panel display dan logic board menerima injeksi daya terkalibrasi untuk memverifikasi konsumsi arus standby dan mendeteksi short-circuit sebelum dekonstruksi.",
-        metrics: [
-            { label: "Sudut Bukaan", value: "115° Artikulasi" },
-            { label: "Arus Standby", value: "0.012A Normal" },
-            { label: "Display Signal", value: "eDP 4-Lane Terdeteksi" },
-        ],
-        statusText: "DISPLAY_PANEL_SYNC // POWER_RAILS_ACTIVE_19V",
-    },
-    {
-        id: "logic_board",
-        step: "03",
-        title: "Isolasi Komponen Logic Board",
-        subtitle: "Dekonstruksi Modular & Pemetaan Jalur Mikron",
-        badge: "Tahap 3 · Logic Board",
-        range: [0.35, 0.55],
-        description:
-            "Deck atas dilepas secara modular. Logic board, CPU socket, modul RAM SO-DIMM, NVMe SSD, dan sistem pendingin diisolasi di bawah mikroskop stereoskopik untuk melacak kerusakan jalur semikonduktor.",
-        metrics: [
-            { label: "Logic Board", value: "FR-4 Multi-Layer PCB" },
-            { label: "Kapasitor SMD", value: "High-Q Tantalum" },
-            { label: "Bus PCIe Gen4", value: "Jalur Terverifikasi" },
-        ],
-        statusText: "DECK_SEPARATED // LOGIC_BOARD_MAPPED_OK",
-    },
-    {
-        id: "micro_repair",
-        step: "04",
-        title: "Mikro-Soldering & Thermal Overhaul",
-        subtitle: "Pelepasan Heatsink & Aplikasi Pasta Termal Industri",
-        badge: "Tahap 4 · Rework & Termal",
-        range: [0.55, 0.75],
-        description:
-            "Sistem pendingin tembaga diangkat. Die silikon CPU & GPU dibersihkan dari residu lama dan diaplikasikan pasta termal konduktivitas tinggi (Honeywell PTM7950). Titik IC BGA dan rel daya disolder ulang dengan presisi mikron.",
-        metrics: [
-            { label: "Thermal Compound", value: "Phase-Change PTM7950" },
-            { label: "Presisi Solder", value: "Pitch 0.02mm SMD" },
-            { label: "Clean Workstation", value: "ESD-Protected Area" },
-        ],
-        statusText: "HEATSINK_DETACHED // THERMAL_PASTE_REAPPLIED",
-    },
-    {
-        id: "reassembly",
-        step: "05",
-        title: "Rekonstruksi & Kalibrasi Torsi OEM",
-        subtitle: "Pemasangan Kembali Komponen & Penguncian Chassis",
-        badge: "Tahap 5 · Perakitan",
-        range: [0.75, 0.90],
-        description:
-            "Heatsink tembaga dipasang kembali ke atas die CPU/GPU dengan torsi sekrup terkalibrasi pabrikan. Deck keyboard dan chassis dirakit ulang secara presisi dengan perlindungan anti-statis.",
-        metrics: [
-            { label: "Torsi Baut", value: "0.22 N·m Standar Pabrik" },
-            { label: "Thermal Contact", value: "Kontak Merata 100%" },
-            { label: "Chassis Alignment", value: "Presisi 0-Gap" },
-        ],
-        statusText: "HEATSINK_SEATED // CHASSIS_REASSEMBLED_LOCKED",
-    },
-    {
-        id: "qc_certification",
-        step: "06",
-        title: "25-Point QC Seal & Garansi Digital",
-        subtitle: "Stress-Test Beban Penuh & Validasi Akhir",
-        badge: "Tahap 6 · QC Pass",
-        range: [0.90, 1.0],
-        description:
-            "Unit yang telah selesai menjalani stress-test kontinu selama 2 jam (FurMark & Cinebench). Setelah seluruh 25 titik QC terkonfirmasi lulus, sertifikat garansi digital resmi ber-hash unik diterbitkan.",
-        metrics: [
-            { label: "Burn-In Test", value: "2 Jam Beban Penuh" },
-            { label: "Delta Suhu", value: "ΔT < 14°C Suhu Normal" },
-            { label: "Garansi Digital", value: "Sertifikat Ber-Hash" },
-        ],
-        statusText: "QC_MATRIX_25_POINT_PASS // READY_FOR_DISPATCH",
-    },
-];
-
-// Continuous Camera Path Waypoints (No sudden jumps, C0-continuous)
+// Continuous Camera Path Waypoints (C0-continuous hermite spline)
 const CAMERA_WAYPOINTS = [
-    { p: 0.00, cam: [0, 2.8, 7.2], look: [0, 0.1, 0] },
-    { p: 0.15, cam: [0, 2.2, 5.8], look: [0, 0.1, 0] },
-    { p: 0.35, cam: [0, 3.2, 5.2], look: [0, 0.6, -0.3] },
-    { p: 0.55, cam: [0.8, 3.8, 3.2], look: [0.1, 0.2, 0] },
-    { p: 0.75, cam: [-0.6, 3.3, 2.6], look: [-0.6, 0.2, 0.2] },
-    { p: 0.90, cam: [0.6, 2.8, 5.2], look: [0, 0.3, 0] },
-    { p: 1.00, cam: [2.2, 2.6, 6.2], look: [0, 0.3, 0] },
+    { p: 0.00, cam: [0, 2.6, 7.0], look: [0, 0.1, 0] },     // Closed laptop beauty view
+    { p: 0.15, cam: [0, 2.2, 5.8], look: [0, 0.1, 0] },     // Approach before open
+    { p: 0.35, cam: [0, 3.2, 5.0], look: [0, 0.7, -0.4] },  // Lid open, looking at display & keyboard
+    { p: 0.55, cam: [0.7, 3.6, 3.0], look: [0.1, 0.2, 0] }, // Exploded macro view diving into motherboard
+    { p: 0.75, cam: [-0.6, 3.0, 2.4], look: [-0.7, 0.1, 0.2] }, // Close-up on CPU socket rework
+    { p: 0.90, cam: [0.6, 2.6, 5.0], look: [0, 0.3, 0] },   // Pulls back as unit reassembles
+    { p: 1.00, cam: [2.2, 2.4, 6.0], look: [0, 0.3, 0] },   // 3/4 hero beauty angle
 ];
 
 function interpolateCamera(progress) {
@@ -123,9 +23,8 @@ function interpolateCamera(progress) {
     }
     const w1 = CAMERA_WAYPOINTS[idx];
     const w2 = CAMERA_WAYPOINTS[idx + 1];
-    const segmentSpan = w2.p - w1.p;
-    const rawT = segmentSpan > 0 ? (p - w1.p) / segmentSpan : 0;
-    // Cubic hermite smoothing
+    const span = w2.p - w1.p;
+    const rawT = span > 0 ? (p - w1.p) / span : 0;
     const t = rawT * rawT * (3 - 2 * rawT);
 
     const camX = w1.cam[0] + (w2.cam[0] - w1.cam[0]) * t;
@@ -139,12 +38,12 @@ function interpolateCamera(progress) {
     return { camX, camY, camZ, lookX, lookY, lookZ };
 }
 
-// Draw dynamic screen UI onto an existing canvas
-function updateScreenCanvas(canvas, stageIdx, progress) {
+// Draw dynamic screen UI onto persistent canvas
+function updateScreenCanvas(canvas, progress) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.fillStyle = "#0a0f18";
+    ctx.fillStyle = "#090d16";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Subtle technical grid
@@ -164,7 +63,7 @@ function updateScreenCanvas(canvas, stageIdx, progress) {
     }
 
     // Top status bar
-    ctx.fillStyle = "#141c2b";
+    ctx.fillStyle = "#131b2a";
     ctx.fillRect(0, 0, canvas.width, 44);
     ctx.fillStyle = "#2563eb";
     ctx.fillRect(0, 42, canvas.width, 2);
@@ -177,8 +76,8 @@ function updateScreenCanvas(canvas, stageIdx, progress) {
     ctx.fillStyle = "#10b981";
     ctx.fillText("STATUS: ACTIVE", canvas.width - 160, 28);
 
-    // Stage 6 special: 25-Point QC Certificate
-    if (stageIdx >= 5 || progress >= 0.88) {
+    // Final Stage special: 25-Point QC Certificate
+    if (progress >= 0.88) {
         ctx.fillStyle = "rgba(16, 185, 129, 0.12)";
         ctx.strokeStyle = "#10b981";
         ctx.lineWidth = 3;
@@ -271,7 +170,7 @@ function updateScreenCanvas(canvas, stageIdx, progress) {
 
         const logs = [
             "[OK] Non-destructive optical scan completed. Chassis tolerance 0.05mm verified.",
-            `[SYS] Active stage: ${STAGES[stageIdx]?.title || "Processing..."}`,
+            `[SYS] Progress Timeline: ${Math.round(progress * 100)}%`,
             "[ENG] Logic board power distribution lines mapped via stereoscopic inspection.",
             "[INFO] Micro-soldering rework and phase-change thermal compound ready.",
             "[TEL] Telemetry live link: YVS Workshop Cloud node #04 connected.",
@@ -387,7 +286,6 @@ function createMotherboardTexture() {
 export default function ServiceProcess3D() {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
-    const [currentStageIdx, setCurrentStageIdx] = useState(0);
     const [scrollPct, setScrollPct] = useState(0);
 
     const threeState = useRef({
@@ -400,24 +298,9 @@ export default function ServiceProcess3D() {
         animFrameId: null,
         screenCanvas: null,
         screenTexture: null,
-        isInView: true,
         mouseX: 0,
         mouseY: 0,
     });
-
-    const scrollToStage = (idx) => {
-        if (!containerRef.current) return;
-        const stage = STAGES[idx];
-        const targetPct = (stage.range[0] + stage.range[1]) / 2;
-        const container = containerRef.current;
-        const totalScrollable = container.offsetHeight - window.innerHeight;
-        const targetScrollTop = container.offsetTop + targetPct * totalScrollable;
-
-        window.scrollTo({
-            top: targetScrollTop,
-            behavior: "smooth",
-        });
-    };
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -426,19 +309,17 @@ export default function ServiceProcess3D() {
 
         const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-        // 1. Scene, Camera, Renderer
+        // 1. Scene, Camera, Renderer (Clean studio without fog to prevent disappearing into white)
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf8fafc);
-        scene.fog = new THREE.FogExp2(0xf8fafc, 0.04);
+        scene.background = new THREE.Color(0xf1f5f9); // Clean slate-100 studio backdrop
 
         const width = canvas.clientWidth || window.innerWidth;
         const height = canvas.clientHeight || window.innerHeight;
 
         const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 50);
-        camera.position.set(0, 2.8, 7.2);
+        camera.position.set(0, 2.6, 7.0);
         camera.lookAt(0, 0.1, 0);
 
-        // Standard WebGLRenderer without powerPreference to prevent Linux GPU subsystem query warnings
         const renderer = new THREE.WebGLRenderer({
             canvas,
             antialias: true,
@@ -447,18 +328,18 @@ export default function ServiceProcess3D() {
         renderer.setSize(width, height, false);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.1;
+        renderer.toneMappingExposure = 1.15;
 
-        // Use PCFShadowMap (PCFSoftShadowMap is deprecated/removed in Three.js r187)
+        // Shadow map
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowMap;
 
-        // 2. Lighting Setup
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+        // 2. High-Contrast Studio Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
         scene.add(ambientLight);
 
-        const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
-        keyLight.position.set(5, 8, 6);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+        keyLight.position.set(5, 9, 6);
         keyLight.castShadow = true;
         keyLight.shadow.mapSize.width = 1024;
         keyLight.shadow.mapSize.height = 1024;
@@ -467,17 +348,17 @@ export default function ServiceProcess3D() {
         keyLight.shadow.bias = -0.0005;
         scene.add(keyLight);
 
-        const fillLight = new THREE.DirectionalLight(0x93c5fd, 0.7);
-        fillLight.position.set(-6, 4, -4);
+        const fillLight = new THREE.DirectionalLight(0xbae6fd, 0.7);
+        fillLight.position.set(-6, 5, -3);
         scene.add(fillLight);
 
-        const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.8);
-        rimLight.position.set(0, 5, -6);
+        const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.9);
+        rimLight.position.set(0, 6, -5);
         scene.add(rimLight);
 
         // Ground shadow plane
-        const shadowPlaneGeo = new THREE.PlaneGeometry(12, 12);
-        const shadowPlaneMat = new THREE.ShadowMaterial({ opacity: 0.18 });
+        const shadowPlaneGeo = new THREE.PlaneGeometry(16, 16);
+        const shadowPlaneMat = new THREE.ShadowMaterial({ opacity: 0.16 });
         const shadowPlane = new THREE.Mesh(shadowPlaneGeo, shadowPlaneMat);
         shadowPlane.rotation.x = -Math.PI / 2;
         shadowPlane.position.y = -0.12;
@@ -490,9 +371,9 @@ export default function ServiceProcess3D() {
 
         // Materials
         const chassisMat = new THREE.MeshStandardMaterial({
-            color: 0x1e2430, // Space gray aluminum
-            metalness: 0.8,
-            roughness: 0.32,
+            color: 0x242834, // Space gray anodized aluminum
+            metalness: 0.85,
+            roughness: 0.28,
         });
 
         const darkMetalMat = new THREE.MeshStandardMaterial({
@@ -502,15 +383,15 @@ export default function ServiceProcess3D() {
         });
 
         const copperMat = new THREE.MeshStandardMaterial({
-            color: 0xc87d42,
-            metalness: 0.9,
-            roughness: 0.2,
+            color: 0xdf8445, // Rich copper luster
+            metalness: 0.92,
+            roughness: 0.18,
         });
 
         const siliconDieMat = new THREE.MeshStandardMaterial({
             color: 0x0f172a,
-            metalness: 0.95,
-            roughness: 0.08,
+            metalness: 0.98,
+            roughness: 0.04,
         });
 
         const goldMat = new THREE.MeshStandardMaterial({
@@ -520,9 +401,9 @@ export default function ServiceProcess3D() {
         });
 
         const thermalPasteMat = new THREE.MeshStandardMaterial({
-            color: 0x94a3b8,
-            metalness: 0.4,
-            roughness: 0.6,
+            color: 0xa8b2c1,
+            metalness: 0.5,
+            roughness: 0.45,
         });
 
         // A. LOWER CHASSIS BASE
@@ -594,7 +475,7 @@ export default function ServiceProcess3D() {
         // Pulsing precision micro-rework ring around CPU
         const probeRingGeo = new THREE.RingGeometry(0.48, 0.54, 32);
         const probeRingMat = new THREE.MeshBasicMaterial({
-            color: 0x38bdf8,
+            color: 0x00d4ff,
             transparent: true,
             opacity: 0,
             side: THREE.DoubleSide,
@@ -720,7 +601,9 @@ export default function ServiceProcess3D() {
         deckGroup.position.set(0, 0.11, 0);
         laptopRoot.add(deckGroup);
 
-        const deckPlate = new THREE.Mesh(new THREE.BoxGeometry(5.18, 0.04, 3.58), chassisMat);
+        const deckPlateMat = chassisMat.clone();
+        deckPlateMat.transparent = true;
+        const deckPlate = new THREE.Mesh(new THREE.BoxGeometry(5.18, 0.04, 3.58), deckPlateMat);
         deckPlate.position.set(0, 0.02, 0);
         deckPlate.castShadow = true;
         deckPlate.receiveShadow = true;
@@ -732,6 +615,8 @@ export default function ServiceProcess3D() {
             map: kbTex,
             roughness: 0.4,
             metalness: 0.1,
+            side: THREE.DoubleSide,
+            transparent: true,
         });
         const kbPlane = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 2.0), kbMat);
         kbPlane.rotation.x = -Math.PI / 2;
@@ -739,7 +624,13 @@ export default function ServiceProcess3D() {
         deckGroup.add(kbPlane);
 
         // Trackpad
-        const trackpad = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.01, 1.15), darkMetalMat);
+        const trackpadMat = new THREE.MeshStandardMaterial({
+            color: 0x161a24,
+            metalness: 0.75,
+            roughness: 0.25,
+            transparent: true,
+        });
+        const trackpad = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.01, 1.15), trackpadMat);
         trackpad.position.set(0, 0.041, 1.0);
         deckGroup.add(trackpad);
 
@@ -748,7 +639,7 @@ export default function ServiceProcess3D() {
         pwrBtn.position.set(2.0, 0.041, -1.4);
         deckGroup.add(pwrBtn);
 
-        const ledMesh = new THREE.Mesh(new THREE.CircleGeometry(0.015, 8), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        const ledMesh = new THREE.Mesh(new THREE.CircleGeometry(0.015, 8), new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide }));
         ledMesh.rotation.x = -Math.PI / 2;
         ledMesh.position.set(2.3, 0.042, -1.4);
         deckGroup.add(ledMesh);
@@ -762,7 +653,7 @@ export default function ServiceProcess3D() {
         hingeCylinder.rotation.z = Math.PI / 2;
         hingeGroup.add(hingeCylinder);
 
-        // Display Lid Assembly (Pivot is at rear hinge; center is offset forward by half depth)
+        // Display Lid Assembly
         const lidGroup = new THREE.Group();
         lidGroup.position.set(0, 0.04, 1.75);
         hingeGroup.add(lidGroup);
@@ -773,34 +664,35 @@ export default function ServiceProcess3D() {
         lidBack.castShadow = true;
         lidGroup.add(lidBack);
 
-        // Screen bezel (facing down towards keyboard when closed flat)
+        // Screen bezel
         const screenBezelMat = new THREE.MeshStandardMaterial({
             color: 0x090b0e,
             roughness: 0.2,
             metalness: 0.8,
+            side: THREE.DoubleSide,
         });
         const screenBezel = new THREE.Mesh(new THREE.PlaneGeometry(5.1, 3.42), screenBezelMat);
         screenBezel.rotation.x = Math.PI / 2;
         screenBezel.position.set(0, -0.021, 0);
         lidGroup.add(screenBezel);
 
-        // Active display screen panel (Single reusable canvas texture)
+        // Active display screen panel
         const screenCanvas = document.createElement("canvas");
         screenCanvas.width = 1024;
         screenCanvas.height = 640;
-        updateScreenCanvas(screenCanvas, 0, 0);
+        updateScreenCanvas(screenCanvas, 0);
 
         const screenTexture = new THREE.CanvasTexture(screenCanvas);
-        const screenMat = new THREE.MeshBasicMaterial({ map: screenTexture });
+        const screenMat = new THREE.MeshBasicMaterial({ map: screenTexture, side: THREE.DoubleSide });
         const screenPanel = new THREE.Mesh(new THREE.PlaneGeometry(4.7, 2.94), screenMat);
         screenPanel.rotation.x = Math.PI / 2;
         screenPanel.position.set(0, -0.022, 0);
         lidGroup.add(screenPanel);
 
-        // Web camera dot at top bezel (front of laptop when closed)
+        // Web camera dot at top bezel
         const camDot = new THREE.Mesh(
             new THREE.CircleGeometry(0.025, 16),
-            new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+            new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
         );
         camDot.rotation.x = Math.PI / 2;
         camDot.position.set(0, -0.023, 1.6);
@@ -815,13 +707,15 @@ export default function ServiceProcess3D() {
             currentProgress: 0,
             screenCanvas,
             screenTexture,
-            isInView: true,
             mouseX: 0,
             mouseY: 0,
             components: {
                 laptopRoot,
                 hingeGroup,
                 deckGroup,
+                deckPlate,
+                kbMat,
+                trackpadMat,
                 heatsinkGroup,
                 thermalPaste,
                 probeRing,
@@ -850,7 +744,7 @@ export default function ServiceProcess3D() {
         handleResize();
         window.addEventListener("resize", handleResize);
 
-        // Subtle parallax pointer movement
+        // Subtle pointer parallax
         const handleMouseMove = (e) => {
             threeState.current.mouseX = (e.clientX / window.innerWidth - 0.5) * 0.3;
             threeState.current.mouseY = (e.clientY / window.innerHeight - 0.5) * 0.2;
@@ -867,36 +761,16 @@ export default function ServiceProcess3D() {
             const progress = Math.min(Math.max(-rect.top / totalScrollable, 0), 1);
             threeState.current.targetProgress = progress;
             setScrollPct(Math.round(progress * 100));
-
-            let activeIdx = 0;
-            for (let i = 0; i < STAGES.length; i++) {
-                if (progress >= STAGES[i].range[0] && progress <= STAGES[i].range[1]) {
-                    activeIdx = i;
-                    break;
-                }
-            }
-            setCurrentStageIdx(activeIdx);
         };
         window.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
 
-        // IntersectionObserver to pause rendering when off-screen
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                threeState.current.isInView = entry.isIntersecting;
-            },
-            { threshold: 0.05 }
-        );
-        observer.observe(containerRef.current);
-
-        // 4. ANIMATION RENDER LOOP (Silky smooth lerp scrubber)
-        let lastStageIdx = -1;
+        // 4. ANIMATION RENDER LOOP (Always renders without stopping)
         let clock = 0;
+        let lastLoggedProgressBucket = -1;
 
         const animate = () => {
             threeState.current.animFrameId = requestAnimationFrame(animate);
-
-            if (!threeState.current.isInView) return;
 
             clock += 0.016;
             const state = threeState.current;
@@ -907,6 +781,9 @@ export default function ServiceProcess3D() {
             const {
                 hingeGroup,
                 deckGroup,
+                deckPlate,
+                kbMat,
+                trackpadMat,
                 heatsinkGroup,
                 thermalPaste,
                 probeRing,
@@ -916,14 +793,13 @@ export default function ServiceProcess3D() {
 
             // --- A. SMOOTH CAMERA WAYPOINTS ---
             const { camX, camY, camZ, lookX, lookY, lookZ } = interpolateCamera(p);
-            // Apply slight interactive mouse parallax
             camera.position.set(camX + state.mouseX, camY + state.mouseY, camZ);
             camera.lookAt(lookX, lookY, lookZ);
 
             // --- B. HINGE CLAMSHELL OPENING (0.15 to 0.35) ---
             const maxOpenAngle = (115 * Math.PI) / 180;
             if (p < 0.15) {
-                hingeGroup.rotation.x = 0; // completely flat closed
+                hingeGroup.rotation.x = 0;
             } else if (p < 0.35) {
                 const openT = (p - 0.15) / 0.20;
                 const smoothT = openT * openT * (3 - 2 * openT);
@@ -941,16 +817,38 @@ export default function ServiceProcess3D() {
             // --- C. EXPLODED VIEW: UPPER KEYBOARD DECK (0.35 to 0.55, reassembles 0.75 to 0.90) ---
             if (p < 0.35) {
                 deckGroup.position.y = 0.11;
+                deckGroup.position.z = 0;
+                deckPlate.material.opacity = 1;
+                kbMat.opacity = 1;
+                trackpadMat.opacity = 1;
             } else if (p < 0.55) {
                 const t = (p - 0.35) / 0.20;
-                deckGroup.position.y = 0.11 + t * 1.6;
+                deckGroup.position.y = 0.11 + t * 1.8;
+                deckGroup.position.z = t * 0.8; // moves slightly forward so it never blocks camera view of motherboard
+                const fade = 1 - t * 0.65;
+                deckPlate.material.opacity = fade;
+                kbMat.opacity = fade;
+                trackpadMat.opacity = fade;
             } else if (p < 0.75) {
-                deckGroup.position.y = 1.71;
+                deckGroup.position.y = 1.91;
+                deckGroup.position.z = 0.8;
+                deckPlate.material.opacity = 0.35;
+                kbMat.opacity = 0.35;
+                trackpadMat.opacity = 0.35;
             } else if (p < 0.90) {
                 const t = (p - 0.75) / 0.15;
-                deckGroup.position.y = 1.71 - t * 1.6;
+                deckGroup.position.y = 1.91 - t * 1.8;
+                deckGroup.position.z = 0.8 - t * 0.8;
+                const returnFade = 0.35 + t * 0.65;
+                deckPlate.material.opacity = returnFade;
+                kbMat.opacity = returnFade;
+                trackpadMat.opacity = returnFade;
             } else {
                 deckGroup.position.y = 0.11;
+                deckGroup.position.z = 0;
+                deckPlate.material.opacity = 1;
+                kbMat.opacity = 1;
+                trackpadMat.opacity = 1;
             }
 
             // --- D. REPAIR STAGE: HEATSINK LIFTS OFF & THERMAL OVERHAUL (0.55 to 0.75) ---
@@ -963,15 +861,14 @@ export default function ServiceProcess3D() {
                 const t = (p - 0.55) / 0.10;
                 heatsinkGroup.position.y = 0.06 + t * 1.6;
                 thermalPaste.scale.set(t, t, t);
-                probeRing.material.opacity = t * 0.8;
-                repairBeam.material.opacity = t * 0.7;
+                probeRing.material.opacity = t * 0.85;
+                repairBeam.material.opacity = t * 0.75;
             } else if (p < 0.75) {
                 const t = (p - 0.65) / 0.10;
                 heatsinkGroup.position.y = 1.66;
                 thermalPaste.scale.set(1, 1, 1);
-                probeRing.material.opacity = 0.8 - t * 0.4;
-                repairBeam.material.opacity = 0.7 - t * 0.35;
-                // Pulsing ring scale
+                probeRing.material.opacity = 0.85 - t * 0.4;
+                repairBeam.material.opacity = 0.75 - t * 0.35;
                 const pulse = 1 + Math.sin(clock * 6) * 0.08;
                 probeRing.scale.set(pulse, pulse, 1);
             } else if (p < 0.85) {
@@ -990,18 +887,11 @@ export default function ServiceProcess3D() {
                 fanHub.rotation.y += 0.12;
             }
 
-            // --- E. UPDATE SCREEN TEXTURE WITHOUT DISPOSING TEXTURES ---
-            let activeIdx = 0;
-            for (let i = 0; i < STAGES.length; i++) {
-                if (p >= STAGES[i].range[0] && p <= STAGES[i].range[1]) {
-                    activeIdx = i;
-                    break;
-                }
-            }
-
-            if (activeIdx !== lastStageIdx) {
-                lastStageIdx = activeIdx;
-                updateScreenCanvas(state.screenCanvas, activeIdx, p);
+            // --- E. UPDATE SCREEN TEXTURE ---
+            const currentBucket = p >= 0.88 ? 2 : p >= 0.15 ? 1 : 0;
+            if (currentBucket !== lastLoggedProgressBucket) {
+                lastLoggedProgressBucket = currentBucket;
+                updateScreenCanvas(state.screenCanvas, p);
                 state.screenTexture.needsUpdate = true;
             }
 
@@ -1015,7 +905,6 @@ export default function ServiceProcess3D() {
             window.removeEventListener("resize", handleResize);
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("scroll", handleScroll);
-            observer.disconnect();
 
             if (threeState.current.animFrameId) {
                 cancelAnimationFrame(threeState.current.animFrameId);
@@ -1035,148 +924,38 @@ export default function ServiceProcess3D() {
         };
     }, []);
 
-    const activeStage = STAGES[currentStageIdx] || STAGES[0];
-
     return (
         <section
             ref={containerRef}
-            className="relative w-full bg-slate-50 border-b border-slate-200"
-            style={{ height: "600vh" }}
+            className="relative w-full bg-slate-100"
+            style={{ height: "400vh" }}
             id="service-workflow"
         >
-            <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col justify-between pointer-events-none">
+            {/* Sticky 100vh viewport container */}
+            <div className="sticky top-0 w-full h-screen h-[100dvh] overflow-hidden">
+                {/* 3D WebGL Canvas */}
                 <canvas
                     ref={canvasRef}
-                    className="absolute inset-0 w-full h-full block pointer-events-auto"
+                    className="w-full h-full block cursor-grab active:cursor-grabbing"
+                    style={{ touchAction: "pan-y" }}
                 />
 
-                {/* TOP HUD BAR */}
-                <div className="relative z-10 w-full pt-4 sm:pt-6 px-4 sm:px-6 lg:px-8 pointer-events-auto">
-                    <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/90 backdrop-blur-md border border-slate-200/90 rounded-2xl px-5 py-3.5 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                                <Cpu className="w-4 h-4" />
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-display font-bold text-sm text-slate-900">
-                                        Anatomi &amp; Alur Rekayasa 3D
-                                    </span>
-                                    <span className="w-1 h-1 rounded-full bg-slate-300" />
-                                    <span className="text-xs font-mono text-blue-600 font-semibold">
-                                        Scroll-Driven Timeline
-                                    </span>
-                                </div>
-                                <p className="text-3xs sm:text-2xs text-slate-400 font-sans hidden sm:block">
-                                    Putar scroll mouse ke bawah untuk menelusuri proses perbaikan secara berurutan
-                                </p>
-                            </div>
+                {/* Minimal, elegant floating progress bar at bottom (No bulky stage text cards) */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/85 backdrop-blur-md border border-slate-200 shadow-md">
+                        <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                        <span className="font-mono text-xs font-semibold text-slate-800 tracking-tight">
+                            YVS 3D Telemetry Scrub
+                        </span>
+                        <div className="w-20 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-blue-600 transition-all duration-75 rounded-full"
+                                style={{ width: `${scrollPct}%` }}
+                            />
                         </div>
-
-                        {/* Interactive Stage Stepper Pills */}
-                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                            {STAGES.map((s, idx) => {
-                                const isActive = currentStageIdx === idx;
-                                const isPassed = currentStageIdx > idx;
-                                return (
-                                    <button
-                                        key={s.id}
-                                        type="button"
-                                        onClick={() => scrollToStage(idx)}
-                                        className={`px-2.5 py-1 rounded-lg text-xs font-sans font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                                            isActive
-                                                ? "bg-blue-600 text-white shadow-xs font-semibold"
-                                                : isPassed
-                                                ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                                : "bg-slate-100 text-slate-500 hover:bg-slate-200/80"
-                                        }`}
-                                    >
-                                        <span>{s.step}</span>
-                                        <span className="hidden md:inline">{s.badge.split(" · ")[1]}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Progress Bar Line */}
-                    <div className="max-w-6xl mx-auto mt-2 h-1 bg-slate-200/70 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-blue-600 transition-all duration-100 ease-out rounded-full"
-                            style={{ width: `${scrollPct}%` }}
-                        />
-                    </div>
-                </div>
-
-                {/* BOTTOM FLOATING STAGE DETAILS HUD CARD */}
-                <div className="relative z-10 w-full pb-6 sm:pb-8 px-4 sm:px-6 lg:px-8 pointer-events-auto">
-                    <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                            <div className="flex items-center gap-2.5">
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-sans font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                    {activeStage.badge}
-                                </span>
-                                <span className="font-mono text-xs text-slate-400">
-                                    Timeline: {scrollPct}%
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="font-mono text-2xs text-slate-500 uppercase tracking-wider">
-                                    {activeStage.statusText}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <h3 className="font-display font-bold text-lg sm:text-xl text-slate-900 tracking-tight leading-snug">
-                                {activeStage.title}
-                            </h3>
-                            <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed">
-                                {activeStage.description}
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                            {activeStage.metrics.map((m, i) => (
-                                <div
-                                    key={i}
-                                    className="bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-2"
-                                >
-                                    <div className="text-3xs font-sans font-semibold text-slate-400 uppercase tracking-wide">
-                                        {m.label}
-                                    </div>
-                                    <div className="font-mono text-xs font-bold text-slate-900 mt-0.5">
-                                        {m.value}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="flex items-center justify-between text-2xs text-slate-400 font-sans pt-1">
-                            <span>Scroll ke bawah untuk melanjutkan ke tahap berikutnya &darr;</span>
-                            <div className="flex items-center gap-2">
-                                {currentStageIdx > 0 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => scrollToStage(currentStageIdx - 1)}
-                                        className="hover:text-blue-600 transition-colors cursor-pointer"
-                                    >
-                                        &larr; Tahap Sebelumnya
-                                    </button>
-                                )}
-                                {currentStageIdx < STAGES.length - 1 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => scrollToStage(currentStageIdx + 1)}
-                                        className="text-blue-600 font-semibold hover:underline cursor-pointer"
-                                    >
-                                        Tahap Berikutnya &rarr;
-                                    </button>
-                                )}
-                            </div>
-                        </div>
+                        <span className="font-mono text-xs text-slate-500 font-medium">
+                            {scrollPct}%
+                        </span>
                     </div>
                 </div>
             </div>
