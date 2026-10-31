@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
 // Continuous Camera Path Waypoints (Hermite Spline)
@@ -291,48 +292,72 @@ export default function ServiceProcess3D() {
         updateScreenCanvas(screenCanvas, 0);
         const screenTexture = new THREE.CanvasTexture(screenCanvas);
 
-        // GLTF Loaders Setup (Local DRACO + Meshopt)
+        // GLTF Loaders Setup (Local DRACO + KTX2 + Meshopt)
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath("/draco/");
 
+        const ktx2Loader = new KTX2Loader();
+        ktx2Loader.setTranscoderPath("/basis/");
+        ktx2Loader.detectSupport(renderer);
+
         const gltfLoader = new GLTFLoader();
         gltfLoader.setDRACOLoader(dracoLoader);
+        gltfLoader.setKTX2Loader(ktx2Loader);
         gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+
+        // Safe async loader for robust error resilience
+        const loadSafe = async (url) => {
+            try {
+                return await gltfLoader.loadAsync(url);
+            } catch (e) {
+                console.warn(`[3D Loader] Failed to load ${url}:`, e);
+                return null;
+            }
+        };
 
         // Load photorealistic models in parallel
         Promise.all([
-            gltfLoader.loadAsync("/models/macbook-rigged.glb"),
-            gltfLoader.loadAsync("/models/motherboard.glb"),
-            gltfLoader.loadAsync("/models/cpu.glb"),
-            gltfLoader.loadAsync("/models/gpu.glb"),
-            gltfLoader.loadAsync("/models/ram.glb"),
+            loadSafe("/models/macbook-rigged.glb"),
+            loadSafe("/models/motherboard.glb"),
+            loadSafe("/models/cpu.glb"),
+            loadSafe("/models/gpu.glb"),
+            loadSafe("/models/ram.glb"),
         ])
             .then(([macbookGltf, mbGltf, cpuGltf, gpuGltf, ramGltf]) => {
+                let macbookScene = null;
+                let lidPivot = null;
+                let baseGroup = null;
+
                 // A. MACBOOK PRO RIGGING
-                const macbookScene = macbookGltf.scene;
-                normalizeModel(macbookScene, 4.3);
+                if (macbookGltf) {
+                    macbookScene = macbookGltf.scene;
+                    normalizeModel(macbookScene, 4.3);
 
-                // Find LidPivot and Screen mesh
-                let lidPivot = macbookScene.getObjectByName("LidPivot");
-                let baseGroup = macbookScene.getObjectByName("Base");
-                let screenMesh = macbookScene.getObjectByName("Screen");
+                    lidPivot = macbookScene.getObjectByName("LidPivot");
+                    baseGroup = macbookScene.getObjectByName("Base");
+                    const screenMesh = macbookScene.getObjectByName("Screen");
 
-                if (screenMesh && screenMesh.isMesh) {
-                    screenMesh.material = new THREE.MeshBasicMaterial({
-                        map: screenTexture,
-                        toneMapped: false,
-                        side: THREE.DoubleSide,
-                    });
+                    if (baseGroup) {
+                        baseGroup.userData.initPos = baseGroup.position.clone();
+                    }
+
+                    if (screenMesh && screenMesh.isMesh) {
+                        screenMesh.material = new THREE.MeshBasicMaterial({
+                            map: screenTexture,
+                            toneMapped: false,
+                            side: THREE.DoubleSide,
+                        });
+                    }
+
+                    // Fallback LidPivot setup if not nested
+                    if (!lidPivot) {
+                        lidPivot = new THREE.Group();
+                        lidPivot.position.set(0, 0.1, -1.5);
+                        macbookScene.add(lidPivot);
+                    }
+
+                    masterRoot.add(macbookScene);
                 }
-
-                // Fallback LidPivot setup if not nested
-                if (!lidPivot) {
-                    lidPivot = new THREE.Group();
-                    lidPivot.position.set(0, 0.1, -1.5);
-                    macbookScene.add(lidPivot);
-                }
-
-                masterRoot.add(macbookScene);
 
                 // B. INTERNAL LOGIC BOARD & HARDWARE ASSEMBLY
                 const internalsGroup = new THREE.Group();
@@ -341,28 +366,36 @@ export default function ServiceProcess3D() {
                 masterRoot.add(internalsGroup);
 
                 // Real 3D Motherboard
-                const mbScene = mbGltf.scene;
-                normalizeModel(mbScene, 3.8);
-                mbScene.position.set(0, 0, 0);
-                internalsGroup.add(mbScene);
+                if (mbGltf) {
+                    const mbScene = mbGltf.scene;
+                    normalizeModel(mbScene, 3.8);
+                    mbScene.position.set(0, 0, 0);
+                    internalsGroup.add(mbScene);
+                }
 
                 // Real 3D CPU
-                const cpuScene = cpuGltf.scene;
-                normalizeModel(cpuScene, 0.85);
-                cpuScene.position.set(-0.6, 0.12, 0.2);
-                internalsGroup.add(cpuScene);
+                if (cpuGltf) {
+                    const cpuScene = cpuGltf.scene;
+                    normalizeModel(cpuScene, 0.85);
+                    cpuScene.position.set(-0.6, 0.12, 0.2);
+                    internalsGroup.add(cpuScene);
+                }
 
                 // Real 3D RAM Stick
-                const ramScene = ramGltf.scene;
-                normalizeModel(ramScene, 1.4);
-                ramScene.position.set(-1.2, 0.15, -0.6);
-                internalsGroup.add(ramScene);
+                if (ramGltf) {
+                    const ramScene = ramGltf.scene;
+                    normalizeModel(ramScene, 1.4);
+                    ramScene.position.set(-1.2, 0.15, -0.6);
+                    internalsGroup.add(ramScene);
+                }
 
                 // Real 3D Dedicated GPU
-                const gpuScene = gpuGltf.scene;
-                normalizeModel(gpuScene, 1.5);
-                gpuScene.position.set(0.9, 0.18, 0.1);
-                internalsGroup.add(gpuScene);
+                if (gpuGltf) {
+                    const gpuScene = gpuGltf.scene;
+                    normalizeModel(gpuScene, 1.5);
+                    gpuScene.position.set(0.9, 0.18, 0.1);
+                    internalsGroup.add(gpuScene);
+                }
 
                 // Heatsink assembly (Copper cooling pipes & plates)
                 const heatsinkGroup = new THREE.Group();
@@ -529,29 +562,28 @@ export default function ServiceProcess3D() {
 
             // Exploded view transition (Motherboard revealed)
             if (internalsGroup && baseGroup) {
+                const initPos = baseGroup.userData.initPos || baseGroup.position;
                 if (p < 0.35) {
                     internalsGroup.visible = false;
-                    baseGroup.position.y = 0;
-                    baseGroup.position.z = 0;
+                    baseGroup.position.copy(initPos);
                 } else if (p < 0.55) {
                     const t = (p - 0.35) / 0.20;
                     internalsGroup.visible = true;
                     // MacBook base lifts and shifts forward to reveal motherboard below
-                    baseGroup.position.y = t * 1.5;
-                    baseGroup.position.z = t * 0.8;
+                    baseGroup.position.y = initPos.y + t * 1.5;
+                    baseGroup.position.z = initPos.z + t * 0.8;
                 } else if (p < 0.75) {
                     internalsGroup.visible = true;
-                    baseGroup.position.y = 1.5;
-                    baseGroup.position.z = 0.8;
+                    baseGroup.position.y = initPos.y + 1.5;
+                    baseGroup.position.z = initPos.z + 0.8;
                 } else if (p < 0.88) {
                     const t = (p - 0.75) / 0.13;
                     internalsGroup.visible = true;
-                    baseGroup.position.y = 1.5 - t * 1.5;
-                    baseGroup.position.z = 0.8 - t * 0.8;
+                    baseGroup.position.y = initPos.y + (1.5 - t * 1.5);
+                    baseGroup.position.z = initPos.z + (0.8 - t * 0.8);
                 } else {
                     internalsGroup.visible = false;
-                    baseGroup.position.y = 0;
-                    baseGroup.position.z = 0;
+                    baseGroup.position.copy(initPos);
                 }
             }
 
@@ -605,6 +637,13 @@ export default function ServiceProcess3D() {
             if (threeState.current.animFrameId) {
                 cancelAnimationFrame(threeState.current.animFrameId);
             }
+
+            try {
+                dracoLoader.dispose();
+            } catch (_) {}
+            try {
+                ktx2Loader.dispose();
+            } catch (_) {}
 
             scene.traverse((obj) => {
                 if (obj.isMesh) {
