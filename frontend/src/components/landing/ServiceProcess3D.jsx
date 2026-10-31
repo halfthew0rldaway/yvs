@@ -101,15 +101,50 @@ const STAGES = [
     },
 ];
 
-// Helper to generate dynamic canvas texture for laptop screen
-function createScreenTexture(stageIdx, progress) {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1024;
-    canvas.height = 640;
-    const ctx = canvas.getContext("2d");
+// Continuous Camera Path Waypoints (No sudden jumps, C0-continuous)
+const CAMERA_WAYPOINTS = [
+    { p: 0.00, cam: [0, 2.8, 7.2], look: [0, 0.1, 0] },
+    { p: 0.15, cam: [0, 2.2, 5.8], look: [0, 0.1, 0] },
+    { p: 0.35, cam: [0, 3.2, 5.2], look: [0, 0.6, -0.3] },
+    { p: 0.55, cam: [0.8, 3.8, 3.2], look: [0.1, 0.2, 0] },
+    { p: 0.75, cam: [-0.6, 3.3, 2.6], look: [-0.6, 0.2, 0.2] },
+    { p: 0.90, cam: [0.6, 2.8, 5.2], look: [0, 0.3, 0] },
+    { p: 1.00, cam: [2.2, 2.6, 6.2], look: [0, 0.3, 0] },
+];
 
-    // Background: High-tech diagnostic desktop
-    ctx.fillStyle = "#0c111a";
+function interpolateCamera(progress) {
+    const p = Math.min(Math.max(progress, 0), 1);
+    let idx = 0;
+    for (let i = 0; i < CAMERA_WAYPOINTS.length - 1; i++) {
+        if (p >= CAMERA_WAYPOINTS[i].p && p <= CAMERA_WAYPOINTS[i + 1].p) {
+            idx = i;
+            break;
+        }
+    }
+    const w1 = CAMERA_WAYPOINTS[idx];
+    const w2 = CAMERA_WAYPOINTS[idx + 1];
+    const segmentSpan = w2.p - w1.p;
+    const rawT = segmentSpan > 0 ? (p - w1.p) / segmentSpan : 0;
+    // Cubic hermite smoothing
+    const t = rawT * rawT * (3 - 2 * rawT);
+
+    const camX = w1.cam[0] + (w2.cam[0] - w1.cam[0]) * t;
+    const camY = w1.cam[1] + (w2.cam[1] - w1.cam[1]) * t;
+    const camZ = w1.cam[2] + (w2.cam[2] - w1.cam[2]) * t;
+
+    const lookX = w1.look[0] + (w2.look[0] - w1.look[0]) * t;
+    const lookY = w1.look[1] + (w2.look[1] - w1.look[1]) * t;
+    const lookZ = w1.look[2] + (w2.look[2] - w1.look[2]) * t;
+
+    return { camX, camY, camZ, lookX, lookY, lookZ };
+}
+
+// Draw dynamic screen UI onto an existing canvas
+function updateScreenCanvas(canvas, stageIdx, progress) {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "#0a0f18";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Subtle technical grid
@@ -129,56 +164,52 @@ function createScreenTexture(stageIdx, progress) {
     }
 
     // Top status bar
-    ctx.fillStyle = "#162032";
+    ctx.fillStyle = "#141c2b";
     ctx.fillRect(0, 0, canvas.width, 44);
-    ctx.fillStyle = "#3b82f6";
+    ctx.fillStyle = "#2563eb";
     ctx.fillRect(0, 42, canvas.width, 2);
 
-    // Header text
     ctx.font = "bold 16px monospace";
     ctx.fillStyle = "#93c5fd";
     ctx.fillText("YVS COMPUTER // HARDWARE DIAGNOSTIC TELEMETRY v4.2", 24, 28);
 
     ctx.font = "14px monospace";
     ctx.fillStyle = "#10b981";
-    ctx.fillText("STATUS: ONLINE", canvas.width - 160, 28);
+    ctx.fillText("STATUS: ACTIVE", canvas.width - 160, 28);
 
-    // Stage 6 special: Big QC Passed Seal
+    // Stage 6 special: 25-Point QC Certificate
     if (stageIdx >= 5 || progress >= 0.88) {
-        // Large verification card
         ctx.fillStyle = "rgba(16, 185, 129, 0.12)";
         ctx.strokeStyle = "#10b981";
         ctx.lineWidth = 3;
-        ctx.strokeRect(180, 110, canvas.width - 360, 420);
-        ctx.fillRect(180, 110, canvas.width - 360, 420);
+        ctx.strokeRect(180, 100, canvas.width - 360, 440);
+        ctx.fillRect(180, 100, canvas.width - 360, 440);
 
         ctx.fillStyle = "#10b981";
-        ctx.font = "bold 38px sans-serif";
+        ctx.font = "bold 36px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("25-POINT QC MATRIX: PASSED", canvas.width / 2, 210);
+        ctx.fillText("25-POINT QC MATRIX: PASSED", canvas.width / 2, 190);
 
         ctx.fillStyle = "#e2e8f0";
         ctx.font = "18px sans-serif";
-        ctx.fillText("Seluruh Pengujian Daya, Beban Penuh & Suhu Lolos Sertifikasi", canvas.width / 2, 260);
+        ctx.fillText("Seluruh Pengujian Daya, Beban Penuh & Suhu Lolos Sertifikasi", canvas.width / 2, 245);
 
         ctx.fillStyle = "#94a3b8";
         ctx.font = "15px monospace";
-        ctx.fillText("CPU PEAK TEMP: 62°C (OK)  |  GPU STRESS: PASS (120 FPS)", canvas.width / 2, 320);
-        ctx.fillText("VCORE STABILITY: 1.05V ±0.01V  |  NVMe READ: 3450 MB/s", canvas.width / 2, 355);
+        ctx.fillText("CPU PEAK TEMP: 62°C (OK)  |  GPU STRESS: PASS (120 FPS)", canvas.width / 2, 310);
+        ctx.fillText("VCORE STABILITY: 1.05V ±0.01V  |  NVMe READ: 3450 MB/s", canvas.width / 2, 345);
 
         ctx.fillStyle = "#38bdf8";
         ctx.font = "bold 16px monospace";
-        ctx.fillText("DIGITAL WARRANTY CERTIFICATE #YVS-PASS-2026 ACTIVE", canvas.width / 2, 430);
-
+        ctx.fillText("DIGITAL WARRANTY CERTIFICATE #YVS-PASS-2026 ACTIVE", canvas.width / 2, 420);
         ctx.textAlign = "left";
     } else {
-        // Normal diagnostic telemetry panels
-        // Panel 1: Volt Rails
-        ctx.fillStyle = "rgba(30, 41, 59, 0.7)";
+        // Power Rail Monitor Card
+        ctx.fillStyle = "rgba(22, 30, 46, 0.8)";
         ctx.strokeStyle = "rgba(59, 130, 246, 0.3)";
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(40, 70, 440, 240);
-        ctx.fillRect(40, 70, 440, 240);
+        ctx.strokeRect(40, 70, 440, 250);
+        ctx.fillRect(40, 70, 440, 250);
 
         ctx.font = "bold 15px monospace";
         ctx.fillStyle = "#60a5fa";
@@ -193,7 +224,7 @@ function createScreenTexture(stageIdx, progress) {
         ];
 
         rails.forEach((r, idx) => {
-            const y = 135 + idx * 28;
+            const y = 138 + idx * 28;
             ctx.font = "13px monospace";
             ctx.fillStyle = "#cbd5e1";
             ctx.fillText(r.name, 58, y);
@@ -203,15 +234,14 @@ function createScreenTexture(stageIdx, progress) {
             ctx.fillText(r.status, 390, y);
         });
 
-        // Panel 2: Thermal Sensor Telemetry
-        ctx.strokeRect(520, 70, 460, 240);
-        ctx.fillRect(520, 70, 460, 240);
+        // Thermal Interface Monitor Card
+        ctx.strokeRect(520, 70, 460, 250);
+        ctx.fillRect(520, 70, 460, 250);
 
         ctx.font = "bold 15px monospace";
         ctx.fillStyle = "#60a5fa";
         ctx.fillText("THERMAL INTERFACE TELEMETRY", 538, 100);
 
-        // Simple real-time bar graphs
         const thermals = [
             { label: "CPU DIE TEMPERATURE", val: "44°C", pct: 0.38, col: "#10b981" },
             { label: "GPU DIE TEMPERATURE", val: "41°C", pct: 0.35, col: "#10b981" },
@@ -220,7 +250,7 @@ function createScreenTexture(stageIdx, progress) {
         ];
 
         thermals.forEach((t, idx) => {
-            const y = 130 + idx * 42;
+            const y = 132 + idx * 44;
             ctx.font = "12px monospace";
             ctx.fillStyle = "#cbd5e1";
             ctx.fillText(`${t.label}: ${t.val}`, 538, y);
@@ -231,13 +261,13 @@ function createScreenTexture(stageIdx, progress) {
             ctx.fillRect(538, y + 8, 300 * t.pct, 10);
         });
 
-        // Bottom Console Log Panel
-        ctx.strokeRect(40, 340, 940, 250);
-        ctx.fillRect(40, 340, 940, 250);
+        // Diagnostic Console Log
+        ctx.strokeRect(40, 350, 940, 240);
+        ctx.fillRect(40, 350, 940, 240);
 
         ctx.font = "bold 14px monospace";
         ctx.fillStyle = "#e2e8f0";
-        ctx.fillText("SYSTEM WORKSHOP LOG // YVS REAL-TIME DISPATCH", 58, 370);
+        ctx.fillText("SYSTEM WORKSHOP LOG // YVS REAL-TIME DISPATCH", 58, 380);
 
         const logs = [
             "[OK] Non-destructive optical scan completed. Chassis tolerance 0.05mm verified.",
@@ -250,25 +280,21 @@ function createScreenTexture(stageIdx, progress) {
         ctx.font = "13px monospace";
         logs.forEach((line, idx) => {
             ctx.fillStyle = idx === 0 ? "#10b981" : idx === 1 ? "#38bdf8" : "#94a3b8";
-            ctx.fillText(line, 58, 410 + idx * 32);
+            ctx.fillText(line, 58, 418 + idx * 32);
         });
     }
-
-    return new THREE.CanvasTexture(canvas);
 }
 
-// Helper to generate keyboard keycaps texture
+// Generate keyboard texture
 function createKeyboardTexture() {
     const canvas = document.createElement("canvas");
     canvas.width = 1024;
     canvas.height = 512;
     const ctx = canvas.getContext("2d");
 
-    // Keyboard well background
     ctx.fillStyle = "#1e2229";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Keycaps layout
     const rows = [
         ["ESC", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "DEL"],
         ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "BACKSPACE"],
@@ -292,16 +318,12 @@ function createKeyboardTexture() {
             const w = keyWidth - 6;
             const h = rowHeight - 6;
 
-            // Keycap body
             ctx.fillStyle = "#12151b";
             ctx.strokeStyle = "#2d333f";
             ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.roundRect(x, y, w, h, 4);
-            ctx.fill();
-            ctx.stroke();
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeRect(x, y, w, h);
 
-            // Keycap letter
             ctx.fillStyle = "#cbd5e1";
             ctx.font = "bold 13px sans-serif";
             ctx.textAlign = "center";
@@ -313,18 +335,16 @@ function createKeyboardTexture() {
     return new THREE.CanvasTexture(canvas);
 }
 
-// Helper to generate Motherboard PCB circuit texture
+// Generate Motherboard PCB circuit texture
 function createMotherboardTexture() {
     const canvas = document.createElement("canvas");
     canvas.width = 1024;
     canvas.height = 1024;
     const ctx = canvas.getContext("2d");
 
-    // Dark green-slate FR4 substrate
     ctx.fillStyle = "#0c201d";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Circuit traces
     ctx.strokeStyle = "#1b4d45";
     ctx.lineWidth = 2;
     for (let i = 0; i < 40; i++) {
@@ -339,7 +359,6 @@ function createMotherboardTexture() {
         ctx.stroke();
     }
 
-    // Gold bus lines
     ctx.strokeStyle = "#c89b3c";
     ctx.lineWidth = 1.5;
     for (let i = 0; i < 20; i++) {
@@ -350,7 +369,6 @@ function createMotherboardTexture() {
         ctx.stroke();
     }
 
-    // SMD pads
     ctx.fillStyle = "#e2b85e";
     for (let i = 0; i < 80; i++) {
         const px = 100 + Math.random() * 800;
@@ -358,7 +376,6 @@ function createMotherboardTexture() {
         ctx.fillRect(px, py, 4, 8);
     }
 
-    // Silkscreen text
     ctx.font = "bold 18px monospace";
     ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
     ctx.fillText("YVS ENGINEERING MAINBOARD REV 4.2", 60, 60);
@@ -372,9 +389,7 @@ export default function ServiceProcess3D() {
     const canvasRef = useRef(null);
     const [currentStageIdx, setCurrentStageIdx] = useState(0);
     const [scrollPct, setScrollPct] = useState(0);
-    const [isReducedMotion, setIsReducedMotion] = useState(false);
 
-    // References for Three.js state
     const threeState = useRef({
         scene: null,
         camera: null,
@@ -383,12 +398,13 @@ export default function ServiceProcess3D() {
         currentProgress: 0,
         components: {},
         animFrameId: null,
+        screenCanvas: null,
         screenTexture: null,
-        screenMaterial: null,
         isInView: true,
+        mouseX: 0,
+        mouseY: 0,
     });
 
-    // Handle stage tab click to scroll directly to the stage position
     const scrollToStage = (idx) => {
         if (!containerRef.current) return;
         const stage = STAGES[idx];
@@ -403,78 +419,78 @@ export default function ServiceProcess3D() {
         });
     };
 
-    // --- THREE.JS SCENE SETUP & LIFECYCLE ---
     useEffect(() => {
         const canvas = canvasRef.current;
         const container = containerRef.current;
         if (!canvas || !container) return;
 
-        // Check prefers-reduced-motion
         const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-        setIsReducedMotion(motionQuery.matches);
 
         // 1. Scene, Camera, Renderer
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf8fafc); // ERP slate-50 studio background
+        scene.background = new THREE.Color(0xf8fafc);
         scene.fog = new THREE.FogExp2(0xf8fafc, 0.04);
 
         const width = canvas.clientWidth || window.innerWidth;
         const height = canvas.clientHeight || window.innerHeight;
 
         const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 50);
-        camera.position.set(0, 3.2, 7.5);
-        camera.lookAt(0, 0.2, 0);
+        camera.position.set(0, 2.8, 7.2);
+        camera.lookAt(0, 0.1, 0);
 
+        // Standard WebGLRenderer without powerPreference to prevent Linux GPU subsystem query warnings
         const renderer = new THREE.WebGLRenderer({
             canvas,
             antialias: true,
-            powerPreference: "high-performance",
+            alpha: false,
         });
-        renderer.setSize(width, height);
+        renderer.setSize(width, height, false);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.1;
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        // 2. Studio Lighting (Crisp high-end industrial tech lab)
+        // Use PCFShadowMap (PCFSoftShadowMap is deprecated/removed in Three.js r187)
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
+
+        // 2. Lighting Setup
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
         scene.add(ambientLight);
 
         const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
         keyLight.position.set(5, 8, 6);
         keyLight.castShadow = true;
-        keyLight.shadow.mapSize.width = 2048;
-        keyLight.shadow.mapSize.height = 2048;
+        keyLight.shadow.mapSize.width = 1024;
+        keyLight.shadow.mapSize.height = 1024;
         keyLight.shadow.camera.near = 0.5;
-        keyLight.shadow.camera.far = 25;
-        keyLight.shadow.bias = -0.0003;
+        keyLight.shadow.camera.far = 22;
+        keyLight.shadow.bias = -0.0005;
         scene.add(keyLight);
 
         const fillLight = new THREE.DirectionalLight(0x93c5fd, 0.7);
         fillLight.position.set(-6, 4, -4);
         scene.add(fillLight);
 
-        const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.9);
+        const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.8);
         rimLight.position.set(0, 5, -6);
         scene.add(rimLight);
 
-        // Ground shadow plane with circular soft shadow
+        // Ground shadow plane
         const shadowPlaneGeo = new THREE.PlaneGeometry(12, 12);
         const shadowPlaneMat = new THREE.ShadowMaterial({ opacity: 0.18 });
         const shadowPlane = new THREE.Mesh(shadowPlaneGeo, shadowPlaneMat);
         shadowPlane.rotation.x = -Math.PI / 2;
-        shadowPlane.position.y = -0.15;
+        shadowPlane.position.y = -0.12;
         shadowPlane.receiveShadow = true;
         scene.add(shadowPlane);
 
-        // 3. MASTER LAPTOP ASSEMBLY HIERARCHY
+        // 3. MASTER LAPTOP ASSEMBLY
         const laptopRoot = new THREE.Group();
         scene.add(laptopRoot);
 
-        // Materials definition
+        // Materials
         const chassisMat = new THREE.MeshStandardMaterial({
-            color: 0x1e2430, // Space Gray anodized aluminum
+            color: 0x1e2430, // Space gray aluminum
             metalness: 0.8,
             roughness: 0.32,
         });
@@ -486,7 +502,7 @@ export default function ServiceProcess3D() {
         });
 
         const copperMat = new THREE.MeshStandardMaterial({
-            color: 0xc87d42, // Genuine copper luster
+            color: 0xc87d42,
             metalness: 0.9,
             roughness: 0.2,
         });
@@ -504,12 +520,12 @@ export default function ServiceProcess3D() {
         });
 
         const thermalPasteMat = new THREE.MeshStandardMaterial({
-            color: 0x94a3b8, // Shimmering silver thermal compound
+            color: 0x94a3b8,
             metalness: 0.4,
             roughness: 0.6,
         });
 
-        // A. LOWER CHASSIS BASE (Fixed to base)
+        // A. LOWER CHASSIS BASE
         const baseCaseGeo = new THREE.BoxGeometry(5.2, 0.22, 3.6);
         const baseCase = new THREE.Mesh(baseCaseGeo, chassisMat);
         baseCase.position.set(0, 0, 0);
@@ -517,7 +533,7 @@ export default function ServiceProcess3D() {
         baseCase.receiveShadow = true;
         laptopRoot.add(baseCase);
 
-        // Side ports (Left & Right USB-C / HDMI cutouts)
+        // Side ports
         const portGeo = new THREE.BoxGeometry(0.04, 0.08, 0.24);
         const leftPort1 = new THREE.Mesh(portGeo, darkMetalMat);
         leftPort1.position.set(-2.61, 0.02, -0.6);
@@ -527,7 +543,7 @@ export default function ServiceProcess3D() {
         rightPort.position.set(2.61, 0.02, -0.4);
         laptopRoot.add(leftPort1, leftPort2, rightPort);
 
-        // Rubber feet on bottom
+        // Rubber feet
         const footGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.04, 16);
         const footMat = new THREE.MeshBasicMaterial({ color: 0x0a0c10 });
         [
@@ -537,56 +553,62 @@ export default function ServiceProcess3D() {
             [2.2, 1.4],
         ].forEach(([fx, fz]) => {
             const foot = new THREE.Mesh(footGeo, footMat);
-            foot.position.set(fx, -0.13, fz);
+            foot.position.set(fx, -0.12, fz);
             laptopRoot.add(foot);
         });
 
-        // B. MOTHERBOARD ASSEMBLY (Inside base)
+        // B. MOTHERBOARD ASSEMBLY (FR-4 substrate + chips inside base)
         const mbGroup = new THREE.Group();
-        mbGroup.position.set(0, 0.12, 0);
+        mbGroup.position.set(0, 0.02, 0);
         laptopRoot.add(mbGroup);
 
-        // PCB Substrate with copper traces texture
         const pcbTex = createMotherboardTexture();
         const pcbMat = new THREE.MeshStandardMaterial({
             map: pcbTex,
             roughness: 0.5,
             metalness: 0.2,
         });
-        const pcbGeo = new THREE.BoxGeometry(4.8, 0.04, 3.2);
-        const pcb = new THREE.Mesh(pcbGeo, pcbMat);
+        const pcb = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.04, 3.2), pcbMat);
         pcb.castShadow = true;
         pcb.receiveShadow = true;
         mbGroup.add(pcb);
 
         // CPU Socket & Die
-        const cpuSocketGeo = new THREE.BoxGeometry(1.2, 0.06, 1.2);
-        const cpuSocket = new THREE.Mesh(cpuSocketGeo, darkMetalMat);
+        const cpuSocket = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.04, 1.2), darkMetalMat);
         cpuSocket.position.set(-0.8, 0.04, 0.2);
-        cpuSocket.castShadow = true;
         mbGroup.add(cpuSocket);
 
-        const cpuDieGeo = new THREE.BoxGeometry(0.8, 0.04, 0.8);
-        const cpuDie = new THREE.Mesh(cpuDieGeo, siliconDieMat);
-        cpuDie.position.set(-0.8, 0.08, 0.2);
-        cpuDie.castShadow = true;
+        const cpuDie = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.03, 0.8), siliconDieMat);
+        cpuDie.position.set(-0.8, 0.075, 0.2);
         mbGroup.add(cpuDie);
 
-        // Fresh Thermal Paste Layer on CPU (Scales/appears during repair stage)
-        const pasteGeo = new THREE.CylinderGeometry(0.32, 0.35, 0.03, 24);
-        const thermalPaste = new THREE.Mesh(pasteGeo, thermalPasteMat);
-        thermalPaste.position.set(-0.8, 0.11, 0.2);
-        thermalPaste.scale.set(0.001, 0.001, 0.001); // starts invisible
+        // Fresh Thermal Paste Layer on CPU
+        const thermalPaste = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.32, 0.35, 0.03, 24),
+            thermalPasteMat
+        );
+        thermalPaste.position.set(-0.8, 0.095, 0.2);
+        thermalPaste.scale.set(0.001, 0.001, 0.001);
         mbGroup.add(thermalPaste);
 
-        // GPU Die next to CPU
-        const gpuDieGeo = new THREE.BoxGeometry(1.0, 0.06, 1.0);
-        const gpuDie = new THREE.Mesh(gpuDieGeo, siliconDieMat);
+        // Pulsing precision micro-rework ring around CPU
+        const probeRingGeo = new THREE.RingGeometry(0.48, 0.54, 32);
+        const probeRingMat = new THREE.MeshBasicMaterial({
+            color: 0x38bdf8,
+            transparent: true,
+            opacity: 0,
+            side: THREE.DoubleSide,
+        });
+        const probeRing = new THREE.Mesh(probeRingGeo, probeRingMat);
+        probeRing.rotation.x = -Math.PI / 2;
+        probeRing.position.set(-0.8, 0.098, 0.2);
+        mbGroup.add(probeRing);
+
+        // GPU Die & VRAM
+        const gpuDie = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 1.0), siliconDieMat);
         gpuDie.position.set(0.9, 0.05, 0.2);
-        gpuDie.castShadow = true;
         mbGroup.add(gpuDie);
 
-        // VRAM GDDR6 memory chips surrounding GPU
         const vramGeo = new THREE.BoxGeometry(0.3, 0.04, 0.35);
         [
             [0.9, 0.85],
@@ -601,35 +623,30 @@ export default function ServiceProcess3D() {
 
         // Dual RAM SO-DIMM Modules
         const ramGroup = new THREE.Group();
-        ramGroup.position.set(-1.4, 0.08, -0.8);
-        const ramSlotGeo = new THREE.BoxGeometry(1.6, 0.04, 0.5);
-        const ramSlot = new THREE.Mesh(ramSlotGeo, darkMetalMat);
+        ramGroup.position.set(-1.4, 0.06, -0.8);
+        const ramSlot = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.5), darkMetalMat);
         ramGroup.add(ramSlot);
 
-        const ramStickGeo = new THREE.BoxGeometry(1.5, 0.08, 0.35);
-        const ramStick = new THREE.Mesh(ramStickGeo, chassisMat);
+        const ramStick = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.35), chassisMat);
         ramStick.position.set(0, 0.05, 0);
         ramGroup.add(ramStick);
 
-        // RAM gold contacts
-        const ramGoldGeo = new THREE.BoxGeometry(1.4, 0.02, 0.04);
-        const ramGold = new THREE.Mesh(ramGoldGeo, goldMat);
+        const ramGold = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.02, 0.04), goldMat);
         ramGold.position.set(0, 0.01, -0.16);
         ramGroup.add(ramGold);
         mbGroup.add(ramGroup);
 
-        // M.2 NVMe SSD Module
+        // M.2 NVMe SSD
         const nvmeGroup = new THREE.Group();
-        nvmeGroup.position.set(1.4, 0.08, -0.8);
-        const nvmeGeo = new THREE.BoxGeometry(0.6, 0.04, 1.6);
-        const nvme = new THREE.Mesh(nvmeGeo, darkMetalMat);
+        nvmeGroup.position.set(1.4, 0.06, -0.8);
+        const nvme = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 1.6), darkMetalMat);
         nvmeGroup.add(nvme);
         const nvmeGold = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.06), goldMat);
         nvmeGold.position.set(0, 0.01, 0.78);
         nvmeGroup.add(nvmeGold);
         mbGroup.add(nvmeGroup);
 
-        // Power delivery chokes (Inductors R22)
+        // Power Inductors (Chokes)
         const chokeGeo = new THREE.BoxGeometry(0.24, 0.12, 0.24);
         const chokeMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, roughness: 0.4 });
         for (let i = 0; i < 4; i++) {
@@ -638,65 +655,56 @@ export default function ServiceProcess3D() {
             mbGroup.add(choke);
         }
 
-        // C. REMOVABLE HEATSINK & COOLING ASSEMBLY (Lifts up in Stage 4)
+        // C. REMOVABLE HEATSINK ASSEMBLY (Lifts up in Stage 4)
         const heatsinkGroup = new THREE.Group();
-        heatsinkGroup.position.set(0, 0.18, 0);
+        heatsinkGroup.position.set(0, 0.06, 0);
         laptopRoot.add(heatsinkGroup);
 
-        // CPU Copper Cold Plate
-        const cpuPlateGeo = new THREE.BoxGeometry(1.0, 0.05, 1.0);
-        const cpuPlate = new THREE.Mesh(cpuPlateGeo, copperMat);
-        cpuPlate.position.set(-0.8, 0, 0.2);
+        // Copper cold plates
+        const cpuPlate = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 1.0), copperMat);
+        cpuPlate.position.set(-0.8, 0.06, 0.2);
         heatsinkGroup.add(cpuPlate);
 
-        // GPU Copper Cold Plate
-        const gpuPlateGeo = new THREE.BoxGeometry(1.1, 0.05, 1.1);
-        const gpuPlate = new THREE.Mesh(gpuPlateGeo, copperMat);
-        gpuPlate.position.set(0.9, 0, 0.2);
+        const gpuPlate = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.04, 1.1), copperMat);
+        gpuPlate.position.set(0.9, 0.06, 0.2);
         heatsinkGroup.add(gpuPlate);
 
-        // Dual Copper Heat Pipes (Curved tubes)
-        const pipe1Geo = new THREE.CylinderGeometry(0.06, 0.06, 2.8, 16);
-        const pipe1 = new THREE.Mesh(pipe1Geo, copperMat);
+        // Copper heatpipes
+        const pipe1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.8, 16), copperMat);
         pipe1.rotation.z = Math.PI / 2;
-        pipe1.position.set(0.1, 0.06, -0.2);
+        pipe1.position.set(0.1, 0.09, -0.2);
         heatsinkGroup.add(pipe1);
 
-        const pipe2Geo = new THREE.CylinderGeometry(0.06, 0.06, 2.6, 16);
-        const pipe2 = new THREE.Mesh(pipe2Geo, copperMat);
+        const pipe2 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.6, 16), copperMat);
         pipe2.rotation.z = Math.PI / 2;
-        pipe2.position.set(0.1, 0.06, 0.0);
+        pipe2.position.set(0.1, 0.09, 0.0);
         heatsinkGroup.add(pipe2);
 
-        // Rear Radiator Fins (Exhaust stack)
-        const finStackGeo = new THREE.BoxGeometry(3.6, 0.14, 0.4);
-        const finStack = new THREE.Mesh(finStackGeo, copperMat);
-        finStack.position.set(0, 0.05, -1.4);
+        // Radiator fin stack at exhaust
+        const finStack = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.14, 0.4), copperMat);
+        finStack.position.set(0, 0.07, -1.4);
         heatsinkGroup.add(finStack);
 
-        // Cooling Blower Fan Housing & Impeller Hub
-        const fanHousingGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.16, 24);
-        const fanHousing = new THREE.Mesh(fanHousingGeo, darkMetalMat);
-        fanHousing.position.set(1.5, 0.06, -0.6);
+        // Cooling fan
+        const fanHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.16, 24), darkMetalMat);
+        fanHousing.position.set(1.5, 0.07, -0.6);
         heatsinkGroup.add(fanHousing);
 
-        const fanHubGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.18, 16);
-        const fanHub = new THREE.Mesh(fanHubGeo, chassisMat);
-        fanHub.position.set(1.5, 0.07, -0.6);
+        const fanHub = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.18, 16), chassisMat);
+        fanHub.position.set(1.5, 0.08, -0.6);
         heatsinkGroup.add(fanHub);
 
-        // Fan Impeller Blades
         const bladeGeo = new THREE.BoxGeometry(0.03, 0.12, 0.35);
         for (let b = 0; b < 8; b++) {
             const blade = new THREE.Mesh(bladeGeo, darkMetalMat);
             const angle = (b / 8) * Math.PI * 2;
-            blade.position.set(1.5 + Math.cos(angle) * 0.42, 0.07, -0.6 + Math.sin(angle) * 0.42);
+            blade.position.set(1.5 + Math.cos(angle) * 0.42, 0.08, -0.6 + Math.sin(angle) * 0.42);
             blade.rotation.y = angle;
             heatsinkGroup.add(blade);
         }
 
-        // Diagnostic micro-soldering / repair light beam
-        const beamGeo = new THREE.CylinderGeometry(0.04, 0.35, 1.6, 16);
+        // Micro-soldering precision light beam
+        const beamGeo = new THREE.CylinderGeometry(0.04, 0.35, 1.8, 16);
         const beamMat = new THREE.MeshBasicMaterial({
             color: 0x38bdf8,
             transparent: true,
@@ -704,94 +712,98 @@ export default function ServiceProcess3D() {
             blending: THREE.AdditiveBlending,
         });
         const repairBeam = new THREE.Mesh(beamGeo, beamMat);
-        repairBeam.position.set(-0.8, 0.9, 0.2);
+        repairBeam.position.set(-0.8, 1.0, 0.2);
         scene.add(repairBeam);
 
-        // D. UPPER KEYBOARD DECK (Separates / explodes in Stage 3)
+        // D. UPPER KEYBOARD DECK (Lifts up in Stage 3)
         const deckGroup = new THREE.Group();
-        deckGroup.position.set(0, 0.16, 0);
+        deckGroup.position.set(0, 0.11, 0);
         laptopRoot.add(deckGroup);
 
-        const deckPlateGeo = new THREE.BoxGeometry(5.18, 0.06, 3.58);
-        const deckPlate = new THREE.Mesh(deckPlateGeo, chassisMat);
+        const deckPlate = new THREE.Mesh(new THREE.BoxGeometry(5.18, 0.04, 3.58), chassisMat);
+        deckPlate.position.set(0, 0.02, 0);
         deckPlate.castShadow = true;
         deckPlate.receiveShadow = true;
         deckGroup.add(deckPlate);
 
-        // Keyboard keycaps plane with canvas texture
+        // Keyboard plane
         const kbTex = createKeyboardTexture();
         const kbMat = new THREE.MeshStandardMaterial({
             map: kbTex,
             roughness: 0.4,
             metalness: 0.1,
         });
-        const kbPlaneGeo = new THREE.PlaneGeometry(4.4, 2.0);
-        const kbPlane = new THREE.Mesh(kbPlaneGeo, kbMat);
+        const kbPlane = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 2.0), kbMat);
         kbPlane.rotation.x = -Math.PI / 2;
-        kbPlane.position.set(0, 0.035, -0.4);
+        kbPlane.position.set(0, 0.041, -0.4);
         deckGroup.add(kbPlane);
 
         // Trackpad
-        const trackpadGeo = new THREE.BoxGeometry(1.8, 0.02, 1.15);
-        const trackpadMat = new THREE.MeshStandardMaterial({
-            color: 0x161a22,
-            metalness: 0.7,
-            roughness: 0.3,
-        });
-        const trackpad = new THREE.Mesh(trackpadGeo, trackpadMat);
-        trackpad.position.set(0, 0.035, 1.0);
+        const trackpad = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.01, 1.15), darkMetalMat);
+        trackpad.position.set(0, 0.041, 1.0);
         deckGroup.add(trackpad);
 
-        // E. DISPLAY LID & HINGE ASSEMBLY (Pivots open on X axis)
-        // Hinge pivot point at the rear top edge of base
+        // Power button & status LED
+        const pwrBtn = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.015, 0.2), darkMetalMat);
+        pwrBtn.position.set(2.0, 0.041, -1.4);
+        deckGroup.add(pwrBtn);
+
+        const ledMesh = new THREE.Mesh(new THREE.CircleGeometry(0.015, 8), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        ledMesh.rotation.x = -Math.PI / 2;
+        ledMesh.position.set(2.3, 0.042, -1.4);
+        deckGroup.add(ledMesh);
+
+        // E. DISPLAY LID & HINGE (Pivots open on X axis)
         const hingeGroup = new THREE.Group();
-        hingeGroup.position.set(0, 0.14, -1.78);
+        hingeGroup.position.set(0, 0.11, -1.75);
         laptopRoot.add(hingeGroup);
 
-        // Hinge cylinder
-        const hingeCylinderGeo = new THREE.CylinderGeometry(0.08, 0.08, 4.2, 16);
-        const hingeCylinder = new THREE.Mesh(hingeCylinderGeo, darkMetalMat);
+        const hingeCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.2, 16), darkMetalMat);
         hingeCylinder.rotation.z = Math.PI / 2;
         hingeGroup.add(hingeCylinder);
 
-        // Display Lid Back Cover (Aluminum clamshell back)
+        // Display Lid Assembly (Pivot is at rear hinge; center is offset forward by half depth)
         const lidGroup = new THREE.Group();
-        // Shift lid geometry so pivot is at hinge origin
-        lidGroup.position.set(0, 1.75, 0);
+        lidGroup.position.set(0, 0.04, 1.75);
         hingeGroup.add(lidGroup);
 
-        const lidBackGeo = new THREE.BoxGeometry(5.2, 3.5, 0.08);
-        const lidBack = new THREE.Mesh(lidBackGeo, chassisMat);
+        // Aluminum outer back shell
+        const lidBack = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.06, 3.5), chassisMat);
+        lidBack.position.set(0, 0.01, 0);
         lidBack.castShadow = true;
         lidGroup.add(lidBack);
 
-        // Display Screen Glass & Active Bezel
-        const screenBezelGeo = new THREE.BoxGeometry(5.08, 3.38, 0.02);
+        // Screen bezel (facing down towards keyboard when closed flat)
         const screenBezelMat = new THREE.MeshStandardMaterial({
             color: 0x090b0e,
             roughness: 0.2,
             metalness: 0.8,
         });
-        const screenBezel = new THREE.Mesh(screenBezelGeo, screenBezelMat);
-        screenBezel.position.set(0, 0, 0.045);
+        const screenBezel = new THREE.Mesh(new THREE.PlaneGeometry(5.1, 3.42), screenBezelMat);
+        screenBezel.rotation.x = Math.PI / 2;
+        screenBezel.position.set(0, -0.021, 0);
         lidGroup.add(screenBezel);
 
-        // Screen Display Texture
-        const initialScreenTex = createScreenTexture(0, 0);
-        const screenMat = new THREE.MeshBasicMaterial({
-            map: initialScreenTex,
-        });
-        const screenPanelGeo = new THREE.PlaneGeometry(4.7, 2.95);
-        const screenPanel = new THREE.Mesh(screenPanelGeo, screenMat);
-        screenPanel.position.set(0, 0, 0.06);
+        // Active display screen panel (Single reusable canvas texture)
+        const screenCanvas = document.createElement("canvas");
+        screenCanvas.width = 1024;
+        screenCanvas.height = 640;
+        updateScreenCanvas(screenCanvas, 0, 0);
+
+        const screenTexture = new THREE.CanvasTexture(screenCanvas);
+        const screenMat = new THREE.MeshBasicMaterial({ map: screenTexture });
+        const screenPanel = new THREE.Mesh(new THREE.PlaneGeometry(4.7, 2.94), screenMat);
+        screenPanel.rotation.x = Math.PI / 2;
+        screenPanel.position.set(0, -0.022, 0);
         lidGroup.add(screenPanel);
 
-        // Web camera dot at top bezel
+        // Web camera dot at top bezel (front of laptop when closed)
         const camDot = new THREE.Mesh(
-            new THREE.CircleGeometry(0.03, 16),
+            new THREE.CircleGeometry(0.025, 16),
             new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
         );
-        camDot.position.set(0, 1.58, 0.06);
+        camDot.rotation.x = Math.PI / 2;
+        camDot.position.set(0, -0.023, 1.6);
         lidGroup.add(camDot);
 
         // Store Three.js references
@@ -801,53 +813,61 @@ export default function ServiceProcess3D() {
             renderer,
             targetProgress: 0,
             currentProgress: 0,
-            screenTexture: initialScreenTex,
-            screenMaterial: screenMat,
+            screenCanvas,
+            screenTexture,
             isInView: true,
+            mouseX: 0,
+            mouseY: 0,
             components: {
                 laptopRoot,
                 hingeGroup,
                 deckGroup,
                 heatsinkGroup,
                 thermalPaste,
+                probeRing,
                 repairBeam,
                 fanHub,
             },
         };
 
-        // Resize handler
+        // Resize handler with mobile FOV adaptation
         const handleResize = () => {
             if (!canvas) return;
             const w = canvas.clientWidth || window.innerWidth;
             const h = canvas.clientHeight || window.innerHeight;
+            if (w === 0 || h === 0) return;
             camera.aspect = w / h;
-            // Adjust camera FOV for mobile to avoid cropping laptop
             if (w < 640) {
-                camera.fov = 48;
+                camera.fov = 50;
             } else if (w < 1024) {
                 camera.fov = 42;
             } else {
                 camera.fov = 36;
             }
             camera.updateProjectionMatrix();
-            renderer.setSize(w, h);
+            renderer.setSize(w, h, false);
         };
         handleResize();
         window.addEventListener("resize", handleResize);
 
-        // 4. SCROLL PROGRESS LISTENER (Direct Scrubber)
+        // Subtle parallax pointer movement
+        const handleMouseMove = (e) => {
+            threeState.current.mouseX = (e.clientX / window.innerWidth - 0.5) * 0.3;
+            threeState.current.mouseY = (e.clientY / window.innerHeight - 0.5) * 0.2;
+        };
+        window.addEventListener("mousemove", handleMouseMove, { passive: true });
+
+        // Scroll listener (Direct Scrubber)
         const handleScroll = () => {
             if (!containerRef.current) return;
             const rect = containerRef.current.getBoundingClientRect();
             const totalScrollable = containerRef.current.offsetHeight - window.innerHeight;
             if (totalScrollable <= 0) return;
 
-            // Direct mapping: 0 when top enters viewport, 1 when section finishes
             const progress = Math.min(Math.max(-rect.top / totalScrollable, 0), 1);
             threeState.current.targetProgress = progress;
             setScrollPct(Math.round(progress * 100));
 
-            // Sync current stage index
             let activeIdx = 0;
             for (let i = 0; i < STAGES.length; i++) {
                 if (progress >= STAGES[i].range[0] && progress <= STAGES[i].range[1]) {
@@ -858,9 +878,9 @@ export default function ServiceProcess3D() {
             setCurrentStageIdx(activeIdx);
         };
         window.addEventListener("scroll", handleScroll, { passive: true });
-        handleScroll(); // Initial check
+        handleScroll();
 
-        // IntersectionObserver to pause render loop when off-screen
+        // IntersectionObserver to pause rendering when off-screen
         const observer = new IntersectionObserver(
             ([entry]) => {
                 threeState.current.isInView = entry.isIntersecting;
@@ -869,105 +889,48 @@ export default function ServiceProcess3D() {
         );
         observer.observe(containerRef.current);
 
-        // 5. ANIMATION RENDER LOOP (Silky smooth lerp scrubber)
+        // 4. ANIMATION RENDER LOOP (Silky smooth lerp scrubber)
         let lastStageIdx = -1;
+        let clock = 0;
+
         const animate = () => {
             threeState.current.animFrameId = requestAnimationFrame(animate);
 
             if (!threeState.current.isInView) return;
 
+            clock += 0.016;
             const state = threeState.current;
-            // Smooth lerp progress towards target
             const lerpFactor = motionQuery.matches ? 0.3 : 0.085;
             state.currentProgress += (state.targetProgress - state.currentProgress) * lerpFactor;
             const p = state.currentProgress;
 
             const {
-                laptopRoot,
                 hingeGroup,
                 deckGroup,
                 heatsinkGroup,
                 thermalPaste,
+                probeRing,
                 repairBeam,
                 fanHub,
             } = state.components;
 
-            // --- A. CAMERA WAYPOINTS INTERPOLATION ---
-            // 0.0 - 0.15: Closed laptop, camera approaches
-            // 0.15 - 0.35: Lid opens, camera moves upward & angles into display
-            // 0.35 - 0.55: Exploded view, camera zooms deep into logic board
-            // 0.55 - 0.75: Heatsink lifts, camera inspects CPU socket rework
-            // 0.75 - 0.90: Reassembly, camera pulls back
-            // 0.90 - 1.00: Final majesty beauty hero angle
-            let camX = 0, camY = 3.2, camZ = 7.5;
-            let lookX = 0, lookY = 0.2, lookZ = 0;
-
-            if (p < 0.15) {
-                const t = p / 0.15;
-                camX = 0;
-                camY = 3.2 - t * 0.7; // 3.2 -> 2.5
-                camZ = 7.5 - t * 1.5; // 7.5 -> 6.0
-                lookX = 0;
-                lookY = 0.2;
-                lookZ = 0;
-            } else if (p < 0.35) {
-                const t = (p - 0.15) / 0.20;
-                camX = 0;
-                camY = 2.5 + t * 0.9; // 2.5 -> 3.4
-                camZ = 6.0 - t * 0.8; // 6.0 -> 5.2
-                lookX = 0;
-                lookY = 0.2 + t * 0.6; // look slightly higher into screen
-                lookZ = -0.2;
-            } else if (p < 0.55) {
-                const t = (p - 0.35) / 0.20;
-                camX = t * 0.8; // pan to component side
-                camY = 3.4 + t * 0.6; // 3.4 -> 4.0
-                camZ = 5.2 - t * 2.2; // 5.2 -> 3.0 (macro dive)
-                lookX = t * 0.3;
-                lookY = 0.8 - t * 0.6; // look straight down at PCB
-                lookZ = 0;
-            } else if (p < 0.75) {
-                const t = (p - 0.55) / 0.20;
-                camX = 0.8 - t * 1.4; // 0.8 -> -0.6
-                camY = 4.0 - t * 0.4; // 4.0 -> 3.6
-                camZ = 3.0 - t * 0.4; // 3.0 -> 2.6
-                lookX = -0.4; // focused on CPU socket
-                lookY = 0.2;
-                lookZ = 0.2;
-            } else if (p < 0.90) {
-                const t = (p - 0.75) / 0.15;
-                camX = -0.6 + t * 1.6; // -0.6 -> 1.0
-                camY = 3.6 - t * 0.8; // 3.6 -> 2.8
-                camZ = 2.6 + t * 2.8; // 2.6 -> 5.4
-                lookX = 0;
-                lookY = 0.3;
-                lookZ = 0;
-            } else {
-                const t = (p - 0.90) / 0.10;
-                camX = 1.0 + t * 1.4; // 1.0 -> 2.4 (3/4 beauty angle)
-                camY = 2.8 - t * 0.2; // 2.8 -> 2.6
-                camZ = 5.4 + t * 1.0; // 5.4 -> 6.4
-                lookX = 0;
-                lookY = 0.4;
-                lookZ = 0;
-            }
-
-            camera.position.set(camX, camY, camZ);
+            // --- A. SMOOTH CAMERA WAYPOINTS ---
+            const { camX, camY, camZ, lookX, lookY, lookZ } = interpolateCamera(p);
+            // Apply slight interactive mouse parallax
+            camera.position.set(camX + state.mouseX, camY + state.mouseY, camZ);
             camera.lookAt(lookX, lookY, lookZ);
 
             // --- B. HINGE CLAMSHELL OPENING (0.15 to 0.35) ---
             const maxOpenAngle = (115 * Math.PI) / 180;
             if (p < 0.15) {
-                hingeGroup.rotation.x = 0; // closed flat
+                hingeGroup.rotation.x = 0; // completely flat closed
             } else if (p < 0.35) {
                 const openT = (p - 0.15) / 0.20;
-                // Smooth easeInOut curve
-                const smoothT = openT < 0.5 ? 2 * openT * openT : -1 + (4 - 2 * openT) * openT;
+                const smoothT = openT * openT * (3 - 2 * openT);
                 hingeGroup.rotation.x = -smoothT * maxOpenAngle;
             } else if (p < 0.75) {
                 hingeGroup.rotation.x = -maxOpenAngle;
             } else if (p < 0.90) {
-                // Gently settle to 105°
                 const settleT = (p - 0.75) / 0.15;
                 const settleAngle = (105 * Math.PI) / 180;
                 hingeGroup.rotation.x = -(maxOpenAngle - settleT * (maxOpenAngle - settleAngle));
@@ -975,53 +938,59 @@ export default function ServiceProcess3D() {
                 hingeGroup.rotation.x = -((105 * Math.PI) / 180);
             }
 
-            // --- C. EXPLODED VIEW: UPPER KEYBOARD DECK (0.35 to 0.55 & returns at 0.75) ---
+            // --- C. EXPLODED VIEW: UPPER KEYBOARD DECK (0.35 to 0.55, reassembles 0.75 to 0.90) ---
             if (p < 0.35) {
-                deckGroup.position.y = 0.16;
+                deckGroup.position.y = 0.11;
             } else if (p < 0.55) {
                 const t = (p - 0.35) / 0.20;
-                deckGroup.position.y = 0.16 + t * 1.5; // lifts 1.5 units
+                deckGroup.position.y = 0.11 + t * 1.6;
             } else if (p < 0.75) {
-                deckGroup.position.y = 1.66; // hovers
+                deckGroup.position.y = 1.71;
             } else if (p < 0.90) {
                 const t = (p - 0.75) / 0.15;
-                deckGroup.position.y = 1.66 - t * 1.5; // snaps back down
+                deckGroup.position.y = 1.71 - t * 1.6;
             } else {
-                deckGroup.position.y = 0.16;
+                deckGroup.position.y = 0.11;
             }
 
-            // --- D. REPAIR STAGE: HEATSINK LIFTS OFF & REPAIRS (0.55 to 0.75) ---
+            // --- D. REPAIR STAGE: HEATSINK LIFTS OFF & THERMAL OVERHAUL (0.55 to 0.75) ---
             if (p < 0.55) {
-                heatsinkGroup.position.y = 0.18;
+                heatsinkGroup.position.y = 0.06;
                 thermalPaste.scale.set(0.001, 0.001, 0.001);
+                probeRing.material.opacity = 0;
                 repairBeam.material.opacity = 0;
             } else if (p < 0.65) {
                 const t = (p - 0.55) / 0.10;
-                heatsinkGroup.position.y = 0.18 + t * 1.6; // heatsink lifts
-                // Thermal paste spreads on die
+                heatsinkGroup.position.y = 0.06 + t * 1.6;
                 thermalPaste.scale.set(t, t, t);
-                repairBeam.material.opacity = t * 0.85;
+                probeRing.material.opacity = t * 0.8;
+                repairBeam.material.opacity = t * 0.7;
             } else if (p < 0.75) {
                 const t = (p - 0.65) / 0.10;
-                heatsinkGroup.position.y = 1.78; // hovers
+                heatsinkGroup.position.y = 1.66;
                 thermalPaste.scale.set(1, 1, 1);
-                // Pulse beam light
-                repairBeam.material.opacity = 0.85 - t * 0.45;
+                probeRing.material.opacity = 0.8 - t * 0.4;
+                repairBeam.material.opacity = 0.7 - t * 0.35;
+                // Pulsing ring scale
+                const pulse = 1 + Math.sin(clock * 6) * 0.08;
+                probeRing.scale.set(pulse, pulse, 1);
             } else if (p < 0.85) {
                 const t = (p - 0.75) / 0.10;
-                heatsinkGroup.position.y = 1.78 - t * 1.6; // snaps firmly back onto die
+                heatsinkGroup.position.y = 1.66 - t * 1.6;
+                probeRing.material.opacity = 0;
                 repairBeam.material.opacity = 0;
             } else {
-                heatsinkGroup.position.y = 0.18;
+                heatsinkGroup.position.y = 0.06;
+                probeRing.material.opacity = 0;
                 repairBeam.material.opacity = 0;
             }
 
-            // Fan spin during active diagnostics / stress test
+            // Fan rotation
             if (p > 0.20) {
                 fanHub.rotation.y += 0.12;
             }
 
-            // --- E. UPDATE SCREEN TEXTURE WHEN STAGE CHANGES ---
+            // --- E. UPDATE SCREEN TEXTURE WITHOUT DISPOSING TEXTURES ---
             let activeIdx = 0;
             for (let i = 0; i < STAGES.length; i++) {
                 if (p >= STAGES[i].range[0] && p <= STAGES[i].range[1]) {
@@ -1032,12 +1001,8 @@ export default function ServiceProcess3D() {
 
             if (activeIdx !== lastStageIdx) {
                 lastStageIdx = activeIdx;
-                const newScreenTex = createScreenTexture(activeIdx, p);
-                if (state.screenMaterial) {
-                    state.screenMaterial.map.dispose();
-                    state.screenMaterial.map = newScreenTex;
-                    state.screenMaterial.needsUpdate = true;
-                }
+                updateScreenCanvas(state.screenCanvas, activeIdx, p);
+                state.screenTexture.needsUpdate = true;
             }
 
             renderer.render(scene, camera);
@@ -1045,9 +1010,10 @@ export default function ServiceProcess3D() {
 
         animate();
 
-        // 6. CLEANUP
+        // 5. CLEANUP
         return () => {
             window.removeEventListener("resize", handleResize);
+            window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("scroll", handleScroll);
             observer.disconnect();
 
@@ -1055,7 +1021,6 @@ export default function ServiceProcess3D() {
                 cancelAnimationFrame(threeState.current.animFrameId);
             }
 
-            // Dispose geometries and materials
             scene.traverse((obj) => {
                 if (obj.isMesh) {
                     obj.geometry.dispose();
@@ -1076,18 +1041,16 @@ export default function ServiceProcess3D() {
         <section
             ref={containerRef}
             className="relative w-full bg-slate-50 border-b border-slate-200"
-            style={{ height: "600vh" }} // 6x Viewport height for cinematic scroll scrub
+            style={{ height: "600vh" }}
             id="service-workflow"
         >
-            {/* STICKY FULL-VIEWPORT 3D CANVAS & HUD */}
             <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col justify-between pointer-events-none">
-                {/* 3D WebGL Canvas */}
                 <canvas
                     ref={canvasRef}
-                    className="absolute inset-0 w-full h-full block pointer-events-auto cursor-grab active:cursor-grabbing"
+                    className="absolute inset-0 w-full h-full block pointer-events-auto"
                 />
 
-                {/* TOP HUD BAR: Real-Time Scroll Timeline & Section Spec */}
+                {/* TOP HUD BAR */}
                 <div className="relative z-10 w-full pt-4 sm:pt-6 px-4 sm:px-6 lg:px-8 pointer-events-auto">
                     <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/90 backdrop-blur-md border border-slate-200/90 rounded-2xl px-5 py-3.5 shadow-sm">
                         <div className="flex items-center gap-3">
@@ -1101,11 +1064,11 @@ export default function ServiceProcess3D() {
                                     </span>
                                     <span className="w-1 h-1 rounded-full bg-slate-300" />
                                     <span className="text-xs font-mono text-blue-600 font-semibold">
-                                        Scroll-Driven Cinema
+                                        Scroll-Driven Timeline
                                     </span>
                                 </div>
                                 <p className="text-3xs sm:text-2xs text-slate-400 font-sans hidden sm:block">
-                                    Putar scroll mouse Anda ke bawah untuk menelusuri proses perbaikan secara berurutan
+                                    Putar scroll mouse ke bawah untuk menelusuri proses perbaikan secara berurutan
                                 </p>
                             </div>
                         </div>
@@ -1148,14 +1111,13 @@ export default function ServiceProcess3D() {
                 {/* BOTTOM FLOATING STAGE DETAILS HUD CARD */}
                 <div className="relative z-10 w-full pb-6 sm:pb-8 px-4 sm:px-6 lg:px-8 pointer-events-auto">
                     <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-                        {/* Header Badge & Stage Counter */}
                         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                             <div className="flex items-center gap-2.5">
                                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-sans font-bold bg-blue-50 text-blue-700 border border-blue-200">
                                     {activeStage.badge}
                                 </span>
                                 <span className="font-mono text-xs text-slate-400">
-                                    Progress Timeline: {scrollPct}%
+                                    Timeline: {scrollPct}%
                                 </span>
                             </div>
 
@@ -1167,7 +1129,6 @@ export default function ServiceProcess3D() {
                             </div>
                         </div>
 
-                        {/* Title & Description */}
                         <div className="space-y-1.5">
                             <h3 className="font-display font-bold text-lg sm:text-xl text-slate-900 tracking-tight leading-snug">
                                 {activeStage.title}
@@ -1177,7 +1138,6 @@ export default function ServiceProcess3D() {
                             </p>
                         </div>
 
-                        {/* Quantitative Hardware Metrics for this Stage */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                             {activeStage.metrics.map((m, i) => (
                                 <div
@@ -1194,7 +1154,6 @@ export default function ServiceProcess3D() {
                             ))}
                         </div>
 
-                        {/* Interactive Navigation Hint */}
                         <div className="flex items-center justify-between text-2xs text-slate-400 font-sans pt-1">
                             <span>Scroll ke bawah untuk melanjutkan ke tahap berikutnya &darr;</span>
                             <div className="flex items-center gap-2">
