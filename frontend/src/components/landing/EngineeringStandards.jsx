@@ -1,4 +1,4 @@
-import { ShieldCheck, Eye, Cpu, Award, ArrowUpRight } from "lucide-react";
+import { ShieldCheck, Eye, Cpu, Award } from "lucide-react";
 
 const PRINCIPLES = [
     {
@@ -7,6 +7,8 @@ const PRINCIPLES = [
         desc: "Kami tidak pernah memungut biaya diagnosis jika estimasi yang diajukan tidak disetujui. Obeng tidak akan menyentuh logic board Anda sebelum ada persetujuan resmi dari pemilik perangkat.",
         tag: "NO_HIDDEN_COST_POLICY",
         icon: ShieldCheck,
+        color: "text-blue-600",
+        bg: "bg-blue-50 border-blue-100",
     },
     {
         num: "02",
@@ -14,6 +16,8 @@ const PRINCIPLES = [
         desc: "Bukan sekadar klaim sepihak. Setiap temuan mikroskop, jalur terbakar, proses soldering, hingga komponen yang diganti difoto atau direkam dan dapat Anda periksa langsung di portal ini.",
         tag: "VERIFIED_AUDIT_TRAIL",
         icon: Eye,
+        color: "text-emerald-600",
+        bg: "bg-emerald-50 border-emerald-100",
     },
     {
         num: "03",
@@ -21,6 +25,8 @@ const PRINCIPLES = [
         desc: "Seluruh pengerjaan chip-level dilakukan pada stasiun kerja terlindung Anti-Static (ESD Safe) dengan instrumentasi suhu terkalibrasi. Komponen IC dan suku cadang berasal dari rantai pasok OEM Grade-A.",
         tag: "CERTIFIED_SEMICONDUCTORS",
         icon: Cpu,
+        color: "text-indigo-600",
+        bg: "bg-indigo-50 border-indigo-100",
     },
     {
         num: "04",
@@ -28,70 +34,68 @@ const PRINCIPLES = [
         desc: "Sertifikat garansi digital dengan nomor tiket unik otomatis aktif setelah serah terima unit ditandatangani secara digital. Anda memiliki bukti proteksi resmi tanpa takut nota fisik hilang.",
         tag: "AUTHENTIC_WARRANTY_PASS",
         icon: Award,
+        color: "text-amber-600",
+        bg: "bg-amber-50 border-amber-100",
     },
 ];
 
 export default function EngineeringStandards() {
     return (
-        <section className="relative w-full bg-[#0a0b0e] text-zinc-100 py-16 sm:py-24 border-b border-zinc-800/80" id="engineering-standards">
+        <section className="relative w-full bg-white py-16 sm:py-24 border-b border-slate-100" id="engineering-standards">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-                    {/* Left Sticky Editorial Column */}
+                    {/* Left Sticky Column */}
                     <div className="lg:col-span-5 lg:sticky lg:top-28 space-y-6">
                         <div className="space-y-3">
-                            <span className="font-mono text-xs uppercase tracking-widest text-amber-400 font-bold">
-                                // THE YVS ENGINEERING CODE
+                            <span className="text-xs font-sans font-semibold text-blue-600 uppercase tracking-wide">
+                                The YVS Engineering Code
                             </span>
-                            <h2 className="font-grotesk font-black text-2xl sm:text-4xl text-white tracking-tight leading-tight">
+                            <h2 className="font-display font-bold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
                                 Standar Rekayasa yang Membedakan Kami dari Servis Konvensional.
                             </h2>
                         </div>
 
-                        <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed font-sans">
+                        <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-sans">
                             Industri reparasi komputer kerap dibayangi oleh ketidakpastian biaya, penggantian komponen yang tidak transparan, dan ketiadaan jaminan tertulis. Di YVS Computer, kami membangun reputasi di atas fondasi integritas teknis dan bukti nyata.
                         </p>
 
-                        <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 font-mono text-xs">
-                            <div className="flex items-center justify-between text-zinc-400 text-3xs">
-                                <span>STANDAR PENGUJIAN</span>
-                                <span className="text-emerald-400 font-bold">TERVERIFIKASI</span>
+                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <div className="flex items-center justify-between text-xs font-sans">
+                                <span className="text-slate-500 uppercase tracking-wide font-semibold">Standar Pengujian</span>
+                                <span className="text-emerald-600 font-semibold">Terverifikasi</span>
                             </div>
-                            <p className="text-zinc-300 text-2xs leading-relaxed">
+                            <p className="text-slate-600 text-sm leading-relaxed font-sans">
                                 Setiap unit yang selesai melewati 25 titik inspeksi (QC Matrix) mencakup pengujian thermals, stress-test CPU/GPU minimum 2 jam, uji daya tahan baterai, dan stabilitas I/O port.
                             </p>
                         </div>
                     </div>
 
-                    {/* Right Column: 4 Numbered Architectural Blocks */}
-                    <div className="lg:col-span-7 space-y-5">
+                    {/* Right Column: Principle Cards */}
+                    <div className="lg:col-span-7 space-y-4">
                         {PRINCIPLES.map((p) => {
-                            const IconComponent = p.icon;
+                            const Icon = p.icon;
                             return (
                                 <div
                                     key={p.num}
-                                    className="bg-[#101217] border border-zinc-800/90 rounded-2xl p-6 sm:p-7 hover:border-zinc-700 transition-all"
+                                    className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 hover:border-slate-300 hover:shadow-sm transition-all"
                                 >
-                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <span className="font-mono text-xs font-black text-amber-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-700">
-                                                [ {p.num} ]
-                                            </span>
-                                            <span className="font-mono text-3xs uppercase tracking-widest text-zinc-400">
-                                                {p.tag}
-                                            </span>
+                                    <div className="flex items-start gap-4">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 ${p.bg}`}>
+                                            <Icon className={`w-5 h-5 ${p.color}`} />
                                         </div>
-                                        <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
-                                            <IconComponent className="w-4 h-4" />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <span className="font-mono text-xs font-bold text-slate-400">[{p.num}]</span>
+                                                <span className="font-mono text-2xs text-slate-300 uppercase tracking-widest hidden sm:inline">{p.tag}</span>
+                                            </div>
+                                            <h3 className="font-display font-semibold text-base text-slate-900 mb-2 leading-snug">
+                                                {p.title}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 leading-relaxed font-sans">
+                                                {p.desc}
+                                            </p>
                                         </div>
                                     </div>
-
-                                    <h3 className="font-grotesk font-bold text-base sm:text-lg text-white mb-2">
-                                        {p.title}
-                                    </h3>
-
-                                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
-                                        {p.desc}
-                                    </p>
                                 </div>
                             );
                         })}
@@ -101,4 +105,3 @@ export default function EngineeringStandards() {
         </section>
     );
 }
-

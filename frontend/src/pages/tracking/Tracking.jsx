@@ -1533,24 +1533,25 @@ export default function Tracking() {
         return (
             <div className="min-h-screen bg-slate-50 font-sans">
                 {/* Official YVS Tracking Header */}
-                <header className="bg-[#0c0d10] border-b border-zinc-800 sticky top-0 z-50 text-white">
+                <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 text-slate-900 shadow-xs">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <button
                                 type="button"
                                 onClick={handleBackToLanding}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-mono font-bold transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 text-xs font-sans font-medium transition-all shadow-xs cursor-pointer"
                             >
-                                <ChevronLeft className="w-4 h-4" />
-                                <span>Portal YVS</span>
+                                <ChevronLeft className="w-4 h-4 text-slate-400" />
+                                <span>Kembali ke Beranda</span>
                             </button>
-                            <span className="hidden sm:inline-block w-px h-5 bg-zinc-800" />
+                            <span className="hidden sm:inline-block w-px h-5 bg-slate-200" />
                             <div className="hidden sm:flex items-center gap-2">
-                                <span className="font-grotesk font-bold text-sm tracking-tight text-white uppercase">
-                                    Yangversa Service (YVS)
+                                <span className="font-display font-bold text-sm tracking-tight text-slate-900">
+                                    YVS Computer
                                 </span>
-                                <span className="text-3xs font-mono text-zinc-400">
-                                    // Live Telemetry Tracker
+                                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                <span className="text-xs font-sans text-slate-500">
+                                    Portal Pelacakan Servis
                                 </span>
                             </div>
                         </div>
@@ -1564,9 +1565,9 @@ export default function Tracking() {
                                         setResults(null);
                                     }
                                 }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 text-xs font-mono font-bold transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-sans font-medium transition-all shadow-xs cursor-pointer"
                             >
-                                <Search className="w-3.5 h-3.5 text-zinc-400" />
+                                <Search className="w-3.5 h-3.5 text-slate-400" />
                                 <span>Lacak Tiket Lain</span>
                             </button>
                         </div>
@@ -1631,7 +1632,7 @@ export default function Tracking() {
 
     // --- VIEW 2: EDITORIAL YVS COMPUTER BRAND PORTAL & LANDING EXPERIENCE ---
     return (
-        <div className="min-h-screen bg-[#090a0d] text-zinc-100 font-sans selection:bg-zinc-800 selection:text-white">
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
             {/* 1. Industrial Top Navigation */}
             <LandingNavbar onSearchClick={scrollToLookup} />
 
@@ -1656,33 +1657,33 @@ export default function Tracking() {
             <EngineeringStandards />
 
             {/* 6. Live Dedicated Tracking Hub Section */}
-            <section className="relative w-full bg-[#0c0d10] py-16 sm:py-24 border-b border-zinc-800/80" id="track-lookup">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="relative w-full bg-white py-16 sm:py-24 border-b border-slate-100" id="track-lookup">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center space-y-3 mb-10">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800">
-                            <span className="w-2 h-2 rounded-full bg-amber-400" />
-                            <span className="font-mono text-3xs uppercase tracking-widest text-zinc-400">
-                                DIRECT TELEMETRY GATEWAY
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                            <span className="text-xs font-sans font-semibold text-blue-700 uppercase tracking-wide">
+                                Portal Pelacakan Mandiri
                             </span>
                         </div>
-                        <h2 className="font-grotesk font-black text-2xl sm:text-4xl text-white tracking-tight">
+                        <h2 className="font-display font-bold text-2xl sm:text-4xl text-slate-900 tracking-tight">
                             Lacak Status Pengerjaan Perangkat Anda
                         </h2>
-                        <p className="text-zinc-400 text-xs sm:text-sm max-w-lg mx-auto">
+                        <p className="text-slate-500 text-sm max-w-lg mx-auto font-sans leading-relaxed">
                             Masukkan nomor tiket servis atau nomor WhatsApp yang terdaftar untuk memantau perkembangan unit Anda secara real-time.
                         </p>
                     </div>
 
-                    <div className="bg-[#12141a] border border-zinc-800/90 rounded-2xl p-6 sm:p-8 shadow-2xl relative">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm relative">
                         {/* Tab Switcher */}
-                        <div className="grid grid-cols-2 gap-1.5 p-1 bg-zinc-900 rounded-xl border border-zinc-800 mb-6">
+                        <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl mb-6">
                             <button
                                 type="button"
                                 onClick={() => setTrackMethod("tiket")}
-                                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
+                                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-sans font-medium transition-all cursor-pointer ${
                                     trackMethod === "tiket"
-                                        ? "bg-zinc-800 text-white shadow-xs border border-zinc-700"
-                                        : "text-zinc-400 hover:text-zinc-200"
+                                        ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                                        : "text-slate-500 hover:text-slate-700"
                                 }`}
                             >
                                 <TicketIcon className="w-4 h-4" />
@@ -1691,10 +1692,10 @@ export default function Tracking() {
                             <button
                                 type="button"
                                 onClick={() => setTrackMethod("telepon")}
-                                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
+                                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-sans font-medium transition-all cursor-pointer ${
                                     trackMethod === "telepon"
-                                        ? "bg-zinc-800 text-white shadow-xs border border-zinc-700"
-                                        : "text-zinc-400 hover:text-zinc-200"
+                                        ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                                        : "text-slate-500 hover:text-slate-700"
                                 }`}
                             >
                                 <Phone className="w-4 h-4" />
@@ -1703,53 +1704,49 @@ export default function Tracking() {
                         </div>
 
                         {/* Input Form */}
-                        <form onSubmit={handleTrack} className="space-y-5">
+                        <form onSubmit={handleTrack} className="space-y-4">
                             {trackMethod === "tiket" ? (
                                 <div className="space-y-1.5">
-                                    <label className="block font-mono text-2xs uppercase tracking-wider text-zinc-400 font-bold">
+                                    <label className="block text-xs font-sans font-semibold text-slate-500 uppercase tracking-wide">
                                         Nomor Tiket Servis YVS
                                     </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={nomorTiket}
-                                            onChange={(e) => setNomorTiket(e.target.value)}
-                                            placeholder="Contoh: SRV-2024-001"
-                                            className="w-full px-4 py-3.5 bg-zinc-900/90 border border-zinc-700/80 rounded-xl text-white font-mono text-sm placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 transition-all"
-                                        />
-                                    </div>
+                                    <input
+                                        type="text"
+                                        value={nomorTiket}
+                                        onChange={(e) => setNomorTiket(e.target.value)}
+                                        placeholder="Contoh: SRV-2024-001"
+                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-sm placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                    />
                                 </div>
                             ) : (
                                 <div className="space-y-1.5">
-                                    <label className="block font-mono text-2xs uppercase tracking-wider text-zinc-400 font-bold">
+                                    <label className="block text-xs font-sans font-semibold text-slate-500 uppercase tracking-wide">
                                         Nomor WhatsApp Terdaftar
                                     </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={nomorTelepon}
-                                            onChange={(e) => setNomorTelepon(e.target.value)}
-                                            placeholder="Contoh: 081234567890"
-                                            className="w-full px-4 py-3.5 bg-zinc-900/90 border border-zinc-700/80 rounded-xl text-white font-mono text-sm placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 transition-all"
-                                        />
-                                    </div>
+                                    <input
+                                        type="text"
+                                        value={nomorTelepon}
+                                        onChange={(e) => setNomorTelepon(e.target.value)}
+                                        placeholder="Contoh: 081234567890"
+                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-sm placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                    />
                                 </div>
                             )}
 
                             <button
                                 type="submit"
                                 disabled={loading || (trackMethod === "tiket" ? !nomorTiket : !nomorTelepon)}
-                                className="w-full py-4 bg-zinc-100 hover:bg-white active:bg-zinc-200 text-zinc-950 font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans font-medium text-sm rounded-xl transition-all shadow-md shadow-blue-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                             >
                                 {loading ? (
                                     <>
-                                        <div className="w-4 h-4 border-2 border-zinc-900/20 border-t-zinc-900 rounded-full animate-spin" />
+                                        <div className="w-4 h-4 border-2 border-blue-200 border-t-white rounded-full animate-spin" />
                                         <span>Memeriksa Database Servis...</span>
                                     </>
                                 ) : (
                                     <>
                                         <Search className="w-4 h-4" />
-                                        <span>Lacak Telemetri Servis Sekarang</span>
+                                        <span>Lacak Status Servis Sekarang</span>
                                     </>
                                 )}
                             </button>
@@ -1757,22 +1754,22 @@ export default function Tracking() {
 
                         {/* Error Message */}
                         {error && (
-                            <div className="mt-5 p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-200 flex items-center gap-3 font-mono text-xs">
-                                <SearchX className="w-5 h-5 shrink-0 text-red-400" />
+                            <div className="mt-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-3 text-sm font-sans">
+                                <SearchX className="w-5 h-5 shrink-0 text-red-500" />
                                 <p>{error}</p>
                             </div>
                         )}
 
                         {/* Results Empty State */}
                         {results && results.length === 0 && (
-                            <div className="mt-6 p-6 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-2">
-                                <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 mx-auto">
+                            <div className="mt-6 p-6 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-2">
+                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
                                     <PackageSearch className="w-5 h-5" />
                                 </div>
-                                <h4 className="font-grotesk font-bold text-sm text-white">
+                                <h4 className="font-display font-semibold text-sm text-slate-900">
                                     Tiket Servis Tidak Ditemukan
                                 </h4>
-                                <p className="text-2xs text-zinc-400 max-w-sm mx-auto font-sans leading-relaxed">
+                                <p className="text-xs text-slate-500 max-w-sm mx-auto font-sans leading-relaxed">
                                     Tidak ada catatan servis yang cocok dengan input Anda. Mohon periksa kembali nomor tiket atau hubungi hotline WhatsApp kami.
                                 </p>
                             </div>
