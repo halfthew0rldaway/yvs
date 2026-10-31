@@ -12,7 +12,7 @@ const getFrameSrc = (index) => {
 const STORY_STAGES = [
     {
         id: "intro",
-        range: [0.00, 0.20],
+        range: [0.00, 0.16],
         eyebrow: "YANGVERSA COMPUTER · KOMPUTERAWET.COM",
         title: "Teman Terpercaya Merawat & Memperbaiki Komputer Anda.",
         body: "Pusat servis laptop, PC, dan MacBook di Pekayon, Bekasi. Fokus kami sederhana: solusi jujur, konsultasi transparan, dan pengerjaan yang rapi agar perangkat Anda awet digunakan.",
@@ -21,7 +21,7 @@ const STORY_STAGES = [
     },
     {
         id: "inspection",
-        range: [0.20, 0.45],
+        range: [0.16, 0.32],
         eyebrow: "01 // PENGECEKAN JUJUR & DETAIL",
         title: "Pengecekan Tuntas, Estimasi Biaya Dulu Tanpa Paksaan.",
         body: "Sebelum perbaikan dimulai, kami periksa akar masalahnya dan jelaskan secara terbuka kepada Anda. Tidak ada biaya siluman—jika estimasi biaya tidak disetujui, perangkat bisa diambil kembali tanpa biaya cek.",
@@ -29,7 +29,7 @@ const STORY_STAGES = [
     },
     {
         id: "hardware",
-        range: [0.45, 0.70],
+        range: [0.32, 0.48],
         eyebrow: "02 // PERBAIKAN & PERAWATAN BERKALA",
         title: "Dari Ganti Thermal Paste, Engsel, Hingga Masalah Motherboard.",
         body: "Menangani laptop lemot, panas berlebih, engsel patah, layar pecah, mati total, hingga upgrade SSD dan RAM. Setiap part copotan atau bekas kami kembalikan utuh ke tangan Anda.",
@@ -37,7 +37,7 @@ const STORY_STAGES = [
     },
     {
         id: "quality",
-        range: [0.70, 0.88],
+        range: [0.48, 0.65],
         eyebrow: "03 // UJI KELAYAKAN & FINISHING",
         title: "Dites Kestabilannya Sebelum Diserahkan Kembali.",
         body: "Setiap unit dibersihkan dengan rapi dan diuji suhunya agar tidak lagi overheat atau sering hang saat dipakai bekerja. Kami pastikan perangkat benar-benar siap dan nyaman digunakan.",
@@ -45,7 +45,7 @@ const STORY_STAGES = [
     },
     {
         id: "ready",
-        range: [0.88, 1.00],
+        range: [0.65, 1.00],
         eyebrow: "04 // LACAK PROGRES & GARANSI JELAS",
         title: "Pantau Progres Servis Kapan Saja, Disertai Garansi Jelas.",
         body: "Anda bisa memantau foto kondisi, riwayat pengerjaan, dan status garansi secara langsung melalui portal pelacakan ini tanpa harus bolak-balik tanya ke toko.",
@@ -247,8 +247,12 @@ export default function ServiceProcess3D({ onTrackClick }) {
             const dt = Math.min((time - lastTime) / 1000, 0.05);
             lastTime = time;
 
-            // Target frame index as continuous float (0.0 to 239.0)
-            const target = targetProgress.current * (TOTAL_FRAMES - 1);
+            // Video completes disassembly at 65% of the scroll track.
+            // The remaining 35% (~1.5 to 2 full viewport scrolls) keeps the completely
+            // disassembled state locked in view before seamlessly unpinning to the next section.
+            const VIDEO_COMPLETE_PROGRESS = 0.65;
+            const rawVideoProgress = Math.min(1.0, targetProgress.current / VIDEO_COMPLETE_PROGRESS);
+            const target = rawVideoProgress * (TOTAL_FRAMES - 1);
             const frameDiff = target - currentFrame.current;
 
             if (Math.abs(frameDiff) > 0.005) {
@@ -270,7 +274,8 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 currentFrame.current = target;
             }
 
-            const p = currentFrame.current / (TOTAL_FRAMES - 1);
+            // Sync storytelling stages to overall scroll progress
+            const p = targetProgress.current;
 
             // Update active stage with zero unnecessary React re-renders
             let nextStage = 0;
@@ -326,7 +331,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
         <section
             ref={containerRef}
             className="relative w-full bg-white"
-            style={{ height: "380vh" }}
+            style={{ height: "540vh" }}
             id="service-workflow"
         >
             {/* Sticky 100vh viewport container */}
@@ -389,7 +394,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                                     </a>
                                 </div>
                             ) : currentStage.showFinalCTA ? (
-                                <div className="pt-2">
+                                <div className="pt-2 space-y-2">
                                     <button
                                         type="button"
                                         onClick={onTrackClick}
@@ -399,6 +404,10 @@ export default function ServiceProcess3D({ onTrackClick }) {
                                         Buka Formulir Pelacakan
                                         <ArrowDown className="w-4 h-4" />
                                     </button>
+                                    <p className="text-xs font-mono text-slate-400 flex items-center gap-1.5 pt-0.5">
+                                        <span>↓</span>
+                                        <span>Gulir ke bawah untuk langsung membuka formulir pelacakan</span>
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="pt-1 flex items-center gap-2 text-xs font-mono text-slate-400">

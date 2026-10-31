@@ -3,10 +3,11 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../../services/api";
-import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2, Play, Video, ZoomIn } from "lucide-react";
+import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2, Play, Video, ZoomIn, Share2, RefreshCw, Copy, Printer } from "lucide-react";
 import { isVideo, getMediaUrl } from "../../utils/mediaUtils";
 import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS, getChecklistValue } from "../../utils/checklistItems";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
+import CameraScannerModal from "../../components/CameraScannerModal";
 import SlaBadge, { SlaCountdownCard } from "../../components/SlaBadge";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
 import DigitalSignaturePadModal from "../../components/DigitalSignaturePadModal";
@@ -18,6 +19,49 @@ import EngineeringStandards from "../../components/landing/EngineeringStandards"
 import WorkshopMetrics from "../../components/landing/WorkshopMetrics";
 import WorkshopLocation from "../../components/landing/WorkshopLocation";
 import LandingFooter from "../../components/landing/LandingFooter";
+
+const RECENT_TRACKING_KEY = "yvs_recent_tracking";
+
+function getRecentSearches() {
+    try {
+        const stored = localStorage.getItem(RECENT_TRACKING_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            return Array.isArray(parsed) ? parsed : [];
+        }
+    } catch (_) {}
+    return [];
+}
+
+function saveRecentSearch(type, value) {
+    if (!value || !String(value).trim()) return;
+    try {
+        const clean = String(value).trim();
+        const current = getRecentSearches();
+        const filtered = current.filter(item => item.value !== clean);
+        const updated = [{ type, value: clean, time: Date.now() }, ...filtered].slice(0, 4);
+        localStorage.setItem(RECENT_TRACKING_KEY, JSON.stringify(updated));
+    } catch (_) {}
+}
+
+function clearRecentSearches() {
+    try {
+        localStorage.removeItem(RECENT_TRACKING_KEY);
+    } catch (_) {}
+}
+
+function extractTicketFromScan(text) {
+    if (!text) return "";
+    const clean = String(text).trim();
+    try {
+        if (clean.startsWith("http://") || clean.startsWith("https://")) {
+            const url = new URL(clean);
+            const tParam = url.searchParams.get("nomor_tiket") || url.searchParams.get("tiket");
+            if (tParam) return tParam.trim();
+        }
+    } catch (_) {}
+    return clean;
+}
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-50 text-blue-700 border-blue-200" },
@@ -598,6 +642,109 @@ function AccessoriesChecklist({ kelengkapanDetail, kelengkapanText }) {
     );
 }
 
+/* ===== Feature: Sparepart Transparency & Old Part Return SOP Card ===== */
+function SparepartTransparencyCard({ parts = [] }) {
+    const hasParts = Array.isArray(parts) && parts.length > 0;
+
+    return (
+        <div className="mb-8 pt-6 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2.5">
+                    <Package className="w-5 h-5 text-blue-600" />
+                    <div>
+                        <h5 className="font-semibold text-slate-900 text-sm sm:text-base">
+                            Transparansi Suku Cadang & Komponen
+                        </h5>
+                        <p className="text-xs text-slate-500">
+                            Komitmen integritas teknis bengkel YVS Computer
+                        </p>
+                    </div>
+                </div>
+                {hasParts && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                        {parts.length} Komponen Diganti
+                    </span>
+                )}
+            </div>
+
+            {/* Yangversa Old Part Return SOP Guarantee Banner */}
+            <div className="mb-4 p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-2xs">
+                <div className="p-2 bg-amber-500 text-white rounded-xl shadow-xs shrink-0">
+                    <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div className="text-xs leading-relaxed">
+                    <span className="font-bold block text-amber-900">
+                        SOP Garansi Komponen Bekas (Komputerawet / Yangversa)
+                    </span>
+                    <span className="text-amber-800/90">
+                        Seluruh sparepart rusak / modul lama yang diganti <strong>wajib disimpan rapi dalam kemasan dan diserahkan kembali kepada Anda</strong> saat pengambilan unit. Kami tidak pernah menahan komponen bekas milik pelanggan.
+                    </span>
+                </div>
+            </div>
+
+            {hasParts ? (
+                <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden divide-y divide-slate-200/80">
+                    {parts.map((p, idx) => {
+                        const nama = p.sparepart?.nama || p.nama || "Suku Cadang";
+                        const kategori = p.sparepart?.kategori || "Komponen Pengganti";
+                        const jumlah = p.jumlah || 1;
+                        const serialNumber = p.serial_number;
+
+                        return (
+                            <div key={idx} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/70 transition-colors">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-blue-600 font-bold text-xs shrink-0 shadow-2xs">
+                                        {idx + 1}
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <h6 className="font-bold text-slate-900 text-sm">{nama}</h6>
+                                            <span className="px-2 py-0.5 rounded-md text-3xs font-semibold bg-slate-200 text-slate-700">
+                                                {kategori}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
+                                            <span>Jumlah: <strong className="text-slate-800">{jumlah} unit</strong></span>
+                                            {serialNumber && (
+                                                <>
+                                                    <span className="text-slate-300">•</span>
+                                                    <span className="font-mono text-3xs px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600">
+                                                        S/N: {serialNumber}
+                                                    </span>
+                                                </>
+                                            )}
+                                            <span className="text-slate-300">•</span>
+                                            <span className="text-emerald-700 font-medium">Part lama dikembalikan</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span className="text-xs text-blue-700 font-medium px-2.5 py-1 bg-blue-50 rounded-lg border border-blue-200 w-fit">
+                                    Bergaransi Toko
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3.5">
+                    <div className="p-2 bg-white rounded-xl border border-slate-200 text-slate-500 shadow-2xs shrink-0">
+                        <Wrench className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="text-xs text-slate-600 leading-relaxed">
+                        <p className="font-bold text-slate-800 mb-0.5">
+                            Reparasi Tingkat Komponen / Tanpa Penggantian Sparepart Baru
+                        </p>
+                        <p className="text-slate-500">
+                            Pengerjaan unit ini diselesaikan melalui tindakan teknis (perbaikan jalur sirkuit, micro-soldering IC, reballing, ultrasonic cleaning, atau penggantian thermal paste performa tinggi) tanpa perlu mengganti modul baru, menjaga efisiensi biaya Anda.
+                        </p>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
     const [t, setT] = useState(initialTicket);
     const [isWarrantyModalOpen, setIsWarrantyModalOpen] = useState(false);
@@ -615,6 +762,54 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
     // Customer Sign-to-Unlock Modal State
     const [isSignInvoiceModalOpen, setIsSignInvoiceModalOpen] = useState(false);
     const [submittingSignInvoice, setSubmittingSignInvoice] = useState(false);
+
+    // Live Status Refreshing State
+    const [refreshing, setRefreshing] = useState(false);
+
+    const handleRefreshStatus = async () => {
+        if (refreshing) return;
+        setRefreshing(true);
+        try {
+            const res = await api.post("/tracking", { nomorTiket: t.nomor_tiket });
+            const data = Array.isArray(res.data) ? res.data[0] : res.data;
+            if (data) {
+                setT(data);
+                if (onUpdateTicket) onUpdateTicket(data);
+                toast.success("Status servis berhasil diperbarui!");
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal menyegarkan status terbaru");
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
+    const handleShareTracking = async () => {
+        const trackingUrl = `${window.location.origin}/tracking?nomor_tiket=${encodeURIComponent(t.nomor_tiket)}`;
+        const shareData = {
+            title: `Status Servis YVS - ${t.nomor_tiket}`,
+            text: `Pantau status perbaikan unit ${t.perangkat} (${t.nomor_tiket}) di YVS Computer:`,
+            url: trackingUrl
+        };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            try {
+                await navigator.share(shareData);
+                return;
+            } catch (err) {
+                if (err.name !== "AbortError") {
+                    // Ignore user cancellation
+                }
+            }
+        }
+
+        try {
+            await navigator.clipboard.writeText(trackingUrl);
+            toast.success("Tautan pelacakan berhasil disalin ke clipboard!");
+        } catch (_) {
+            toast.error("Gagal menyalin tautan");
+        }
+    };
 
     const handleCustomerSignInvoice = async ({ signature, signerName, phoneLast4: inputPhone4 }) => {
         setSubmittingSignInvoice(true);
@@ -694,9 +889,58 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-200 overflow-hidden w-full flex flex-col w-full mx-auto">
             <div className="p-6 sm:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-start justify-between gap-5 bg-slate-50/80">
                 <div className="space-y-1 w-full">
-                    <button onClick={onBack} className="mb-6 flex items-center gap-2 text-sm text-slate-500 hover:text-blue-600 font-semibold transition-colors bg-white px-3 py-1.5 border border-slate-200 rounded-lg w-fit shadow-sm">
-                        <ChevronDown className="w-4 h-4 rotate-90" /> Kembali ke Daftar
-                    </button>
+                    {/* Top Action Toolbar */}
+                    <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+                        <button onClick={onBack} className="flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600 font-semibold transition-colors bg-white px-3.5 py-1.5 border border-slate-200 rounded-xl w-fit shadow-xs cursor-pointer">
+                            <ChevronDown className="w-4 h-4 rotate-90" /> Kembali ke Daftar
+                        </button>
+                        
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                                type="button"
+                                onClick={handleRefreshStatus}
+                                disabled={refreshing}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                                title="Segarkan status servis terbaru dari server"
+                            >
+                                <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${refreshing ? "animate-spin" : ""}`} />
+                                <span>{refreshing ? "Memperbarui..." : "Segarkan Status"}</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleShareTracking}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                                title="Bagikan tautan pelacakan langsung via WhatsApp atau salin link"
+                            >
+                                <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Bagikan Tautan</span>
+                            </button>
+
+                            {['selesai', 'diambil'].includes(t.status) && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsWarrantyModalOpen(true)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-amber-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                                        title="Buka sertifikat garansi resmi"
+                                    >
+                                        <Award className="w-3.5 h-3.5 text-amber-500" />
+                                        <span>Garansi</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => window.print()}
+                                        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                                        title="Cetak lembar status & invoice servis"
+                                    >
+                                        <Printer className="w-3.5 h-3.5 text-slate-500" />
+                                        <span>Cetak</span>
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                         <span className="font-mono font-bold text-base sm:text-lg text-slate-900">{t.nomor_tiket}</span>
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-200/50 text-slate-700 rounded-md text-xs font-semibold">
@@ -1102,6 +1346,9 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                     </div>
                 )}
                 
+                {/* Feature: Yangversa Sparepart Transparency & Old Part Return SOP Card */}
+                <SparepartTransparencyCard parts={t?.penggunaan_sparepart} />
+
                 <div className="pt-6 border-t border-slate-100">
                     <h5 className="font-semibold text-slate-900 mb-4">Riwayat Perbaikan</h5>
                     {t?.log_perbaikan && t.log_perbaikan.length > 0 ? (
@@ -1465,20 +1712,28 @@ function RatingSection({ ticket }) {
 export default function Tracking() {
     const [searchParams] = useSearchParams();
     const queryTiket = searchParams.get("nomor_tiket") || searchParams.get("tiket") || "";
-    const [trackMethod, setTrackMethod] = useState("tiket");
-    const [nomorTelepon, setNomorTelepon] = useState("");
+    const queryPhone = searchParams.get("nomor_telepon") || searchParams.get("phone") || searchParams.get("telepon") || "";
+    const [trackMethod, setTrackMethod] = useState(queryPhone && !queryTiket ? "telepon" : "tiket");
+    const [nomorTelepon, setNomorTelepon] = useState(queryPhone);
     const [nomorTiket, setNomorTiket] = useState(queryTiket);
     const [results, setResults] = useState(null);
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
+    const [recentSearches, setRecentSearches] = useState(() => getRecentSearches());
 
     useEffect(() => {
         if (queryTiket) {
+            setTrackMethod("tiket");
             setNomorTiket(queryTiket);
             executeTrack({ nomorTiket: queryTiket });
+        } else if (queryPhone) {
+            setTrackMethod("telepon");
+            setNomorTelepon(queryPhone);
+            executeTrack({ nomorTelepon: queryPhone });
         }
-    }, [queryTiket]);
+    }, [queryTiket, queryPhone]);
 
     async function executeTrack(payload) {
         setError("");
@@ -1493,12 +1748,33 @@ export default function Tracking() {
             if (data.length === 1) {
                 setSelectedTicket(data[0]);
             }
+            if (payload.nomorTiket) {
+                saveRecentSearch("tiket", payload.nomorTiket);
+                setRecentSearches(getRecentSearches());
+            } else if (payload.nomorTelepon) {
+                saveRecentSearch("telepon", payload.nomorTelepon);
+                setRecentSearches(getRecentSearches());
+            }
+            window.scrollTo({ top: 0, behavior: "smooth" });
         } catch (err) {
             setError(err.response?.data?.message || "Gagal melacak servis");
         } finally {
             setLoading(false);
         }
     }
+
+    const handleScanReceipt = (scannedText) => {
+        setIsCameraScannerOpen(false);
+        const ticketId = extractTicketFromScan(scannedText);
+        if (ticketId) {
+            setTrackMethod("tiket");
+            setNomorTiket(ticketId);
+            toast.success(`Nota terdeteksi: ${ticketId}`);
+            executeTrack({ nomorTiket: ticketId });
+        } else {
+            toast.error("Kode QR / Barcode nota tidak dikenali");
+        }
+    };
 
     async function handleTrack(e) {
         e.preventDefault();
@@ -1625,6 +1901,15 @@ export default function Tracking() {
                         </div>
                     )}
                 </main>
+
+                {/* Camera QR & Barcode Scanner Modal */}
+                <CameraScannerModal
+                    isOpen={isCameraScannerOpen}
+                    onClose={() => setIsCameraScannerOpen(false)}
+                    onScan={handleScanReceipt}
+                    title="Pindai QR / Barcode Nota Servis"
+                    subtitle="Arahkan kamera ponsel Anda ke kode QR pada lembar nota fisik YVS Computer"
+                />
             </div>
         );
     }
@@ -1657,31 +1942,43 @@ export default function Tracking() {
                     </div>
 
                     <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm relative">
-                        {/* Tab Switcher */}
-                        <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl mb-6">
+                        {/* Tab Switcher & QR Scan Button */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-6">
+                            <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl flex-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setTrackMethod("tiket")}
+                                    className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-sans font-medium transition-all cursor-pointer ${
+                                        trackMethod === "tiket"
+                                            ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                                            : "text-slate-500 hover:text-slate-700"
+                                    }`}
+                                >
+                                    <TicketIcon className="w-4 h-4" />
+                                    <span>Nomor Tiket</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setTrackMethod("telepon")}
+                                    className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-sans font-medium transition-all cursor-pointer ${
+                                        trackMethod === "telepon"
+                                            ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                                            : "text-slate-500 hover:text-slate-700"
+                                    }`}
+                                >
+                                    <Phone className="w-4 h-4" />
+                                    <span>Nomor Telepon</span>
+                                </button>
+                            </div>
+
                             <button
                                 type="button"
-                                onClick={() => setTrackMethod("tiket")}
-                                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-sans font-medium transition-all cursor-pointer ${
-                                    trackMethod === "tiket"
-                                        ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                                        : "text-slate-500 hover:text-slate-700"
-                                }`}
+                                onClick={() => setIsCameraScannerOpen(true)}
+                                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-2xs shrink-0"
+                                title="Buka kamera untuk memindai QR code pada lembar nota fisik"
                             >
-                                <TicketIcon className="w-4 h-4" />
-                                <span>Nomor Tiket</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setTrackMethod("telepon")}
-                                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-sans font-medium transition-all cursor-pointer ${
-                                    trackMethod === "telepon"
-                                        ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                                        : "text-slate-500 hover:text-slate-700"
-                                }`}
-                            >
-                                <Phone className="w-4 h-4" />
-                                <span>Nomor Telepon</span>
+                                <Camera className="w-4 h-4 text-blue-600" />
+                                <span>Pindai QR Nota</span>
                             </button>
                         </div>
 
@@ -1689,16 +1986,35 @@ export default function Tracking() {
                         <form onSubmit={handleTrack} className="space-y-4">
                             {trackMethod === "tiket" ? (
                                 <div className="space-y-1.5">
-                                    <label className="block text-xs font-sans font-semibold text-slate-500 uppercase tracking-wide">
-                                        Nomor Tiket Servis YVS
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={nomorTiket}
-                                        onChange={(e) => setNomorTiket(e.target.value)}
-                                        placeholder="Contoh: SRV-2024-001"
-                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-sm placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                                    />
+                                    <div className="flex items-center justify-between">
+                                        <label className="block text-xs font-sans font-semibold text-slate-500 uppercase tracking-wide">
+                                            Nomor Tiket Servis YVS
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCameraScannerOpen(true)}
+                                            className="text-xs text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1 cursor-pointer sm:hidden"
+                                        >
+                                            <QrCode className="w-3.5 h-3.5" /> Pindai Kamera
+                                        </button>
+                                    </div>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={nomorTiket}
+                                            onChange={(e) => setNomorTiket(e.target.value)}
+                                            placeholder="Contoh: SRV-2024-001"
+                                            className="w-full pl-4 pr-11 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-sm placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCameraScannerOpen(true)}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                                            title="Pindai QR Nota Fisik"
+                                        >
+                                            <QrCode className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-1.5">
@@ -1712,6 +2028,46 @@ export default function Tracking() {
                                         placeholder="Contoh: 081234567890"
                                         className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-sm placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                                     />
+                                </div>
+                            )}
+
+                            {/* Recent Searches Memory Chips */}
+                            {recentSearches.length > 0 && (
+                                <div className="pt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                                    <span className="flex items-center gap-1 text-slate-400 text-3xs font-semibold uppercase tracking-wider">
+                                        <Clock className="w-3 h-3 text-slate-400" /> Riwayat:
+                                    </span>
+                                    {recentSearches.map((item, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => {
+                                                setTrackMethod(item.type);
+                                                if (item.type === "tiket") {
+                                                    setNomorTiket(item.value);
+                                                    executeTrack({ nomorTiket: item.value });
+                                                } else {
+                                                    setNomorTelepon(item.value);
+                                                    executeTrack({ nomorTelepon: item.value });
+                                                }
+                                            }}
+                                            className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 border border-slate-200/80 font-mono text-3xs font-medium text-slate-700 transition-colors cursor-pointer"
+                                            title={`Lacak kembali ${item.value}`}
+                                        >
+                                            {item.value}
+                                        </button>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            clearRecentSearches();
+                                            setRecentSearches([]);
+                                        }}
+                                        className="text-3xs text-slate-400 hover:text-rose-600 transition-colors ml-1 cursor-pointer"
+                                        title="Hapus riwayat pencarian"
+                                    >
+                                        Hapus
+                                    </button>
                                 </div>
                             )}
 
@@ -1774,6 +2130,15 @@ export default function Tracking() {
 
             {/* 9. Architectural Technical Footer */}
             <LandingFooter />
+
+            {/* Camera QR & Barcode Scanner Modal */}
+            <CameraScannerModal
+                isOpen={isCameraScannerOpen}
+                onClose={() => setIsCameraScannerOpen(false)}
+                onScan={handleScanReceipt}
+                title="Pindai QR / Barcode Nota Servis"
+                subtitle="Arahkan kamera ponsel Anda ke kode QR pada lembar nota fisik YVS Computer"
+            />
         </div>
     );
 }
