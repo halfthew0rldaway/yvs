@@ -41,7 +41,7 @@ const PRINCIPLES = [
 
 export default function EngineeringStandards() {
     return (
-        <section className="relative w-full bg-white py-16 sm:py-24 border-b border-slate-200 font-sans" id="engineering-standards">
+        <section className="relative w-full bg-white py-16 sm:py-24 border-b border-slate-200 font-sans scroll-mt-14 sm:scroll-mt-16" id="engineering-standards">
             <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
                     {/* Left Sticky Column on Desktop */}

@@ -15,18 +15,27 @@ export default function LandingNavbar({ onSearchClick }) {
     const scrollToSection = (id) => {
         setMobileMenuOpen(false);
         const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: "smooth" });
+        if (el) {
+            const navbarOffset = window.innerWidth >= 640 ? 64 : 56;
+            const elementPosition = el.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - navbarOffset;
+            window.scrollTo({
+                top: Math.max(0, offsetPosition),
+                behavior: "smooth"
+            });
+        }
     };
 
     return (
-        <header
-            className={`sticky top-0 z-50 transition-all duration-300 font-sans ${
-                scrolled
-                    ? "bg-white/95 backdrop-blur-md border-b border-slate-200 py-2.5 sm:py-3 shadow-xs"
-                    : "bg-white border-b border-slate-100 py-3 sm:py-4"
-            }`}
-        >
-            <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 flex items-center justify-between">
+        <>
+            <header
+                className={`fixed top-0 left-0 right-0 z-50 w-full h-14 sm:h-16 transition-colors duration-200 font-sans flex items-center ${
+                    scrolled
+                        ? "bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs"
+                        : "bg-white border-b border-slate-100"
+                }`}
+            >
+                <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 flex items-center justify-between">
                 {/* Brand Identity */}
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-xs shrink-0">
@@ -127,7 +136,7 @@ export default function LandingNavbar({ onSearchClick }) {
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="md:hidden overflow-hidden bg-white/98 backdrop-blur-lg border-b border-slate-200 px-4 py-4 space-y-1 shadow-md"
+                        className="md:hidden absolute top-full left-0 right-0 overflow-hidden bg-white/98 backdrop-blur-lg border-b border-slate-200 px-4 py-4 space-y-1 shadow-md"
                     >
                         {[
                             { label: "Proses Perbaikan", id: "service-workflow" },
@@ -167,5 +176,8 @@ export default function LandingNavbar({ onSearchClick }) {
                 )}
             </AnimatePresence>
         </header>
+        {/* Flow Spacer - keeps page content aligned perfectly below the fixed header */}
+        <div className="h-14 sm:h-16 w-full shrink-0" aria-hidden="true" />
+        </>
     );
 }

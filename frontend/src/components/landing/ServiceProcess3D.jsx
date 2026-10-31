@@ -11,7 +11,7 @@ const getFrameSrc = (index) => {
 const STORY_STAGES = [
     {
         id: "intro",
-        range: [0.00, 0.16],
+        range: [0.00, 0.12],
         eyebrow: "KOMPUTERAWET.COM · YANGVERSA COMPUTER",
         title: "Teman Terpercaya Merawat & Memperbaiki Komputer Anda.",
         body: "Pusat spesialis servis laptop, PC Desktop, dan MacBook di Pekayon, Bekasi. Fokus kami sederhana: solusi jujur, konsultasi transparan, dan pengerjaan yang rapi agar perangkat Anda awet digunakan.",
@@ -19,7 +19,7 @@ const STORY_STAGES = [
     },
     {
         id: "inspection",
-        range: [0.16, 0.32],
+        range: [0.12, 0.25],
         eyebrow: "TAHAP 01 · PEMERIKSAAN DETAIL",
         title: "Pengecekan Tuntas, Estimasi Biaya Dulu Tanpa Paksaan.",
         body: "Sebelum perbaikan dimulai, teknisi memeriksa akar masalah hingga ke level mikroskopis dan menjelaskan secara terbuka. Jika estimasi biaya tidak disetujui, perangkat bisa diambil kembali tanpa biaya cek.",
@@ -27,7 +27,7 @@ const STORY_STAGES = [
     },
     {
         id: "hardware",
-        range: [0.32, 0.48],
+        range: [0.25, 0.38],
         eyebrow: "TAHAP 02 · PERBAIKAN & PENGGANTIAN SUKU CADANG",
         title: "Dari Ganti Thermal Paste, Engsel, Hingga Masalah Motherboard.",
         body: "Menangani laptop lemot, panas berlebih, engsel patah, layar pecah, mati total, hingga upgrade SSD dan RAM. Setiap part copotan atau bekas kami kembalikan utuh ke tangan Anda.",
@@ -35,7 +35,7 @@ const STORY_STAGES = [
     },
     {
         id: "quality",
-        range: [0.48, 0.65],
+        range: [0.38, 0.50],
         eyebrow: "TAHAP 03 · PENGUJIAN STABILITAS & SUHU",
         title: "Dites Kestabilannya Sebelum Diserahkan Kembali.",
         body: "Setiap unit dibersihkan dengan rapi dan diuji suhunya agar tidak lagi overheat atau sering hang saat dipakai bekerja. Kami pastikan perangkat benar-benar siap dan nyaman digunakan.",
@@ -43,7 +43,7 @@ const STORY_STAGES = [
     },
     {
         id: "ready",
-        range: [0.65, 1.00],
+        range: [0.50, 1.00],
         eyebrow: "TAHAP 04 · SERAH TERIMA & GARANSI RESMI",
         title: "Pantau Progres Servis Kapan Saja, Disertai Garansi Jelas.",
         body: "Anda bisa memantau foto kondisi, riwayat pengerjaan, dan status garansi secara langsung melalui portal pelacakan ini tanpa harus bolak-balik tanya ke toko.",
@@ -243,16 +243,23 @@ export default function ServiceProcess3D({ onTrackClick }) {
             const dt = Math.min((time - lastTime) / 1000, 0.05);
             lastTime = time;
 
-            const VIDEO_COMPLETE_PROGRESS = 0.65;
+            // Video completes disassembly at 48% of the scroll track.
+            // The remaining 52% (~3.4 full viewport scrolls) keeps the completely
+            // disassembled state locked in view before seamlessly unpinning to the next section.
+            const VIDEO_COMPLETE_PROGRESS = 0.48;
             const rawVideoProgress = Math.min(1.0, targetProgress.current / VIDEO_COMPLETE_PROGRESS);
             const target = rawVideoProgress * (TOTAL_FRAMES - 1);
             const frameDiff = target - currentFrame.current;
 
             if (Math.abs(frameDiff) > 0.005) {
-                const lerpFactor = 1 - Math.exp(-10.0 * dt);
-                let step = frameDiff * lerpFactor;
+                // Adaptive lerp: fast catch-up when frameDiff is large, silky smooth on normal scroll
+                const baseLerp = 1 - Math.exp(-14.0 * dt);
+                const distanceRatio = Math.min(1.0, Math.abs(frameDiff) / 60);
+                const effectiveLerp = baseLerp + (1.0 - baseLerp) * (distanceRatio * 0.45);
+                let step = frameDiff * effectiveLerp;
 
-                const maxStep = 135 * dt;
+                // Max step allows fast response (up to 380 frames/sec) so it never gets left behind
+                const maxStep = 380 * dt;
                 if (Math.abs(step) > maxStep) {
                     step = Math.sign(step) * maxStep;
                 }
@@ -308,8 +315,8 @@ export default function ServiceProcess3D({ onTrackClick }) {
     return (
         <section
             ref={containerRef}
-            className="relative w-full bg-white font-sans"
-            style={{ height: "540vh" }}
+            className="relative w-full bg-white font-sans scroll-mt-14 sm:scroll-mt-16"
+            style={{ height: "650vh" }}
             id="service-workflow"
         >
             {/* Sticky viewport container (Full-bleed 100vw, offset below navbar) */}

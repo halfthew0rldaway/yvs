@@ -87,7 +87,7 @@ export default function ServiceSpecSheet() {
         : CAPABILITIES.filter((c) => c.category === activeCategory);
 
     return (
-        <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 font-sans" id="service-spec">
+        <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 font-sans scroll-mt-14 sm:scroll-mt-16" id="service-spec">
             <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 {/* Header */}
                 <div className="max-w-2xl mb-10 space-y-3">

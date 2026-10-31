@@ -60,7 +60,7 @@ const REVIEWS_B5 = [
 
 export default function WorkshopMetrics() {
     return (
-        <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 font-sans" id="workshop-reviews">
+        <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 font-sans scroll-mt-14 sm:scroll-mt-16" id="workshop-reviews">
             <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 {/* Metrics Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5 pb-16 border-b border-slate-200">
