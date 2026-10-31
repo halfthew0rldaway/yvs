@@ -12,7 +12,6 @@ import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapper
 import DigitalSignaturePadModal from "../../components/DigitalSignaturePadModal";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import LandingNavbar from "../../components/landing/LandingNavbar";
-import LandingHero from "../../components/landing/LandingHero";
 import ServiceProcess3D from "../../components/landing/ServiceProcess3D";
 import ServiceSpecSheet from "../../components/landing/ServiceSpecSheet";
 import EngineeringStandards from "../../components/landing/EngineeringStandards";
@@ -1636,28 +1635,11 @@ export default function Tracking() {
             {/* 1. Industrial Top Navigation */}
             <LandingNavbar onSearchClick={scrollToLookup} />
 
-            {/* 2. Editorial Hero with Direct Instant Search */}
-            <LandingHero
-                onTrackSubmit={async (payload) => {
-                    await executeTrack(payload);
-                    if (!selectedTicket) {
-                        scrollToLookup();
-                    }
-                }}
-                loading={loading}
-            />
+            {/* 2. Scroll-Driven Laptop Disassembly Storytelling Experience */}
+            <ServiceProcess3D onTrackClick={scrollToLookup} />
 
-            {/* 3. On-Scroll 3D Hardware Service Anatomy (Three.js) */}
-            <ServiceProcess3D />
-
-            {/* 4. Engineering Capabilities Spec Sheet Matrix */}
-            <ServiceSpecSheet />
-
-            {/* 5. The YVS Standard / Engineering Principles */}
-            <EngineeringStandards />
-
-            {/* 6. Live Dedicated Tracking Hub Section */}
-            <section className="relative w-full bg-white py-16 sm:py-24 border-b border-slate-100" id="track-lookup">
+            {/* 3. Live Dedicated Tracking Hub Section (Immediate Natural Continuation) */}
+            <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200" id="track-lookup">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center space-y-3 mb-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
@@ -1778,7 +1760,13 @@ export default function Tracking() {
                 </div>
             </section>
 
-            {/* 7. Empirical Benchmarks & Customer Testimonials */}
+            {/* 4. Engineering Capabilities Spec Sheet Matrix */}
+            <ServiceSpecSheet />
+
+            {/* 5. The YVS Standard / Engineering Principles */}
+            <EngineeringStandards />
+
+            {/* 6. Empirical Benchmarks & Customer Testimonials */}
             <WorkshopMetrics />
 
             {/* 8. Workshop Location, Hours & Direct Contact */}
