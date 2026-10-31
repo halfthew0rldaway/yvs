@@ -13,43 +13,43 @@ const STORY_STAGES = [
     {
         id: "intro",
         range: [0.00, 0.20],
-        eyebrow: "YVS COMPUTER · INDUSTRIAL REPAIR LAB",
-        title: "Rekayasa & Reparasi Komputer Berstandar Presisi.",
-        body: "Spesialis pemulihan laptop dan workstation level komponen: BGA reballing, power rail restoration, liquid damage recovery, dan kalibrasi termal komprehensif.",
-        badge: "Standar Industri",
+        eyebrow: "YANGVERSA COMPUTER · KOMPUTERAWET.COM",
+        title: "Teman Terpercaya Merawat & Memperbaiki Komputer Anda.",
+        body: "Pusat servis laptop, PC, dan MacBook di Pekayon, Bekasi. Fokus kami sederhana: solusi jujur, konsultasi transparan, dan pengerjaan yang rapi agar perangkat Anda awet digunakan.",
+        badge: "Konsultasi Terbuka",
         showHeroCTA: true,
     },
     {
         id: "inspection",
         range: [0.20, 0.45],
-        eyebrow: "01 // DIAGNOSTIK MIKROSKOPIK",
-        title: "Pemeriksaan Non-Destruktif & Pemetaan Sirkuit.",
-        body: "Setiap perangkat melalui audit toleransi fisik 0.05mm, stereoskopik optik logic board, dan pengujian multi-rail voltage sebelum estimasi diajukan. Bebas biaya jika estimasi tidak disepakati.",
-        badge: "Toleransi 0.05mm",
+        eyebrow: "01 // PENGECEKAN JUJUR & DETAIL",
+        title: "Pengecekan Tuntas, Estimasi Biaya Dulu Tanpa Paksaan.",
+        body: "Sebelum perbaikan dimulai, kami periksa akar masalahnya dan jelaskan secara terbuka kepada Anda. Tidak ada biaya siluman—jika estimasi biaya tidak disetujui, perangkat bisa diambil kembali tanpa biaya cek.",
+        badge: "Bebas Biaya Cek",
     },
     {
         id: "hardware",
         range: [0.45, 0.70],
-        eyebrow: "02 // TINGKAT KOMPONEN & BGA",
-        title: "Restorasi Inti: Motherboard, VRM & Power Rail.",
-        body: "Perbaikan jalur pendek (short-circuit), penggantian kapasitor low-ESR, reballing chip BGA, serta aplikasi senyawa termal fase cair (Phase-Change TIM) tanpa penggantian papan secara buta.",
-        badge: "Level Komponen",
+        eyebrow: "02 // PERBAIKAN & PERAWATAN BERKALA",
+        title: "Dari Ganti Thermal Paste, Engsel, Hingga Masalah Motherboard.",
+        body: "Menangani laptop lemot, panas berlebih, engsel patah, layar pecah, mati total, hingga upgrade SSD dan RAM. Setiap part copotan atau bekas kami kembalikan utuh ke tangan Anda.",
+        badge: "Sparepart Transparan",
     },
     {
         id: "quality",
         range: [0.70, 0.88],
-        eyebrow: "03 // QUALITY CONTROL MATRIX",
-        title: "25-Point QC Matrix & Pengujian Beban Penuh.",
-        body: "Pengujian ketat kestabilan daya, stres termal CPU & GPU di bawah beban 100%, verifikasi integritas NVMe/RAM, dan validasi I/O selama minimal 4 jam sebelum perakitan akhir disetujui.",
-        badge: "Burn-in Test 4 Jam",
+        eyebrow: "03 // UJI KELAYAKAN & FINISHING",
+        title: "Dites Kestabilannya Sebelum Diserahkan Kembali.",
+        body: "Setiap unit dibersihkan dengan rapi dan diuji suhunya agar tidak lagi overheat atau sering hang saat dipakai bekerja. Kami pastikan perangkat benar-benar siap dan nyaman digunakan.",
+        badge: "Pengujian Suhu & Stabilitas",
     },
     {
         id: "ready",
         range: [0.88, 1.00],
-        eyebrow: "04 // TRANSPARANSI & GARANSI",
-        title: "Perangkat Anda Siap. Terpantau Real-Time.",
-        body: "Seluruh riwayat pengerjaan, foto visual audit, dan sertifikat garansi digital ber-hash aktif otomatis. Cek perkembangan unit Anda langsung melalui portal pelacakan mandiri.",
-        badge: "Garansi Digital",
+        eyebrow: "04 // LACAK PROGRES & GARANSI JELAS",
+        title: "Pantau Progres Servis Kapan Saja, Disertai Garansi Jelas.",
+        body: "Anda bisa memantau foto kondisi, riwayat pengerjaan, dan status garansi secara langsung melalui portal pelacakan ini tanpa harus bolak-balik tanya ke toko.",
+        badge: "Garansi Resmi Servis",
         showFinalCTA: true,
     },
 ];
@@ -65,7 +65,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
     // References for frames and smooth animation loop
     const framesRef = useRef(new Array(TOTAL_FRAMES).fill(null));
     const targetProgress = useRef(0);
-    const currentProgress = useRef(0);
+    const currentFrame = useRef(0);
     const animFrameId = useRef(null);
     const activeStageRef = useRef(0);
     const showFloatingRef = useRef(false);
@@ -132,6 +132,12 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 dx += shift;
             }
 
+            // Integer pixel rounding prevents sub-pixel antialiasing blur
+            dx = Math.round(dx);
+            dy = Math.round(dy);
+            dw = Math.round(dw);
+            dh = Math.round(dh);
+
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = "high";
 
@@ -161,41 +167,61 @@ export default function ServiceProcess3D({ onTrackClick }) {
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
 
-        // Preload frame sequence with progressive loading
-        let loadedCount = 0;
-        const total = TOTAL_FRAMES;
+        // Sequential batch preloader: loads frames in orderly chunks of 8
+        // Ensures earlier frames are ready first and prevents out-of-order network stalling
+        let isCancelled = false;
 
-        // Load Frame 0 first for instant hero view
-        const firstImg = new Image();
-        firstImg.src = getFrameSrc(0);
-        firstImg.onload = () => {
+        const loadFrameSequence = async () => {
+            // 1. Load initial frame immediately
+            const firstImg = new Image();
+            firstImg.src = getFrameSrc(0);
+            await new Promise((res) => {
+                firstImg.onload = res;
+                firstImg.onerror = res;
+            });
+            if (isCancelled) return;
+
             framesRef.current[0] = firstImg;
-            loadedCount++;
-            setLoadProgress(Math.round((loadedCount / total) * 100));
             drawFrame(0);
             lastRenderedFrame.current = 0;
             setIsInitialReady(true);
+            setLoadProgress(1);
+
+            // 2. Stream in batches of 8 frames sequentially
+            let loaded = 1;
+            const batchSize = 8;
+
+            for (let i = 1; i < TOTAL_FRAMES; i += batchSize) {
+                if (isCancelled) return;
+                const batchPromises = [];
+
+                for (let j = i; j < Math.min(i + batchSize, TOTAL_FRAMES); j++) {
+                    const img = new Image();
+                    img.src = getFrameSrc(j);
+                    const p = new Promise((resolve) => {
+                        img.onload = () => {
+                            framesRef.current[j] = img;
+                            loaded++;
+                            setLoadProgress(Math.round((loaded / TOTAL_FRAMES) * 100));
+                            if (lastRenderedFrame.current === j) {
+                                drawFrame(j);
+                            }
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            loaded++;
+                            setLoadProgress(Math.round((loaded / TOTAL_FRAMES) * 100));
+                            resolve();
+                        };
+                    });
+                    batchPromises.push(p);
+                }
+
+                await Promise.all(batchPromises);
+            }
         };
 
-        // Load remaining frames
-        for (let i = 1; i < total; i++) {
-            const img = new Image();
-            img.src = getFrameSrc(i);
-            img.onload = () => {
-                framesRef.current[i] = img;
-                loadedCount++;
-                setLoadProgress(Math.round((loadedCount / total) * 100));
-
-                // If this is the current active frame, redraw immediately
-                if (lastRenderedFrame.current === i) {
-                    drawFrame(i);
-                }
-            };
-            img.onerror = () => {
-                loadedCount++;
-                setLoadProgress(Math.round((loadedCount / total) * 100));
-            };
-        }
+        loadFrameSequence();
 
         // Scroll listener (Maps container scroll position to 0.0 - 1.0)
         const handleScroll = () => {
@@ -211,27 +237,40 @@ export default function ServiceProcess3D({ onTrackClick }) {
         window.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
 
-        // Buttery smooth render loop with Apple-style silky inertia damping
+        // 60-120fps Cinema-Grade Physics Loop with Velocity Governor
+        // Prevents frame teleporting during aggressive scrolling while maintaining high-speed fluidity
         let lastTime = performance.now();
 
         const animate = (time) => {
             animFrameId.current = requestAnimationFrame(animate);
 
-            const dt = Math.min((time - lastTime) / 1000, 0.08);
+            const dt = Math.min((time - lastTime) / 1000, 0.05);
             lastTime = time;
 
-            // Silky exponential inertia damping (lambda = 7.0 for luxurious gliding physics)
-            const lambda = 7.0;
-            const lerpFactor = 1 - Math.exp(-lambda * dt);
+            // Target frame index as continuous float (0.0 to 239.0)
+            const target = targetProgress.current * (TOTAL_FRAMES - 1);
+            const frameDiff = target - currentFrame.current;
 
-            const diff = targetProgress.current - currentProgress.current;
-            if (Math.abs(diff) > 0.00001) {
-                currentProgress.current += diff * lerpFactor;
+            if (Math.abs(frameDiff) > 0.005) {
+                // Responsive base speed (lambda = 10.0 for snappy yet natural feel)
+                const lerpFactor = 1 - Math.exp(-10.0 * dt);
+                let step = frameDiff * lerpFactor;
+
+                // Velocity Governor: Caps max speed to ~135 frames/sec
+                // At 60Hz: advances ~2.2 frames/tick
+                // At 120Hz ProMotion: advances ~1.1 frames/tick (every single frame rendered!)
+                // Eliminates teleporting/slideshow effect during fast flicks
+                const maxStep = 135 * dt;
+                if (Math.abs(step) > maxStep) {
+                    step = Math.sign(step) * maxStep;
+                }
+
+                currentFrame.current += step;
             } else {
-                currentProgress.current = targetProgress.current;
+                currentFrame.current = target;
             }
 
-            const p = currentProgress.current;
+            const p = currentFrame.current / (TOTAL_FRAMES - 1);
 
             // Update active stage with zero unnecessary React re-renders
             let nextStage = 0;
@@ -257,19 +296,22 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 setShowFloatingTrack(shouldShowFloat);
             }
 
-            // Render exact frame when progress advances
-            const floatIndex = p * (TOTAL_FRAMES - 1);
-            const targetFrame = Math.round(floatIndex);
+            // Render active frame continuously at 60-120fps
+            const renderIndex = Math.min(
+                Math.max(0, Math.round(currentFrame.current)),
+                TOTAL_FRAMES - 1
+            );
 
-            if (targetFrame !== lastRenderedFrame.current) {
-                lastRenderedFrame.current = targetFrame;
-                drawFrame(targetFrame);
+            if (renderIndex !== lastRenderedFrame.current) {
+                lastRenderedFrame.current = renderIndex;
+                drawFrame(renderIndex);
             }
         };
 
         animFrameId.current = requestAnimationFrame(animate);
 
         return () => {
+            isCancelled = true;
             window.removeEventListener("resize", resizeCanvas);
             window.removeEventListener("scroll", handleScroll);
             if (animFrameId.current) {
