@@ -966,7 +966,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                         {STATUS_LABELS[t.status]?.label}
                     </span>
                     <a 
-                        href={`https://wa.me/6281234567890?text=Halo,%20saya%20ingin%20bertanya%20tentang%20status%20perbaikan%20perangkat%20saya%20dengan%20nomor%20tiket%20${t.nomor_tiket}`} 
+                        href={`https://wa.me/628121034212?text=Halo,%20saya%20ingin%20bertanya%20tentang%20status%20perbaikan%20perangkat%20saya%20dengan%20nomor%20tiket%20${t.nomor_tiket}`} 
                         target="_blank" 
                         rel="noreferrer"
                         className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all mt-auto sm:mt-4 shadow-sm shadow-emerald-500/20"
@@ -1929,19 +1929,19 @@ export default function Tracking() {
                     <div className="text-center space-y-3 mb-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                            <span className="text-xs font-sans font-semibold text-blue-700 uppercase tracking-wide">
-                                Portal Pelacakan Mandiri
+                            <span className="text-xs font-mono font-semibold text-blue-700 uppercase tracking-wider">
+                                Portal Pelacakan Mandiri Real-Time
                             </span>
                         </div>
-                        <h2 className="font-display font-bold text-2xl sm:text-4xl text-slate-900 tracking-tight">
+                        <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
                             Lacak Status Pengerjaan Perangkat Anda
                         </h2>
-                        <p className="text-slate-500 text-sm max-w-lg mx-auto font-sans leading-relaxed">
-                            Masukkan nomor tiket servis atau nomor WhatsApp yang terdaftar untuk memantau perkembangan unit Anda secara real-time.
+                        <p className="text-slate-500 text-sm sm:text-base max-w-lg mx-auto font-sans leading-relaxed">
+                            Masukkan nomor tiket servis atau nomor WhatsApp yang terdaftar untuk memantau perkembangan unit Anda secara transparan.
                         </p>
                     </div>
 
-                    <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm relative">
+                    <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xs relative">
                         {/* Tab Switcher & QR Scan Button */}
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-6">
                             <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl flex-1">

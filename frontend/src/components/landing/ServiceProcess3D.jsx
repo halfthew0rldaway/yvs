@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, ArrowDown, MessageCircle } from "lucide-react";
+import { Search, ArrowDown, MessageCircle, Clock, ShieldCheck } from "lucide-react";
 
 const TOTAL_FRAMES = 240;
 
@@ -15,8 +15,8 @@ const STORY_STAGES = [
         range: [0.00, 0.16],
         eyebrow: "YANGVERSA COMPUTER · KOMPUTERAWET.COM",
         title: "Teman Terpercaya Merawat & Memperbaiki Komputer Anda.",
-        body: "Pusat servis laptop, PC, dan MacBook di Pekayon, Bekasi. Fokus kami sederhana: solusi jujur, konsultasi transparan, dan pengerjaan yang rapi agar perangkat Anda awet digunakan.",
-        badge: "Konsultasi Terbuka",
+        body: "Pusat spesialis servis laptop, PC Desktop, dan MacBook di Pekayon, Bekasi. Fokus kami sederhana: solusi jujur, konsultasi transparan, dan pengerjaan yang rapi agar perangkat Anda awet digunakan.",
+        badge: "Buka Setiap Hari 09–18 WIB",
         showHeroCTA: true,
     },
     {
@@ -122,14 +122,22 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 dw = cw;
                 dh = cw / imgAspect;
                 dx = 0;
-                dy = (ch - dh) / 2;
+                // On mobile portrait, shift slightly upward so the bottom card never obscures the laptop
+                if (canvasAspect < 1.0) {
+                    dy = Math.max(0, (ch - dh) * 0.30);
+                } else {
+                    dy = (ch - dh) / 2;
+                }
             }
 
-            // Desktop layout enhancement: gently shift visual rightward to create space for text column
+            // Desktop & iPad layout enhancement: gently shift visual rightward to create space for text column
             if (window.innerWidth >= 1024 && canvasAspect > 1.35) {
                 const availableSpace = (cw - dw) / 2;
                 const shift = Math.min(availableSpace * 0.65, cw * 0.08);
                 dx += shift;
+            } else if (window.innerWidth >= 768 && window.innerWidth < 1024 && canvasAspect > 1.15) {
+                const availableSpace = (cw - dw) / 2;
+                dx += availableSpace * 0.35;
             }
 
             // Integer pixel rounding prevents sub-pixel antialiasing blur
@@ -168,7 +176,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
         window.addEventListener("resize", resizeCanvas);
 
         // Sequential batch preloader: loads frames in orderly chunks of 8
-        // Ensures earlier frames are ready first and prevents out-of-order network stalling
         let isCancelled = false;
 
         const loadFrameSequence = async () => {
@@ -238,7 +245,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
         handleScroll();
 
         // 60-120fps Cinema-Grade Physics Loop with Velocity Governor
-        // Prevents frame teleporting during aggressive scrolling while maintaining high-speed fluidity
         let lastTime = performance.now();
 
         const animate = (time) => {
@@ -248,22 +254,18 @@ export default function ServiceProcess3D({ onTrackClick }) {
             lastTime = time;
 
             // Video completes disassembly at 65% of the scroll track.
-            // The remaining 35% (~1.5 to 2 full viewport scrolls) keeps the completely
-            // disassembled state locked in view before seamlessly unpinning to the next section.
+            // The remaining 35% keeps the completely disassembled exploded state
+            // locked in view for ~1.5 to 2 full viewport scrolls before unpinning.
             const VIDEO_COMPLETE_PROGRESS = 0.65;
             const rawVideoProgress = Math.min(1.0, targetProgress.current / VIDEO_COMPLETE_PROGRESS);
             const target = rawVideoProgress * (TOTAL_FRAMES - 1);
             const frameDiff = target - currentFrame.current;
 
             if (Math.abs(frameDiff) > 0.005) {
-                // Responsive base speed (lambda = 10.0 for snappy yet natural feel)
                 const lerpFactor = 1 - Math.exp(-10.0 * dt);
                 let step = frameDiff * lerpFactor;
 
                 // Velocity Governor: Caps max speed to ~135 frames/sec
-                // At 60Hz: advances ~2.2 frames/tick
-                // At 120Hz ProMotion: advances ~1.1 frames/tick (every single frame rendered!)
-                // Eliminates teleporting/slideshow effect during fast flicks
                 const maxStep = 135 * dt;
                 if (Math.abs(step) > maxStep) {
                     step = Math.sign(step) * maxStep;
@@ -277,7 +279,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
             // Sync storytelling stages to overall scroll progress
             const p = targetProgress.current;
 
-            // Update active stage with zero unnecessary React re-renders
             let nextStage = 0;
             for (let i = 0; i < STORY_STAGES.length; i++) {
                 if (p >= STORY_STAGES[i].range[0] && p < STORY_STAGES[i].range[1]) {
@@ -294,7 +295,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 setActiveStage(nextStage);
             }
 
-            // Floating quick-track button toggle (visible between 15% and 95%)
+            // Floating quick-track button toggle (visible on desktop/tablet when scrolled)
             const shouldShowFloat = p > 0.15 && p < 0.98;
             if (shouldShowFloat !== showFloatingRef.current) {
                 showFloatingRef.current = shouldShowFloat;
@@ -330,7 +331,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
     return (
         <section
             ref={containerRef}
-            className="relative w-full bg-white"
+            className="relative w-full bg-white font-sans"
             style={{ height: "540vh" }}
             id="service-workflow"
         >
@@ -353,18 +354,23 @@ export default function ServiceProcess3D({ onTrackClick }) {
                     style={{ touchAction: "pan-y" }}
                 />
 
-                {/* 3. Desktop & Tablet Storytelling Column (Non-obstructive left placement) */}
-                <div className="hidden lg:flex absolute inset-y-0 left-0 z-20 flex-col justify-center pointer-events-none p-8 lg:pl-16 lg:pr-8 max-w-xl xl:max-w-2xl">
+                {/* 3. Desktop & iPad Storytelling Column (Non-obstructive left placement) */}
+                <div className="hidden md:flex absolute inset-y-0 left-0 z-20 flex-col justify-center pointer-events-none p-6 sm:p-8 md:pl-8 md:pr-4 lg:pl-16 lg:pr-8 max-w-md lg:max-w-xl xl:max-w-2xl">
                     <div className="pointer-events-auto transition-all duration-300">
-                        <div className="bg-white/92 backdrop-blur-md border border-slate-200/90 rounded-2xl p-7 lg:p-9 shadow-sm space-y-4">
-                            <div className="flex items-center gap-2.5">
-                                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                                <span className="font-mono text-xs font-semibold text-blue-600 uppercase tracking-wider">
-                                    {currentStage.eyebrow}
+                        <div className="bg-white/94 backdrop-blur-md border border-slate-200/90 rounded-2xl p-6 lg:p-9 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between gap-2.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                                    <span className="font-mono text-xs font-semibold text-blue-600 uppercase tracking-wider">
+                                        {currentStage.eyebrow}
+                                    </span>
+                                </div>
+                                <span className="font-mono text-3xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
+                                    0{activeStage + 1} / 0{STORY_STAGES.length}
                                 </span>
                             </div>
 
-                            <h2 className="font-display font-bold text-2xl lg:text-3xl xl:text-4xl text-slate-900 tracking-tight leading-[1.18]">
+                            <h2 className="font-display font-extrabold text-2xl lg:text-3xl xl:text-4xl text-slate-900 tracking-tight leading-[1.18]">
                                 {currentStage.title}
                             </h2>
 
@@ -384,7 +390,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                                         Lacak Status Servis
                                     </button>
                                     <a
-                                        href="https://wa.me/6281234567890?text=Halo%20YVS%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20saya"
+                                        href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
                                         target="_blank"
                                         rel="noreferrer"
                                         className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-medium text-sm transition-all"
@@ -412,25 +418,31 @@ export default function ServiceProcess3D({ onTrackClick }) {
                             ) : (
                                 <div className="pt-1 flex items-center gap-2 text-xs font-mono text-slate-400">
                                     <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                                    <span>Scroll ke bawah untuk melanjutkan alur pengerjaan</span>
+                                    <span>Scroll ke bawah untuk melihat tahap pembongkaran</span>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
 
-                {/* 4. Mobile Storytelling Card (Docked at Bottom) */}
-                <div className="lg:hidden absolute bottom-4 left-4 right-4 z-20 pointer-events-auto">
-                    <div className="bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl p-4 shadow-md space-y-2">
+                {/* 4. Mobile Storytelling Card (Docked cleanly at bottom for phones) */}
+                <div className="md:hidden absolute bottom-3 sm:bottom-4 left-3 right-3 sm:left-4 sm:right-4 z-20 pointer-events-auto">
+                    <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl p-4 shadow-md space-y-2.5">
                         <div className="flex items-center justify-between">
-                            <span className="font-mono text-[10px] font-semibold text-blue-600 uppercase tracking-wider">
+                            <span className="font-mono text-3xs font-bold text-blue-600 uppercase tracking-wider">
                                 {currentStage.eyebrow}
                             </span>
-                            <span className="font-mono text-[10px] text-slate-400">
+                            <span className="font-mono text-3xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
                                 0{activeStage + 1} / 0{STORY_STAGES.length}
                             </span>
                         </div>
-                        <h3 className="font-display font-bold text-sm sm:text-base text-slate-900 leading-snug">
+                        <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-blue-600 transition-all duration-300"
+                                style={{ width: `${((activeStage + 1) / STORY_STAGES.length) * 100}%` }}
+                            />
+                        </div>
+                        <h3 className="font-display font-extrabold text-sm sm:text-base text-slate-900 leading-snug">
                             {currentStage.title}
                         </h3>
                         <p className="font-sans text-xs text-slate-600 line-clamp-2 leading-relaxed">
@@ -439,17 +451,17 @@ export default function ServiceProcess3D({ onTrackClick }) {
                         <button
                             type="button"
                             onClick={onTrackClick}
-                            className="w-full mt-1.5 py-2 px-3 rounded-lg bg-blue-600 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm"
+                            className="w-full mt-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm shadow-blue-600/20 cursor-pointer"
                         >
                             <Search className="w-3.5 h-3.5" />
-                            Lacak Status Servis
+                            Lacak Status Servis Sekarang
                         </button>
                     </div>
                 </div>
 
-                {/* 5. Persistent Floating Quick-Track Action */}
+                {/* 5. Persistent Floating Quick-Track Action for Desktop/iPad */}
                 <div
-                    className={`fixed bottom-6 right-6 z-40 transition-all duration-300 ${
+                    className={`hidden md:block fixed bottom-6 right-6 z-40 transition-all duration-300 ${
                         showFloatingTrack
                             ? "opacity-100 translate-y-0 pointer-events-auto"
                             : "opacity-0 translate-y-4 pointer-events-none"
