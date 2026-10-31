@@ -58,6 +58,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const [isInitialReady, setIsInitialReady] = useState(false);
+    const [loadProgress, setLoadProgress] = useState(0);
     const [activeStage, setActiveStage] = useState(0);
     const [showFloatingTrack, setShowFloatingTrack] = useState(false);
 
@@ -68,6 +69,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
     const animFrameId = useRef(null);
     const activeStageRef = useRef(0);
     const showFloatingRef = useRef(false);
+    const lastRenderedFrame = useRef(-1);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -76,24 +78,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
 
         const ctx = canvas.getContext("2d", { alpha: false });
         if (!ctx) return;
-
-        let lastRenderedProgress = -1;
-
-        // HiDPI canvas resizing
-        const resizeCanvas = () => {
-            const w = canvas.clientWidth || window.innerWidth;
-            const h = canvas.clientHeight || window.innerHeight;
-            if (w === 0 || h === 0) return;
-
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            canvas.width = w * dpr;
-            canvas.height = h * dpr;
-
-            lastRenderedProgress = -1;
-        };
-
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
 
         // Find best available frame to draw (exact frame or closest loaded frame)
         const getBestFrame = (targetIdx) => {
@@ -115,15 +99,15 @@ export default function ServiceProcess3D({ onTrackClick }) {
             return null;
         };
 
-        // Sub-frame cross-fading renderer for 60fps/120fps continuous motion
-        const renderBlendedFrames = (idxA, idxB, alphaB) => {
-            const imgA = getBestFrame(idxA);
-            if (!imgA) return;
+        // Razor-sharp single frame renderer (Zero ghosting, zero double edges)
+        const drawFrame = (frameIdx) => {
+            const img = getBestFrame(frameIdx);
+            if (!img) return;
 
             const cw = canvas.width;
             const ch = canvas.height;
-            const iw = imgA.naturalWidth || 1920;
-            const ih = imgA.naturalHeight || 1080;
+            const iw = img.naturalWidth || 1920;
+            const ih = img.naturalHeight || 1080;
 
             const canvasAspect = cw / ch;
             const imgAspect = iw / ih;
@@ -148,67 +132,70 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 dx += shift;
             }
 
-            // Clean background fill matching the video studio background
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+
+            // Clean background fill matching the studio white background
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, cw, ch);
 
-            // 1. Draw base frame
-            ctx.globalAlpha = 1.0;
-            ctx.drawImage(imgA, dx, dy, dw, dh);
+            // Draw crisp single frame
+            ctx.drawImage(img, dx, dy, dw, dh);
+        };
 
-            // 2. Sub-frame alpha blend for ultra-smooth 60fps/120fps transitions
-            if (alphaB > 0.015 && idxA !== idxB) {
-                const imgB = getBestFrame(idxB);
-                if (imgB && imgB !== imgA) {
-                    ctx.globalAlpha = alphaB;
-                    ctx.drawImage(imgB, dx, dy, dw, dh);
-                    ctx.globalAlpha = 1.0;
-                }
+        // HiDPI canvas resizing
+        const resizeCanvas = () => {
+            const w = canvas.clientWidth || window.innerWidth;
+            const h = canvas.clientHeight || window.innerHeight;
+            if (w === 0 || h === 0) return;
+
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(h * dpr);
+
+            if (lastRenderedFrame.current >= 0) {
+                drawFrame(lastRenderedFrame.current);
             }
         };
 
-        // Priority-based async image loader with off-thread GPU decoding
-        const preloadFrames = async () => {
-            // Tier 1: Decode Frame 1 immediately
-            const firstImg = new Image();
-            firstImg.src = getFrameSrc(0);
-            try {
-                await firstImg.decode();
-            } catch (_) {}
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+
+        // Preload frame sequence with progressive loading
+        let loadedCount = 0;
+        const total = TOTAL_FRAMES;
+
+        // Load Frame 0 first for instant hero view
+        const firstImg = new Image();
+        firstImg.src = getFrameSrc(0);
+        firstImg.onload = () => {
             framesRef.current[0] = firstImg;
-            renderBlendedFrames(0, 0, 0);
+            loadedCount++;
+            setLoadProgress(Math.round((loadedCount / total) * 100));
+            drawFrame(0);
+            lastRenderedFrame.current = 0;
             setIsInitialReady(true);
-
-            // Tier 2: Anchor keyframes distributed across the entire timeline
-            const stride = 12;
-            const anchorPromises = [];
-            for (let i = stride; i < TOTAL_FRAMES; i += stride) {
-                const img = new Image();
-                img.src = getFrameSrc(i);
-                anchorPromises.push(
-                    img.decode().then(() => {
-                        framesRef.current[i] = img;
-                    }).catch(() => {
-                        framesRef.current[i] = img;
-                    })
-                );
-            }
-            await Promise.allSettled(anchorPromises);
-
-            // Tier 3: Asynchronously decode all remaining intermediate frames
-            for (let i = 1; i < TOTAL_FRAMES; i++) {
-                if (framesRef.current[i]) continue;
-                const img = new Image();
-                img.src = getFrameSrc(i);
-                img.decode().then(() => {
-                    framesRef.current[i] = img;
-                }).catch(() => {
-                    framesRef.current[i] = img;
-                });
-            }
         };
 
-        preloadFrames();
+        // Load remaining frames
+        for (let i = 1; i < total; i++) {
+            const img = new Image();
+            img.src = getFrameSrc(i);
+            img.onload = () => {
+                framesRef.current[i] = img;
+                loadedCount++;
+                setLoadProgress(Math.round((loadedCount / total) * 100));
+
+                // If this is the current active frame, redraw immediately
+                if (lastRenderedFrame.current === i) {
+                    drawFrame(i);
+                }
+            };
+            img.onerror = () => {
+                loadedCount++;
+                setLoadProgress(Math.round((loadedCount / total) * 100));
+            };
+        }
 
         // Scroll listener (Maps container scroll position to 0.0 - 1.0)
         const handleScroll = () => {
@@ -224,7 +211,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
         window.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
 
-        // 60fps/120fps render loop with framerate-independent physics damping
+        // Buttery smooth render loop with Apple-style silky inertia damping
         let lastTime = performance.now();
 
         const animate = (time) => {
@@ -233,12 +220,12 @@ export default function ServiceProcess3D({ onTrackClick }) {
             const dt = Math.min((time - lastTime) / 1000, 0.08);
             lastTime = time;
 
-            // Exponential damping (lambda = 16 for buttery smooth glide)
-            const lambda = 16;
+            // Silky exponential inertia damping (lambda = 7.0 for luxurious gliding physics)
+            const lambda = 7.0;
             const lerpFactor = 1 - Math.exp(-lambda * dt);
 
             const diff = targetProgress.current - currentProgress.current;
-            if (Math.abs(diff) > 0.00002) {
+            if (Math.abs(diff) > 0.00001) {
                 currentProgress.current += diff * lerpFactor;
             } else {
                 currentProgress.current = targetProgress.current;
@@ -270,16 +257,13 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 setShowFloatingTrack(shouldShowFloat);
             }
 
-            // Render sub-frame blended transition
-            if (Math.abs(p - lastRenderedProgress) > 0.00008) {
-                lastRenderedProgress = p;
+            // Render exact frame when progress advances
+            const floatIndex = p * (TOTAL_FRAMES - 1);
+            const targetFrame = Math.round(floatIndex);
 
-                const floatIndex = p * (TOTAL_FRAMES - 1);
-                const floorIdx = Math.floor(floatIndex);
-                const ceilIdx = Math.min(floorIdx + 1, TOTAL_FRAMES - 1);
-                const fraction = floatIndex - floorIdx;
-
-                renderBlendedFrames(floorIdx, ceilIdx, fraction);
+            if (targetFrame !== lastRenderedFrame.current) {
+                lastRenderedFrame.current = targetFrame;
+                drawFrame(targetFrame);
             }
         };
 
@@ -294,34 +278,35 @@ export default function ServiceProcess3D({ onTrackClick }) {
         };
     }, []);
 
-    const jumpToStage = (stageIdx) => {
-        if (!containerRef.current) return;
-        const stage = STORY_STAGES[stageIdx];
-        if (!stage) return;
-        const scrollable = containerRef.current.offsetHeight - window.innerHeight;
-        const targetY = containerRef.current.offsetTop + stage.range[0] * scrollable + 15;
-        window.scrollTo({ top: targetY, behavior: "smooth" });
-    };
-
     const currentStage = STORY_STAGES[activeStage] || STORY_STAGES[0];
 
     return (
         <section
             ref={containerRef}
             className="relative w-full bg-white"
-            style={{ height: "450vh" }}
+            style={{ height: "380vh" }}
             id="service-workflow"
         >
             {/* Sticky 100vh viewport container */}
             <div className="sticky top-0 w-full h-screen h-[100dvh] overflow-hidden bg-white">
-                {/* 1. Scroll-driven Canvas Centerpiece */}
+                {/* 1. Top Preload Progress Bar (Fades out when 100% buffered) */}
+                {loadProgress < 100 && (
+                    <div className="absolute top-0 left-0 right-0 z-30 h-1 bg-slate-100 overflow-hidden">
+                        <div
+                            className="h-full bg-blue-600 transition-all duration-200"
+                            style={{ width: `${loadProgress}%` }}
+                        />
+                    </div>
+                )}
+
+                {/* 2. Scroll-driven Canvas Centerpiece */}
                 <canvas
                     ref={canvasRef}
                     className="w-full h-full block"
                     style={{ touchAction: "pan-y" }}
                 />
 
-                {/* 2. Desktop & Tablet Storytelling Column (Non-obstructive left placement) */}
+                {/* 3. Desktop & Tablet Storytelling Column (Non-obstructive left placement) */}
                 <div className="hidden lg:flex absolute inset-y-0 left-0 z-20 flex-col justify-center pointer-events-none p-8 lg:pl-16 lg:pr-8 max-w-xl xl:max-w-2xl">
                     <div className="pointer-events-auto transition-all duration-300">
                         <div className="bg-white/92 backdrop-blur-md border border-slate-200/90 rounded-2xl p-7 lg:p-9 shadow-sm space-y-4">
@@ -383,7 +368,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                     </div>
                 </div>
 
-                {/* 3. Mobile Storytelling Card (Docked at Bottom) */}
+                {/* 4. Mobile Storytelling Card (Docked at Bottom) */}
                 <div className="lg:hidden absolute bottom-4 left-4 right-4 z-20 pointer-events-auto">
                     <div className="bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl p-4 shadow-md space-y-2">
                         <div className="flex items-center justify-between">
@@ -409,32 +394,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
                             Lacak Status Servis
                         </button>
                     </div>
-                </div>
-
-                {/* 4. Desktop Vertical Step Navigation (Right Rail) */}
-                <div className="hidden lg:flex flex-col gap-2 absolute top-1/2 -translate-y-1/2 right-8 z-20 pointer-events-auto">
-                    {STORY_STAGES.map((s, idx) => (
-                        <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => jumpToStage(idx)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all text-xs font-mono cursor-pointer ${
-                                activeStage === idx
-                                    ? "bg-slate-900 text-white font-semibold shadow-sm"
-                                    : "bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 border border-slate-200/60"
-                            }`}
-                        >
-                            <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                    activeStage === idx ? "bg-blue-400" : "bg-slate-300"
-                                }`}
-                            />
-                            <span>0{idx + 1}</span>
-                            <span className="hidden xl:inline text-[11px] font-sans font-normal opacity-85">
-                                {s.badge}
-                            </span>
-                        </button>
-                    ))}
                 </div>
 
                 {/* 5. Persistent Floating Quick-Track Action */}
