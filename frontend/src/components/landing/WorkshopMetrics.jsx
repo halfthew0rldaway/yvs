@@ -112,7 +112,7 @@ export default function WorkshopMetrics() {
                         <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
                             Kata Pelanggan di Google Maps Yangversa
                         </h2>
-                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans">
+                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-justify [text-justify:inter-word]">
                             Seluruh ulasan di bawah ini adalah review bintang 5 (★★★★★) murni dari pelanggan riil yang mempercayakan perangkat laptop dan komputernya ke workshop kami di Pekayon, Bekasi.
                         </p>
                     </div>
@@ -149,7 +149,7 @@ export default function WorkshopMetrics() {
                                     </span>
                                 </div>
 
-                                <p className="text-sm text-slate-700 leading-relaxed font-sans">
+                                <p className="text-sm text-slate-700 leading-relaxed font-sans text-justify [text-justify:inter-word]">
                                     &ldquo;{r.text}&rdquo;
                                 </p>
                             </div>

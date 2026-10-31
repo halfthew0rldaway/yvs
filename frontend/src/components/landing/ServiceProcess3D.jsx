@@ -108,31 +108,49 @@ export default function ServiceProcess3D({ onTrackClick }) {
             const imgAspect = iw / ih;
 
             let dw, dh, dx, dy;
-            if (canvasAspect > imgAspect) {
-                dh = ch;
-                dw = ch * imgAspect;
-                dx = (cw - dw) / 2;
-                dy = 0;
-            } else {
-                dw = cw;
-                dh = cw / imgAspect;
-                dx = 0;
-                // On mobile portrait, shift slightly upward so bottom docked card never obscures the laptop
+            const isDesktopOrTablet = window.innerWidth >= 768;
+
+            if (!isDesktopOrTablet) {
+                // Mobile portrait/landscape: keep laptop centered or slightly upward above the docked card
                 if (canvasAspect < 1.0) {
+                    dw = cw;
+                    dh = cw / imgAspect;
+                    dx = 0;
                     dy = Math.max(0, (ch - dh) * 0.28);
                 } else {
+                    dh = ch * 0.90;
+                    dw = dh * imgAspect;
+                    dx = (cw - dw) / 2;
                     dy = (ch - dh) / 2;
                 }
-            }
+            } else {
+                // Desktop & iPad layout: shift the 3D laptop cleanly rightward so the left text column has zero collision
+                dh = Math.min(ch * 0.94, ch);
+                dw = dh * imgAspect;
+                if (dw > cw * 1.15) {
+                    dw = cw * 1.15;
+                    dh = dw / imgAspect;
+                }
+                dy = (ch - dh) / 2;
 
-            // Desktop & iPad layout: gently shift visual rightward so the left storytelling column has clear breathing room
-            if (window.innerWidth >= 1024 && canvasAspect > 1.35) {
-                const availableSpace = (cw - dw) / 2;
-                const shift = Math.min(availableSpace * 0.70, cw * 0.12);
-                dx += shift;
-            } else if (window.innerWidth >= 768 && window.innerWidth < 1024 && canvasAspect > 1.15) {
-                const availableSpace = (cw - dw) / 2;
-                dx += availableSpace * 0.35;
+                // Center of hardware in source image is at x ≈ 0.52 * iw.
+                // Position hardware center intentionally on the right side of the canvas:
+                let targetCenterX;
+                if (cw >= 1280) {
+                    targetCenterX = cw * 0.65;
+                } else if (cw >= 1024) {
+                    targetCenterX = cw * 0.62;
+                } else {
+                    targetCenterX = cw * 0.58;
+                }
+
+                dx = targetCenterX - dw * 0.52;
+
+                // Ensure hardware right edge (at ~0.78 * dw) has breathing room and never clips
+                const hardwareRightMax = cw - 24;
+                if (dx + dw * 0.78 > hardwareRightMax) {
+                    dx = hardwareRightMax - dw * 0.78;
+                }
             }
 
             dx = Math.round(dx);
@@ -341,7 +359,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 {/* 3. Desktop & iPad Storytelling Overlay (Left Column, wide-to-edge container, pointer-events-none container) */}
                 <div className="hidden md:flex absolute inset-0 z-20 items-center pointer-events-none">
                     <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
-                        <div className="pointer-events-auto max-w-lg lg:max-w-xl xl:max-w-2xl space-y-4">
+                        <div className="pointer-events-auto max-w-md lg:max-w-[460px] xl:max-w-[500px] space-y-4">
                             {/* Header Pill & Step Counter */}
                             <div className="flex items-center gap-2.5">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 shadow-2xs">
@@ -368,12 +386,12 @@ export default function ServiceProcess3D({ onTrackClick }) {
                             </div>
 
                             {/* Dynamic Stage Title */}
-                            <h1 className="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl xl:text-[2.65rem] text-slate-900 tracking-tight leading-[1.18]">
+                            <h1 className="font-display font-extrabold text-xl sm:text-2xl lg:text-3xl xl:text-[2.25rem] text-slate-900 tracking-tight leading-[1.2]">
                                 {currentStage.title}
                             </h1>
 
                             {/* Dynamic Stage Description */}
-                            <p className="font-sans text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl">
+                            <p className="font-sans text-slate-600 text-xs sm:text-sm lg:text-base leading-relaxed text-justify [text-justify:inter-word]">
                                 {currentStage.body}
                             </p>
 
@@ -428,7 +446,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                         <h3 className="font-display font-bold text-sm sm:text-base text-slate-900 leading-snug line-clamp-2">
                             {currentStage.title}
                         </h3>
-                        <p className="font-sans text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                        <p className="font-sans text-xs text-slate-600 line-clamp-2 leading-relaxed text-justify [text-justify:inter-word]">
                             {currentStage.body}
                         </p>
                         <div className="pt-1 flex items-center gap-2">
