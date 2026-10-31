@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, ArrowDown, MessageCircle, Clock, ShieldCheck } from "lucide-react";
+import { Search, MessageCircle, Clock, ShieldCheck, ChevronRight } from "lucide-react";
 
 const TOTAL_FRAMES = 240;
 
-// Format frame index as 3-digit zero-padded number (001 to 240)
 const getFrameSrc = (index) => {
     const padIndex = String(index + 1).padStart(3, "0");
     return `/frames/${padIndex}.webp`;
@@ -13,24 +12,23 @@ const STORY_STAGES = [
     {
         id: "intro",
         range: [0.00, 0.16],
-        eyebrow: "YANGVERSA COMPUTER · KOMPUTERAWET.COM",
+        eyebrow: "KOMPUTERAWET.COM · YANGVERSA COMPUTER",
         title: "Teman Terpercaya Merawat & Memperbaiki Komputer Anda.",
         body: "Pusat spesialis servis laptop, PC Desktop, dan MacBook di Pekayon, Bekasi. Fokus kami sederhana: solusi jujur, konsultasi transparan, dan pengerjaan yang rapi agar perangkat Anda awet digunakan.",
         badge: "Buka Setiap Hari 09–18 WIB",
-        showHeroCTA: true,
     },
     {
         id: "inspection",
         range: [0.16, 0.32],
-        eyebrow: "01 // PENGECEKAN JUJUR & DETAIL",
+        eyebrow: "TAHAP 01 · PEMERIKSAAN DETAIL",
         title: "Pengecekan Tuntas, Estimasi Biaya Dulu Tanpa Paksaan.",
-        body: "Sebelum perbaikan dimulai, kami periksa akar masalahnya dan jelaskan secara terbuka kepada Anda. Tidak ada biaya siluman—jika estimasi biaya tidak disetujui, perangkat bisa diambil kembali tanpa biaya cek.",
+        body: "Sebelum perbaikan dimulai, teknisi memeriksa akar masalah hingga ke level mikroskopis dan menjelaskan secara terbuka. Jika estimasi biaya tidak disetujui, perangkat bisa diambil kembali tanpa biaya cek.",
         badge: "Bebas Biaya Cek",
     },
     {
         id: "hardware",
         range: [0.32, 0.48],
-        eyebrow: "02 // PERBAIKAN & PERAWATAN BERKALA",
+        eyebrow: "TAHAP 02 · PERBAIKAN & PENGGANTIAN SUKU CADANG",
         title: "Dari Ganti Thermal Paste, Engsel, Hingga Masalah Motherboard.",
         body: "Menangani laptop lemot, panas berlebih, engsel patah, layar pecah, mati total, hingga upgrade SSD dan RAM. Setiap part copotan atau bekas kami kembalikan utuh ke tangan Anda.",
         badge: "Sparepart Transparan",
@@ -38,7 +36,7 @@ const STORY_STAGES = [
     {
         id: "quality",
         range: [0.48, 0.65],
-        eyebrow: "03 // UJI KELAYAKAN & FINISHING",
+        eyebrow: "TAHAP 03 · PENGUJIAN STABILITAS & SUHU",
         title: "Dites Kestabilannya Sebelum Diserahkan Kembali.",
         body: "Setiap unit dibersihkan dengan rapi dan diuji suhunya agar tidak lagi overheat atau sering hang saat dipakai bekerja. Kami pastikan perangkat benar-benar siap dan nyaman digunakan.",
         badge: "Pengujian Suhu & Stabilitas",
@@ -46,11 +44,10 @@ const STORY_STAGES = [
     {
         id: "ready",
         range: [0.65, 1.00],
-        eyebrow: "04 // LACAK PROGRES & GARANSI JELAS",
+        eyebrow: "TAHAP 04 · SERAH TERIMA & GARANSI RESMI",
         title: "Pantau Progres Servis Kapan Saja, Disertai Garansi Jelas.",
         body: "Anda bisa memantau foto kondisi, riwayat pengerjaan, dan status garansi secara langsung melalui portal pelacakan ini tanpa harus bolak-balik tanya ke toko.",
         badge: "Garansi Resmi Servis",
-        showFinalCTA: true,
     },
 ];
 
@@ -60,15 +57,12 @@ export default function ServiceProcess3D({ onTrackClick }) {
     const [isInitialReady, setIsInitialReady] = useState(false);
     const [loadProgress, setLoadProgress] = useState(0);
     const [activeStage, setActiveStage] = useState(0);
-    const [showFloatingTrack, setShowFloatingTrack] = useState(false);
 
-    // References for frames and smooth animation loop
     const framesRef = useRef(new Array(TOTAL_FRAMES).fill(null));
     const targetProgress = useRef(0);
     const currentFrame = useRef(0);
     const animFrameId = useRef(null);
     const activeStageRef = useRef(0);
-    const showFloatingRef = useRef(false);
     const lastRenderedFrame = useRef(-1);
 
     useEffect(() => {
@@ -79,7 +73,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
         const ctx = canvas.getContext("2d", { alpha: false });
         if (!ctx) return;
 
-        // Find best available frame to draw (exact frame or closest loaded frame)
         const getBestFrame = (targetIdx) => {
             const clampedIdx = Math.min(TOTAL_FRAMES - 1, Math.max(0, targetIdx));
             if (framesRef.current[clampedIdx]?.complete && framesRef.current[clampedIdx]?.naturalWidth > 0) {
@@ -99,13 +92,14 @@ export default function ServiceProcess3D({ onTrackClick }) {
             return null;
         };
 
-        // Razor-sharp single frame renderer (Zero ghosting, zero double edges)
         const drawFrame = (frameIdx) => {
             const img = getBestFrame(frameIdx);
             if (!img) return;
 
             const cw = canvas.width;
             const ch = canvas.height;
+            if (cw === 0 || ch === 0) return;
+
             const iw = img.naturalWidth || 1920;
             const ih = img.naturalHeight || 1080;
 
@@ -122,25 +116,9 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 dw = cw;
                 dh = cw / imgAspect;
                 dx = 0;
-                // On mobile portrait, shift slightly upward so the bottom card never obscures the laptop
-                if (canvasAspect < 1.0) {
-                    dy = Math.max(0, (ch - dh) * 0.30);
-                } else {
-                    dy = (ch - dh) / 2;
-                }
+                dy = (ch - dh) / 2;
             }
 
-            // Desktop & iPad layout enhancement: gently shift visual rightward to create space for text column
-            if (window.innerWidth >= 1024 && canvasAspect > 1.35) {
-                const availableSpace = (cw - dw) / 2;
-                const shift = Math.min(availableSpace * 0.65, cw * 0.08);
-                dx += shift;
-            } else if (window.innerWidth >= 768 && window.innerWidth < 1024 && canvasAspect > 1.15) {
-                const availableSpace = (cw - dw) / 2;
-                dx += availableSpace * 0.35;
-            }
-
-            // Integer pixel rounding prevents sub-pixel antialiasing blur
             dx = Math.round(dx);
             dy = Math.round(dy);
             dw = Math.round(dw);
@@ -149,18 +127,16 @@ export default function ServiceProcess3D({ onTrackClick }) {
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = "high";
 
-            // Clean background fill matching the studio white background
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, cw, ch);
-
-            // Draw crisp single frame
             ctx.drawImage(img, dx, dy, dw, dh);
         };
 
-        // HiDPI canvas resizing
         const resizeCanvas = () => {
-            const w = canvas.clientWidth || window.innerWidth;
-            const h = canvas.clientHeight || window.innerHeight;
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+            const w = rect.width || canvas.clientWidth || 600;
+            const h = rect.height || canvas.clientHeight || 450;
             if (w === 0 || h === 0) return;
 
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -175,11 +151,9 @@ export default function ServiceProcess3D({ onTrackClick }) {
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
 
-        // Sequential batch preloader: loads frames in orderly chunks of 8
         let isCancelled = false;
 
         const loadFrameSequence = async () => {
-            // 1. Load initial frame immediately
             const firstImg = new Image();
             firstImg.src = getFrameSrc(0);
             await new Promise((res) => {
@@ -194,7 +168,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
             setIsInitialReady(true);
             setLoadProgress(1);
 
-            // 2. Stream in batches of 8 frames sequentially
             let loaded = 1;
             const batchSize = 8;
 
@@ -230,7 +203,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
 
         loadFrameSequence();
 
-        // Scroll listener (Maps container scroll position to 0.0 - 1.0)
         const handleScroll = () => {
             if (!containerRef.current) return;
             const rect = containerRef.current.getBoundingClientRect();
@@ -244,7 +216,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
         window.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
 
-        // 60-120fps Cinema-Grade Physics Loop with Velocity Governor
         let lastTime = performance.now();
 
         const animate = (time) => {
@@ -253,9 +224,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
             const dt = Math.min((time - lastTime) / 1000, 0.05);
             lastTime = time;
 
-            // Video completes disassembly at 65% of the scroll track.
-            // The remaining 35% keeps the completely disassembled exploded state
-            // locked in view for ~1.5 to 2 full viewport scrolls before unpinning.
             const VIDEO_COMPLETE_PROGRESS = 0.65;
             const rawVideoProgress = Math.min(1.0, targetProgress.current / VIDEO_COMPLETE_PROGRESS);
             const target = rawVideoProgress * (TOTAL_FRAMES - 1);
@@ -265,7 +233,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 const lerpFactor = 1 - Math.exp(-10.0 * dt);
                 let step = frameDiff * lerpFactor;
 
-                // Velocity Governor: Caps max speed to ~135 frames/sec
                 const maxStep = 135 * dt;
                 if (Math.abs(step) > maxStep) {
                     step = Math.sign(step) * maxStep;
@@ -276,7 +243,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 currentFrame.current = target;
             }
 
-            // Sync storytelling stages to overall scroll progress
             const p = targetProgress.current;
 
             let nextStage = 0;
@@ -295,14 +261,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 setActiveStage(nextStage);
             }
 
-            // Floating quick-track button toggle (visible on desktop/tablet when scrolled)
-            const shouldShowFloat = p > 0.15 && p < 0.98;
-            if (shouldShowFloat !== showFloatingRef.current) {
-                showFloatingRef.current = shouldShowFloat;
-                setShowFloatingTrack(shouldShowFloat);
-            }
-
-            // Render active frame continuously at 60-120fps
             const renderIndex = Math.min(
                 Math.max(0, Math.round(currentFrame.current)),
                 TOTAL_FRAMES - 1
@@ -335,9 +293,9 @@ export default function ServiceProcess3D({ onTrackClick }) {
             style={{ height: "540vh" }}
             id="service-workflow"
         >
-            {/* Sticky 100vh viewport container */}
-            <div className="sticky top-0 w-full h-screen h-[100dvh] overflow-hidden bg-white">
-                {/* 1. Top Preload Progress Bar (Fades out when 100% buffered) */}
+            {/* Sticky viewport container - perfectly offset below navbar to prevent overlap/cutoff */}
+            <div className="sticky top-14 sm:top-16 w-full h-[calc(100dvh-3.5rem)] sm:h-[calc(100dvh-4rem)] overflow-hidden bg-white flex flex-col justify-center">
+                {/* Preload Progress Indicator */}
                 {loadProgress < 100 && (
                     <div className="absolute top-0 left-0 right-0 z-30 h-1 bg-slate-100 overflow-hidden">
                         <div
@@ -347,134 +305,84 @@ export default function ServiceProcess3D({ onTrackClick }) {
                     </div>
                 )}
 
-                {/* 2. Scroll-driven Canvas Centerpiece */}
-                <canvas
-                    ref={canvasRef}
-                    className="w-full h-full block"
-                    style={{ touchAction: "pan-y" }}
-                />
-
-                {/* 3. Desktop & iPad Storytelling Column (Non-obstructive left placement) */}
-                <div className="hidden md:flex absolute inset-y-0 left-0 z-20 flex-col justify-center pointer-events-none p-6 sm:p-8 md:pl-8 md:pr-4 lg:pl-16 lg:pr-8 max-w-md lg:max-w-xl xl:max-w-2xl">
-                    <div className="pointer-events-auto transition-all duration-300">
-                        <div className="bg-white/94 backdrop-blur-md border border-slate-200/90 rounded-2xl p-6 lg:p-9 shadow-sm space-y-4">
-                            <div className="flex items-center justify-between gap-2.5">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                                    <span className="font-mono text-xs font-semibold text-blue-600 uppercase tracking-wider">
-                                        {currentStage.eyebrow}
-                                    </span>
-                                </div>
-                                <span className="font-mono text-3xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
-                                    0{activeStage + 1} / 0{STORY_STAGES.length}
+                {/* Unified Balanced Edge-to-Edge Grid (Sejajar & Setara on Any Zoom Level) */}
+                <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-6 md:gap-8 lg:gap-14 py-2 sm:py-4 md:py-6 relative z-10 my-auto h-full">
+                    
+                    {/* Left Column: Brand, Storytelling, and Direct Actions */}
+                    <div className="w-full md:w-5/12 lg:w-5/12 flex flex-col justify-center space-y-2 sm:space-y-3 lg:space-y-4 shrink-0 order-2 md:order-1">
+                        
+                        {/* Header Pill & Step Counter */}
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-blue-50 border border-blue-100">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                                <span className="font-mono text-4xs sm:text-3xs md:text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                    {currentStage.eyebrow}
                                 </span>
                             </div>
-
-                            <h2 className="font-display font-extrabold text-2xl lg:text-3xl xl:text-4xl text-slate-900 tracking-tight leading-[1.18]">
-                                {currentStage.title}
-                            </h2>
-
-                            <p className="font-sans text-slate-600 text-sm lg:text-base leading-relaxed">
-                                {currentStage.body}
-                            </p>
-
-                            {/* Stage Action Buttons */}
-                            {currentStage.showHeroCTA ? (
-                                <div className="pt-2 flex flex-wrap items-center gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={onTrackClick}
-                                        className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans font-semibold text-sm transition-all shadow-md shadow-blue-100 cursor-pointer"
-                                    >
-                                        <Search className="w-4 h-4" />
-                                        Lacak Status Servis
-                                    </button>
-                                    <a
-                                        href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-medium text-sm transition-all"
-                                    >
-                                        <MessageCircle className="w-4 h-4 text-emerald-600" />
-                                        Konsultasi WA
-                                    </a>
-                                </div>
-                            ) : currentStage.showFinalCTA ? (
-                                <div className="pt-2 space-y-2">
-                                    <button
-                                        type="button"
-                                        onClick={onTrackClick}
-                                        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans font-semibold text-sm transition-all shadow-md shadow-blue-100 cursor-pointer"
-                                    >
-                                        <Search className="w-4 h-4" />
-                                        Buka Formulir Pelacakan
-                                        <ArrowDown className="w-4 h-4" />
-                                    </button>
-                                    <p className="text-xs font-mono text-slate-400 flex items-center gap-1.5 pt-0.5">
-                                        <span>↓</span>
-                                        <span>Gulir ke bawah untuk langsung membuka formulir pelacakan</span>
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="pt-1 flex items-center gap-2 text-xs font-mono text-slate-400">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                                    <span>Scroll ke bawah untuk melihat tahap pembongkaran</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* 4. Mobile Storytelling Card (Docked cleanly at bottom for phones) */}
-                <div className="md:hidden absolute bottom-3 sm:bottom-4 left-3 right-3 sm:left-4 sm:right-4 z-20 pointer-events-auto">
-                    <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl p-4 shadow-md space-y-2.5">
-                        <div className="flex items-center justify-between">
-                            <span className="font-mono text-3xs font-bold text-blue-600 uppercase tracking-wider">
-                                {currentStage.eyebrow}
-                            </span>
-                            <span className="font-mono text-3xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
+                            <span className="font-mono text-4xs sm:text-3xs font-bold text-slate-500 bg-slate-100 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
                                 0{activeStage + 1} / 0{STORY_STAGES.length}
                             </span>
                         </div>
-                        <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-blue-600 transition-all duration-300"
-                                style={{ width: `${((activeStage + 1) / STORY_STAGES.length) * 100}%` }}
-                            />
+
+                        {/* Balanced 5-Segment Progress Bar */}
+                        <div className="grid grid-cols-5 gap-1.5 w-full">
+                            {STORY_STAGES.map((s, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`h-1 sm:h-1.5 rounded-full transition-all duration-300 ${
+                                        idx <= activeStage ? "bg-blue-600" : "bg-slate-200"
+                                    }`}
+                                />
+                            ))}
                         </div>
-                        <h3 className="font-display font-extrabold text-sm sm:text-base text-slate-900 leading-snug">
+
+                        {/* Dynamic Stage Title */}
+                        <h1 className="font-display font-extrabold text-lg sm:text-2xl md:text-3xl lg:text-4xl text-slate-900 tracking-tight leading-[1.2]">
                             {currentStage.title}
-                        </h3>
-                        <p className="font-sans text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                        </h1>
+
+                        {/* Dynamic Stage Description */}
+                        <p className="font-sans text-slate-600 text-xs sm:text-sm lg:text-base leading-relaxed line-clamp-3 sm:line-clamp-none">
                             {currentStage.body}
                         </p>
-                        <button
-                            type="button"
-                            onClick={onTrackClick}
-                            className="w-full mt-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm shadow-blue-600/20 cursor-pointer"
-                        >
-                            <Search className="w-3.5 h-3.5" />
-                            Lacak Status Servis Sekarang
-                        </button>
-                    </div>
-                </div>
 
-                {/* 5. Persistent Floating Quick-Track Action for Desktop/iPad */}
-                <div
-                    className={`hidden md:block fixed bottom-6 right-6 z-40 transition-all duration-300 ${
-                        showFloatingTrack
-                            ? "opacity-100 translate-y-0 pointer-events-auto"
-                            : "opacity-0 translate-y-4 pointer-events-none"
-                    }`}
-                >
-                    <button
-                        type="button"
-                        onClick={onTrackClick}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans text-xs font-semibold shadow-lg shadow-blue-600/25 transition-all cursor-pointer border border-blue-500/30"
-                    >
-                        <Search className="w-3.5 h-3.5" />
-                        <span>Lacak Tiket Servis</span>
-                    </button>
+                        {/* Interactive CTAs */}
+                        <div className="pt-1 sm:pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+                            <button
+                                type="button"
+                                onClick={onTrackClick}
+                                className="inline-flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 md:py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans font-semibold text-xs sm:text-sm transition-all shadow-sm shadow-blue-500/20 cursor-pointer"
+                            >
+                                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <span>Lacak Status Servis</span>
+                            </button>
+
+                            <a
+                                href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-medium text-xs sm:text-sm transition-all"
+                            >
+                                <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                                <span>Konsultasi WA</span>
+                            </a>
+                        </div>
+
+                        {/* Subtle Scroll Hint */}
+                        <div className="hidden sm:flex items-center gap-2 text-3xs sm:text-xs font-mono text-slate-400 pt-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                            <span>Gulir ke bawah untuk melihat tahapan perbaikan perangkat</span>
+                        </div>
+                    </div>
+
+                    {/* Right Column: High-DPI Disassembly Visual Stage */}
+                    <div className="w-full md:w-7/12 lg:w-7/12 flex-1 md:h-full flex items-center justify-center relative overflow-hidden order-1 md:order-2 h-[26vh] sm:h-[32vh] md:h-full max-h-[220px] sm:max-h-[280px] md:max-h-[75vh] 2xl:max-h-[82vh]">
+                        <canvas
+                            ref={canvasRef}
+                            className="w-full h-full block object-contain"
+                            style={{ touchAction: "pan-y" }}
+                        />
+                    </div>
                 </div>
 
                 {/* Subtle initial spinner */}

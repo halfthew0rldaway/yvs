@@ -17,7 +17,7 @@ export default function LandingFooter() {
 
     return (
         <footer className="relative w-full bg-slate-50 text-slate-700 py-12 sm:py-16 border-t border-slate-200 font-sans">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-10 pb-12 border-b border-slate-200">
                     {/* Brand Column */}
                     <div className="md:col-span-5 space-y-4">
@@ -52,33 +52,33 @@ export default function LandingFooter() {
                         </span>
                         <ul className="space-y-2.5 text-sm text-slate-600 font-medium">
                             <li>
+                                <a href="#service-workflow" className="hover:text-blue-600 transition-colors">
+                                    Proses Perbaikan
+                                </a>
+                            </li>
+                            <li>
                                 <a href="#track-lookup" className="hover:text-blue-600 transition-colors">
                                     Lacak Tiket Servis
                                 </a>
                             </li>
                             <li>
-                                <a href="#service-workflow" className="hover:text-blue-600 transition-colors">
-                                    Alur Pengerjaan 3D
-                                </a>
-                            </li>
-                            <li>
                                 <a href="#service-spec" className="hover:text-blue-600 transition-colors">
-                                    Spesifikasi Layanan
+                                    Layanan Kami
                                 </a>
                             </li>
                             <li>
                                 <a href="#engineering-standards" className="hover:text-blue-600 transition-colors">
-                                    Standar Rekayasa YVS
+                                    Standar Pemeriksaan
                                 </a>
                             </li>
                             <li>
                                 <a href="#workshop-reviews" className="hover:text-blue-600 transition-colors">
-                                    Ulasan Google Maps (4.7★)
+                                    Ulasan Pelanggan (4.7★)
                                 </a>
                             </li>
                             <li>
                                 <a href="#workshop-location" className="hover:text-blue-600 transition-colors">
-                                    Lokasi &amp; Jam Operasional
+                                    Lokasi & Jadwal Layanan
                                 </a>
                             </li>
                         </ul>
@@ -87,7 +87,7 @@ export default function LandingFooter() {
                     {/* Contact & Workshop Info */}
                     <div className="md:col-span-4 space-y-3.5">
                         <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 block">
-                            Kontak &amp; Alamat Workshop
+                            Kontak & Alamat Workshop
                         </span>
                         
                         <div className="text-xs sm:text-sm text-slate-600 space-y-1 leading-relaxed">

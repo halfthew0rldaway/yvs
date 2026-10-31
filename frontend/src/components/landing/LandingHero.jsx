@@ -60,7 +60,7 @@ export default function LandingHero({ onTrackSubmit, loading }) {
             {/* Top accent bar */}
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 via-blue-400 to-transparent" />
 
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 {/* Live Status Badge */}
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 mb-8">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -77,7 +77,7 @@ export default function LandingHero({ onTrackSubmit, loading }) {
                                 Precision Hardware Engineering · Component-Level Repair
                             </span>
                             <h1 className="font-display font-bold text-3xl sm:text-5xl lg:text-[3.25rem] tracking-tight text-slate-900 leading-[1.1]">
-                                Pusat Reparasi &amp; Rekayasa Komputer Berstandar Industri.
+                                Pusat Reparasi dan Perawatan Komputer Terpercaya di Bekasi.
                             </h1>
                         </div>
 
@@ -88,7 +88,7 @@ export default function LandingHero({ onTrackSubmit, loading }) {
                         {/* CTA Actions */}
                         <div className="pt-1 flex flex-wrap items-center gap-3 sm:gap-4">
                             <a
-                                href="https://wa.me/6281234567890?text=Halo%20YVS%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20saya"
+                                href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20saya"
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-sans font-medium text-sm transition-all shadow-md shadow-emerald-100"
@@ -106,7 +106,7 @@ export default function LandingHero({ onTrackSubmit, loading }) {
                                 className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-sans font-medium text-sm transition-all cursor-pointer"
                             >
                                 <ArrowDown className="w-4 h-4 text-slate-400" />
-                                Lihat Alur Kerja 3D
+                                Simulasi Tahapan Servis
                             </button>
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, MessageCircle, Cpu, Menu, X, ArrowUpRight, Clock } from "lucide-react";
+import { Search, MessageCircle, Cpu, Menu, X, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LandingNavbar({ onSearchClick }) {
@@ -26,7 +26,7 @@ export default function LandingNavbar({ onSearchClick }) {
                     : "bg-white border-b border-slate-100 py-3 sm:py-4"
             }`}
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 flex items-center justify-between">
                 {/* Brand Identity */}
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-xs shrink-0">
@@ -39,7 +39,7 @@ export default function LandingNavbar({ onSearchClick }) {
                             </span>
                             <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-3xs font-mono font-medium">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                09:00–18:00 WIB
+                                Buka 09:00–18:00
                             </span>
                         </div>
                         <span className="text-3xs font-mono text-slate-400 tracking-wider uppercase">
@@ -48,42 +48,42 @@ export default function LandingNavbar({ onSearchClick }) {
                     </div>
                 </div>
 
-                {/* Desktop Navigation */}
-                <nav className="hidden md:flex items-center gap-7 text-xs sm:text-sm font-sans font-medium text-slate-600">
+                {/* Desktop Navigation - Professional & Balanced */}
+                <nav className="hidden md:flex items-center gap-5 lg:gap-7 text-xs sm:text-sm font-sans font-medium text-slate-600">
                     <button
                         type="button"
                         onClick={() => scrollToSection("service-workflow")}
                         className="hover:text-blue-600 transition-colors cursor-pointer"
                     >
-                        Alur Kerja 3D
+                        Proses Perbaikan
                     </button>
                     <button
                         type="button"
                         onClick={() => scrollToSection("service-spec")}
                         className="hover:text-blue-600 transition-colors cursor-pointer"
                     >
-                        Spesifikasi Layanan
+                        Layanan Kami
                     </button>
                     <button
                         type="button"
                         onClick={() => scrollToSection("engineering-standards")}
                         className="hover:text-blue-600 transition-colors cursor-pointer"
                     >
-                        Standar Rekayasa
+                        Standar Pemeriksaan
                     </button>
                     <button
                         type="button"
                         onClick={() => scrollToSection("workshop-reviews")}
                         className="hover:text-blue-600 transition-colors cursor-pointer"
                     >
-                        Ulasan Google Maps
+                        Ulasan Pelanggan (4.7★)
                     </button>
                     <button
                         type="button"
                         onClick={() => scrollToSection("workshop-location")}
                         className="hover:text-blue-600 transition-colors cursor-pointer"
                     >
-                        Lokasi Workshop
+                        Lokasi & Kontak
                     </button>
                 </nav>
 
@@ -119,7 +119,7 @@ export default function LandingNavbar({ onSearchClick }) {
                 </div>
             </div>
 
-            {/* Mobile Drawer with Framer Motion */}
+            {/* Mobile Drawer */}
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <motion.div
@@ -130,11 +130,11 @@ export default function LandingNavbar({ onSearchClick }) {
                         className="md:hidden overflow-hidden bg-white/98 backdrop-blur-lg border-b border-slate-200 px-4 py-4 space-y-1 shadow-md"
                     >
                         {[
-                            { label: "Alur Kerja 3D", id: "service-workflow" },
-                            { label: "Spesifikasi Layanan", id: "service-spec" },
-                            { label: "Standar Rekayasa YVS", id: "engineering-standards" },
-                            { label: "Ulasan Google Maps (4.7★)", id: "workshop-reviews" },
-                            { label: "Lokasi & Jam Operasional", id: "workshop-location" },
+                            { label: "Proses Perbaikan", id: "service-workflow" },
+                            { label: "Layanan Kami", id: "service-spec" },
+                            { label: "Standar Pemeriksaan", id: "engineering-standards" },
+                            { label: "Ulasan Pelanggan (4.7★)", id: "workshop-reviews" },
+                            { label: "Lokasi & Jadwal Layanan", id: "workshop-location" },
                         ].map((item) => (
                             <button
                                 key={item.id}

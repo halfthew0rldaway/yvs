@@ -2,15 +2,15 @@ import { useState } from "react";
 import { Cpu, Wrench, Shield, Zap, Flame, HardDrive, Check, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const CATEGORIES = ["Semua", "Logic Board", "BGA & Silicon", "Thermal", "Liquid Damage", "Data Recovery", "Upgrade & Build"];
+const CATEGORIES = ["Semua", "Motherboard & Daya", "Chipset & VGA", "Pembersihan & Suhu", "Kena Air & Korosi", "Pemulihan Data", "Upgrade SSD & RAM"];
 
 const CAPABILITIES = [
     {
         code: "ENG-01",
-        category: "Logic Board",
-        title: "Chip-Level Logic Board & Power Rail Restoration",
+        category: "Motherboard & Daya",
+        title: "Perbaikan Motherboard & Jalur Tegangan Power",
         hardware: "Apple MacBook, ThinkPad, Dell XPS, ASUS ROG, Acer, HP, Lenovo",
-        scope: "Melacak short-circuit pada jalur tegangan primer (19V / 3.3V / 5V / VCore). Penggantian IC PWM charging, controller power-sequencing, MOSFET, dan kapasitor SMD.",
+        scope: "Melacak dan memperbaiki korsleting pada jalur power utama (19V / 3.3V / 5V / VCore). Penggantian IC power charging, kontroler daya, MOSFET, dan kapasitor SMD yang rusak.",
         sla: "1–3 Hari Kerja",
         warranty: "30–90 Hari",
         icon: Cpu,
@@ -19,10 +19,10 @@ const CAPABILITIES = [
     },
     {
         code: "ENG-02",
-        category: "BGA & Silicon",
-        title: "BGA Reballing & Dedicated GPU / Chipset Replacement",
+        category: "Chipset & VGA",
+        title: "Reballing Chipset & Perbaikan Chip Grafis (GPU)",
         hardware: "Laptop Gaming, Mobile Workstation, Mini PC, Motherboard Desktop",
-        scope: "Pelepasan IC BGA dengan profil termal multi-zona inframerah. Pembersihan oksidasi, penyusunan lead-free solder ball 0.35–0.5mm, dan penanaman ulang dengan alignment presisi optik.",
+        scope: "Solusi laptop layar blank, artefak garis, atau GPU tidak terdeteksi. Pemanasan terkontrol multi-zona, pembersihan korosi timah, dan pemasangan ulang bola timah (lead-free solder balls) berakurasi optik.",
         sla: "2–4 Hari Kerja",
         warranty: "60–90 Hari",
         icon: Cpu,
@@ -31,10 +31,10 @@ const CAPABILITIES = [
     },
     {
         code: "ENG-03",
-        category: "Thermal",
-        title: "Advanced Thermal Architecture Overhaul & Acoustic Tuning",
+        category: "Pembersihan & Suhu",
+        title: "Deep Cleaning & Ganti Pasta Termal Performa Tinggi",
         hardware: "Semua Laptop High-Performance, Gaming Rig, Mini ITX, Workstation",
-        scope: "Restorasi termal pendingin: pembersihan korosi sirip tembaga, inspeksi heat-pipe & vapor chamber, pelumasan rotor kipas, aplikasi pasta termal konduktivitas tinggi (Thermal Grizzly / PTM7950).",
+        scope: "Pembersihan total sirip pendingin tembaga dan kipas dari debu padat, pelumasan rotor kipas, dan aplikasi thermal paste konduktivitas tinggi (Thermal Grizzly / PTM7950) agar suhu kerja laptop tetap dingin dan stabil.",
         sla: "2–4 Jam (Same-Day)",
         warranty: "30 Hari Beban Normal",
         icon: Flame,
@@ -43,10 +43,10 @@ const CAPABILITIES = [
     },
     {
         code: "ENG-04",
-        category: "Liquid Damage",
-        title: "Ultrasonic Remediation & Corroded Trace Rebuilding",
+        category: "Kena Air & Korosi",
+        title: "Penanganan Motherboard Korosif Akibat Tumpahan Cairan",
         hardware: "Laptop Terkena Tumpahan Air/Kopi/Susu, Motherboard Korosif",
-        scope: "Pencucian ultrasonik logic board dalam larutan kimia non-konduktif khusus. Rekonstruksi jalur PCB tembaga yang terputus menggunakan kawat enamel ultra-halus dan solder mask UV curing.",
+        scope: "Pencucian ultrasonik logic board dalam larutan kimia non-konduktif untuk mematikan sisa korosi cairan. Rekonstruksi jalur tembaga PCB yang putus dan pelapisan insulasi UV curing.",
         sla: "1–5 Hari Kerja",
         warranty: "30–60 Hari",
         icon: Zap,
@@ -55,10 +55,10 @@ const CAPABILITIES = [
     },
     {
         code: "ENG-05",
-        category: "Data Recovery",
-        title: "NVMe / SATA SSD & HDD Data Recovery",
+        category: "Pemulihan Data",
+        title: "Penyelamatan & Pemulihan Data (Data Recovery)",
         hardware: "Semua Laptop & PC, NVMe PCIe Gen3/Gen4, SATA SSD & HDD 2.5\"/3.5\"",
-        scope: "Pemulihan data dari storage yang mengalami kegagalan controller, bad sector fisik, atau kerusakan firmware. Kloning sektor-per-sektor dan ekstraksi partisi penting.",
+        scope: "Penyelamatan data dari SSD NVMe/SATA dan Harddisk yang mengalami kegagalan deteksi, bad sector fisik, atau kerusakan partisi file tanpa merusak media asli.",
         sla: "1–3 Hari Kerja",
         warranty: "Garansi Integritas Data",
         icon: HardDrive,
@@ -67,10 +67,10 @@ const CAPABILITIES = [
     },
     {
         code: "ENG-06",
-        category: "Upgrade & Build",
-        title: "Custom PC Build & Storage / RAM Upgrade Consultation",
+        category: "Upgrade SSD & RAM",
+        title: "Upgrade Kecepatan SSD, RAM & Konsultasi Rakit PC",
         hardware: "PC Desktop Custom, Laptop Upgradeable, Mini ITX / Micro-ATX",
-        scope: "Konsultasi dan pemasangan upgrade RAM DDR4/DDR5, NVMe SSD, dan GPU. Perakitan PC kustom dengan manajemen kabel profesional, thermal testing, dan validasi kompatibilitas komponen.",
+        scope: "Pemasangan SSD NVMe generasi terbaru dan penambahan RAM multi-tasking untuk performa responsif, serta perakitan PC Desktop kustom dengan manajemen kabel rapi dan uji kestabilan suhu.",
         sla: "Sesuai Konsultasi",
         warranty: "30 Hari Pemasangan",
         icon: Wrench,
@@ -88,20 +88,20 @@ export default function ServiceSpecSheet() {
 
     return (
         <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 font-sans" id="service-spec">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 {/* Header */}
                 <div className="max-w-2xl mb-10 space-y-3">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
                         <span className="text-xs font-mono font-semibold text-blue-700 uppercase tracking-wider">
-                            Spesifikasi Layanan Presisi
+                            Katalog Layanan & Penanganan
                         </span>
                     </div>
                     <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
-                        Kapabilitas Rekayasa YVS Computer
+                        Solusi Perbaikan Spesialis Berdasarkan Kebutuhan Anda
                     </h2>
-                    <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-sans">
-                        Setiap pengerjaan didefinisikan secara transparan: cakupan diagnosis, perangkat keras yang didukung, estimasi SLA waktu pengerjaan, dan jaminan garansi resmi.
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans">
+                        Setiap tindakan perbaikan memiliki cakupan teknis yang jelas, estimasi waktu penyelesaian (SLA), dan jaminan sertifikat garansi resmi.
                     </p>
                 </div>
 
@@ -123,8 +123,8 @@ export default function ServiceSpecSheet() {
                     ))}
                 </div>
 
-                {/* Service Cards */}
-                <div className="space-y-4">
+                {/* Service Cards - Balanced 2-Column Grid (Sejajar & Setara) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
                     <AnimatePresence mode="popLayout">
                         {filtered.map((cap) => {
                             const Icon = cap.icon;
@@ -136,7 +136,7 @@ export default function ServiceSpecSheet() {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.98 }}
                                     transition={{ duration: 0.2 }}
-                                    className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-5 sm:p-7 hover:border-slate-300 hover:shadow-xs transition-all"
+                                    className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-5 sm:p-6 hover:border-slate-300 hover:shadow-xs transition-all flex flex-col justify-between"
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
                                         <div className="flex items-start gap-4 flex-1 min-w-0">

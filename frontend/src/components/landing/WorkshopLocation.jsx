@@ -31,19 +31,19 @@ export default function WorkshopLocation() {
 
     return (
         <section className="relative w-full bg-white py-16 sm:py-24 border-b border-slate-100 font-sans" id="workshop-location">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 {/* Header */}
                 <div className="space-y-3 max-w-2xl pb-10 border-b border-slate-100 mb-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
                         <span className="text-xs font-mono font-semibold text-blue-700 uppercase tracking-wider">
-                            Pusat Workshop Fisik & Laboratorium
+                            Pusat Workshop & Layanan
                         </span>
                     </div>
                     <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
-                        Lokasi Workshop &amp; Jadwal Operasional
+                        Lokasi Workshop dan Jadwal Pelayanan
                     </h2>
-                    <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-sans">
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans">
                         Kunjungi workshop kami langsung di Pekayon Bekasi untuk konsultasi tatap muka, pengecekan gratis di depan Anda, atau kirimkan perangkat Anda secara aman melalui kurir instan / ekspedisi.
                     </p>
                 </div>
@@ -134,7 +134,7 @@ export default function WorkshopLocation() {
                             </div>
 
                             <p className="text-xs text-slate-500 leading-relaxed font-sans pt-1">
-                                Kirim unit via kurir instan (Gojek / Grab Express) atau kargo (JNE / J&amp;T) diterima setiap hari pada jam operasional kerja dengan mencantumkan nama dan nomor WhatsApp aktif Anda.
+                                Kirim unit via kurir instan (Gojek / Grab Express) atau kargo (JNE / J&T) diterima setiap hari pada jam operasional kerja dengan mencantumkan nama dan nomor WhatsApp aktif Anda.
                             </p>
                         </div>
                     </div>
@@ -144,13 +144,13 @@ export default function WorkshopLocation() {
                         <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
                             <div className="space-y-2">
                                 <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-3xs font-mono font-semibold">
-                                    DIRECT HELPDESK
+                                    LAYANAN KONSULTASI
                                 </div>
                                 <h3 className="font-display font-bold text-xl sm:text-2xl text-slate-900">
                                     Hubungi Langsung Tim Teknisi YVS
                                 </h3>
-                                <p className="text-sm text-slate-500 leading-relaxed font-sans">
-                                    Konsultasikan masalah perangkat Anda sebelum datang. Kami siap membantu memperkirakan kerusakan (laptop mati total, layar gelap, overhead, engsel retak, upgrade komponen) secara transparan.
+                                <p className="text-sm text-slate-600 leading-relaxed font-sans">
+                                    Konsultasikan masalah perangkat Anda sebelum datang. Kami siap membantu memperkirakan kemungkinan kerusakan (laptop mati total, layar gelap, overheat, engsel retak, upgrade komponen) secara transparan.
                                 </p>
                             </div>
 

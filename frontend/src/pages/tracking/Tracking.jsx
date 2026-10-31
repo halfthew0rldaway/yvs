@@ -14,6 +14,7 @@ import DigitalSignaturePadModal from "../../components/DigitalSignaturePadModal"
 import ErrorBoundary from "../../components/ErrorBoundary";
 import LandingNavbar from "../../components/landing/LandingNavbar";
 import ServiceProcess3D from "../../components/landing/ServiceProcess3D";
+import BrandTicker from "../../components/landing/BrandTicker";
 import ServiceSpecSheet from "../../components/landing/ServiceSpecSheet";
 import EngineeringStandards from "../../components/landing/EngineeringStandards";
 import WorkshopMetrics from "../../components/landing/WorkshopMetrics";
@@ -1849,7 +1850,7 @@ export default function Tracking() {
                     </div>
                 </header>
 
-                <main className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 mx-auto max-w-7xl">
+                <main className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-8 sm:py-12">
                     {/* Multi-result list (when searched by phone number) */}
                     {results && results.length > 0 && !selectedTicket && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 w-full">
@@ -1923,25 +1924,53 @@ export default function Tracking() {
             {/* 2. Scroll-Driven Laptop Disassembly Storytelling Experience */}
             <ServiceProcess3D onTrackClick={scrollToLookup} />
 
+            {/* 2.1 Minimal Typographic Running Brand Ticker */}
+            <BrandTicker />
+
             {/* 3. Live Dedicated Tracking Hub Section (Immediate Natural Continuation) */}
             <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200" id="track-lookup">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center space-y-3 mb-10">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                            <span className="text-xs font-mono font-semibold text-blue-700 uppercase tracking-wider">
-                                Portal Pelacakan Mandiri Real-Time
-                            </span>
-                        </div>
-                        <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
-                            Lacak Status Pengerjaan Perangkat Anda
-                        </h2>
-                        <p className="text-slate-500 text-sm sm:text-base max-w-lg mx-auto font-sans leading-relaxed">
-                            Masukkan nomor tiket servis atau nomor WhatsApp yang terdaftar untuk memantau perkembangan unit Anda secara transparan.
-                        </p>
-                    </div>
+                <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
+                        {/* Left Column: Heading, description, and trust guarantees */}
+                        <div className="lg:col-span-5 space-y-5">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                                <span className="text-xs font-mono font-semibold text-blue-700 uppercase tracking-wider">
+                                    Pelacakan Servis Real-Time
+                                </span>
+                            </div>
+                            <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
+                                Pantau Perkembangan Servis Unit Anda
+                            </h2>
+                            <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans">
+                                Masukkan nomor tiket servis fisik atau nomor WhatsApp yang Anda daftarkan saat serah terima di toko. Seluruh foto kondisi awal, temuan mikroskop teknisi, transparansi sparepart, dan sertifikat garansi dapat Anda pantau secara langsung.
+                            </p>
 
-                    <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xs relative">
+                            <div className="space-y-3 pt-2">
+                                <div className="flex items-start gap-3 text-xs sm:text-sm text-slate-700">
+                                    <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200/80 mt-0.5">
+                                        <CheckCircle className="w-3.5 h-3.5" />
+                                    </div>
+                                    <span><strong>Bebas Biaya Diagnosis:</strong> Tidak dipungut biaya apa pun jika estimasi biaya tidak Anda setujui.</span>
+                                </div>
+                                <div className="flex items-start gap-3 text-xs sm:text-sm text-slate-700">
+                                    <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200/80 mt-0.5">
+                                        <Package className="w-3.5 h-3.5" />
+                                    </div>
+                                    <span><strong>Transparansi Suku Cadang:</strong> Komponen rusak lama wajib diserahkan kembali saat unit diambil.</span>
+                                </div>
+                                <div className="flex items-start gap-3 text-xs sm:text-sm text-slate-700">
+                                    <div className="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-200/80 mt-0.5">
+                                        <Award className="w-3.5 h-3.5" />
+                                    </div>
+                                    <span><strong>Sertifikat Garansi Resmi:</strong> Terbit otomatis digital tanpa risiko bukti nota fisik hilang.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column: Tracking Search Box & Scanner */}
+                        <div className="lg:col-span-7">
+                            <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xs relative">
                         {/* Tab Switcher & QR Scan Button */}
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-6">
                             <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl flex-1">
@@ -2114,7 +2143,9 @@ export default function Tracking() {
                         )}
                     </div>
                 </div>
-            </section>
+            </div>
+        </div>
+    </section>
 
             {/* 4. Engineering Capabilities Spec Sheet Matrix */}
             <ServiceSpecSheet />

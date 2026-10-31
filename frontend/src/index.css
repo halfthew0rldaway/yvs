@@ -122,6 +122,21 @@
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   }
 
+  /* Restrained Editorial Brand Ticker */
+  @keyframes marquee {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+  }
+  .animate-marquee {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+    animation: marquee 35s linear infinite;
+  }
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }
+
   /* 60fps GPU Hardware-Accelerated Compositing & Spring Transitions */
   .gpu-layer {
     transform: translate3d(0, 0, 0);
