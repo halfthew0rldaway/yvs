@@ -92,6 +92,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
             return null;
         };
 
+        // Razor-sharp single frame renderer (Zero ghosting, 100% full-screen blend-in)
         const drawFrame = (frameIdx) => {
             const img = getBestFrame(frameIdx);
             if (!img) return;
@@ -116,7 +117,22 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 dw = cw;
                 dh = cw / imgAspect;
                 dx = 0;
-                dy = (ch - dh) / 2;
+                // On mobile portrait, shift slightly upward so bottom docked card never obscures the laptop
+                if (canvasAspect < 1.0) {
+                    dy = Math.max(0, (ch - dh) * 0.28);
+                } else {
+                    dy = (ch - dh) / 2;
+                }
+            }
+
+            // Desktop & iPad layout: gently shift visual rightward so the left storytelling column has clear breathing room
+            if (window.innerWidth >= 1024 && canvasAspect > 1.35) {
+                const availableSpace = (cw - dw) / 2;
+                const shift = Math.min(availableSpace * 0.70, cw * 0.12);
+                dx += shift;
+            } else if (window.innerWidth >= 768 && window.innerWidth < 1024 && canvasAspect > 1.15) {
+                const availableSpace = (cw - dw) / 2;
+                dx += availableSpace * 0.35;
             }
 
             dx = Math.round(dx);
@@ -127,16 +143,19 @@ export default function ServiceProcess3D({ onTrackClick }) {
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = "high";
 
+            // Clean background fill matching the studio pure white background
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, cw, ch);
+
+            // Draw full-bleed frame
             ctx.drawImage(img, dx, dy, dw, dh);
         };
 
+        // HiDPI full-screen canvas resizing
         const resizeCanvas = () => {
             if (!canvas) return;
-            const rect = canvas.getBoundingClientRect();
-            const w = rect.width || canvas.clientWidth || 600;
-            const h = rect.height || canvas.clientHeight || 450;
+            const w = canvas.clientWidth || window.innerWidth;
+            const h = canvas.clientHeight || window.innerHeight;
             if (w === 0 || h === 0) return;
 
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -293,9 +312,9 @@ export default function ServiceProcess3D({ onTrackClick }) {
             style={{ height: "540vh" }}
             id="service-workflow"
         >
-            {/* Sticky viewport container - perfectly offset below navbar to prevent overlap/cutoff */}
-            <div className="sticky top-14 sm:top-16 w-full h-[calc(100dvh-3.5rem)] sm:h-[calc(100dvh-4rem)] overflow-hidden bg-white flex flex-col justify-center">
-                {/* Preload Progress Indicator */}
+            {/* Sticky viewport container (Full-bleed 100vw, offset below navbar) */}
+            <div className="sticky top-14 sm:top-16 w-full h-[calc(100dvh-3.5rem)] sm:h-[calc(100dvh-4rem)] overflow-hidden bg-white">
+                {/* 1. Preload Progress Indicator */}
                 {loadProgress < 100 && (
                     <div className="absolute top-0 left-0 right-0 z-30 h-1 bg-slate-100 overflow-hidden">
                         <div
@@ -305,83 +324,125 @@ export default function ServiceProcess3D({ onTrackClick }) {
                     </div>
                 )}
 
-                {/* Unified Balanced Edge-to-Edge Grid (Sejajar & Setara on Any Zoom Level) */}
-                <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-6 md:gap-8 lg:gap-14 py-2 sm:py-4 md:py-6 relative z-10 my-auto h-full">
-                    
-                    {/* Left Column: Brand, Storytelling, and Direct Actions */}
-                    <div className="w-full md:w-5/12 lg:w-5/12 flex flex-col justify-center space-y-2 sm:space-y-3 lg:space-y-4 shrink-0 order-2 md:order-1">
-                        
-                        {/* Header Pill & Step Counter */}
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-blue-50 border border-blue-100">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                                <span className="font-mono text-4xs sm:text-3xs md:text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                                    {currentStage.eyebrow}
+                {/* 2. Full-Bleed 3D Canvas Centerpiece (100% viewport width & height, 100% white blend-in) */}
+                <canvas
+                    ref={canvasRef}
+                    className="absolute inset-0 w-full h-full block"
+                    style={{ touchAction: "pan-y" }}
+                />
+
+                {/* 3. Desktop & iPad Storytelling Overlay (Left Column, wide-to-edge container, pointer-events-none container) */}
+                <div className="hidden md:flex absolute inset-0 z-20 items-center pointer-events-none">
+                    <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
+                        <div className="pointer-events-auto max-w-lg lg:max-w-xl xl:max-w-2xl space-y-4">
+                            {/* Header Pill & Step Counter */}
+                            <div className="flex items-center gap-2.5">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 shadow-2xs">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                                    <span className="font-mono text-3xs sm:text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                        {currentStage.eyebrow}
+                                    </span>
+                                </div>
+                                <span className="font-mono text-3xs font-bold text-slate-500 bg-slate-100/90 border border-slate-200/60 px-2.5 py-1 rounded-full">
+                                    0{activeStage + 1} / 0{STORY_STAGES.length}
                                 </span>
                             </div>
-                            <span className="font-mono text-4xs sm:text-3xs font-bold text-slate-500 bg-slate-100 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
+
+                            {/* Balanced 5-Segment Progress Bar */}
+                            <div className="grid grid-cols-5 gap-1.5 w-full max-w-xs">
+                                {STORY_STAGES.map((s, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                                            idx <= activeStage ? "bg-blue-600" : "bg-slate-200"
+                                        }`}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Dynamic Stage Title */}
+                            <h1 className="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl xl:text-[2.65rem] text-slate-900 tracking-tight leading-[1.18]">
+                                {currentStage.title}
+                            </h1>
+
+                            {/* Dynamic Stage Description */}
+                            <p className="font-sans text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl">
+                                {currentStage.body}
+                            </p>
+
+                            {/* Interactive CTAs */}
+                            <div className="pt-2 flex flex-wrap items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={onTrackClick}
+                                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans font-semibold text-sm transition-all shadow-sm shadow-blue-500/20 cursor-pointer"
+                                >
+                                    <Search className="w-4 h-4" />
+                                    <span>Lacak Status Servis</span>
+                                </button>
+
+                                <a
+                                    href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/95 hover:bg-white text-slate-700 border border-slate-200 font-sans font-medium text-sm transition-all shadow-2xs hover:border-slate-300"
+                                >
+                                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                                    <span>Konsultasi WA</span>
+                                </a>
+                            </div>
+
+                            {/* Subtle Scroll Hint */}
+                            <div className="flex items-center gap-2 text-3xs sm:text-xs font-mono text-slate-400 pt-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                                <span>Gulir ke bawah untuk melihat tahapan perbaikan perangkat</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 4. Mobile Storytelling Card (Docked cleanly at bottom for phones) */}
+                <div className="md:hidden absolute bottom-3 left-3 right-3 z-20 pointer-events-auto">
+                    <div className="bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-4 shadow-md space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-3xs font-bold text-blue-600 uppercase tracking-wider truncate">
+                                {currentStage.eyebrow}
+                            </span>
+                            <span className="font-mono text-3xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium shrink-0">
                                 0{activeStage + 1} / 0{STORY_STAGES.length}
                             </span>
                         </div>
-
-                        {/* Balanced 5-Segment Progress Bar */}
-                        <div className="grid grid-cols-5 gap-1.5 w-full">
-                            {STORY_STAGES.map((s, idx) => (
-                                <div
-                                    key={idx}
-                                    className={`h-1 sm:h-1.5 rounded-full transition-all duration-300 ${
-                                        idx <= activeStage ? "bg-blue-600" : "bg-slate-200"
-                                    }`}
-                                />
-                            ))}
+                        <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-blue-600 transition-all duration-300"
+                                style={{ width: `${((activeStage + 1) / STORY_STAGES.length) * 100}%` }}
+                            />
                         </div>
-
-                        {/* Dynamic Stage Title */}
-                        <h1 className="font-display font-extrabold text-lg sm:text-2xl md:text-3xl lg:text-4xl text-slate-900 tracking-tight leading-[1.2]">
+                        <h3 className="font-display font-bold text-sm sm:text-base text-slate-900 leading-snug line-clamp-2">
                             {currentStage.title}
-                        </h1>
-
-                        {/* Dynamic Stage Description */}
-                        <p className="font-sans text-slate-600 text-xs sm:text-sm lg:text-base leading-relaxed line-clamp-3 sm:line-clamp-none">
+                        </h3>
+                        <p className="font-sans text-xs text-slate-600 line-clamp-2 leading-relaxed">
                             {currentStage.body}
                         </p>
-
-                        {/* Interactive CTAs */}
-                        <div className="pt-1 sm:pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+                        <div className="pt-1 flex items-center gap-2">
                             <button
                                 type="button"
                                 onClick={onTrackClick}
-                                className="inline-flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 md:py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans font-semibold text-xs sm:text-sm transition-all shadow-sm shadow-blue-500/20 cursor-pointer"
+                                className="flex-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm shadow-blue-600/20 cursor-pointer"
                             >
-                                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                <span>Lacak Status Servis</span>
+                                <Search className="w-3.5 h-3.5" />
+                                Lacak Servis
                             </button>
-
                             <a
-                                href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
+                                href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20saya"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-medium text-xs sm:text-sm transition-all"
+                                className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center"
+                                title="Konsultasi WhatsApp"
                             >
-                                <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
-                                <span>Konsultasi WA</span>
+                                <MessageCircle className="w-4 h-4" />
                             </a>
                         </div>
-
-                        {/* Subtle Scroll Hint */}
-                        <div className="hidden sm:flex items-center gap-2 text-3xs sm:text-xs font-mono text-slate-400 pt-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                            <span>Gulir ke bawah untuk melihat tahapan perbaikan perangkat</span>
-                        </div>
-                    </div>
-
-                    {/* Right Column: High-DPI Disassembly Visual Stage */}
-                    <div className="w-full md:w-7/12 lg:w-7/12 flex-1 md:h-full flex items-center justify-center relative overflow-hidden order-1 md:order-2 h-[26vh] sm:h-[32vh] md:h-full max-h-[220px] sm:max-h-[280px] md:max-h-[75vh] 2xl:max-h-[82vh]">
-                        <canvas
-                            ref={canvasRef}
-                            className="w-full h-full block object-contain"
-                            style={{ touchAction: "pan-y" }}
-                        />
                     </div>
                 </div>
 
