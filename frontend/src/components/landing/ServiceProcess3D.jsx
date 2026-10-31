@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
-// Continuous Camera Path Waypoints (C0-continuous hermite spline)
+// Continuous Camera Path Waypoints (Hermite Spline)
 const CAMERA_WAYPOINTS = [
-    { p: 0.00, cam: [0, 2.6, 7.0], look: [0, 0.1, 0] },     // Closed laptop beauty view
+    { p: 0.00, cam: [0, 2.6, 7.2], look: [0, 0.1, 0] },     // Closed laptop beauty view
     { p: 0.15, cam: [0, 2.2, 5.8], look: [0, 0.1, 0] },     // Approach before open
-    { p: 0.35, cam: [0, 3.2, 5.0], look: [0, 0.7, -0.4] },  // Lid open, looking at display & keyboard
-    { p: 0.55, cam: [0.7, 3.6, 3.0], look: [0.1, 0.2, 0] }, // Exploded macro view diving into motherboard
-    { p: 0.75, cam: [-0.6, 3.0, 2.4], look: [-0.7, 0.1, 0.2] }, // Close-up on CPU socket rework
-    { p: 0.90, cam: [0.6, 2.6, 5.0], look: [0, 0.3, 0] },   // Pulls back as unit reassembles
-    { p: 1.00, cam: [2.2, 2.4, 6.0], look: [0, 0.3, 0] },   // 3/4 hero beauty angle
+    { p: 0.35, cam: [0, 3.2, 5.2], look: [0, 0.8, -0.3] },  // Lid open, viewing Retina display
+    { p: 0.55, cam: [0.7, 3.8, 3.2], look: [0.1, 0.2, 0] }, // Exploded macro view diving into motherboard
+    { p: 0.75, cam: [-0.6, 3.0, 2.4], look: [-0.5, 0.1, 0.2] }, // Close-up on CPU socket rework
+    { p: 0.90, cam: [0.6, 2.6, 5.2], look: [0, 0.3, 0] },   // Pulls back as unit reassembles
+    { p: 1.00, cam: [2.2, 2.4, 6.2], look: [0, 0.3, 0] },   // 3/4 hero beauty angle
 ];
 
 function interpolateCamera(progress) {
@@ -76,7 +79,7 @@ function updateScreenCanvas(canvas, progress) {
     ctx.fillStyle = "#10b981";
     ctx.fillText("STATUS: ACTIVE", canvas.width - 160, 28);
 
-    // Final Stage special: 25-Point QC Certificate
+    // Final Stage: 25-Point QC Certificate
     if (progress >= 0.88) {
         ctx.fillStyle = "rgba(16, 185, 129, 0.12)";
         ctx.strokeStyle = "#10b981";
@@ -184,109 +187,23 @@ function updateScreenCanvas(canvas, progress) {
     }
 }
 
-// Generate keyboard texture
-function createKeyboardTexture() {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1024;
-    canvas.height = 512;
-    const ctx = canvas.getContext("2d");
-
-    ctx.fillStyle = "#1e2229";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const rows = [
-        ["ESC", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "DEL"],
-        ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "BACKSPACE"],
-        ["TAB", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\"],
-        ["CAPS", "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'", "ENTER"],
-        ["SHIFT", "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/", "SHIFT"],
-        ["CTRL", "FN", "OPT", "CMD", "      SPACE      ", "CMD", "OPT", "◄", "▲▼", "►"],
-    ];
-
-    const paddingX = 24;
-    const paddingY = 24;
-    const rowHeight = (canvas.height - paddingY * 2) / rows.length;
-
-    rows.forEach((row, rIdx) => {
-        const y = paddingY + rIdx * rowHeight;
-        const totalKeys = row.length;
-        const keyWidth = (canvas.width - paddingX * 2) / totalKeys;
-
-        row.forEach((key, kIdx) => {
-            const x = paddingX + kIdx * keyWidth;
-            const w = keyWidth - 6;
-            const h = rowHeight - 6;
-
-            ctx.fillStyle = "#12151b";
-            ctx.strokeStyle = "#2d333f";
-            ctx.lineWidth = 1.5;
-            ctx.fillRect(x, y, w, h);
-            ctx.strokeRect(x, y, w, h);
-
-            ctx.fillStyle = "#cbd5e1";
-            ctx.font = "bold 13px sans-serif";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(key, x + w / 2, y + h / 2);
-        });
-    });
-
-    return new THREE.CanvasTexture(canvas);
-}
-
-// Generate Motherboard PCB circuit texture
-function createMotherboardTexture() {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1024;
-    canvas.height = 1024;
-    const ctx = canvas.getContext("2d");
-
-    ctx.fillStyle = "#0c201d";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = "#1b4d45";
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 40; i++) {
-        const x1 = Math.random() * canvas.width;
-        const y1 = Math.random() * canvas.height;
-        const x2 = x1 + (Math.random() - 0.5) * 300;
-        const y2 = y1 + (Math.random() - 0.5) * 300;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x1, y2);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-    }
-
-    ctx.strokeStyle = "#c89b3c";
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 20; i++) {
-        const y = 200 + i * 24;
-        ctx.beginPath();
-        ctx.moveTo(120, y);
-        ctx.lineTo(450, y);
-        ctx.stroke();
-    }
-
-    ctx.fillStyle = "#e2b85e";
-    for (let i = 0; i < 80; i++) {
-        const px = 100 + Math.random() * 800;
-        const py = 100 + Math.random() * 800;
-        ctx.fillRect(px, py, 4, 8);
-    }
-
-    ctx.font = "bold 18px monospace";
-    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.fillText("YVS ENGINEERING MAINBOARD REV 4.2", 60, 60);
-    ctx.fillText("ESD PROTECTED // LEAD-FREE ROHS COMPLIANT", 60, 980);
-
-    return new THREE.CanvasTexture(canvas);
+// Utility to normalize and scale any GLTF model to a target size
+function normalizeModel(model, targetSize) {
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z) || 1;
+    const scale = targetSize / maxDim;
+    model.scale.setScalar(scale);
+    model.position.sub(center.clone().multiplyScalar(scale));
+    return { box, size, center, scale };
 }
 
 export default function ServiceProcess3D() {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const [scrollPct, setScrollPct] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
     const threeState = useRef({
         scene: null,
@@ -309,15 +226,15 @@ export default function ServiceProcess3D() {
 
         const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-        // 1. Scene, Camera, Renderer (Clean studio without fog to prevent disappearing into white)
+        // 1. Scene, Camera, Renderer (Clean studio without fog)
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf1f5f9); // Clean slate-100 studio backdrop
+        scene.background = new THREE.Color(0xf1f5f9);
 
         const width = canvas.clientWidth || window.innerWidth;
         const height = canvas.clientHeight || window.innerHeight;
 
         const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 50);
-        camera.position.set(0, 2.6, 7.0);
+        camera.position.set(0, 2.6, 7.2);
         camera.lookAt(0, 0.1, 0);
 
         const renderer = new THREE.WebGLRenderer({
@@ -329,13 +246,11 @@ export default function ServiceProcess3D() {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.15;
-
-        // Shadow map
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowMap;
 
         // 2. High-Contrast Studio Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
 
         const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
@@ -358,370 +273,170 @@ export default function ServiceProcess3D() {
 
         // Ground shadow plane
         const shadowPlaneGeo = new THREE.PlaneGeometry(16, 16);
-        const shadowPlaneMat = new THREE.ShadowMaterial({ opacity: 0.16 });
+        const shadowPlaneMat = new THREE.ShadowMaterial({ opacity: 0.15 });
         const shadowPlane = new THREE.Mesh(shadowPlaneGeo, shadowPlaneMat);
         shadowPlane.rotation.x = -Math.PI / 2;
         shadowPlane.position.y = -0.12;
         shadowPlane.receiveShadow = true;
         scene.add(shadowPlane);
 
-        // 3. MASTER LAPTOP ASSEMBLY
-        const laptopRoot = new THREE.Group();
-        scene.add(laptopRoot);
+        // 3. MASTER SCENE ROOTS
+        const masterRoot = new THREE.Group();
+        scene.add(masterRoot);
 
-        // Materials
-        const chassisMat = new THREE.MeshStandardMaterial({
-            color: 0x242834, // Space gray anodized aluminum
-            metalness: 0.85,
-            roughness: 0.28,
-        });
-
-        const darkMetalMat = new THREE.MeshStandardMaterial({
-            color: 0x11141a,
-            metalness: 0.85,
-            roughness: 0.25,
-        });
-
-        const copperMat = new THREE.MeshStandardMaterial({
-            color: 0xdf8445, // Rich copper luster
-            metalness: 0.92,
-            roughness: 0.18,
-        });
-
-        const siliconDieMat = new THREE.MeshStandardMaterial({
-            color: 0x0f172a,
-            metalness: 0.98,
-            roughness: 0.04,
-        });
-
-        const goldMat = new THREE.MeshStandardMaterial({
-            color: 0xd4af37,
-            metalness: 0.95,
-            roughness: 0.15,
-        });
-
-        const thermalPasteMat = new THREE.MeshStandardMaterial({
-            color: 0xa8b2c1,
-            metalness: 0.5,
-            roughness: 0.45,
-        });
-
-        // A. LOWER CHASSIS BASE
-        const baseCaseGeo = new THREE.BoxGeometry(5.2, 0.22, 3.6);
-        const baseCase = new THREE.Mesh(baseCaseGeo, chassisMat);
-        baseCase.position.set(0, 0, 0);
-        baseCase.castShadow = true;
-        baseCase.receiveShadow = true;
-        laptopRoot.add(baseCase);
-
-        // Side ports
-        const portGeo = new THREE.BoxGeometry(0.04, 0.08, 0.24);
-        const leftPort1 = new THREE.Mesh(portGeo, darkMetalMat);
-        leftPort1.position.set(-2.61, 0.02, -0.6);
-        const leftPort2 = new THREE.Mesh(portGeo, darkMetalMat);
-        leftPort2.position.set(-2.61, 0.02, -0.2);
-        const rightPort = new THREE.Mesh(portGeo, darkMetalMat);
-        rightPort.position.set(2.61, 0.02, -0.4);
-        laptopRoot.add(leftPort1, leftPort2, rightPort);
-
-        // Rubber feet
-        const footGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.04, 16);
-        const footMat = new THREE.MeshBasicMaterial({ color: 0x0a0c10 });
-        [
-            [-2.2, -1.4],
-            [2.2, -1.4],
-            [-2.2, 1.4],
-            [2.2, 1.4],
-        ].forEach(([fx, fz]) => {
-            const foot = new THREE.Mesh(footGeo, footMat);
-            foot.position.set(fx, -0.12, fz);
-            laptopRoot.add(foot);
-        });
-
-        // B. MOTHERBOARD ASSEMBLY (FR-4 substrate + chips inside base)
-        const mbGroup = new THREE.Group();
-        mbGroup.position.set(0, 0.02, 0);
-        laptopRoot.add(mbGroup);
-
-        const pcbTex = createMotherboardTexture();
-        const pcbMat = new THREE.MeshStandardMaterial({
-            map: pcbTex,
-            roughness: 0.5,
-            metalness: 0.2,
-        });
-        const pcb = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.04, 3.2), pcbMat);
-        pcb.castShadow = true;
-        pcb.receiveShadow = true;
-        mbGroup.add(pcb);
-
-        // CPU Socket & Die
-        const cpuSocket = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.04, 1.2), darkMetalMat);
-        cpuSocket.position.set(-0.8, 0.04, 0.2);
-        mbGroup.add(cpuSocket);
-
-        const cpuDie = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.03, 0.8), siliconDieMat);
-        cpuDie.position.set(-0.8, 0.075, 0.2);
-        mbGroup.add(cpuDie);
-
-        // Fresh Thermal Paste Layer on CPU
-        const thermalPaste = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.32, 0.35, 0.03, 24),
-            thermalPasteMat
-        );
-        thermalPaste.position.set(-0.8, 0.095, 0.2);
-        thermalPaste.scale.set(0.001, 0.001, 0.001);
-        mbGroup.add(thermalPaste);
-
-        // Pulsing precision micro-rework ring around CPU
-        const probeRingGeo = new THREE.RingGeometry(0.48, 0.54, 32);
-        const probeRingMat = new THREE.MeshBasicMaterial({
-            color: 0x00d4ff,
-            transparent: true,
-            opacity: 0,
-            side: THREE.DoubleSide,
-        });
-        const probeRing = new THREE.Mesh(probeRingGeo, probeRingMat);
-        probeRing.rotation.x = -Math.PI / 2;
-        probeRing.position.set(-0.8, 0.098, 0.2);
-        mbGroup.add(probeRing);
-
-        // GPU Die & VRAM
-        const gpuDie = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 1.0), siliconDieMat);
-        gpuDie.position.set(0.9, 0.05, 0.2);
-        mbGroup.add(gpuDie);
-
-        const vramGeo = new THREE.BoxGeometry(0.3, 0.04, 0.35);
-        [
-            [0.9, 0.85],
-            [0.9, -0.45],
-            [1.55, 0.2],
-            [0.25, 0.2],
-        ].forEach(([vx, vz]) => {
-            const vram = new THREE.Mesh(vramGeo, darkMetalMat);
-            vram.position.set(vx, 0.05, vz);
-            mbGroup.add(vram);
-        });
-
-        // Dual RAM SO-DIMM Modules
-        const ramGroup = new THREE.Group();
-        ramGroup.position.set(-1.4, 0.06, -0.8);
-        const ramSlot = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.5), darkMetalMat);
-        ramGroup.add(ramSlot);
-
-        const ramStick = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.35), chassisMat);
-        ramStick.position.set(0, 0.05, 0);
-        ramGroup.add(ramStick);
-
-        const ramGold = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.02, 0.04), goldMat);
-        ramGold.position.set(0, 0.01, -0.16);
-        ramGroup.add(ramGold);
-        mbGroup.add(ramGroup);
-
-        // M.2 NVMe SSD
-        const nvmeGroup = new THREE.Group();
-        nvmeGroup.position.set(1.4, 0.06, -0.8);
-        const nvme = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 1.6), darkMetalMat);
-        nvmeGroup.add(nvme);
-        const nvmeGold = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.06), goldMat);
-        nvmeGold.position.set(0, 0.01, 0.78);
-        nvmeGroup.add(nvmeGold);
-        mbGroup.add(nvmeGroup);
-
-        // Power Inductors (Chokes)
-        const chokeGeo = new THREE.BoxGeometry(0.24, 0.12, 0.24);
-        const chokeMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, roughness: 0.4 });
-        for (let i = 0; i < 4; i++) {
-            const choke = new THREE.Mesh(chokeGeo, chokeMat);
-            choke.position.set(-1.6, 0.08, 0.5 - i * 0.32);
-            mbGroup.add(choke);
-        }
-
-        // C. REMOVABLE HEATSINK ASSEMBLY (Lifts up in Stage 4)
-        const heatsinkGroup = new THREE.Group();
-        heatsinkGroup.position.set(0, 0.06, 0);
-        laptopRoot.add(heatsinkGroup);
-
-        // Copper cold plates
-        const cpuPlate = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 1.0), copperMat);
-        cpuPlate.position.set(-0.8, 0.06, 0.2);
-        heatsinkGroup.add(cpuPlate);
-
-        const gpuPlate = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.04, 1.1), copperMat);
-        gpuPlate.position.set(0.9, 0.06, 0.2);
-        heatsinkGroup.add(gpuPlate);
-
-        // Copper heatpipes
-        const pipe1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.8, 16), copperMat);
-        pipe1.rotation.z = Math.PI / 2;
-        pipe1.position.set(0.1, 0.09, -0.2);
-        heatsinkGroup.add(pipe1);
-
-        const pipe2 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.6, 16), copperMat);
-        pipe2.rotation.z = Math.PI / 2;
-        pipe2.position.set(0.1, 0.09, 0.0);
-        heatsinkGroup.add(pipe2);
-
-        // Radiator fin stack at exhaust
-        const finStack = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.14, 0.4), copperMat);
-        finStack.position.set(0, 0.07, -1.4);
-        heatsinkGroup.add(finStack);
-
-        // Cooling fan
-        const fanHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.16, 24), darkMetalMat);
-        fanHousing.position.set(1.5, 0.07, -0.6);
-        heatsinkGroup.add(fanHousing);
-
-        const fanHub = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.18, 16), chassisMat);
-        fanHub.position.set(1.5, 0.08, -0.6);
-        heatsinkGroup.add(fanHub);
-
-        const bladeGeo = new THREE.BoxGeometry(0.03, 0.12, 0.35);
-        for (let b = 0; b < 8; b++) {
-            const blade = new THREE.Mesh(bladeGeo, darkMetalMat);
-            const angle = (b / 8) * Math.PI * 2;
-            blade.position.set(1.5 + Math.cos(angle) * 0.42, 0.08, -0.6 + Math.sin(angle) * 0.42);
-            blade.rotation.y = angle;
-            heatsinkGroup.add(blade);
-        }
-
-        // Micro-soldering precision light beam
-        const beamGeo = new THREE.CylinderGeometry(0.04, 0.35, 1.8, 16);
-        const beamMat = new THREE.MeshBasicMaterial({
-            color: 0x38bdf8,
-            transparent: true,
-            opacity: 0,
-            blending: THREE.AdditiveBlending,
-        });
-        const repairBeam = new THREE.Mesh(beamGeo, beamMat);
-        repairBeam.position.set(-0.8, 1.0, 0.2);
-        scene.add(repairBeam);
-
-        // D. UPPER KEYBOARD DECK (Lifts up in Stage 3)
-        const deckGroup = new THREE.Group();
-        deckGroup.position.set(0, 0.11, 0);
-        laptopRoot.add(deckGroup);
-
-        const deckPlateMat = chassisMat.clone();
-        deckPlateMat.transparent = true;
-        const deckPlate = new THREE.Mesh(new THREE.BoxGeometry(5.18, 0.04, 3.58), deckPlateMat);
-        deckPlate.position.set(0, 0.02, 0);
-        deckPlate.castShadow = true;
-        deckPlate.receiveShadow = true;
-        deckGroup.add(deckPlate);
-
-        // Keyboard plane
-        const kbTex = createKeyboardTexture();
-        const kbMat = new THREE.MeshStandardMaterial({
-            map: kbTex,
-            roughness: 0.4,
-            metalness: 0.1,
-            side: THREE.DoubleSide,
-            transparent: true,
-        });
-        const kbPlane = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 2.0), kbMat);
-        kbPlane.rotation.x = -Math.PI / 2;
-        kbPlane.position.set(0, 0.041, -0.4);
-        deckGroup.add(kbPlane);
-
-        // Trackpad
-        const trackpadMat = new THREE.MeshStandardMaterial({
-            color: 0x161a24,
-            metalness: 0.75,
-            roughness: 0.25,
-            transparent: true,
-        });
-        const trackpad = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.01, 1.15), trackpadMat);
-        trackpad.position.set(0, 0.041, 1.0);
-        deckGroup.add(trackpad);
-
-        // Power button & status LED
-        const pwrBtn = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.015, 0.2), darkMetalMat);
-        pwrBtn.position.set(2.0, 0.041, -1.4);
-        deckGroup.add(pwrBtn);
-
-        const ledMesh = new THREE.Mesh(new THREE.CircleGeometry(0.015, 8), new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide }));
-        ledMesh.rotation.x = -Math.PI / 2;
-        ledMesh.position.set(2.3, 0.042, -1.4);
-        deckGroup.add(ledMesh);
-
-        // E. DISPLAY LID & HINGE (Pivots open on X axis)
-        const hingeGroup = new THREE.Group();
-        hingeGroup.position.set(0, 0.11, -1.75);
-        laptopRoot.add(hingeGroup);
-
-        const hingeCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.2, 16), darkMetalMat);
-        hingeCylinder.rotation.z = Math.PI / 2;
-        hingeGroup.add(hingeCylinder);
-
-        // Display Lid Assembly
-        const lidGroup = new THREE.Group();
-        lidGroup.position.set(0, 0.04, 1.75);
-        hingeGroup.add(lidGroup);
-
-        // Aluminum outer back shell
-        const lidBack = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.06, 3.5), chassisMat);
-        lidBack.position.set(0, 0.01, 0);
-        lidBack.castShadow = true;
-        lidGroup.add(lidBack);
-
-        // Screen bezel
-        const screenBezelMat = new THREE.MeshStandardMaterial({
-            color: 0x090b0e,
-            roughness: 0.2,
-            metalness: 0.8,
-            side: THREE.DoubleSide,
-        });
-        const screenBezel = new THREE.Mesh(new THREE.PlaneGeometry(5.1, 3.42), screenBezelMat);
-        screenBezel.rotation.x = Math.PI / 2;
-        screenBezel.position.set(0, -0.021, 0);
-        lidGroup.add(screenBezel);
-
-        // Active display screen panel
+        // Screen texture setup
         const screenCanvas = document.createElement("canvas");
         screenCanvas.width = 1024;
         screenCanvas.height = 640;
         updateScreenCanvas(screenCanvas, 0);
-
         const screenTexture = new THREE.CanvasTexture(screenCanvas);
-        const screenMat = new THREE.MeshBasicMaterial({ map: screenTexture, side: THREE.DoubleSide });
-        const screenPanel = new THREE.Mesh(new THREE.PlaneGeometry(4.7, 2.94), screenMat);
-        screenPanel.rotation.x = Math.PI / 2;
-        screenPanel.position.set(0, -0.022, 0);
-        lidGroup.add(screenPanel);
 
-        // Web camera dot at top bezel
-        const camDot = new THREE.Mesh(
-            new THREE.CircleGeometry(0.025, 16),
-            new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
-        );
-        camDot.rotation.x = Math.PI / 2;
-        camDot.position.set(0, -0.023, 1.6);
-        lidGroup.add(camDot);
+        // GLTF Loaders Setup (Local DRACO + Meshopt)
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath("/draco/");
 
-        // Store Three.js references
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.setDRACOLoader(dracoLoader);
+        gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+
+        // Load photorealistic models in parallel
+        Promise.all([
+            gltfLoader.loadAsync("/models/macbook-rigged.glb"),
+            gltfLoader.loadAsync("/models/motherboard.glb"),
+            gltfLoader.loadAsync("/models/cpu.glb"),
+            gltfLoader.loadAsync("/models/gpu.glb"),
+            gltfLoader.loadAsync("/models/ram.glb"),
+        ])
+            .then(([macbookGltf, mbGltf, cpuGltf, gpuGltf, ramGltf]) => {
+                // A. MACBOOK PRO RIGGING
+                const macbookScene = macbookGltf.scene;
+                normalizeModel(macbookScene, 4.3);
+
+                // Find LidPivot and Screen mesh
+                let lidPivot = macbookScene.getObjectByName("LidPivot");
+                let baseGroup = macbookScene.getObjectByName("Base");
+                let screenMesh = macbookScene.getObjectByName("Screen");
+
+                if (screenMesh && screenMesh.isMesh) {
+                    screenMesh.material = new THREE.MeshBasicMaterial({
+                        map: screenTexture,
+                        toneMapped: false,
+                        side: THREE.DoubleSide,
+                    });
+                }
+
+                // Fallback LidPivot setup if not nested
+                if (!lidPivot) {
+                    lidPivot = new THREE.Group();
+                    lidPivot.position.set(0, 0.1, -1.5);
+                    macbookScene.add(lidPivot);
+                }
+
+                masterRoot.add(macbookScene);
+
+                // B. INTERNAL LOGIC BOARD & HARDWARE ASSEMBLY
+                const internalsGroup = new THREE.Group();
+                internalsGroup.position.set(0, 0.05, 0);
+                internalsGroup.visible = false;
+                masterRoot.add(internalsGroup);
+
+                // Real 3D Motherboard
+                const mbScene = mbGltf.scene;
+                normalizeModel(mbScene, 3.8);
+                mbScene.position.set(0, 0, 0);
+                internalsGroup.add(mbScene);
+
+                // Real 3D CPU
+                const cpuScene = cpuGltf.scene;
+                normalizeModel(cpuScene, 0.85);
+                cpuScene.position.set(-0.6, 0.12, 0.2);
+                internalsGroup.add(cpuScene);
+
+                // Real 3D RAM Stick
+                const ramScene = ramGltf.scene;
+                normalizeModel(ramScene, 1.4);
+                ramScene.position.set(-1.2, 0.15, -0.6);
+                internalsGroup.add(ramScene);
+
+                // Real 3D Dedicated GPU
+                const gpuScene = gpuGltf.scene;
+                normalizeModel(gpuScene, 1.5);
+                gpuScene.position.set(0.9, 0.18, 0.1);
+                internalsGroup.add(gpuScene);
+
+                // Heatsink assembly (Copper cooling pipes & plates)
+                const heatsinkGroup = new THREE.Group();
+                heatsinkGroup.position.set(0, 0.18, 0);
+                internalsGroup.add(heatsinkGroup);
+
+                const copperMat = new THREE.MeshStandardMaterial({
+                    color: 0xdf8445,
+                    metalness: 0.92,
+                    roughness: 0.18,
+                });
+
+                const cpuPlate = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.04, 0.95), copperMat);
+                cpuPlate.position.set(-0.6, 0.02, 0.2);
+                heatsinkGroup.add(cpuPlate);
+
+                const pipe1 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 16), copperMat);
+                pipe1.rotation.z = Math.PI / 2;
+                pipe1.position.set(0.1, 0.05, 0.0);
+                heatsinkGroup.add(pipe1);
+
+                // Fresh Thermal Paste layer on CPU
+                const pasteMat = new THREE.MeshStandardMaterial({
+                    color: 0xa8b2c1,
+                    metalness: 0.5,
+                    roughness: 0.45,
+                });
+                const thermalPaste = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.3, 0.32, 0.03, 24),
+                    pasteMat
+                );
+                thermalPaste.position.set(-0.6, 0.15, 0.2);
+                thermalPaste.scale.set(0.001, 0.001, 0.001);
+                internalsGroup.add(thermalPaste);
+
+                // Precision micro-rework laser ring
+                const probeRing = new THREE.Mesh(
+                    new THREE.RingGeometry(0.42, 0.48, 32),
+                    new THREE.MeshBasicMaterial({
+                        color: 0x00d4ff,
+                        transparent: true,
+                        opacity: 0,
+                        side: THREE.DoubleSide,
+                    })
+                );
+                probeRing.rotation.x = -Math.PI / 2;
+                probeRing.position.set(-0.6, 0.16, 0.2);
+                internalsGroup.add(probeRing);
+
+                // Store references for render loop
+                threeState.current.components = {
+                    macbookScene,
+                    baseGroup,
+                    lidPivot,
+                    internalsGroup,
+                    heatsinkGroup,
+                    thermalPaste,
+                    probeRing,
+                };
+
+                setIsLoading(false);
+            })
+            .catch((err) => {
+                console.error("Error loading photorealistic 3D hardware assets:", err);
+                setIsLoading(false);
+            });
+
         threeState.current = {
+            ...threeState.current,
             scene,
             camera,
             renderer,
-            targetProgress: 0,
-            currentProgress: 0,
             screenCanvas,
             screenTexture,
-            mouseX: 0,
-            mouseY: 0,
-            components: {
-                laptopRoot,
-                hingeGroup,
-                deckGroup,
-                deckPlate,
-                kbMat,
-                trackpadMat,
-                heatsinkGroup,
-                thermalPaste,
-                probeRing,
-                repairBeam,
-                fanHub,
-            },
         };
 
         // Resize handler with mobile FOV adaptation
@@ -732,7 +447,7 @@ export default function ServiceProcess3D() {
             if (w === 0 || h === 0) return;
             camera.aspect = w / h;
             if (w < 640) {
-                camera.fov = 50;
+                camera.fov = 48;
             } else if (w < 1024) {
                 camera.fov = 42;
             } else {
@@ -765,9 +480,9 @@ export default function ServiceProcess3D() {
         window.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
 
-        // 4. ANIMATION RENDER LOOP (Always renders without stopping)
+        // 4. ANIMATION RENDER LOOP (Continuous & Smooth)
         let clock = 0;
-        let lastLoggedProgressBucket = -1;
+        let lastProgressBucket = -1;
 
         const animate = () => {
             threeState.current.animFrameId = requestAnimationFrame(animate);
@@ -779,118 +494,99 @@ export default function ServiceProcess3D() {
             const p = state.currentProgress;
 
             const {
-                hingeGroup,
-                deckGroup,
-                deckPlate,
-                kbMat,
-                trackpadMat,
+                macbookScene,
+                baseGroup,
+                lidPivot,
+                internalsGroup,
                 heatsinkGroup,
                 thermalPaste,
                 probeRing,
-                repairBeam,
-                fanHub,
             } = state.components;
 
-            // --- A. SMOOTH CAMERA WAYPOINTS ---
+            // Camera movement
             const { camX, camY, camZ, lookX, lookY, lookZ } = interpolateCamera(p);
             camera.position.set(camX + state.mouseX, camY + state.mouseY, camZ);
             camera.lookAt(lookX, lookY, lookZ);
 
-            // --- B. HINGE CLAMSHELL OPENING (0.15 to 0.35) ---
-            const maxOpenAngle = (115 * Math.PI) / 180;
-            if (p < 0.15) {
-                hingeGroup.rotation.x = 0;
-            } else if (p < 0.35) {
-                const openT = (p - 0.15) / 0.20;
-                const smoothT = openT * openT * (3 - 2 * openT);
-                hingeGroup.rotation.x = -smoothT * maxOpenAngle;
-            } else if (p < 0.75) {
-                hingeGroup.rotation.x = -maxOpenAngle;
-            } else if (p < 0.90) {
-                const settleT = (p - 0.75) / 0.15;
-                const settleAngle = (105 * Math.PI) / 180;
-                hingeGroup.rotation.x = -(maxOpenAngle - settleT * (maxOpenAngle - settleAngle));
-            } else {
-                hingeGroup.rotation.x = -((105 * Math.PI) / 180);
+            if (lidPivot) {
+                // Clamshell Opening: Closed = 1.94 rad, Open = 0 rad
+                const closedX = 1.94;
+                const openX = 0;
+                if (p < 0.15) {
+                    lidPivot.rotation.x = closedX;
+                } else if (p < 0.35) {
+                    const openT = (p - 0.15) / 0.20;
+                    const smoothT = openT * openT * (3 - 2 * openT);
+                    lidPivot.rotation.x = closedX + (openX - closedX) * smoothT;
+                } else if (p < 0.85) {
+                    lidPivot.rotation.x = openX;
+                } else {
+                    // Settle at refined beauty angle
+                    const settleT = (p - 0.85) / 0.15;
+                    lidPivot.rotation.x = openX + 0.15 * settleT;
+                }
             }
 
-            // --- C. EXPLODED VIEW: UPPER KEYBOARD DECK (0.35 to 0.55, reassembles 0.75 to 0.90) ---
-            if (p < 0.35) {
-                deckGroup.position.y = 0.11;
-                deckGroup.position.z = 0;
-                deckPlate.material.opacity = 1;
-                kbMat.opacity = 1;
-                trackpadMat.opacity = 1;
-            } else if (p < 0.55) {
-                const t = (p - 0.35) / 0.20;
-                deckGroup.position.y = 0.11 + t * 1.8;
-                deckGroup.position.z = t * 0.8; // moves slightly forward so it never blocks camera view of motherboard
-                const fade = 1 - t * 0.65;
-                deckPlate.material.opacity = fade;
-                kbMat.opacity = fade;
-                trackpadMat.opacity = fade;
-            } else if (p < 0.75) {
-                deckGroup.position.y = 1.91;
-                deckGroup.position.z = 0.8;
-                deckPlate.material.opacity = 0.35;
-                kbMat.opacity = 0.35;
-                trackpadMat.opacity = 0.35;
-            } else if (p < 0.90) {
-                const t = (p - 0.75) / 0.15;
-                deckGroup.position.y = 1.91 - t * 1.8;
-                deckGroup.position.z = 0.8 - t * 0.8;
-                const returnFade = 0.35 + t * 0.65;
-                deckPlate.material.opacity = returnFade;
-                kbMat.opacity = returnFade;
-                trackpadMat.opacity = returnFade;
-            } else {
-                deckGroup.position.y = 0.11;
-                deckGroup.position.z = 0;
-                deckPlate.material.opacity = 1;
-                kbMat.opacity = 1;
-                trackpadMat.opacity = 1;
+            // Exploded view transition (Motherboard revealed)
+            if (internalsGroup && baseGroup) {
+                if (p < 0.35) {
+                    internalsGroup.visible = false;
+                    baseGroup.position.y = 0;
+                    baseGroup.position.z = 0;
+                } else if (p < 0.55) {
+                    const t = (p - 0.35) / 0.20;
+                    internalsGroup.visible = true;
+                    // MacBook base lifts and shifts forward to reveal motherboard below
+                    baseGroup.position.y = t * 1.5;
+                    baseGroup.position.z = t * 0.8;
+                } else if (p < 0.75) {
+                    internalsGroup.visible = true;
+                    baseGroup.position.y = 1.5;
+                    baseGroup.position.z = 0.8;
+                } else if (p < 0.88) {
+                    const t = (p - 0.75) / 0.13;
+                    internalsGroup.visible = true;
+                    baseGroup.position.y = 1.5 - t * 1.5;
+                    baseGroup.position.z = 0.8 - t * 0.8;
+                } else {
+                    internalsGroup.visible = false;
+                    baseGroup.position.y = 0;
+                    baseGroup.position.z = 0;
+                }
             }
 
-            // --- D. REPAIR STAGE: HEATSINK LIFTS OFF & THERMAL OVERHAUL (0.55 to 0.75) ---
-            if (p < 0.55) {
-                heatsinkGroup.position.y = 0.06;
-                thermalPaste.scale.set(0.001, 0.001, 0.001);
-                probeRing.material.opacity = 0;
-                repairBeam.material.opacity = 0;
-            } else if (p < 0.65) {
-                const t = (p - 0.55) / 0.10;
-                heatsinkGroup.position.y = 0.06 + t * 1.6;
-                thermalPaste.scale.set(t, t, t);
-                probeRing.material.opacity = t * 0.85;
-                repairBeam.material.opacity = t * 0.75;
-            } else if (p < 0.75) {
-                const t = (p - 0.65) / 0.10;
-                heatsinkGroup.position.y = 1.66;
-                thermalPaste.scale.set(1, 1, 1);
-                probeRing.material.opacity = 0.85 - t * 0.4;
-                repairBeam.material.opacity = 0.75 - t * 0.35;
-                const pulse = 1 + Math.sin(clock * 6) * 0.08;
-                probeRing.scale.set(pulse, pulse, 1);
-            } else if (p < 0.85) {
-                const t = (p - 0.75) / 0.10;
-                heatsinkGroup.position.y = 1.66 - t * 1.6;
-                probeRing.material.opacity = 0;
-                repairBeam.material.opacity = 0;
-            } else {
-                heatsinkGroup.position.y = 0.06;
-                probeRing.material.opacity = 0;
-                repairBeam.material.opacity = 0;
+            // Heatsink lift & thermal paste application (0.55 to 0.75)
+            if (heatsinkGroup && thermalPaste && probeRing) {
+                if (p < 0.55) {
+                    heatsinkGroup.position.y = 0.18;
+                    thermalPaste.scale.set(0.001, 0.001, 0.001);
+                    probeRing.material.opacity = 0;
+                } else if (p < 0.65) {
+                    const t = (p - 0.55) / 0.10;
+                    heatsinkGroup.position.y = 0.18 + t * 1.4;
+                    thermalPaste.scale.set(t, t, t);
+                    probeRing.material.opacity = t * 0.85;
+                } else if (p < 0.75) {
+                    const t = (p - 0.65) / 0.10;
+                    heatsinkGroup.position.y = 1.58;
+                    thermalPaste.scale.set(1, 1, 1);
+                    probeRing.material.opacity = 0.85 - t * 0.4;
+                    const pulse = 1 + Math.sin(clock * 6) * 0.08;
+                    probeRing.scale.set(pulse, pulse, 1);
+                } else if (p < 0.85) {
+                    const t = (p - 0.75) / 0.10;
+                    heatsinkGroup.position.y = 1.58 - t * 1.4;
+                    probeRing.material.opacity = 0;
+                } else {
+                    heatsinkGroup.position.y = 0.18;
+                    probeRing.material.opacity = 0;
+                }
             }
 
-            // Fan rotation
-            if (p > 0.20) {
-                fanHub.rotation.y += 0.12;
-            }
-
-            // --- E. UPDATE SCREEN TEXTURE ---
+            // Update screen canvas texture
             const currentBucket = p >= 0.88 ? 2 : p >= 0.15 ? 1 : 0;
-            if (currentBucket !== lastLoggedProgressBucket) {
-                lastLoggedProgressBucket = currentBucket;
+            if (currentBucket !== lastProgressBucket) {
+                lastProgressBucket = currentBucket;
                 updateScreenCanvas(state.screenCanvas, p);
                 state.screenTexture.needsUpdate = true;
             }
@@ -900,7 +596,7 @@ export default function ServiceProcess3D() {
 
         animate();
 
-        // 5. CLEANUP
+        // 5. Cleanup
         return () => {
             window.removeEventListener("resize", handleResize);
             window.removeEventListener("mousemove", handleMouseMove);
@@ -940,9 +636,21 @@ export default function ServiceProcess3D() {
                     style={{ touchAction: "pan-y" }}
                 />
 
-                {/* Minimal, elegant floating progress bar at bottom (No bulky stage text cards) */}
+                {/* Subtle loading spinner overlay if needed */}
+                {isLoading && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-100/80 backdrop-blur-xs transition-opacity duration-300">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-8 h-8 border-3 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
+                            <span className="font-mono text-xs text-slate-600 font-semibold">
+                                Memuat Aset 3D Fotorealistik...
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Minimal, elegant floating scrub pill at bottom (No bulky stage text cards) */}
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-                    <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/85 backdrop-blur-md border border-slate-200 shadow-md">
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-md">
                         <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
                         <span className="font-mono text-xs font-semibold text-slate-800 tracking-tight">
                             YVS 3D Telemetry Scrub
