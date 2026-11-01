@@ -123,7 +123,7 @@ export default function NotificationBell() {
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+                className="relative h-9 w-9 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shrink-0 cursor-pointer"
                 title="Notifikasi & Memo"
             >
                 <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5" />

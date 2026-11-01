@@ -148,10 +148,10 @@ export default function LandingNavbar({ onSearchClick }) {
                     <button
                         type="button"
                         onClick={onSearchClick}
-                        className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-2xs hover:border-slate-300 whitespace-nowrap shrink-0 w-fit max-w-max"
+                        className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/90 text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-2xs hover:border-slate-300 shrink-0 whitespace-nowrap"
                         title="Lacak Tiket Servis"
                     >
-                        <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
+                        <Search className="w-4 h-4 text-blue-600 shrink-0" />
                         <span className="hidden sm:inline whitespace-nowrap">Lacak Tiket</span>
                         <span className="sm:hidden text-xs whitespace-nowrap">Lacak</span>
                     </button>
@@ -160,17 +160,17 @@ export default function LandingNavbar({ onSearchClick }) {
                         href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
                         target="_blank"
                         rel="noreferrer"
-                        className="w-8 h-8 sm:w-auto sm:px-3.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap w-fit max-w-max"
+                        className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
                         title="Chat WhatsApp CS"
                     >
-                        <MessageCircle className="w-4 h-4 shrink-0" />
+                        <MessageCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
                         <span className="hidden lg:inline whitespace-nowrap">WhatsApp</span>
                     </a>
 
                     <button
                         type="button"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="md:hidden w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-100 border border-slate-200 cursor-pointer shrink-0"
+                        className="md:hidden h-9 w-9 flex items-center justify-center text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-100 border border-slate-200/90 cursor-pointer shrink-0"
                         aria-label="Toggle navigation menu"
                     >
                         {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
