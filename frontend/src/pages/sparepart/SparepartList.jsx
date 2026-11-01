@@ -419,21 +419,21 @@ export default function SparepartList() {
                             <ShoppingCart className="w-4 h-4 text-slate-500" />
                             <span>Daftar Belanja Supplier</span>
                             {(lowStockCount + outOfStockCount) > 0 && (
-                                <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold">
+                                <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold whitespace-nowrap shrink-0">
                                     {lowStockCount + outOfStockCount}
                                 </span>
                             )}
                         </button>
                         <Link
                             to="/rma"
-                            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-semibold transition-all shadow-2xs"
+                            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-semibold transition-all shadow-2xs whitespace-nowrap shrink-0"
                         >
                             <RotateCcw className="w-4 h-4 text-blue-600" />
                             <span>Klaim RMA Supplier</span>
                         </Link>
                         <Link
                             to="/sparepart/tambah"
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap shrink-0"
                         >
                             <Plus className="w-4 h-4" />
                             <span>Tambah Sparepart Baru</span>
@@ -518,9 +518,9 @@ export default function SparepartList() {
                             <AlertTriangle className="w-4 h-4" />
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-amber-600">{lowStockCount} Menipis</span>
-                        <span className="text-sm font-bold text-red-600">/ {outOfStockCount} Habis</span>
+                    <div className="flex items-center gap-2 flex-nowrap">
+                        <span className="text-xl font-bold text-amber-600 whitespace-nowrap shrink-0">{lowStockCount} Menipis</span>
+                        <span className="text-sm font-bold text-red-600 whitespace-nowrap shrink-0">/ {outOfStockCount} Habis</span>
                     </div>
                     <p className="text-xs text-slate-500 mt-1">
                         {isAdmin ? "Buka Daftar Belanja WhatsApp →" : `${outOfStockCount} item habis tidak dapat dipasang`}
@@ -532,7 +532,7 @@ export default function SparepartList() {
             <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
                 <button
                     onClick={() => setStockStatusFilter("all")}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
                         stockStatusFilter === "all"
                             ? "bg-blue-600 text-white shadow-xs"
                             : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -542,30 +542,30 @@ export default function SparepartList() {
                 </button>
                 <button
                     onClick={() => setStockStatusFilter("low")}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all flex items-center gap-1.5 ${
                         stockStatusFilter === "low"
                             ? "bg-amber-600 text-white shadow-xs"
                             : "bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100"
                     }`}
                 >
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    <span>Stok Menipis (≤ 5)</span>
-                    <span className="ml-1 px-1.5 py-0.2 bg-white/20 rounded-full text-3xs">{lowStockCount}</span>
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <span className="whitespace-nowrap">Stok Menipis (≤ 5)</span>
+                    <span className="ml-1 px-1.5 py-0.2 bg-white/20 rounded-full text-3xs whitespace-nowrap shrink-0">{lowStockCount}</span>
                 </button>
                 <button
                     onClick={() => setStockStatusFilter("out")}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all flex items-center gap-1.5 ${
                         stockStatusFilter === "out"
                             ? "bg-red-600 text-white shadow-xs"
                             : "bg-red-50 border border-red-200 text-red-700 hover:bg-red-100"
                     }`}
                 >
-                    <span>Stok Habis (0)</span>
-                    <span className="ml-1 px-1.5 py-0.2 bg-white/20 rounded-full text-3xs">{outOfStockCount}</span>
+                    <span className="whitespace-nowrap">Stok Habis (0)</span>
+                    <span className="ml-1 px-1.5 py-0.2 bg-white/20 rounded-full text-3xs whitespace-nowrap shrink-0">{outOfStockCount}</span>
                 </button>
                 <button
                     onClick={() => setStockStatusFilter("available")}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
                         stockStatusFilter === "available"
                             ? "bg-emerald-600 text-white shadow-xs"
                             : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -866,7 +866,7 @@ export default function SparepartList() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                         s.stok <= 2 
                                                         ? "bg-red-50 text-red-700 border-red-200" 
                                                         : s.stok <= 5 

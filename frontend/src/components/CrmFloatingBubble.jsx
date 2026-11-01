@@ -227,7 +227,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                                             <h4 className="text-sm font-bold text-slate-900 tracking-tight">
                                                 Recall Servis
                                             </h4>
-                                            <span className={`text-3xs font-extrabold px-2 py-0.5 rounded-full border ${
+                                            <span className={`text-3xs font-extrabold px-2 py-0.5 rounded-full border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                 urgentCount > 0 
                                                     ? "bg-rose-50 text-rose-700 border-rose-200" 
                                                     : "bg-blue-50 text-blue-700 border-blue-200"

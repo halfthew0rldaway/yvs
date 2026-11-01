@@ -111,7 +111,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                 </h3>
                                 {customer?.tipe_kepribadian && (
                                     <span 
-                                        className={`px-2 py-0.5 rounded-full text-2xs font-semibold border ${personality.badge}`}
+                                        className={`px-2 py-0.5 rounded-full text-2xs font-semibold border whitespace-nowrap shrink-0 w-fit max-w-max ${personality.badge}`}
                                         title={personality.trait}
                                     >
                                         {personality.label}
@@ -329,7 +329,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                                         </span>
                                                                     </div>
                                                                 </div>
-                                                                <span className={`px-2.5 py-1 rounded-full text-2xs font-semibold border ${
+                                                                <span className={`px-2.5 py-1 rounded-full text-2xs font-semibold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                                     ticketCount > 0 
                                                                         ? "bg-blue-50 text-blue-700 border-blue-200" 
                                                                         : "bg-slate-50 text-slate-500 border-slate-200"
@@ -446,16 +446,16 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                                     </td>
                                                                     <td className="py-3 px-4">
                                                                         <div className="flex flex-col gap-1 items-start">
-                                                                            <span className={`px-2 py-0.5 rounded-full text-3xs font-semibold border uppercase tracking-wider ${statusInfo.color}`}>
+                                                                            <span className={`px-2 py-0.5 rounded-full text-3xs font-semibold border uppercase tracking-wider whitespace-nowrap shrink-0 w-fit max-w-max ${statusInfo.color}`}>
                                                                                 {statusInfo.label}
                                                                             </span>
                                                                             {t.is_revisi_acc && (
                                                                                 <span 
-                                                                                    className="px-2 py-0.5 rounded-full text-4xs font-bold bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center gap-1"
+                                                                                    className="px-2 py-0.5 rounded-full text-4xs font-bold bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center gap-1 whitespace-nowrap shrink-0 w-fit max-w-max"
                                                                                     title={t.alasan_revisi_acc ? `Alasan Revisi ACC: ${t.alasan_revisi_acc}` : "Pernah direvisi ACC"}
                                                                                 >
-                                                                                    <RotateCcw className="w-2.5 h-2.5 text-amber-600" />
-                                                                                    1x Revisi ACC
+                                                                                    <RotateCcw className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                                                                                    <span>1x Revisi ACC</span>
                                                                                 </span>
                                                                             )}
                                                                         </div>
@@ -516,7 +516,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                     Tipologi Karakter & Rekomendasi Pelayanan
                                                 </h4>
                                             </div>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${personality.badge}`}>
+                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap shrink-0 w-fit max-w-max ${personality.badge}`}>
                                                 Tipe: {personality.label}
                                             </span>
                                         </div>

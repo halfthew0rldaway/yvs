@@ -278,15 +278,15 @@ export default function PerangkatList() {
                                             <button
                                                 type="button"
                                                 onClick={() => setSelectedPerangkatId(p.id)}
-                                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all hover:scale-105 ${
+                                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border whitespace-nowrap shrink-0 w-fit max-w-max transition-all hover:scale-105 ${
                                                     serviceCount > 0 
                                                         ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300' 
                                                         : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
                                                 }`}
                                                 title="Buka rekam jejak servis & detail unit ini"
                                             >
-                                                <History className="w-3.5 h-3.5" />
-                                                <span>{serviceCount}x Servis</span>
+                                                <History className="w-3.5 h-3.5 shrink-0" />
+                                                <span className="whitespace-nowrap">{serviceCount}x Servis</span>
                                             </button>
                                         </td>
                                         <td className="px-6 py-4 text-right">

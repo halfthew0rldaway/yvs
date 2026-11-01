@@ -431,7 +431,7 @@ export default function RetensiCrm() {
                             <Calendar className="w-4 h-4 text-blue-600" />
                             <span>Perawatan Berkala</span>
                         </span>
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 whitespace-nowrap shrink-0 w-fit max-w-max">
                             6 - 12 Bulan
                         </span>
                     </div>
@@ -440,10 +440,10 @@ export default function RetensiCrm() {
                         <span className="text-xs font-medium text-slate-500">unit siap disapa</span>
                     </div>
                     <div className="flex items-center gap-2 mt-2.5 text-2xs font-semibold text-slate-600">
-                        <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
+                        <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap shrink-0">
                             {maintenanceData.urgent_count} Kritis (≥ 1 Thn)
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap shrink-0">
                             {maintenanceData.routine_count} Rutin
                         </span>
                     </div>
@@ -464,7 +464,7 @@ export default function RetensiCrm() {
                             <PackageCheck className="w-4 h-4 text-amber-600" />
                             <span>Unit Selesai Di Rak</span>
                         </span>
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 whitespace-nowrap shrink-0 w-fit max-w-max">
                             Belum Diambil
                         </span>
                     </div>
@@ -499,7 +499,7 @@ export default function RetensiCrm() {
                             <ShieldCheck className="w-4 h-4 text-emerald-600" />
                             <span>Masa Garansi Toko</span>
                         </span>
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap shrink-0 w-fit max-w-max">
                             H-7 Habis
                         </span>
                     </div>
@@ -521,15 +521,15 @@ export default function RetensiCrm() {
                         <button
                             type="button"
                             onClick={() => handleTabChange("perawatan")}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                                 activeTab === "perawatan"
                                     ? "bg-blue-600 text-white shadow-2xs"
                                     : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
                             }`}
                         >
-                            <Calendar className="w-3.5 h-3.5" />
+                            <Calendar className="w-3.5 h-3.5 shrink-0" />
                             <span>Perawatan Berkala (6-12 Bln)</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-3xs ${activeTab === "perawatan" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                            <span className={`px-1.5 py-0.2 rounded-full text-3xs whitespace-nowrap shrink-0 ${activeTab === "perawatan" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
                                 {maintenanceData.total_due}
                             </span>
                         </button>
@@ -537,15 +537,15 @@ export default function RetensiCrm() {
                         <button
                             type="button"
                             onClick={() => handleTabChange("unclaimed")}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                                 activeTab === "unclaimed"
                                     ? "bg-amber-600 text-white shadow-2xs"
                                     : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
                             }`}
                         >
-                            <PackageCheck className="w-3.5 h-3.5" />
+                            <PackageCheck className="w-3.5 h-3.5 shrink-0" />
                             <span>Unit Belum Diambil</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-3xs ${activeTab === "unclaimed" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                            <span className={`px-1.5 py-0.2 rounded-full text-3xs whitespace-nowrap shrink-0 ${activeTab === "unclaimed" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
                                 {unclaimedData.total_unclaimed}
                             </span>
                         </button>
@@ -553,15 +553,15 @@ export default function RetensiCrm() {
                         <button
                             type="button"
                             onClick={() => handleTabChange("garansi")}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                                 activeTab === "garansi"
                                     ? "bg-emerald-600 text-white shadow-2xs"
                                     : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
                             }`}
                         >
-                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                             <span>Follow-Up Garansi (H-7)</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-3xs ${activeTab === "garansi" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                            <span className={`px-1.5 py-0.2 rounded-full text-3xs whitespace-nowrap shrink-0 ${activeTab === "garansi" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
                                 {warrantyData.length}
                             </span>
                         </button>
@@ -723,7 +723,7 @@ export default function RetensiCrm() {
                                                             {item.merek} {item.model}
                                                         </p>
                                                     </div>
-                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border shrink-0 ${
+                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                         isUrgent 
                                                             ? "bg-rose-50 text-rose-700 border-rose-200" 
                                                             : "bg-blue-50 text-blue-700 border-blue-200"
@@ -783,7 +783,7 @@ export default function RetensiCrm() {
                                                             {item.merek} {item.model}
                                                         </p>
                                                     </div>
-                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border shrink-0 ${
+                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                         isCritical
                                                             ? "bg-rose-50 text-rose-700 border-rose-200"
                                                             : isAging
@@ -848,7 +848,7 @@ export default function RetensiCrm() {
                                                             {item.perangkat?.merek} {item.perangkat?.model}
                                                         </p>
                                                     </div>
-                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border shrink-0 ${
+                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                         isCritical
                                                             ? "bg-amber-100 text-amber-900 border-amber-300 font-extrabold"
                                                             : "bg-emerald-50 text-emerald-800 border-emerald-200"

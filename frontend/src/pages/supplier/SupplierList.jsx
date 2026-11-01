@@ -89,11 +89,11 @@ export default function SupplierList() {
                         <Building2 className="w-6 h-6" />
                     </div>
                     <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                                 Direktori Supplier & Distributor
                             </h1>
-                            <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold rounded-full">
+                            <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold rounded-full whitespace-nowrap shrink-0 w-fit max-w-max">
                                 {totalSuppliers} Mitra
                             </span>
                         </div>

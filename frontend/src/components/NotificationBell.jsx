@@ -136,37 +136,37 @@ export default function NotificationBell() {
 
             {/* Dropdown Popover */}
             {isOpen && (
-                <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 mt-2 sm:w-96 max-w-[calc(100vw-24px)] bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden popover-surface">
+                <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 mt-2 sm:w-[440px] md:w-[460px] max-w-[calc(100vw-24px)] bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden popover-surface">
                     {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-100">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-slate-900">Notifikasi & Memo</span>
+                    <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100 flex-nowrap">
+                        <div className="flex items-center gap-2 shrink-0 min-w-0">
+                            <span className="text-sm font-bold text-slate-900 whitespace-nowrap">Notifikasi & Memo</span>
                             {unreadCount > 0 && (
-                                <span className="px-2 py-0.5 text-xs font-semibold bg-red-50 text-red-700 rounded-full border border-red-200">
+                                <span className="inline-flex items-center px-2 py-0.5 text-2xs font-bold bg-rose-50 text-rose-700 rounded-full border border-rose-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                     {unreadCount} baru
                                 </span>
                             )}
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
                             {unreadCount > 0 && (
                                 <button
                                     type="button"
                                     onClick={handleMarkAllRead}
-                                    className="p-1 text-slate-400 hover:text-slate-700 rounded transition-colors text-xs flex items-center gap-1"
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-lg transition-colors text-xs whitespace-nowrap shrink-0 w-fit max-w-max cursor-pointer"
                                     title="Tandai Semua Dibaca"
                                 >
-                                    <CheckCheck className="w-3.5 h-3.5" />
-                                    <span className="text-2xs font-medium hidden sm:inline">Baca Semua</span>
+                                    <CheckCheck className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="text-2xs font-semibold whitespace-nowrap">Baca Semua</span>
                                 </button>
                             )}
                             <button
                                 type="button"
                                 onClick={() => { setIsOpen(false); setIsMemoModalOpen(true); }}
-                                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold transition-colors"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 w-fit max-w-max cursor-pointer"
                                 title="Tulis memo baru"
                             >
-                                <Send className="w-3 h-3" />
-                                <span>Kirim Memo</span>
+                                <Send className="w-3 h-3 shrink-0" />
+                                <span className="whitespace-nowrap">Kirim Memo</span>
                             </button>
                         </div>
                     </div>

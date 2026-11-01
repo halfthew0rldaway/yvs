@@ -115,14 +115,14 @@ export default function InvoiceList() {
                     <button
                         type="button"
                         onClick={() => setIsReportModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold whitespace-nowrap shrink-0 transition-colors shadow-sm"
                     >
                         <FileText className="w-4 h-4 text-slate-300" />
                         <span>Rekap Laporan Keuangan</span>
                     </button>
                     <Link
                         to="/invoice/tambah"
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold whitespace-nowrap shrink-0 transition-colors shadow-sm"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Buat Invoice</span>
@@ -324,7 +324,7 @@ export default function InvoiceList() {
                                     <td className="px-6 py-4 text-center">
                                         <Link 
                                             to={`/invoice/${inv.id}`}
-                                            className="inline-flex items-center justify-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors"
+                                            className="inline-flex items-center justify-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors"
                                         >
                                             Lihat / Cetak
                                         </Link>

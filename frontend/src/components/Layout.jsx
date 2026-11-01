@@ -447,7 +447,7 @@ export default function Layout({ children }) {
                             <BookOpen className="w-4 h-4 text-blue-600" />
                             <span className="text-xs font-semibold text-slate-800">Panduan Standar Layanan</span>
                         </div>
-                        <span className="text-3xs font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+                        <span className="text-3xs font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
                             WOW
                         </span>
                     </button>

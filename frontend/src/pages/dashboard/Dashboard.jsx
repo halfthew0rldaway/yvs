@@ -545,7 +545,7 @@ export default function Dashboard() {
                                             >
                                                 <td className="py-3 px-4 font-medium text-slate-700 group-hover:text-blue-600 transition-colors">{s.nama}</td>
                                                 <td className="py-3 px-4 text-right">
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                                         {s.stok}
                                                     </span>
                                                 </td>
@@ -997,7 +997,7 @@ export default function Dashboard() {
                                             <p className="text-xs text-slate-500">{tiket.perangkat?.customer?.nama}</p>
                                         </td>
                                         <td className="py-3 px-4">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                 tiket.status === "diterima" ? "bg-red-50 text-red-600 border border-red-200" :
                                                 tiket.status === "didiagnosis" ? "bg-amber-50 text-amber-600 border border-amber-200" :
                                                 tiket.status === "menunggu_persetujuan" ? "bg-orange-50 text-orange-600 border border-orange-200" :

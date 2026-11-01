@@ -468,9 +468,9 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="font-semibold text-slate-900 text-sm">Paket Estimasi SLA: {pkgCek.shortLabel}</span>
+                            <span className="font-semibold text-slate-900 text-sm whitespace-nowrap">Paket Estimasi SLA: {pkgCek.shortLabel}</span>
                             {sla.sla_paket === "express" && (
-                                <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-500 text-white uppercase tracking-wider">
+                                <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-500 text-white uppercase tracking-wider whitespace-nowrap shrink-0">
                                     Priority Queue
                                 </span>
                             )}
@@ -480,8 +480,8 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                 </div>
 
                 <div className="inline-flex items-center gap-2 self-start sm:self-auto">
-                    <span className="text-2xs font-medium text-slate-500 uppercase tracking-wider">Fase Operasional:</span>
-                    <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${
+                    <span className="text-2xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">Fase Operasional:</span>
+                    <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border whitespace-nowrap shrink-0 ${
                         isPaused 
                             ? "bg-amber-50 text-amber-800 border-amber-300"
                             : sla.active_phase === "pengecekan"
@@ -510,7 +510,7 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                             </div>
                             <h4 className="text-xs font-bold text-slate-900">Tahap 1: Estimasi Pengecekan & Diagnosis</h4>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-3xs font-bold border ${
+                        <span className={`px-2 py-0.5 rounded text-3xs font-bold border whitespace-nowrap shrink-0 ${
                             sla.pengecekan?.is_completed
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : sla.pengecekan?.is_active && sla.is_overdue
@@ -555,12 +555,12 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                                 <button
                                     type="button"
                                     onClick={onEditSla}
-                                    className="text-2xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline px-1.5 py-0.5 rounded cursor-pointer"
+                                    className="text-2xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline px-1.5 py-0.5 rounded cursor-pointer whitespace-nowrap shrink-0"
                                 >
                                     Ubah Estimasi
                                 </button>
                             )}
-                            <span className={`px-2 py-0.5 rounded text-3xs font-bold border ${
+                            <span className={`px-2 py-0.5 rounded text-3xs font-bold border whitespace-nowrap shrink-0 ${
                                 sla.pengerjaan?.is_completed
                                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                     : isPaused

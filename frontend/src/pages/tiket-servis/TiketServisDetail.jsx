@@ -937,7 +937,7 @@ export default function TiketServisDetail() {
                     <div>
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight font-mono">{tiket.nomor_tiket}</h1>
-                            <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider ${STATUS_LABELS[tiket.status]?.color}`}>
+                            <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider whitespace-nowrap shrink-0 w-fit max-w-max ${STATUS_LABELS[tiket.status]?.color}`}>
                                 {STATUS_LABELS[tiket.status]?.label}
                             </span>
                         </div>
@@ -1152,12 +1152,12 @@ export default function TiketServisDetail() {
                             <XCircle className="w-6 h-6" />
                         </div>
                         <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-200 text-rose-900 border border-rose-300">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-200 text-rose-900 border border-rose-300 whitespace-nowrap shrink-0 w-fit max-w-max">
                                     Tiket Dibatalkan
                                 </span>
                                 {tiket.biaya_pembatalan > 0 && (
-                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap shrink-0 w-fit max-w-max">
                                         Biaya Cek Batal: {formatRupiah(tiket.biaya_pembatalan)}
                                     </span>
                                 )}
@@ -1187,7 +1187,7 @@ export default function TiketServisDetail() {
                         </div>
                         <div>
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-900 border border-amber-300 uppercase tracking-wider">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-900 border border-amber-300 uppercase tracking-wider whitespace-nowrap shrink-0 w-fit max-w-max">
                                     Pernah 1x Revisi ACC
                                 </span>
                                 <span className="text-xs text-amber-800 font-medium">
@@ -1219,7 +1219,7 @@ export default function TiketServisDetail() {
                         </div>
                         <div>
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-200 text-indigo-950 border border-indigo-300 uppercase tracking-wider">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-200 text-indigo-950 border border-indigo-300 uppercase tracking-wider whitespace-nowrap shrink-0 w-fit max-w-max">
                                     Tiket Klaim Garansi Servis (Re-work)
                                 </span>
                                 <span className="text-xs text-indigo-700 font-semibold">
@@ -1255,7 +1255,7 @@ export default function TiketServisDetail() {
                         </div>
                         <div>
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-950 border border-amber-300 uppercase tracking-wider">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-950 border border-amber-300 uppercase tracking-wider whitespace-nowrap shrink-0 w-fit max-w-max">
                                     Memiliki {tiket.child_claims.length} Tiket Klaim Garansi Terkait
                                 </span>
                             </div>
@@ -1374,7 +1374,7 @@ export default function TiketServisDetail() {
                                                 <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                                                 Profil & Gaya Komunikasi
                                             </span>
-                                            <span className="text-2xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                            <span className="text-2xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                                 {tiket.perangkat.customer.tipe_kepribadian || "Netral"}
                                             </span>
                                         </div>
@@ -1474,7 +1474,7 @@ export default function TiketServisDetail() {
                                 <div className="flex items-center justify-between mb-1.5">
                                     <div className="flex items-center gap-2">
                                         <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Kredensial / PIN Unit</p>
-                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                             {tiket.tipe_kunci || "Tidak Ada"}
                                         </span>
                                     </div>
@@ -1591,11 +1591,11 @@ export default function TiketServisDetail() {
                                 <div className="flex items-center justify-between mb-1.5">
                                     <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Unit Pinjaman (Backup)</p>
                                     {activeLoan ? (
-                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                             Sedang Dipinjam
                                         </span>
                                     ) : (
-                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-slate-100 text-slate-600">
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-slate-100 text-slate-600 whitespace-nowrap shrink-0 w-fit max-w-max">
                                             Tidak Ada
                                         </span>
                                     )}
@@ -2853,7 +2853,7 @@ export default function TiketServisDetail() {
                                             <div className="space-y-3 text-xs">
                                                 <div className="flex items-center justify-between gap-2">
                                                     <span className="text-slate-500">Kondisi Fisik:</span>
-                                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                         tiket.kondisi_fisik === "Pecah" 
                                                             ? "bg-red-50 text-red-700 border-red-200" 
                                                             : tiket.kondisi_fisik === "Ada yang Rusak" 
@@ -2885,7 +2885,7 @@ export default function TiketServisDetail() {
                                             <div className="space-y-3 text-xs">
                                                 <div className="flex items-center justify-between gap-2">
                                                     <span className="text-slate-500">Fokus Penanganan:</span>
-                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                         tiket.prioritas_pelanggan === "Data Aman"
                                                             ? "bg-purple-50 text-purple-700 border-purple-200"
                                                             : tiket.prioritas_pelanggan === "Cepat Selesai"
@@ -2974,7 +2974,7 @@ export default function TiketServisDetail() {
                             <div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <h2 className="text-sm font-bold text-slate-900">Rekam Medis & Riwayat Servis Unit Ini</h2>
-                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                         (tiket.perangkat?.tiket_servis?.length || 0) > 0 
                                             ? "bg-amber-50 text-amber-800 border-amber-200" 
                                             : "bg-emerald-50 text-emerald-800 border-emerald-200"
@@ -3009,7 +3009,7 @@ export default function TiketServisDetail() {
                                                         {hist.nomor_tiket}
                                                         <ExternalLink className="w-3 h-3" />
                                                     </Link>
-                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border uppercase tracking-wider ${STATUS_LABELS[hist.status]?.color || "bg-slate-100 text-slate-700"}`}>
+                                                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold border uppercase tracking-wider whitespace-nowrap shrink-0 w-fit max-w-max ${STATUS_LABELS[hist.status]?.color || "bg-slate-100 text-slate-700"}`}>
                                                         {STATUS_LABELS[hist.status]?.label || hist.status}
                                                     </span>
                                                     <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
@@ -3193,13 +3193,13 @@ export default function TiketServisDetail() {
 
                         <div className="flex items-center gap-2 flex-wrap self-end md:self-auto">
                             {tiket.checklist_qc?.passed_qc ? (
-                                <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1 rounded-full border border-emerald-300">
-                                    <Award className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1 rounded-full border border-emerald-300 whitespace-nowrap shrink-0 w-fit max-w-max">
+                                    <Award className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                                     <span>Lulus QC</span>
                                 </span>
                             ) : (
-                                <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 font-bold text-xs px-3 py-1 rounded-full border border-amber-200">
-                                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 font-bold text-xs px-3 py-1 rounded-full border border-amber-200 whitespace-nowrap shrink-0 w-fit max-w-max">
+                                    <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                                     <span>Menunggu QC</span>
                                 </span>
                             )}

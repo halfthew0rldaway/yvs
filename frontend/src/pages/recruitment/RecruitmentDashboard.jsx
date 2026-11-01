@@ -264,15 +264,15 @@ export default function RecruitmentDashboard() {
                 <button
                     type="button"
                     onClick={() => setActiveTab("pipeline")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
                         activeTab === "pipeline"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
-                    <Users className="w-4 h-4" />
-                    <span>Pipeline Pelamar</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold ${
+                    <Users className="w-4 h-4 shrink-0" />
+                    <span className="whitespace-nowrap">Pipeline Pelamar</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold whitespace-nowrap shrink-0 ${
                         activeTab === "pipeline" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {applicants.length}
@@ -282,15 +282,15 @@ export default function RecruitmentDashboard() {
                 <button
                     type="button"
                     onClick={() => setActiveTab("jobs")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
                         activeTab === "jobs"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
-                    <Briefcase className="w-4 h-4" />
-                    <span>Daftar Lowongan</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold ${
+                    <Briefcase className="w-4 h-4 shrink-0" />
+                    <span className="whitespace-nowrap">Daftar Lowongan</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold whitespace-nowrap shrink-0 ${
                         activeTab === "jobs" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {jobs.length}
@@ -322,14 +322,14 @@ export default function RecruitmentDashboard() {
                             <button
                                 type="button"
                                 onClick={() => setSelectedSourceFilter("all")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer border ${
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer border whitespace-nowrap ${
                                     selectedSourceFilter === "all"
                                         ? "bg-slate-900 text-white border-slate-900 shadow-xs"
                                         : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
                                 }`}
                             >
-                                <span>Semua Saluran</span>
-                                <span className={`px-1.5 py-0.2 rounded-full text-3xs font-bold ${
+                                <span className="whitespace-nowrap">Semua Saluran</span>
+                                <span className={`px-1.5 py-0.2 rounded-full text-3xs font-bold whitespace-nowrap shrink-0 ${
                                     selectedSourceFilter === "all" ? "bg-slate-700 text-white" : "bg-slate-200 text-slate-700"
                                 }`}>
                                     {stats.total_pelamar}
@@ -345,7 +345,7 @@ export default function RecruitmentDashboard() {
                                         key={source.id}
                                         type="button"
                                         onClick={() => setSelectedSourceFilter(isSelected ? "all" : source.id)}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer border ${
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer border whitespace-nowrap ${
                                             isSelected
                                                 ? "bg-blue-600 text-white border-blue-600 shadow-xs ring-2 ring-blue-500/20"
                                                 : count > 0
@@ -353,8 +353,8 @@ export default function RecruitmentDashboard() {
                                                     : "bg-slate-50 text-slate-400 border-slate-200/80 hover:bg-slate-100"
                                         }`}
                                     >
-                                        <span>{source.short}</span>
-                                        <span className={`px-1.5 py-0.2 rounded-full text-3xs font-bold ${
+                                        <span className="whitespace-nowrap">{source.short}</span>
+                                        <span className={`px-1.5 py-0.2 rounded-full text-3xs font-bold whitespace-nowrap shrink-0 ${
                                             isSelected
                                                 ? "bg-blue-700 text-white"
                                                 : count > 0

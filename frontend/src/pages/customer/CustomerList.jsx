@@ -61,7 +61,7 @@ const CustomerRow = memo(function CustomerRow({
             </td>
             <td className="px-6 py-4">
                 <span 
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${personality.badge}`}
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${personality.badge} whitespace-nowrap shrink-0 w-fit max-w-max`}
                     title={personality.trait}
                 >
                     {personality.label}
@@ -73,11 +73,11 @@ const CustomerRow = memo(function CustomerRow({
                 <button
                     type="button"
                     onClick={() => onSelect(customer.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-semibold text-xs transition-all hover:scale-105 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-semibold text-xs transition-all hover:scale-105 cursor-pointer whitespace-nowrap shrink-0 w-fit max-w-max"
                     title="Buka daftar perangkat milik pelanggan ini"
                 >
-                    <MonitorSmartphone className="w-3.5 h-3.5" />
-                    <span>{customer.perangkat?.length || 0} Unit</span>
+                    <MonitorSmartphone className="w-3.5 h-3.5 shrink-0" />
+                    <span className="whitespace-nowrap">{customer.perangkat?.length || 0} Unit</span>
                 </button>
             </td>
             <td className="px-6 py-4 text-right">

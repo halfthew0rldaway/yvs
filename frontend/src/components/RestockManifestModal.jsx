@@ -378,21 +378,21 @@ export default function RestockManifestModal({ isOpen, onClose }) {
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-bold text-slate-800">{item.nama}</span>
                                                         {item.urgency === "urgent_tiket" && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
-                                                                <Zap className="w-3 h-3 text-blue-600 fill-current" />
-                                                                Dibutuhkan {item.demand_active}x Tiket
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-blue-100 text-blue-800 border border-blue-200 whitespace-nowrap shrink-0 w-fit max-w-max">
+                                                                <Zap className="w-3 h-3 text-blue-600 fill-current shrink-0" />
+                                                                <span>Dibutuhkan {item.demand_active}x Tiket</span>
                                                             </span>
                                                         )}
                                                         {item.urgency === "habis" && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
-                                                                <AlertCircle className="w-3 h-3 text-rose-600" />
-                                                                Habis
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-rose-100 text-rose-800 border border-rose-200 whitespace-nowrap shrink-0 w-fit max-w-max">
+                                                                <AlertCircle className="w-3 h-3 text-rose-600 shrink-0" />
+                                                                <span>Habis</span>
                                                             </span>
                                                         )}
                                                         {item.urgency === "menipis" && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                                                                <Clock className="w-3 h-3 text-amber-600" />
-                                                                Menipis
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-200 whitespace-nowrap shrink-0 w-fit max-w-max">
+                                                                <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                                                                <span>Menipis</span>
                                                             </span>
                                                         )}
                                                     </div>

@@ -174,7 +174,7 @@ export default function RepairWikiList() {
                             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                                 Pusat SOP & Knowledge Base
                             </h1>
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                 KEOS Standard
                             </span>
                         </div>
@@ -193,10 +193,10 @@ export default function RepairWikiList() {
                                     setSopToEdit(null);
                                     setIsSopFormOpen(true);
                                 }}
-                                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
+                                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 w-fit max-w-max"
                             >
-                                <Plus className="w-4 h-4" />
-                                <span>Tulis SOP Baru</span>
+                                <Plus className="w-4 h-4 shrink-0" />
+                                <span className="whitespace-nowrap">Tulis SOP Baru</span>
                             </button>
                         )
                     ) : (
@@ -206,10 +206,10 @@ export default function RepairWikiList() {
                                 setWikiToEdit(null);
                                 setIsCreateWikiOpen(true);
                             }}
-                            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
+                            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 w-fit max-w-max"
                         >
-                            <Plus className="w-4 h-4" />
-                            <span>Tulis Kasus Hardware</span>
+                            <Plus className="w-4 h-4 shrink-0" />
+                            <span className="whitespace-nowrap">Tulis Kasus Hardware</span>
                         </button>
                     )}
                 </div>
@@ -220,15 +220,15 @@ export default function RepairWikiList() {
                 <button
                     type="button"
                     onClick={() => setMainTab("sop")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
                         mainTab === "sop"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>Standar SOP Operasional</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold ${
+                    <ShieldCheck className="w-4 h-4 shrink-0" />
+                    <span className="whitespace-nowrap">Standar SOP Operasional</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold whitespace-nowrap shrink-0 ${
                         mainTab === "sop" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {sops.length}
@@ -238,15 +238,15 @@ export default function RepairWikiList() {
                 <button
                     type="button"
                     onClick={() => setMainTab("wiki")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
                         mainTab === "wiki"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
-                    <Wrench className="w-4 h-4" />
-                    <span>Pustaka Servis Hardware</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold ${
+                    <Wrench className="w-4 h-4 shrink-0" />
+                    <span className="whitespace-nowrap">Pustaka Servis Hardware</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold whitespace-nowrap shrink-0 ${
                         mainTab === "wiki" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {wikis.length}

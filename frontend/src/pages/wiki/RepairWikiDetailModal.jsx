@@ -31,19 +31,19 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                     {wiki.merek || "Umum"} {wiki.model_seri ? `• ${wiki.model_seri}` : ""}
                                 </span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                     {wiki.kategori}
                                 </span>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${difficultyColors[wiki.tingkat_kesulitan] || difficultyColors.Menengah}`}>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap shrink-0 w-fit max-w-max ${difficultyColors[wiki.tingkat_kesulitan] || difficultyColors.Menengah}`}>
                                     {wiki.tingkat_kesulitan}
                                 </span>
                                 {wiki.tingkat_sukses && (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                        <span>{wiki.tingkat_sukses}% Sukses</span>
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap shrink-0 w-fit max-w-max">
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                        <span className="whitespace-nowrap">{wiki.tingkat_sukses}% Sukses</span>
                                     </span>
                                 )}
                             </div>

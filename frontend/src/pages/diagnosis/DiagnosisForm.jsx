@@ -511,11 +511,11 @@ export default function DiagnosisForm() {
                                 <h2 className="text-base font-bold text-slate-900">
                                     Cek Fungsi Komponen (Auto-Type Laporan)
                                 </h2>
-                                <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                     {checkedCount}/{HARDWARE_ITEMS.length} Dicek
                                 </span>
                                 {issueCount > 0 && (
-                                    <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                    <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                         {issueCount} Bermasalah
                                     </span>
                                 )}

@@ -123,19 +123,19 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap shrink-0 w-fit max-w-max">
                                     {applicant.job_posting?.judul_posisi || "Posisi Umum"}
                                 </span>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${STATUS_COLORS[status] || STATUS_COLORS["Baru Masuk"]}`}>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap shrink-0 w-fit max-w-max ${STATUS_COLORS[status] || STATUS_COLORS["Baru Masuk"]}`}>
                                     {status}
                                 </span>
-                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${matchedSource.color}`}>
-                                    <Compass className="w-3 h-3 text-slate-400" />
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap shrink-0 w-fit max-w-max ${matchedSource.color}`}>
+                                    <Compass className="w-3 h-3 text-slate-400 shrink-0" />
                                     <span>{matchedSource.short}</span>
                                 </span>
                                 {applicant.user_hired && (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                        <UserCheck className="w-3 h-3 text-emerald-600" />
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap shrink-0 w-fit max-w-max">
+                                        <UserCheck className="w-3 h-3 text-emerald-600 shrink-0" />
                                         <span>Staf Resmi Terdaftar</span>
                                     </span>
                                 )}
@@ -336,21 +336,21 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                             <button
                                 type="button"
                                 onClick={() => handleSaveEvaluation("Tes Logika & Teknis")}
-                                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer"
                             >
                                 Majukan ke Tes Teknis
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleSaveEvaluation("Wawancara / Trial")}
-                                className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer"
                             >
                                 Panggil Trial Day
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleSaveEvaluation("Ditolak")}
-                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer"
                             >
                                 Tolak
                             </button>
@@ -365,7 +365,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                         type="button"
                         onClick={() => handleSaveEvaluation()}
                         disabled={saving}
-                        className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors shadow-2xs cursor-pointer"
+                        className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap shrink-0 transition-colors shadow-2xs cursor-pointer"
                     >
                         <Save className="w-4 h-4" />
                         <span>{saving ? "Menyimpan..." : "Simpan Penilaian"}</span>
@@ -376,7 +376,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                             <button
                                 type="button"
                                 onClick={() => onOpenHireModal(applicant)}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-colors shadow-xs cursor-pointer"
                             >
                                 <CheckCircle2 className="w-4 h-4" />
                                 <span>Terima & Buat Akun Staf</span>
@@ -385,7 +385,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer"
                         >
                             Tutup
                         </button>

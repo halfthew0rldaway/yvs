@@ -403,7 +403,7 @@ export default function UserList() {
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 font-mono text-xs">{u.email}</td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                     u.role === "admin"
                                                         ? "bg-indigo-50 text-indigo-700 border-indigo-200"
                                                         : "bg-blue-50 text-blue-700 border-blue-200"
