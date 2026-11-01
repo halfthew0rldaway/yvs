@@ -60,14 +60,28 @@ export default function LandingNavbar({ onSearchClick }) {
     };
 
     return (
-        <>
-            <header
-                className={`fixed top-0 left-0 right-0 z-50 w-full h-14 sm:h-16 font-sans flex items-center bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs transition-all duration-300 ease-out ${
-                    visible
-                        ? "translate-y-0 opacity-100 pointer-events-auto"
-                        : "-translate-y-full opacity-0 pointer-events-none"
-                }`}
-            >
+        <motion.header
+            initial={false}
+            animate={{
+                y: visible ? 0 : -80,
+                opacity: visible ? 1 : 0,
+            }}
+            transition={{
+                y: {
+                    type: "spring",
+                    stiffness: 380,
+                    damping: 32,
+                    mass: 0.8,
+                },
+                opacity: {
+                    duration: 0.22,
+                    ease: "easeOut",
+                },
+            }}
+            className={`fixed top-0 left-0 right-0 z-50 w-full h-14 sm:h-16 font-sans flex items-center bg-white/92 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_25px_-4px_rgba(15,23,42,0.07)] will-change-transform transform-gpu ${
+                visible ? "pointer-events-auto" : "pointer-events-none"
+            }`}
+        >
                 <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 flex items-center justify-between gap-2 flex-nowrap">
                 {/* Brand Identity */}
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-nowrap">
@@ -235,9 +249,9 @@ export default function LandingNavbar({ onSearchClick }) {
                     </>
                 )}
             </AnimatePresence>
-        </header>
-        {/* Flow Spacer - keeps page content aligned perfectly below the fixed header */}
-        <div className="h-14 sm:h-16 w-full shrink-0" aria-hidden="true" />
-        </>
+
+            {/* Precision Laser Shimmer Accent Along Bottom Border */}
+            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/25 to-transparent pointer-events-none" />
+        </motion.header>
     );
 }
