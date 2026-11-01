@@ -1050,72 +1050,99 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
 
     return (
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-200 overflow-hidden w-full flex flex-col w-full mx-auto">
-            <div className="p-6 sm:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-start justify-between gap-5 bg-slate-50/80">
+            <div className="p-5 sm:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-start justify-between gap-5 bg-slate-50/80">
                 <div className="space-y-1 w-full">
                     {/* Top Action Toolbar */}
-                    <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
-                        <button onClick={onBack} className="flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600 font-semibold transition-colors bg-white px-3.5 py-1.5 border border-slate-200 rounded-xl w-fit shadow-xs cursor-pointer">
-                            <ChevronDown className="w-4 h-4 rotate-90" /> Kembali ke Daftar
-                        </button>
+                    <div className="flex items-center justify-between gap-2.5 mb-4 sm:mb-6 w-full">
+                        {onBack ? (
+                            <button
+                                type="button"
+                                onClick={onBack}
+                                className="inline-flex items-center gap-1.5 h-8.5 px-3 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Daftar Tiket</span>
+                            </button>
+                        ) : (
+                            <div className="text-3xs font-bold text-slate-400 uppercase tracking-widest hidden sm:block">
+                                Detail Tiket Servis
+                            </div>
+                        )}
                         
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
                             <button
                                 type="button"
                                 onClick={handleRefreshStatus}
                                 disabled={refreshing}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 h-8.5 px-2.5 sm:px-3 rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
                                 title="Segarkan status servis terbaru dari server"
                             >
                                 <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${refreshing ? "animate-spin" : ""}`} />
-                                <span>{refreshing ? "Memperbarui..." : "Segarkan Status"}</span>
+                                <span>{refreshing ? "Memperbarui..." : "Segarkan"}</span>
                             </button>
 
                             <button
                                 type="button"
                                 onClick={handleShareTracking}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                                className="inline-flex items-center gap-1.5 h-8.5 px-2.5 sm:px-3 rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
                                 title="Bagikan tautan pelacakan langsung via WhatsApp atau salin link"
                             >
                                 <Share2 className="w-3.5 h-3.5 text-slate-500" />
-                                <span>Bagikan Tautan</span>
+                                <span>Bagikan</span>
                             </button>
 
                             {['selesai', 'diambil'].includes(t.status) && (
-                                <>
-                                    <button
-                                        type="button"
-                                        onClick={() => scrollToWarranty(false)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 hover:from-amber-100 hover:to-emerald-100 text-slate-800 border border-amber-300/80 text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer group"
-                                        title="Lompat dan fokuskan langsung ke Kartu Garansi Fisik/Digital"
-                                    >
-                                        <Award className="w-3.5 h-3.5 text-amber-600 group-hover:scale-110 transition-transform" />
-                                        <span>Cek Garansi</span>
-                                        <ChevronDown className="w-3 h-3 text-slate-400 group-hover:translate-y-0.5 transition-transform" />
-                                    </button>
+                                <div className="hidden sm:flex items-center gap-2">
+                                    <span className="w-px h-5 bg-slate-200" />
                                     {t.invoice && (
                                         <button
                                             type="button"
                                             onClick={() => setIsInvoiceModalOpen(true)}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                                            className="inline-flex items-center gap-1.5 h-8.5 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
                                             title="Buka atau cetak faktur invoice resmi"
                                         >
                                             <FileText className="w-3.5 h-3.5 text-blue-600" />
-                                            <span className="hidden sm:inline">Faktur Invoice</span>
+                                            <span>Faktur Invoice</span>
                                         </button>
                                     )}
                                     <button
                                         type="button"
                                         onClick={() => setIsWarrantyModalOpen(true)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                                        className="inline-flex items-center gap-1.5 h-8.5 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
                                         title="Buka atau cetak sertifikat garansi resmi"
                                     >
-                                        <Printer className="w-3.5 h-3.5 text-slate-500" />
-                                        <span className="hidden sm:inline">Cetak Sertifikat</span>
+                                        <Printer className="w-3.5 h-3.5 text-slate-600" />
+                                        <span>Sertifikat Garansi</span>
                                     </button>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>
+
+                    {/* Mobile Quick Documents Bar (Full-width 2-button grid, no truncated labels) */}
+                    {['selesai', 'diambil'].includes(t.status) && (
+                        <div className="grid grid-cols-2 gap-2 w-full mb-4 sm:hidden">
+                            {t.invoice && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsInvoiceModalOpen(true)}
+                                    className="h-9 px-3 rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                                >
+                                    <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                    <span className="truncate">Faktur Invoice</span>
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => setIsWarrantyModalOpen(true)}
+                                className={`h-9 px-3 rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer ${!t.invoice ? 'col-span-2' : ''}`}
+                            >
+                                <Printer className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                                <span className="truncate">Sertifikat Garansi</span>
+                            </button>
+                        </div>
+                    )}
+
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                         <span className="font-mono font-bold text-base sm:text-lg text-slate-900">{t.nomor_tiket}</span>
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-200/50 text-slate-700 rounded-md text-xs font-semibold">
@@ -1148,17 +1175,18 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                         </p>
                     </div>
                 </div>
-                <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 mt-2 sm:mt-0 h-full">
-                    <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wide text-center shrink-0 mt-2 sm:mt-0 ${STATUS_LABELS[t.status]?.color}`}>
+                <div className="flex items-center justify-between gap-3 w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 mt-3 sm:mt-0 sm:flex-col sm:items-end shrink-0">
+                    <span className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-xs font-extrabold border uppercase tracking-wider text-center shrink-0 ${STATUS_LABELS[t.status]?.color}`}>
                         {STATUS_LABELS[t.status]?.label}
                     </span>
                     <a 
                         href={`https://wa.me/628121034212?text=Halo,%20saya%20ingin%20bertanya%20tentang%20status%20perbaikan%20perangkat%20saya%20dengan%20nomor%20tiket%20${t.nomor_tiket}`} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all mt-auto sm:mt-4 shadow-sm shadow-emerald-500/20"
+                        className="inline-flex items-center justify-center gap-2 h-9 sm:h-10 px-3.5 sm:px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl font-bold text-xs sm:text-sm transition-all shadow-xs shadow-emerald-600/20 cursor-pointer shrink-0 sm:mt-4"
                     >
-                        <MessageCircle className="w-4 h-4" /> Hubungi Admin
+                        <MessageCircle className="w-4 h-4 shrink-0" />
+                        <span>Hubungi Admin</span>
                     </a>
                 </div>
             </div>
@@ -2170,13 +2198,7 @@ export default function Tracking() {
                             <ErrorBoundary>
                                 <TrackingDetail
                                     t={selectedTicket}
-                                    onBack={() => {
-                                        if (results && results.length > 1) {
-                                            setSelectedTicket(null);
-                                        } else {
-                                            handleBackToLanding();
-                                        }
-                                    }}
+                                    onBack={results && results.length > 1 ? () => setSelectedTicket(null) : undefined}
                                     onUpdateTicket={(updated) => {
                                         setSelectedTicket(updated);
                                         setResults((prev) =>
