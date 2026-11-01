@@ -4,18 +4,51 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function LandingNavbar({ onSearchClick }) {
     const [scrolled, setScrolled] = useState(false);
+    const [visible, setVisible] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 20);
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+        const checkVisibility = () => {
+            const workflowEl = document.getElementById("service-workflow");
+            if (!workflowEl) {
+                setVisible(true);
+                setScrolled(window.scrollY > 20);
+                return;
+            }
+            const rect = workflowEl.getBoundingClientRect();
+            // The 3D scene is active while workflowEl is pinned in view.
+            // As soon as the bottom of the 3D track reaches the viewport bottom (it unpins),
+            // the user enters the subsequent content (BrandTicker, #track-lookup, etc.).
+            const isPast3D = rect.bottom <= window.innerHeight + 60;
+            setVisible(isPast3D);
+            setScrolled(window.scrollY > 20);
+
+            if (!isPast3D && mobileMenuOpen) {
+                setMobileMenuOpen(false);
+            }
+        };
+
+        window.addEventListener("scroll", checkVisibility, { passive: true });
+        window.addEventListener("resize", checkVisibility, { passive: true });
+        checkVisibility();
+
+        const timer = setTimeout(checkVisibility, 60);
+
+        return () => {
+            window.removeEventListener("scroll", checkVisibility);
+            window.removeEventListener("resize", checkVisibility);
+            clearTimeout(timer);
+        };
+    }, [mobileMenuOpen]);
 
     const scrollToSection = (id) => {
         setMobileMenuOpen(false);
         const el = document.getElementById(id);
         if (el) {
+            if (id === "service-workflow") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+            }
             const navbarOffset = window.innerWidth >= 640 ? 64 : 56;
             const elementPosition = el.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset - navbarOffset;
@@ -29,10 +62,10 @@ export default function LandingNavbar({ onSearchClick }) {
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-50 w-full h-14 sm:h-16 transition-colors duration-200 font-sans flex items-center ${
-                    scrolled
-                        ? "bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs"
-                        : "bg-white border-b border-slate-100"
+                className={`fixed top-0 left-0 right-0 z-50 w-full h-14 sm:h-16 font-sans flex items-center bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs transition-all duration-300 ease-out ${
+                    visible
+                        ? "translate-y-0 opacity-100 pointer-events-auto"
+                        : "-translate-y-full opacity-0 pointer-events-none"
                 }`}
             >
                 <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 flex items-center justify-between gap-2 flex-nowrap">

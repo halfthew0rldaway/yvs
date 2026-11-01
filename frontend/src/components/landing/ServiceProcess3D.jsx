@@ -493,11 +493,11 @@ export default function ServiceProcess3D({ onTrackClick }) {
     return (
         <section
             ref={containerRef}
-            className="relative w-full bg-white font-sans scroll-mt-14 sm:scroll-mt-16 h-[440vh] sm:h-[650vh]"
+            className="relative w-full bg-white font-sans h-[440vh] sm:h-[650vh]"
             id="service-workflow"
         >
-            {/* Sticky viewport container (Full-bleed 100vw, offset below navbar, isolated render layer) */}
-            <div className="sticky top-14 sm:top-16 w-full h-[calc(100dvh-3.5rem)] sm:h-[calc(100dvh-4rem)] overflow-hidden bg-white [contain:paint]">
+            {/* Sticky viewport container (True 100dvh Fullscreen Studio, isolated render layer) */}
+            <div className="sticky top-0 w-full h-[100dvh] overflow-hidden bg-white [contain:paint]">
                 {/* 1. Preload Progress Indicator */}
                 {loadProgress < 100 && (
                     <div className="absolute top-0 left-0 right-0 z-30 h-1 bg-slate-100 overflow-hidden">
@@ -585,7 +585,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 {/* 4. Mobile Viewport Architecture: Integrated Top HUD & Docked Bottom Glass Sheet */}
                 <div className="md:hidden">
                     {/* Top Viewfinder HUD with Interactive Stage Stepper */}
-                    <div className="absolute top-0 left-0 right-0 z-20 pointer-events-auto px-4 pt-3 pb-3 bg-gradient-to-b from-white via-white/95 to-transparent">
+                    <div className="absolute top-0 left-0 right-0 z-20 pointer-events-auto px-4 pt-[max(env(safe-area-inset-top,0px),12px)] pb-3 bg-gradient-to-b from-white via-white/95 to-transparent">
                         {/* 5-Segment Interactive Progress Line */}
                         <div className="grid grid-cols-5 gap-1.5 w-full">
                             {STORY_STAGES.map((s, idx) => (
