@@ -103,12 +103,34 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
             <td className="px-6 py-3.5 align-middle">
                 <SlaBadge tiket={tiket} />
             </td>
-            <td className="px-6 py-3.5 align-middle text-slate-600 font-medium whitespace-nowrap">{tiket.teknisi?.nama || "-"}</td>
+            <td className="px-6 py-3.5 align-middle text-slate-700 font-medium whitespace-nowrap">
+                {tiket.teknisi?.nama ? (
+                    <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-3xs font-bold inline-flex items-center justify-center shrink-0">
+                            {tiket.teknisi.nama.charAt(0)}
+                        </span>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-slate-800 font-semibold text-xs">
+                                {tiket.teknisi.nama.split("(")[0].trim()}
+                            </span>
+                            {tiket.teknisi.nama.includes("(") && (
+                                <span className="text-slate-400 text-3xs font-normal">
+                                    ({tiket.teknisi.nama.split("(")[1]?.replace(")", "")})
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-3xs font-medium text-slate-400 bg-slate-50 border border-dashed border-slate-200">
+                        Belum Ditugaskan
+                    </span>
+                )}
+            </td>
             <td className="px-6 py-3.5 align-middle">
                 <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap select-none">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold border ${STATUS_LABELS[tiket.status]?.color || "bg-slate-100 text-slate-600 border-slate-200"} shrink-0`}>
+                    <span className={`inline-flex items-center gap-1.5 w-[148px] px-2.5 py-0.5 rounded-md text-xs font-semibold border ${STATUS_LABELS[tiket.status]?.color || "bg-slate-100 text-slate-600 border-slate-200"} shrink-0`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${STATUS_LABELS[tiket.status]?.dotColor || 'bg-current'} shrink-0`} />
-                        <span>{STATUS_LABELS[tiket.status]?.label || tiket.status}</span>
+                        <span className="truncate">{STATUS_LABELS[tiket.status]?.label || tiket.status}</span>
                     </span>
                     {tiket.is_garansi_claim && (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0" title={`Klaim Garansi Retur dari #${tiket.parent_tiket?.nomor_tiket || 'Lama'}`}>
@@ -658,9 +680,9 @@ export default function TiketServisList() {
                                 <th className="px-6 py-3.5">Tgl Masuk</th>
                                 <th className="px-6 py-3.5">Customer</th>
                                 <th className="px-6 py-3.5">Perangkat</th>
-                                <th className="px-6 py-3.5">Target & SLA</th>
-                                <th className="px-6 py-3.5">Teknisi</th>
-                                <th className="px-6 py-3.5">Status & QC</th>
+                                <th className="px-6 py-3.5 min-w-[210px]">Target & SLA</th>
+                                <th className="px-6 py-3.5 min-w-[200px]">Teknisi</th>
+                                <th className="px-6 py-3.5 min-w-[230px]">Status & QC</th>
                                 <th className="px-6 py-3.5 text-right w-24">Aksi</th>
                             </tr>
                         </thead>

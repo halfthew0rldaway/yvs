@@ -404,24 +404,24 @@ export default function SlaBadge({ tiket, className = "" }) {
             className={`inline-flex items-center gap-1.5 flex-nowrap whitespace-nowrap select-none ${className}`}
             title={sla.tooltip_label || sla.status_label}
         >
-            {/* SLA Package Pill */}
+            {/* SLA Package Pill - Fixed width 68px for perfect table vertical alignment */}
             {isExpress ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-amber-500/10 text-amber-700 border border-amber-300/80 shrink-0">
-                    <Zap className="w-2.5 h-2.5 text-amber-600 fill-amber-500" />
+                <span className="inline-flex items-center justify-center gap-1 w-[68px] py-0.5 rounded-md text-3xs font-bold bg-amber-500/10 text-amber-700 border border-amber-300/80 shrink-0">
+                    <Zap className="w-2.5 h-2.5 text-amber-600 fill-amber-500 shrink-0" />
                     <span>Express</span>
                 </span>
             ) : isKompleks ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 shrink-0">
+                <span className="inline-flex items-center justify-center w-[68px] py-0.5 rounded-md text-3xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 shrink-0">
                     <span>Kompleks</span>
                 </span>
             ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                <span className="inline-flex items-center justify-center w-[68px] py-0.5 rounded-md text-3xs font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
                     <span>Reguler</span>
                 </span>
             )}
 
-            {/* SLA Countdown & Health Ring Pill */}
-            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs border ${urgencyStyle} shrink-0`}>
+            {/* SLA Countdown & Health Ring Pill - Fixed width 116px for perfect table vertical alignment */}
+            <span className={`inline-flex items-center gap-1.5 w-[116px] px-2 py-0.5 rounded-md text-xs border ${urgencyStyle} shrink-0`}>
                 <SlaProgressRing 
                     percent={sla.percent_elapsed} 
                     urgency={sla.urgency} 
@@ -429,7 +429,7 @@ export default function SlaBadge({ tiket, className = "" }) {
                     isPaused={isPaused} 
                     size={14} 
                 />
-                <span className="tabular-nums tracking-tight">{sla.short_status_label}</span>
+                <span className="tabular-nums tracking-tight font-medium truncate">{sla.short_status_label}</span>
             </span>
         </div>
     );
