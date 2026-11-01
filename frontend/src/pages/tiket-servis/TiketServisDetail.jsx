@@ -1336,6 +1336,7 @@ export default function TiketServisDetail() {
                                             variant="icon-only" 
                                             size="normal" 
                                             showGuideButton={true}
+                                            allowManage={isAdmin}
                                             onCustomerUpdated={(updated) => {
                                                 setTiket(prev => ({
                                                     ...prev,
@@ -2405,8 +2406,8 @@ export default function TiketServisDetail() {
                 </div>
             )}
 
-            {/* Feature 2.2: CRM & Notifikasi Pengingat Garansi (H-3 Expiry Follow-up) */}
-            {tiket.status === "diambil" && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
+            {/* Feature 2.2: CRM & Notifikasi Pengingat Garansi (H-3 Expiry Follow-up) - Khusus Admin / CS */}
+            {isAdmin && tiket.status === "diambil" && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
                 <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-sm mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-200">
                         <div className="flex items-center gap-3">
@@ -2532,35 +2533,38 @@ export default function TiketServisDetail() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5 pt-3 border-t border-slate-200/50">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-800 uppercase tracking-wider mb-1.5">
-                                Kategori Perbaikan / Tips
-                            </label>
-                            <select
-                                value={kategoriPerbaikan}
-                                onChange={(e) => setKategoriPerbaikan(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
-                            >
-                                {Object.keys(MAINTENANCE_TIPS).map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
-                        </div>
+                    {/* Konfigurasi Garansi (Khusus Admin) */}
+                    {isAdmin && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5 pt-3 border-t border-slate-200/50">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-800 uppercase tracking-wider mb-1.5">
+                                    Kategori Perbaikan / Tips
+                                </label>
+                                <select
+                                    value={kategoriPerbaikan}
+                                    onChange={(e) => setKategoriPerbaikan(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
+                                >
+                                    {Object.keys(MAINTENANCE_TIPS).map((cat) => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-800 uppercase tracking-wider mb-1.5">
-                                Sesuaikan Durasi Garansi
-                            </label>
-                            <input
-                                type="text"
-                                value={durasiGaransi}
-                                onChange={(e) => setDurasiGaransi(e.target.value)}
-                                placeholder="Misal: 1 Bulan / 3 Bulan / 14 Hari"
-                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
-                            />
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-800 uppercase tracking-wider mb-1.5">
+                                    Sesuaikan Durasi Garansi
+                                </label>
+                                <input
+                                    type="text"
+                                    value={durasiGaransi}
+                                    onChange={(e) => setDurasiGaransi(e.target.value)}
+                                    placeholder="Misal: 1 Bulan / 3 Bulan / 14 Hari"
+                                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
+                                />
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-200/50">
                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -2586,28 +2590,32 @@ export default function TiketServisDetail() {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-                            <a
-                                href={generateWarrantyWaLink(tiket)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="w-full sm:w-auto px-5 py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-green-500/20 flex items-center justify-center gap-2 shrink-0"
-                            >
-                                <MessageCircle className="w-4 h-4" />
-                                <span>Kirim Info Garansi (WA)</span>
-                            </a>
+                            {isAdmin && (
+                                <>
+                                    <a
+                                        href={generateWarrantyWaLink(tiket)}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="w-full sm:w-auto px-5 py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-green-500/20 flex items-center justify-center gap-2 shrink-0"
+                                    >
+                                        <MessageCircle className="w-4 h-4" />
+                                        <span>Kirim Info Garansi (WA)</span>
+                                    </a>
 
-                            <button
-                                type="button"
-                                onClick={() => setIsKlaimGaransiOpen(true)}
-                                className={`w-full sm:w-auto px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
-                                    tiket.warranty_status?.isExpired 
-                                        ? "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20" 
-                                        : "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20"
-                                }`}
-                            >
-                                <ShieldCheck className="w-4 h-4" />
-                                <span>Klaim Garansi</span>
-                            </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsKlaimGaransiOpen(true)}
+                                        className={`w-full sm:w-auto px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
+                                            tiket.warranty_status?.isExpired 
+                                                ? "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20" 
+                                                : "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20"
+                                        }`}
+                                    >
+                                        <ShieldCheck className="w-4 h-4" />
+                                        <span>Klaim Garansi</span>
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

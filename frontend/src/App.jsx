@@ -82,10 +82,10 @@ export default function App() {
                     {/* Protected routes */}
                     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                    <Route path="/customer" element={<ProtectedRoute><CustomerList /></ProtectedRoute>} />
+                    <Route path="/customer" element={<ProtectedRoute roles={["admin"]}><CustomerList /></ProtectedRoute>} />
                     <Route path="/customer/tambah" element={<ProtectedRoute roles={["admin"]}><CustomerForm /></ProtectedRoute>} />
                     <Route path="/customer/edit/:id" element={<ProtectedRoute roles={["admin"]}><CustomerForm /></ProtectedRoute>} />
-                    <Route path="/perangkat" element={<ProtectedRoute><PerangkatList /></ProtectedRoute>} />
+                    <Route path="/perangkat" element={<ProtectedRoute roles={["admin"]}><PerangkatList /></ProtectedRoute>} />
                     <Route path="/perangkat/tambah" element={<ProtectedRoute roles={["admin"]}><PerangkatForm /></ProtectedRoute>} />
                     <Route path="/perangkat/edit/:id" element={<ProtectedRoute roles={["admin"]}><PerangkatForm /></ProtectedRoute>} />
                     <Route path="/tiket-servis" element={<ProtectedRoute><TiketServisList /></ProtectedRoute>} />
@@ -102,8 +102,8 @@ export default function App() {
                     <Route path="/rma/tambah" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
                     <Route path="/rma/create" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
                     <Route path="/rma/new" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
-                    <Route path="/supplier" element={<ProtectedRoute><SupplierList /></ProtectedRoute>} />
-                    <Route path="/suppliers" element={<ProtectedRoute><SupplierList /></ProtectedRoute>} />
+                    <Route path="/supplier" element={<ProtectedRoute roles={["admin"]}><SupplierList /></ProtectedRoute>} />
+                    <Route path="/suppliers" element={<ProtectedRoute roles={["admin"]}><SupplierList /></ProtectedRoute>} />
                     <Route path="/invoice" element={<ProtectedRoute roles={["admin"]}><InvoiceList /></ProtectedRoute>} />
                     <Route path="/invoice/tambah" element={<ProtectedRoute roles={["admin"]}><InvoiceForm /></ProtectedRoute>} />
                     <Route path="/invoice/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />

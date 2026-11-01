@@ -7,6 +7,7 @@ import {
     MessageCircle, Plus, Edit2, Laptop, Tv, Printer, Smartphone, FileText, AlertCircle 
 } from "lucide-react";
 import { PERSONALITY_TYPES } from "../constants/personalityTypes";
+import { useAuth } from "../hooks/useAuth";
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-50 text-blue-700 border-blue-200" },
@@ -43,6 +44,7 @@ function getDeviceIcon(jenis) {
 }
 
 export default function PerangkatDetailModal({ perangkatId, isOpen, onClose, onSelectCustomer, onSelectPerangkat }) {
+    const { isAdmin } = useAuth();
     const [perangkat, setPerangkat] = useState(null);
     const [loading, setLoading] = useState(false);
     const [expandedTiketIds, setExpandedTiketIds] = useState({});
@@ -140,7 +142,7 @@ export default function PerangkatDetailModal({ perangkatId, isOpen, onClose, onS
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {perangkat && (
+                        {isAdmin && perangkat && (
                             <Link
                                 to={`/perangkat/edit/${perangkat.id}${window.location.pathname ? `?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}` : ''}`}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all"
@@ -325,13 +327,15 @@ export default function PerangkatDetailModal({ perangkatId, isOpen, onClose, onS
                                                 </button>
                                             </div>
                                         )}
-                                        <Link
-                                            to={`/tiket-servis/tambah?perangkat_id=${perangkat.id}&customer_id=${customer?.id}`}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all shadow-xs"
-                                        >
-                                            <Plus className="w-3.5 h-3.5" />
-                                            <span>Buat Tiket Baru</span>
-                                        </Link>
+                                        {isAdmin && (
+                                            <Link
+                                                to={`/tiket-servis/tambah?perangkat_id=${perangkat.id}&customer_id=${customer?.id}`}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all shadow-xs"
+                                            >
+                                                <Plus className="w-3.5 h-3.5" />
+                                                <span>Buat Tiket Baru</span>
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
 

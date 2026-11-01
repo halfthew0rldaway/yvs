@@ -123,7 +123,6 @@ const teknisiNavGroups = [
         items: [
             { path: "/sparepart", label: "Katalog Sparepart", icon: Wrench },
             { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
-            { path: "/supplier", label: "Direktori Supplier", icon: Building2 },
         ]
     },
     {
@@ -604,16 +603,28 @@ export default function Layout({ children }) {
                         </Link>
                     )}
 
-                    {/* Invoice / Kasir */}
-                    <Link
-                        to="/invoice"
-                        className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-                            location.pathname.startsWith("/invoice") ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
-                        }`}
-                    >
-                        <FileText className="w-5 h-5 mb-0.5" />
-                        <span className="text-3xs tracking-tight">Invoice</span>
-                    </Link>
+                    {/* Kasir / Invoice (Admin) vs SOP & Wiki (Teknisi) */}
+                    {isAdmin ? (
+                        <Link
+                            to="/invoice"
+                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
+                                location.pathname.startsWith("/invoice") ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
+                            }`}
+                        >
+                            <FileText className="w-5 h-5 mb-0.5" />
+                            <span className="text-3xs tracking-tight">Invoice</span>
+                        </Link>
+                    ) : (
+                        <Link
+                            to="/wiki"
+                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
+                                location.pathname.startsWith("/wiki") ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
+                            }`}
+                        >
+                            <BookOpen className="w-5 h-5 mb-0.5" />
+                            <span className="text-3xs tracking-tight">SOP Wiki</span>
+                        </Link>
+                    )}
 
                     {/* Menu Drawer Toggle */}
                     <button

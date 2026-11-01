@@ -46,6 +46,7 @@ const STATUS_LABELS = {
 
 // Memoized Table Row Component
 const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
+    const { isAdmin } = useAuth();
     return (
         <tr 
             onClick={(e) => {
@@ -127,7 +128,7 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
                             <span>Revisi</span>
                         </span>
                     )}
-                    {tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
+                    {isAdmin && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0" title={`Masa Garansi Tersisa ${tiket.warranty_status.sisaHari} Hari`}>
                             <Clock className="w-3 h-3 text-amber-700" />
                             <span>H-{tiket.warranty_status.sisaHari}</span>
@@ -522,28 +523,30 @@ export default function TiketServisList() {
                                     </span>
                                 </button>
 
-                                {/* Garansi H-3 CRM */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setFilter(filter === "garansi_expiring" ? "" : "garansi_expiring");
-                                        setSlaFilter("");
-                                        setCurrentPage(1);
-                                    }}
-                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                                        filter === "garansi_expiring" 
-                                            ? "bg-amber-600 text-white shadow-xs font-bold" 
-                                            : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
-                                    }`}
-                                >
-                                    <Clock className="w-3.5 h-3.5 text-amber-600" />
-                                    <span>Garansi H-3 CRM</span>
-                                    <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold ${
-                                        filter === "garansi_expiring" ? "bg-amber-700 text-white" : "bg-amber-100 text-amber-800"
-                                    }`}>
-                                        {expiringWarrantyCount}
-                                    </span>
-                                </button>
+                                {/* Garansi H-3 CRM (Khusus Admin / CS) */}
+                                {isAdmin && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setFilter(filter === "garansi_expiring" ? "" : "garansi_expiring");
+                                            setSlaFilter("");
+                                            setCurrentPage(1);
+                                        }}
+                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                            filter === "garansi_expiring" 
+                                                ? "bg-amber-600 text-white shadow-xs font-bold" 
+                                                : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
+                                        }`}
+                                    >
+                                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                        <span>Garansi H-3 CRM</span>
+                                        <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold ${
+                                            filter === "garansi_expiring" ? "bg-amber-700 text-white" : "bg-amber-100 text-amber-800"
+                                        }`}>
+                                            {expiringWarrantyCount}
+                                        </span>
+                                    </button>
+                                )}
 
                                 {/* Klaim Garansi Filter */}
                                 <button

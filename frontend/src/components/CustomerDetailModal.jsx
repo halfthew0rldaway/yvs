@@ -9,6 +9,7 @@ import {
 import { PERSONALITY_TYPES } from "../constants/personalityTypes";
 import MaintenanceRecallModal from "./MaintenanceRecallModal";
 import CustomerBadges from "./CustomerBadges";
+import { useAuth } from "../hooks/useAuth";
 
 const STATUS_LABELS = {
     diterima: { label: "Diterima", color: "bg-blue-50 text-blue-700 border-blue-200" },
@@ -46,6 +47,7 @@ function getDeviceIcon(jenis) {
 
 export default function CustomerDetailModal({ customerId, isOpen, onClose, onSelectPerangkat, onCustomerUpdated }) {
     const navigate = useNavigate();
+    const { isAdmin } = useAuth();
     const [customer, setCustomer] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("perangkat"); // "perangkat" | "riwayat" | "profil"
@@ -121,6 +123,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                         variant="icon-only" 
                                         size="normal" 
                                         showGuideButton={true}
+                                        allowManage={isAdmin}
                                         onCustomerUpdated={(updated) => {
                                             setCustomer(prev => ({ ...prev, ...updated }));
                                             if (onCustomerUpdated) onCustomerUpdated(updated);
@@ -136,7 +139,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        {customer && (
+                        {isAdmin && customer && (
                             <Link
                                 to={`/customer/edit/${customer.id}${window.location.pathname ? `?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}` : ''}`}
                                 className="hidden xs:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all"
@@ -474,7 +477,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                                             >
                                                                                 Detail
                                                                             </Link>
-                                                                            {isDueMaintenance && (
+                                                                            {isAdmin && isDueMaintenance && (
                                                                                 <button
                                                                                     type="button"
                                                                                     onClick={() => {
