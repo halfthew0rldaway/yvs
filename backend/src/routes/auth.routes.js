@@ -3,7 +3,7 @@ const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
 const { authLimiter } = require("../middleware/rateLimiter");
-const { login, logout, me, updateProfile, uploadProfilePhoto, removeProfilePhoto } = require("../controllers/auth.controller");
+const { login, logout, refreshSession, me, updateProfile, uploadProfilePhoto, removeProfilePhoto } = require("../controllers/auth.controller");
 const { uploadAvatar } = require("../middleware/upload");
 
 const router = express.Router();
@@ -19,6 +19,7 @@ router.post(
     login
 );
 
+router.post("/refresh", authenticate, refreshSession);
 router.post("/logout", authenticate, logout);
 router.get("/me", authenticate, me);
 router.put(

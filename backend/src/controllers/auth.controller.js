@@ -8,7 +8,7 @@ const prisma = require("../config/database");
 // Login
 async function login(req, res) {
     try {
-        const { email, password } = req.body;
+        const { email, password, rememberMe } = req.body;
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
@@ -20,15 +20,20 @@ async function login(req, res) {
             return res.status(401).json({ message: "Email atau password salah" });
         }
 
+        // Ingat Saya: 30 hari vs 1 hari (atau JWT_EXPIRES_IN)
+        const expiresIn = rememberMe ? "30d" : (process.env.JWT_EXPIRES_IN || "1d");
+
         const token = jwt.sign(
             { id: user.id, nama: user.nama, email: user.email, role: user.role },
             process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+            { expiresIn }
         );
 
         return res.json({
             message: "Login berhasil",
             token,
+            rememberMe: Boolean(rememberMe),
+            expiresIn,
             user: {
                 id: user.id,
                 nama: user.nama,
@@ -39,6 +44,39 @@ async function login(req, res) {
         });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+    }
+}
+
+// Refresh token / perpanjang masa aktif sesi
+async function refreshSession(req, res) {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: { id: true, nama: true, email: true, role: true, foto_profile: true },
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
+        }
+
+        const rememberMe = req.body?.rememberMe ?? false;
+        const expiresIn = rememberMe ? "30d" : (process.env.JWT_EXPIRES_IN || "1d");
+
+        const token = jwt.sign(
+            { id: user.id, nama: user.nama, email: user.email, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn }
+        );
+
+        return res.json({
+            message: "Sesi berhasil diperbarui",
+            token,
+            rememberMe: Boolean(rememberMe),
+            expiresIn,
+            user,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal memperbarui sesi", error: error.message });
     }
 }
 
@@ -179,4 +217,4 @@ async function removeProfilePhoto(req, res) {
     }
 }
 
-module.exports = { login, logout, me, updateProfile, uploadProfilePhoto, removeProfilePhoto };
+module.exports = { login, logout, refreshSession, me, updateProfile, uploadProfilePhoto, removeProfilePhoto };

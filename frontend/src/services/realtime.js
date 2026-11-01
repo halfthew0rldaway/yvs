@@ -3,6 +3,8 @@
  * Manages singleton SSE connection with automatic reconnection and event dispatching.
  */
 
+import { getAuthToken } from "../utils/authStorage";
+
 class RealtimeService {
     constructor() {
         this.eventSource = null;
@@ -26,7 +28,7 @@ class RealtimeService {
             return;
         }
 
-        const token = localStorage.getItem("token");
+        const token = getAuthToken();
         const url = token 
             ? `/api/realtime/events?token=${encodeURIComponent(token)}` 
             : `/api/realtime/events`;

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import Layout from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -50,6 +50,7 @@ function PageLoader() {
 
 function ProtectedRoute({ children, roles }) {
     const { token, user, loading } = useAuth();
+    const location = useLocation();
 
     if (loading) {
         return (
@@ -60,7 +61,8 @@ function ProtectedRoute({ children, roles }) {
     }
 
     if (!token) {
-        return <Navigate to="/login" replace />;
+        const redirectParam = encodeURIComponent(location.pathname + location.search);
+        return <Navigate to={`/login?redirect=${redirectParam}`} replace />;
     }
 
     if (roles && roles.length > 0 && (!user || !roles.includes(user.role))) {

@@ -107,9 +107,8 @@ export default function Profile() {
             const res = await api.put("/auth/profile", formData);
             
             // Perbarui state global user
-            const token = localStorage.getItem("token");
-            if (token && res.data?.user) {
-                login(res.data.user, token);
+            if (res.data?.user) {
+                updateUser(res.data.user);
             }
             
             toast.success("Profil berhasil diperbarui!");

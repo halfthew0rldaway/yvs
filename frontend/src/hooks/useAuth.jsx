@@ -1,51 +1,100 @@
-import { useState, useContext, createContext } from "react";
+import { useState, useEffect, useContext, createContext, useCallback } from "react";
+import {
+    getAuthToken,
+    getStoredUser,
+    isRememberMeActive,
+    setAuthSession,
+    updateStoredUser,
+    clearAuthSession
+} from "../utils/authStorage";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(() => {
-        try {
-            const storedUser = localStorage.getItem("user");
-            return storedUser ? JSON.parse(storedUser) : null;
-        } catch {
-            localStorage.removeItem("user");
-            return null;
-        }
-    });
-
-    const [token, setToken] = useState(() => {
-        return localStorage.getItem("token") || null;
-    });
-
+    const [user, setUser] = useState(() => getStoredUser());
+    const [token, setToken] = useState(() => getAuthToken());
+    const [rememberMe, setRememberMe] = useState(() => isRememberMeActive());
     const [loading] = useState(false);
 
-    function login(userData, userToken) {
-        localStorage.setItem("token", userToken);
-        localStorage.setItem("user", JSON.stringify(userData));
+    // State untuk Lockscreen / Re-login Modal in-app
+    const [isSessionLocked, setIsSessionLocked] = useState(false);
+    const [lockReason, setLockReason] = useState("idle"); // "idle" | "expired" | "unauthorized"
+
+    const lockSession = useCallback((reason = "idle") => {
+        setLockReason(reason);
+        setIsSessionLocked(true);
+    }, []);
+
+    const unlockSession = useCallback(() => {
+        setIsSessionLocked(false);
+    }, []);
+
+    const login = useCallback((userData, userToken, remember = false) => {
+        setAuthSession(userData, userToken, remember);
         setToken(userToken);
         setUser(userData);
-    }
+        setRememberMe(remember);
+        setIsSessionLocked(false);
+    }, []);
 
-    function logout() {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+    const logout = useCallback(() => {
+        clearAuthSession();
         setToken(null);
         setUser(null);
-    }
+        setIsSessionLocked(false);
+    }, []);
 
-    function updateUser(updatedData) {
-        const merged = { ...user, ...updatedData };
-        localStorage.setItem("user", JSON.stringify(merged));
-        setUser(merged);
-    }
+    const updateUser = useCallback((updatedData) => {
+        const merged = updateStoredUser(updatedData);
+        if (merged) {
+            setUser(merged);
+        }
+    }, []);
+
+    // Sinkronisasi status login/logout antar-tab browser via Storage Event
+    useEffect(() => {
+        function handleStorageChange(e) {
+            if (e.key === "token" || e.key === "user") {
+                const currentToken = getAuthToken();
+                const currentUser = getStoredUser();
+
+                setToken(currentToken);
+                setUser(currentUser);
+
+                if (!currentToken) {
+                    setIsSessionLocked(false);
+                }
+            }
+        }
+
+        window.addEventListener("storage", handleStorageChange);
+        return () => window.removeEventListener("storage", handleStorageChange);
+    }, []);
+
+    // Tangkap custom event kedaluwarsa sesi dari interceptor axios API
+    useEffect(() => {
+        function handleSessionExpired(e) {
+            const code = e.detail?.code;
+            const reason = code === "TOKEN_EXPIRED" ? "expired" : "unauthorized";
+            lockSession(reason);
+        }
+
+        window.addEventListener("yvs:session-expired", handleSessionExpired);
+        return () => window.removeEventListener("yvs:session-expired", handleSessionExpired);
+    }, [lockSession]);
 
     const value = {
         user,
         token,
         loading,
+        rememberMe,
         login,
         logout,
         updateUser,
+        isSessionLocked,
+        lockReason,
+        lockSession,
+        unlockSession,
         isAdmin: user?.role === "admin",
         isTeknisi: user?.role === "teknisi"
     };
@@ -56,31 +105,24 @@ export function AuthProvider({ children }) {
 export function useAuth() {
     const context = useContext(AuthContext);
     if (!context) {
-        // Fallback for isolated usages before context mounted
-        try {
-            const storedUser = localStorage.getItem("user");
-            const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-            const storedToken = localStorage.getItem("token") || null;
-            return {
-                user: parsedUser,
-                token: storedToken,
-                loading: false,
-                login: () => {},
-                logout: () => {},
-                isAdmin: parsedUser?.role === "admin",
-                isTeknisi: parsedUser?.role === "teknisi"
-            };
-        } catch {
-            return {
-                user: null,
-                token: null,
-                loading: false,
-                login: () => {},
-                logout: () => {},
-                isAdmin: false,
-                isTeknisi: false
-            };
-        }
+        // Fallback jika dipanggil sebelum provider mount
+        const storedUser = getStoredUser();
+        const storedToken = getAuthToken();
+        return {
+            user: storedUser,
+            token: storedToken,
+            loading: false,
+            rememberMe: isRememberMeActive(),
+            login: () => {},
+            logout: () => {},
+            updateUser: () => {},
+            isSessionLocked: false,
+            lockReason: "idle",
+            lockSession: () => {},
+            unlockSession: () => {},
+            isAdmin: storedUser?.role === "admin",
+            isTeknisi: storedUser?.role === "teknisi"
+        };
     }
     return context;
 }

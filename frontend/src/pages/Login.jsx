@@ -1,20 +1,38 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Navigate, Link } from "react-router-dom";
+import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import api from "../services/api";
+import { getRememberedEmail, setRememberedEmail } from "../utils/authStorage";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
-import { Eye, EyeOff, Lock, Mail, Wrench, Shield, CheckCircle2, ArrowRight, ShieldCheck, Server } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Wrench, Shield, CheckCircle2, ArrowRight, ShieldCheck, Clock, AlertCircle } from "lucide-react";
 
 export default function Login() {
     const { user, login } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    // Check query params for session expiration & redirect path
+    const isExpired = searchParams.get("expired") === "true";
+    const expireReason = searchParams.get("reason");
+    const redirectUrl = searchParams.get("redirect") || "/dashboard";
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [lottieData, setLottieData] = useState(null);
+
+    // Load saved email on mount
+    useEffect(() => {
+        const savedEmail = getRememberedEmail();
+        if (savedEmail) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+        }
+    }, []);
 
     // Fetch Lottie animation data on mount
     useEffect(() => {
@@ -25,7 +43,7 @@ export default function Login() {
     }, []);
 
     if (user) {
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to={redirectUrl} replace />;
     }
 
     async function handleSubmit(e) {
@@ -34,9 +52,22 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const res = await api.post("/auth/login", { email, password });
-            login(res.data.user, res.data.token);
-            navigate("/dashboard");
+            const res = await api.post("/auth/login", { 
+                email, 
+                password, 
+                rememberMe 
+            });
+
+            // Simpan / perbarui preferensi remembered email
+            if (rememberMe) {
+                setRememberedEmail(email);
+            } else {
+                setRememberedEmail("");
+            }
+
+            // Simpan sesi autentikasi dengan preferensi "Ingat Saya"
+            login(res.data.user, res.data.token, rememberMe);
+            navigate(redirectUrl, { replace: true });
         } catch (err) {
             setError(err.response?.data?.message || "Kredensial tidak valid. Silakan coba lagi.");
         } finally {
@@ -44,12 +75,19 @@ export default function Login() {
         }
     }
 
+    // Fungsi bantu cepat isi akun demo
+    function handleSelectDemoAccount(demoEmail) {
+        setEmail(demoEmail);
+        setPassword("password123");
+        setError("");
+    }
+
     // Framer Motion Variants for staggered entry
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
-            transition: { staggerChildren: 0.1, delayChildren: 0.1 }
+            transition: { staggerChildren: 0.08, delayChildren: 0.1 }
         }
     };
 
@@ -82,12 +120,12 @@ export default function Login() {
 
                 {/* Form Area */}
                 <motion.div 
-                    className="w-full max-w-[400px] mx-auto my-auto py-12"
+                    className="w-full max-w-[400px] mx-auto my-auto py-10"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
                 >
-                    <motion.div variants={itemVariants} className="mb-8">
+                    <motion.div variants={itemVariants} className="mb-6">
                         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-2">
                             Selamat Datang
                         </h1>
@@ -96,20 +134,38 @@ export default function Login() {
                         </p>
                     </motion.div>
 
+                    {/* Banner Pemberitahuan Sesi Kedaluwarsa / Timeout */}
+                    {(isExpired || expireReason) && (
+                        <motion.div 
+                            variants={itemVariants}
+                            className="mb-5 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5 shadow-xs"
+                        >
+                            <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                            <div>
+                                <p className="font-semibold text-amber-800">
+                                    {expireReason === "idle" ? "Sesi Berakhir Karena Tidak Ada Aktivitas" : "Sesi Telah Berakhir"}
+                                </p>
+                                <p className="text-amber-700 mt-0.5 leading-relaxed">
+                                    Demi keamanan sistem & data servis, silakan masuk kembali untuk melanjutkan.
+                                </p>
+                            </div>
+                        </motion.div>
+                    )}
+
                     {error && (
                         <motion.div 
                             initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
-                            className="bg-red-50/80 border border-red-100 text-red-600 px-4 py-3 rounded-lg text-sm flex items-start gap-3 overflow-hidden"
+                            animate={{ opacity: 1, height: "auto", marginBottom: 20 }}
+                            className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm flex items-start gap-3 overflow-hidden shadow-xs"
                         >
                             <Shield className="w-4 h-4 mt-0.5 shrink-0" />
                             <span>{error}</span>
                         </motion.div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <motion.div variants={itemVariants}>
-                            <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="email">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="email">
                                 Alamat Email
                             </label>
                             <div className="relative group">
@@ -121,15 +177,16 @@ export default function Login() {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
                                     placeholder="admin@workshop.com"
                                     required
+                                    autoComplete="email"
                                 />
                             </div>
                         </motion.div>
 
                         <motion.div variants={itemVariants}>
-                            <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="password">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="password">
                                 Kata Sandi
                             </label>
                             <div className="relative group">
@@ -141,9 +198,10 @@ export default function Login() {
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
+                                    className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
                                     placeholder="••••••••"
                                     required
+                                    autoComplete="current-password"
                                 />
                                 <button
                                     type="button"
@@ -156,14 +214,28 @@ export default function Login() {
                             </div>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <div className="relative flex items-center">
-                                    <input type="checkbox" className="peer sr-only" />
-                                    <div className="w-4 h-4 border border-slate-300 rounded bg-white peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-colors"></div>
-                                    <CheckCircle2 className="w-3 h-3 text-white absolute left-0.5 top-0.5 opacity-0 peer-checked:opacity-100 pointer-events-none" />
+                        {/* Remember Me Checkbox (Interaktif & Best-Practice) */}
+                        <motion.div variants={itemVariants} className="pt-1">
+                            <label htmlFor="rememberMe" className="flex items-start gap-2.5 cursor-pointer group select-none">
+                                <div className="relative flex items-center justify-center mt-0.5">
+                                    <input 
+                                        id="rememberMe"
+                                        type="checkbox" 
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="peer sr-only" 
+                                    />
+                                    <div className="w-4 h-4 border border-slate-300 rounded bg-white peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500/30 transition-all"></div>
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-white absolute inset-0 m-auto opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
                                 </div>
-                                <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">Ingat saya</span>
+                                <div className="flex-1">
+                                    <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900 transition-colors block">
+                                        Ingat saya di perangkat ini
+                                    </span>
+                                    <span className="text-3xs text-slate-400 block mt-0.5">
+                                        Simpan sesi hingga 30 hari. Jangan centang jika di komputer umum/bersama.
+                                    </span>
+                                </div>
                             </label>
                         </motion.div>
 
@@ -173,27 +245,62 @@ export default function Login() {
                             whileTap={{ scale: 0.98 }}
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm focus:ring-[3px] focus:ring-blue-500/30 outline-none"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm focus:ring-[3px] focus:ring-blue-500/30 outline-none mt-2"
                         >
                             {loading ? (
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
                                 <>
-                                    Masuk <ArrowRight className="w-4 h-4" />
+                                    <span>Masuk ke Sistem</span>
+                                    <ArrowRight className="w-4 h-4" />
                                 </>
                             )}
                         </motion.button>
                     </form>
 
-                    <motion.div variants={itemVariants} className="mt-8 p-4 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-500">
-                        <p className="font-medium text-slate-700 mb-1.5 flex items-center gap-1.5"><ShieldCheck className="w-3 h-3"/> Akun Demo</p>
-                        <div className="flex flex-col gap-1.5">
-                            <span className="flex justify-between items-center"><span>Admin:</span> <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-3xs">admin@workshop.com</span></span>
-                            <span className="flex justify-between items-center"><span>Teknisi 1:</span> <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-3xs">teknisi1@workshop.com</span></span>
-                            <span className="flex justify-between items-center"><span>Teknisi 2:</span> <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-3xs">teknisi2@workshop.com</span></span>
-                            <span className="flex justify-between items-center"><span>Teknisi 3:</span> <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-3xs">teknisi3@workshop.com</span></span>
-                            <div className="h-px bg-slate-200 my-0.5"></div>
-                            <span className="text-3xs text-slate-400 font-medium">Password untuk semua akun: <span className="text-slate-600 font-mono">password123</span></span>
+                    {/* Akun Demo Cepat Klik */}
+                    <motion.div variants={itemVariants} className="mt-7 p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-500">
+                        <div className="flex items-center justify-between mb-2">
+                            <p className="font-semibold text-slate-700 flex items-center gap-1.5">
+                                <ShieldCheck className="w-3.5 h-3.5 text-blue-600"/> Akun Demo (Klik untuk Isi Cepat)
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            <button
+                                type="button"
+                                onClick={() => handleSelectDemoAccount("admin@workshop.com")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Admin</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">admin@workshop.com</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleSelectDemoAccount("teknisi1@workshop.com")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi 1</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">teknisi1@workshop.com</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleSelectDemoAccount("teknisi2@workshop.com")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi 2</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">teknisi2@workshop.com</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleSelectDemoAccount("teknisi3@workshop.com")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi 3</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">teknisi3@workshop.com</span>
+                            </button>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-slate-200/70 text-3xs text-slate-400">
+                            Kata sandi default: <span className="font-mono text-slate-600 font-semibold">password123</span>
                         </div>
                     </motion.div>
                 </motion.div>
@@ -220,8 +327,6 @@ export default function Login() {
                     }}
                 />
                 
-                {/* Background fill */}
-                <div className="absolute inset-0 bg-slate-50 z-0" />
                 <div className="absolute inset-0 bg-slate-50 z-0" />
 
                 {/* Content */}

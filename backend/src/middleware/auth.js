@@ -15,7 +15,13 @@ function authenticate(req, res, next) {
         req.user = decoded;
         next();
     } catch (error) {
-        return res.status(401).json({ message: "Token tidak valid" });
+        if (error.name === "TokenExpiredError") {
+            return res.status(401).json({ 
+                message: "Sesi login Anda telah berakhir. Silakan login kembali.", 
+                code: "TOKEN_EXPIRED" 
+            });
+        }
+        return res.status(401).json({ message: "Token tidak valid", code: "INVALID_TOKEN" });
     }
 }
 

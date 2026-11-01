@@ -37,6 +37,10 @@ import MaintenanceRecallModal from "./MaintenanceRecallModal";
 import NotificationBell from "./NotificationBell";
 import CameraScannerModal from "./CameraScannerModal";
 import UserAvatar from "./common/UserAvatar";
+import ReloginModal from "./ReloginModal";
+import SessionWarningModal from "./SessionWarningModal";
+import { useIdleTimer } from "../hooks/useIdleTimer";
+import { isRememberMeActive } from "../utils/authStorage";
 
 // Menu Groups untuk Admin (Struktur Navigasi Collapsible Terorganisir)
 const adminNavGroups = [
@@ -136,7 +140,16 @@ const teknisiNavGroups = [
 ];
 
 export default function Layout({ children }) {
-    const { user, logout, isAdmin } = useAuth();
+    const { 
+        user, 
+        logout, 
+        isAdmin, 
+        login, 
+        isSessionLocked, 
+        lockReason, 
+        lockSession, 
+        unlockSession 
+    } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -152,6 +165,34 @@ export default function Layout({ children }) {
     const [maintenanceDueData, setMaintenanceDueData] = useState({ items: [], total_due: 0, urgent_count: 0 });
     const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+    // Idle timer untuk memonitor inaktivitas user
+    const {
+        isWarning: isIdleWarning,
+        remainingSeconds: idleRemainingSeconds,
+        resetTimer: resetIdleTimer
+    } = useIdleTimer({
+        timeoutMs: 30 * 60 * 1000,          // 30 menit inaktivitas total
+        warningThresholdMs: 2 * 60 * 1000,  // 2 menit peringatan
+        enabled: Boolean(user) && !isSessionLocked,
+        onIdle: () => {
+            lockSession("idle");
+        }
+    });
+
+    // Perpanjang sesi dengan request refresh ke backend
+    const handleExtendSession = async () => {
+        try {
+            const res = await api.post("/auth/refresh", { rememberMe: isRememberMeActive() });
+            if (res.data?.token && res.data?.user) {
+                login(res.data.user, res.data.token, isRememberMeActive());
+            }
+            resetIdleTimer();
+            toast.success("Sesi Anda berhasil diperpanjang!");
+        } catch {
+            resetIdleTimer();
+        }
+    };
 
     function handleGlobalScan(decodedText) {
         setIsScannerOpen(false);
@@ -269,9 +310,10 @@ export default function Layout({ children }) {
         });
     }, [location.pathname, navGroups]);
 
-    function handleLogout() {
+    function handleLogout(reason) {
         logout();
-        navigate("/login");
+        const search = reason ? `?reason=${reason}` : "";
+        navigate(`/login${search}`);
     }
 
     return (
@@ -665,6 +707,25 @@ export default function Layout({ children }) {
                     />
                 </>
             )}
+
+            {/* Modal Peringatan Inaktivitas Sebelum Terkunci */}
+            <SessionWarningModal
+                isOpen={isIdleWarning && !isSessionLocked}
+                remainingSeconds={idleRemainingSeconds}
+                onExtend={handleExtendSession}
+                onLockNow={() => lockSession("idle")}
+            />
+
+            {/* In-App Re-login Modal (Sesi Kedaluwarsa / Sesi Terkunci) */}
+            <ReloginModal
+                isOpen={isSessionLocked}
+                reason={lockReason}
+                onSuccess={() => {
+                    unlockSession();
+                    resetIdleTimer();
+                }}
+                onLogout={() => handleLogout(lockReason)}
+            />
         </div>
     );
 }
