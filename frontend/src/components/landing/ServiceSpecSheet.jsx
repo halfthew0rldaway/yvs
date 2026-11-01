@@ -100,7 +100,7 @@ export default function ServiceSpecSheet() {
                     <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
                         Solusi Perbaikan Spesialis Berdasarkan Kebutuhan Anda
                     </h2>
-                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-left">
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-justify [text-justify:inter-word]">
                         Setiap tindakan perbaikan memiliki cakupan teknis yang jelas, estimasi waktu penyelesaian (SLA), dan jaminan sertifikat garansi resmi.
                     </p>
                 </div>
@@ -160,7 +160,7 @@ export default function ServiceSpecSheet() {
                                                     {cap.title}
                                                 </h3>
 
-                                                <p className="text-sm text-slate-600 leading-relaxed font-sans text-left">
+                                                <p className="text-sm text-slate-600 leading-relaxed font-sans text-justify [text-justify:inter-word]">
                                                     {cap.scope}
                                                 </p>
 

@@ -43,7 +43,7 @@ export default function WorkshopLocation() {
                     <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
                         Lokasi Workshop dan Jadwal Pelayanan
                     </h2>
-                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-left">
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-justify [text-justify:inter-word]">
                         Kunjungi workshop kami langsung di Pekayon Bekasi untuk konsultasi tatap muka, pengecekan gratis di depan Anda, atau kirimkan perangkat Anda secara aman melalui kurir instan / ekspedisi.
                     </p>
                 </div>
@@ -133,7 +133,7 @@ export default function WorkshopLocation() {
                                 </span>
                             </div>
 
-                            <p className="text-xs text-slate-500 leading-relaxed font-sans pt-1 text-left">
+                            <p className="text-xs text-slate-500 leading-relaxed font-sans pt-1 text-justify [text-justify:inter-word]">
                                 Kirim unit via kurir instan (Gojek / Grab Express) atau kargo (JNE / J&T) diterima setiap hari pada jam operasional kerja dengan mencantumkan nama dan nomor WhatsApp aktif Anda.
                             </p>
                         </div>
@@ -149,7 +149,7 @@ export default function WorkshopLocation() {
                                 <h3 className="font-display font-bold text-xl sm:text-2xl text-slate-900">
                                     Hubungi Langsung Tim Teknisi YVS
                                 </h3>
-                                <p className="text-sm text-slate-600 leading-relaxed font-sans text-left">
+                                <p className="text-sm text-slate-600 leading-relaxed font-sans text-justify [text-justify:inter-word]">
                                     Konsultasikan masalah perangkat Anda sebelum datang. Kami siap membantu memperkirakan kemungkinan kerusakan (laptop mati total, layar gelap, overheat, engsel retak, upgrade komponen) secara transparan.
                                 </p>
                             </div>
