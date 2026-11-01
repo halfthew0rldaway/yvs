@@ -9,9 +9,13 @@ export default function WarrantyCertificateModal({
     tiket,
     customer: propCustomer,
     perangkat: propPerangkat,
-    invoice: propInvoice
+    invoice: propInvoice,
+    isCustomerView = false
 }) {
     if (!isOpen || !tiket) return null;
+
+    // Detect if rendered in customer tracking portal (auto-hide internal admin toggles)
+    const isPublicTracking = isCustomerView || (typeof window !== "undefined" && window.location.pathname.startsWith("/tracking"));
 
     // Resolve customer info
     const customer = propCustomer || tiket.perangkat?.customer || {
@@ -75,6 +79,9 @@ export default function WarrantyCertificateModal({
             return true;
         }
     });
+
+    // In customer tracking view, always enforce verified official digital signature & stamp
+    const effectiveIsDigital = isPublicTracking ? true : isDigitalSignature;
 
     const toggleDigitalSignature = () => {
         setIsDigitalSignature((prev) => {
@@ -147,10 +154,12 @@ export default function WarrantyCertificateModal({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 justify-end">
-                        <DigitalSignatureToggleBar
-                            isDigital={isDigitalSignature}
-                            onToggle={toggleDigitalSignature}
-                        />
+                        {!isPublicTracking && (
+                            <DigitalSignatureToggleBar
+                                isDigital={isDigitalSignature}
+                                onToggle={toggleDigitalSignature}
+                            />
+                        )}
                         <button
                             type="button"
                             onClick={handlePrint}
@@ -396,7 +405,7 @@ export default function WarrantyCertificateModal({
                                                 Penerima Garansi
                                             </p>
                                             <div className="h-14 print:h-11 w-full flex items-center justify-center">
-                                                {isDigitalSignature && tiket.invoice?.ttd_customer ? (
+                                                {effectiveIsDigital && tiket.invoice?.ttd_customer ? (
                                                     <img 
                                                         src={tiket.invoice.ttd_customer} 
                                                         alt="TTD Pelanggan" 
@@ -404,7 +413,7 @@ export default function WarrantyCertificateModal({
                                                     />
                                                 ) : (
                                                     <span className="text-4xs print:text-[7px] text-slate-300 print:text-slate-200 italic select-none">
-                                                        {isDigitalSignature ? "[ Belum TTD ]" : "[ TTD Fisik ]"}
+                                                        {effectiveIsDigital ? "[ Belum TTD ]" : "[ TTD Fisik ]"}
                                                     </span>
                                                 )}
                                             </div>
@@ -423,7 +432,7 @@ export default function WarrantyCertificateModal({
                                                 Petugas Workshop
                                             </p>
                                             <div className="h-14 print:h-11 w-full flex items-center justify-center">
-                                                {isDigitalSignature ? (
+                                                {effectiveIsDigital ? (
                                                     <img 
                                                         src={tiket.invoice?.ttd_admin || DEFAULT_WORKSHOP_SIGNATURE} 
                                                         alt="TTD Petugas" 

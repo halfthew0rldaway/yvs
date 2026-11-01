@@ -1602,6 +1602,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 isOpen={isWarrantyModalOpen}
                 onClose={() => setIsWarrantyModalOpen(false)}
                 tiket={t}
+                isCustomerView={true}
             />
 
             {/* Feature Sign-to-Unlock: Digital Signature Pad Modal */}
