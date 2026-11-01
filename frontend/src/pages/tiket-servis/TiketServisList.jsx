@@ -34,14 +34,14 @@ import TicketQrModal from "../../components/TicketQrModal";
 import CameraScannerModal from "../../components/CameraScannerModal";
 
 const STATUS_LABELS = {
-    diterima: { label: "Diterima", color: "bg-blue-100 text-blue-700 border-blue-200" },
-    didiagnosis: { label: "Didiagnosis", color: "bg-purple-100 text-purple-700 border-purple-200" },
-    menunggu_persetujuan: { label: "Menunggu Persetujuan", color: "bg-amber-100 text-amber-700 border-amber-200" },
-    disetujui: { label: "Disetujui", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-    dalam_perbaikan: { label: "Dalam Perbaikan", color: "bg-indigo-100 text-indigo-700 border-indigo-200" },
-    selesai: { label: "Selesai", color: "bg-green-100 text-green-700 border-green-200" },
-    diambil: { label: "Diambil", color: "bg-slate-100 text-slate-700 border-slate-200" },
-    dibatalkan: { label: "Dibatalkan", color: "bg-red-100 text-red-600 border-red-200" },
+    diterima: { label: "Diterima", color: "bg-blue-50 text-blue-700 border-blue-200", dotColor: "bg-blue-500" },
+    didiagnosis: { label: "Didiagnosis", color: "bg-purple-50 text-purple-700 border-purple-200", dotColor: "bg-purple-500" },
+    menunggu_persetujuan: { label: "Menunggu Persetujuan", color: "bg-amber-50 text-amber-700 border-amber-200", dotColor: "bg-amber-500" },
+    disetujui: { label: "Disetujui", color: "bg-emerald-50 text-emerald-700 border-emerald-200", dotColor: "bg-emerald-500" },
+    dalam_perbaikan: { label: "Dalam Perbaikan", color: "bg-indigo-50 text-indigo-700 border-indigo-200", dotColor: "bg-indigo-500" },
+    selesai: { label: "Selesai", color: "bg-emerald-50 text-emerald-700 border-emerald-200", dotColor: "bg-emerald-500" },
+    diambil: { label: "Diambil", color: "bg-slate-50 text-slate-700 border-slate-200", dotColor: "bg-slate-400" },
+    dibatalkan: { label: "Dibatalkan", color: "bg-rose-50 text-rose-600 border-rose-200", dotColor: "bg-rose-500" },
 };
 
 // Memoized Table Row Component
@@ -54,7 +54,7 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
             }}
             className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
         >
-            <td className="px-6 py-4 font-mono font-bold text-slate-700">
+            <td className="px-6 py-3.5 align-middle font-mono font-bold text-slate-700">
                 <div className="flex items-center gap-2">
                     <span>{tiket.nomor_tiket}</span>
                     <button
@@ -67,8 +67,8 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
                     </button>
                 </div>
             </td>
-            <td className="px-6 py-4 text-slate-600 font-medium">
-                <div className="flex items-center gap-1.5">
+            <td className="px-6 py-3.5 align-middle text-slate-600 font-medium">
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
                     <span>
                         {tiket.created_at
@@ -81,60 +81,61 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
                     </span>
                 </div>
             </td>
-            <td className="px-6 py-4 font-medium text-slate-900">
+            <td className="px-6 py-3.5 align-middle font-medium text-slate-900">
                 <span className="truncate max-w-[180px] block" title={tiket.perangkat?.customer?.nama || "-"}>
                     {tiket.perangkat?.customer?.nama || "-"}
                 </span>
             </td>
-            <td className="px-6 py-4 text-slate-600">
-                <div className="flex items-center gap-1.5 flex-wrap">
+            <td className="px-6 py-3.5 align-middle text-slate-600">
+                <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
                     <span className="truncate max-w-[200px]" title={`${tiket.perangkat?.merek || ""} ${tiket.perangkat?.model || ""}`}>
                         {tiket.perangkat?.merek} {tiket.perangkat?.model}
                     </span>
                     {tiket.defect_map?.items?.length > 0 && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-semibold bg-amber-50 text-amber-700 border border-amber-200" title={`${tiket.defect_map.items.length} cacat fisik tercatat`}>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0" title={`${tiket.defect_map.items.length} cacat fisik tercatat`}>
                             <Laptop className="w-2.5 h-2.5" />
                             {tiket.defect_map.items.length} Defek
                         </span>
                     )}
                 </div>
             </td>
-            <td className="px-6 py-4">
+            <td className="px-6 py-3.5 align-middle">
                 <SlaBadge tiket={tiket} />
             </td>
-            <td className="px-6 py-4 text-slate-600">{tiket.teknisi?.nama || "-"}</td>
-            <td className="px-6 py-4">
-                <div className="flex flex-wrap items-center gap-1.5">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_LABELS[tiket.status]?.color || "bg-slate-100 text-slate-600 border-slate-200"}`}>
-                        {STATUS_LABELS[tiket.status]?.label || tiket.status}
+            <td className="px-6 py-3.5 align-middle text-slate-600 font-medium whitespace-nowrap">{tiket.teknisi?.nama || "-"}</td>
+            <td className="px-6 py-3.5 align-middle">
+                <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap select-none">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold border ${STATUS_LABELS[tiket.status]?.color || "bg-slate-100 text-slate-600 border-slate-200"} shrink-0`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_LABELS[tiket.status]?.dotColor || 'bg-current'} shrink-0`} />
+                        <span>{STATUS_LABELS[tiket.status]?.label || tiket.status}</span>
                     </span>
                     {tiket.is_garansi_claim && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title={`Klaim Garansi Retur dari #${tiket.parent_tiket?.nomor_tiket || 'Lama'}`}>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0" title={`Klaim Garansi Retur dari #${tiket.parent_tiket?.nomor_tiket || 'Lama'}`}>
                             <ShieldCheck className="w-3 h-3 text-indigo-600" />
-                            Klaim Garansi
-                        </span>
-                    )}
-                    {tiket.is_revisi_acc && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-rose-50 text-rose-700 border border-rose-200" title={`Pernah 1x Revisi ACC: ${tiket.alasan_revisi_acc || '-'}`}>
-                            <RotateCcw className="w-3 h-3 text-rose-600" />
-                            Revisi ACC
+                            <span>Garansi</span>
                         </span>
                     )}
                     {tiket.checklist_qc?.passed_qc && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Telah Lulus QC">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0" title="Telah Lulus Quality Control (QC)">
                             <Award className="w-3 h-3 text-emerald-600" />
-                            QC
+                            <span>QC</span>
+                        </span>
+                    )}
+                    {tiket.is_revisi_acc && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-rose-50 text-rose-700 border border-rose-200 shrink-0" title={`Pernah 1x Revisi ACC: ${tiket.alasan_revisi_acc || '-'}`}>
+                            <RotateCcw className="w-3 h-3 text-rose-600" />
+                            <span>Revisi</span>
                         </span>
                     )}
                     {tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-300" title={`Garansi tersisa ${tiket.warranty_status.sisaHari} hari`}>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0" title={`Masa Garansi Tersisa ${tiket.warranty_status.sisaHari} Hari`}>
                             <Clock className="w-3 h-3 text-amber-700" />
-                            H-{tiket.warranty_status.sisaHari}
+                            <span>H-{tiket.warranty_status.sisaHari}</span>
                         </span>
                     )}
                 </div>
             </td>
-            <td className="px-6 py-4 text-right">
+            <td className="px-6 py-3.5 align-middle text-right">
                 <div className="flex items-center justify-end">
                     <Link
                         to={`/tiket-servis/${tiket.id}`}

@@ -83,10 +83,85 @@ export const SLA_PENGERJAAN_PACKAGES = [
 // Fallback compatibility
 export const SLA_PACKAGES = SLA_PENGECEKAN_PACKAGES;
 
+// Helper to abbreviate verbose duration strings (e.g. "2 hari 14 jam" -> "2h 14j", "45 menit" -> "45m")
+export function formatShortDuration(val) {
+    if (typeof val === "number") {
+        const absMs = Math.abs(val);
+        const diffHours = Math.floor(absMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((absMs % (1000 * 60 * 60)) / (1000 * 60));
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffDays > 0) return `${diffDays}h ${diffHours % 24}j`;
+        if (diffHours > 0) return `${diffHours}j ${diffMins}m`;
+        return `${diffMins}m`;
+    }
+    if (typeof val === "string") {
+        return val
+            .replace(/\s*hari\s*/gi, "h ")
+            .replace(/\s*jam\s*/gi, "j ")
+            .replace(/\s*(?:menit|mnt)\s*/gi, "m ")
+            .replace(/\s*detik\s*/gi, "d")
+            .trim();
+    }
+    return "";
+}
+
+// Normalizer to guarantee consistent short labels, percent, urgency, and tooltips
+function normalizeSlaResult(sla, tiket) {
+    if (!sla) return null;
+
+    const shortDur = formatShortDuration(sla.time_text || "");
+    const isPaused = Boolean(sla.is_paused || sla.urgency === "paused");
+    const isOverdue = Boolean(sla.is_overdue || sla.urgency === "danger");
+    const activePhase = sla.active_phase || "pengecekan";
+
+    let shortStatusLabel = "";
+    let phasePrefix = activePhase === "pengecekan" ? "Cek" : "Servis";
+
+    if (sla.urgency === "completed") {
+        shortStatusLabel = sla.completed_on_time ? "Tepat Waktu" : `Lewat ${shortDur}`;
+    } else if (isPaused) {
+        shortStatusLabel = "Menunggu ACC";
+    } else if (isOverdue) {
+        shortStatusLabel = activePhase === "pengecekan" 
+            ? `Cek • Lewat ${shortDur}` 
+            : `Lewat ${shortDur}`;
+    } else if (sla.urgency === "warning") {
+        shortStatusLabel = activePhase === "pengecekan" 
+            ? `Cek • Sisa ${shortDur}` 
+            : `Sisa ${shortDur}`;
+    } else {
+        shortStatusLabel = activePhase === "pengecekan" 
+            ? `Cek • Sisa ${shortDur}` 
+            : `Sisa ${shortDur}`;
+    }
+
+    const pkgName = sla.sla_paket === "express" ? "Express" : (sla.sla_paket === "kompleks" ? "Kompleks" : "Reguler");
+    const tooltipLabel = [
+        `Paket SLA: ${pkgName}`,
+        sla.phase_label ? `Fase: ${sla.phase_label}` : null,
+        sla.status_label ? `Status: ${sla.status_label}` : null,
+        sla.target_selesai_at ? `Target Selesai: ${new Date(sla.target_selesai_at).toLocaleString("id-ID")}` : null,
+        sla.target_pengecekan_at ? `Target Cek: ${new Date(sla.target_pengecekan_at).toLocaleString("id-ID")}` : null
+    ].filter(Boolean).join("\n");
+
+    return {
+        ...sla,
+        short_duration: shortDur,
+        short_status_label: shortStatusLabel,
+        compact_label: shortStatusLabel,
+        tooltip_label: tooltipLabel,
+        is_paused: isPaused,
+        is_overdue: isOverdue,
+    };
+}
+
 // Helper client-side calculate if backend sla_status not available
 export function computeClientSla(tiket) {
     if (!tiket) return null;
-    if (tiket.sla_status) return tiket.sla_status;
+    if (tiket.sla_status) {
+        return normalizeSlaResult(tiket.sla_status, tiket);
+    }
 
     const slaPaket = (tiket.sla_paket || "reguler").toLowerCase();
     const pkgCek = SLA_PENGECEKAN_PACKAGES.find(p => p.id === slaPaket) || SLA_PENGECEKAN_PACKAGES[1];
@@ -202,7 +277,7 @@ export function computeClientSla(tiket) {
         percentElapsed = 0;
     }
 
-    return {
+    const rawResult = {
         sla_paket: slaPaket,
         active_phase: activePhase,
         phase_label: phaseLabel,
@@ -237,87 +312,125 @@ export function computeClientSla(tiket) {
                     : (targetSelesaiAt && now > targetSelesaiAt ? `Lewat Estimasi Servis (${formatDuration(now - targetSelesaiAt)})` : `Estimasi Servis ${formatDuration(targetSelesaiAt - now)} tersisa`)
         }
     };
+
+    return normalizeSlaResult(rawResult, tiket);
 }
 
-// Compact Badge for Table Rows
+// Circular SVG Progress Ring Gauge (Replaces heavy underline bar with modern Linear/Apple style ring)
+export function SlaProgressRing({ percent = 0, urgency = "normal", isOverdue = false, isPaused = false, size = 15 }) {
+    const strokeWidth = 2.2;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const clampedPercent = Math.min(Math.max(percent || 0, 0), 100);
+    const strokeDashoffset = circumference - (clampedPercent / 100) * circumference;
+
+    let strokeColor = "stroke-blue-500";
+    let bgColor = "stroke-slate-200";
+
+    if (urgency === "completed") {
+        strokeColor = "stroke-emerald-500";
+        bgColor = "stroke-emerald-100";
+    } else if (isPaused) {
+        strokeColor = "stroke-amber-400";
+        bgColor = "stroke-amber-100";
+    } else if (isOverdue || urgency === "danger") {
+        strokeColor = "stroke-rose-500";
+        bgColor = "stroke-rose-100";
+    } else if (urgency === "warning") {
+        strokeColor = "stroke-amber-500";
+        bgColor = "stroke-amber-100";
+    }
+
+    return (
+        <span className="relative inline-flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+            <svg className="w-full h-full -rotate-90 transform" viewBox={`0 0 ${size} ${size}`}>
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    className={`${bgColor} fill-none`}
+                    strokeWidth={strokeWidth}
+                />
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    className={`${strokeColor} fill-none transition-all duration-300`}
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={circumference}
+                    strokeDashoffset={isOverdue ? 0 : strokeDashoffset}
+                    strokeLinecap="round"
+                />
+            </svg>
+            {isOverdue ? (
+                <span className="absolute w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse" />
+            ) : isPaused ? (
+                <span className="absolute w-1 h-1.5 border-x border-amber-600" />
+            ) : null}
+        </span>
+    );
+}
+
+// Compact, Single-Line SLA Badge for Table Rows & Lists
 export default function SlaBadge({ tiket, className = "" }) {
     const sla = computeClientSla(tiket);
     if (!sla) return null;
 
     const isExpress = sla.sla_paket === "express";
+    const isKompleks = sla.sla_paket === "kompleks";
     const isPaused = sla.is_paused || sla.urgency === "paused";
     const isOverdue = sla.is_overdue;
 
     let urgencyStyle = "bg-slate-50 text-slate-700 border-slate-200";
-    let DotIcon = Clock;
 
     if (sla.urgency === "completed") {
         urgencyStyle = sla.completed_on_time 
-            ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium" 
-            : "bg-slate-100 text-slate-600 border-slate-200";
-        DotIcon = CheckCircle2;
+            ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold" 
+            : "bg-slate-100 text-slate-600 border-slate-200 font-medium";
     } else if (isPaused) {
-        urgencyStyle = "bg-amber-50 text-amber-800 border-amber-300 font-medium";
-        DotIcon = Pause;
+        urgencyStyle = "bg-amber-50 text-amber-800 border-amber-200 font-medium";
     } else if (sla.urgency === "danger" || isOverdue) {
         urgencyStyle = "bg-rose-50 text-rose-700 border-rose-200 font-semibold";
-        DotIcon = ShieldAlert;
     } else if (sla.urgency === "warning") {
         urgencyStyle = "bg-amber-50 text-amber-800 border-amber-200 font-medium";
-        DotIcon = AlertTriangle;
     } else if (sla.active_phase === "pengecekan") {
         urgencyStyle = "bg-blue-50 text-blue-700 border-blue-200 font-medium";
-        DotIcon = Search;
-    } else if (isExpress) {
-        urgencyStyle = "bg-amber-50 text-amber-800 border-amber-200 font-medium";
-        DotIcon = Zap;
+    } else {
+        urgencyStyle = "bg-indigo-50 text-indigo-700 border-indigo-200 font-medium";
     }
 
     return (
-        <div className={`inline-flex flex-col gap-1 items-start ${className}`}>
-            <div className="flex items-center gap-1.5 flex-wrap">
-                {/* SLA Package Pill */}
-                {isExpress ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                        <Zap className="w-2.5 h-2.5 text-amber-600 fill-amber-500" />
-                        <span>Express</span>
-                    </span>
-                ) : sla.sla_paket === "kompleks" ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                        <span>Kompleks</span>
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                        <span>Reguler</span>
-                    </span>
-                )}
-
-                {/* Dual-Phase Urgency Pill */}
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs border ${urgencyStyle}`}>
-                    <DotIcon className="w-3 h-3 flex-shrink-0" />
-                    <span>{sla.status_label}</span>
+        <div 
+            className={`inline-flex items-center gap-1.5 flex-nowrap whitespace-nowrap select-none ${className}`}
+            title={sla.tooltip_label || sla.status_label}
+        >
+            {/* SLA Package Pill */}
+            {isExpress ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-amber-500/10 text-amber-700 border border-amber-300/80 shrink-0">
+                    <Zap className="w-2.5 h-2.5 text-amber-600 fill-amber-500" />
+                    <span>Express</span>
                 </span>
-            </div>
-
-            {/* Micro Progress bar for active tickets */}
-            {!["selesai", "diambil", "dibatalkan"].includes(tiket.status) && (
-                <div className="w-full min-w-[90px] h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
-                    <div 
-                        className={`h-full transition-all rounded-full ${
-                            isPaused
-                                ? "bg-amber-400 opacity-60"
-                                : isOverdue 
-                                    ? "bg-rose-500" 
-                                    : sla.percent_elapsed >= 75 
-                                        ? "bg-amber-500" 
-                                        : sla.active_phase === "pengecekan"
-                                            ? "bg-blue-500"
-                                            : "bg-indigo-600"
-                        }`}
-                        style={{ width: `${Math.min(sla.percent_elapsed || 0, 100)}%` }}
-                    />
-                </div>
+            ) : isKompleks ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 shrink-0">
+                    <span>Kompleks</span>
+                </span>
+            ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                    <span>Reguler</span>
+                </span>
             )}
+
+            {/* SLA Countdown & Health Ring Pill */}
+            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs border ${urgencyStyle} shrink-0`}>
+                <SlaProgressRing 
+                    percent={sla.percent_elapsed} 
+                    urgency={sla.urgency} 
+                    isOverdue={isOverdue} 
+                    isPaused={isPaused} 
+                    size={14} 
+                />
+                <span className="tabular-nums tracking-tight">{sla.short_status_label}</span>
+            </span>
         </div>
     );
 }
