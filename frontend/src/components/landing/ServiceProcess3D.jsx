@@ -11,43 +11,43 @@ const getFrameSrc = (index) => {
 const STORY_STAGES = [
     {
         id: "intro",
-        range: [0.00, 0.12],
+        range: [0.00, 0.18],
         eyebrow: "KOMPUTERAWET.COM · YANGVERSA COMPUTER",
         shortEyebrow: "YVS COMPUTER · PEKAYON",
         title: "Teman Terpercaya Merawat & Memperbaiki Komputer Anda.",
-        body: "Pusat spesialis servis laptop, PC Desktop, dan MacBook di Pekayon, Bekasi. Fokus kami sederhana: solusi jujur, konsultasi transparan, dan pengerjaan yang rapi agar perangkat Anda awet digunakan.",
+        body: "Pusat spesialis servis laptop, PC Desktop, dan MacBook di Pekayon, Bekasi. Solusi jujur, konsultasi transparan, dan pengerjaan rapi agar perangkat Anda awet digunakan.",
         badge: "Buka Setiap Hari 09–18 WIB",
     },
     {
         id: "inspection",
-        range: [0.12, 0.25],
+        range: [0.18, 0.38],
         eyebrow: "TAHAP 01 · PEMERIKSAAN DETAIL",
         shortEyebrow: "TAHAP 01 · DIAGNOSIS DETAIL",
         title: "Pengecekan Tuntas, Estimasi Biaya Dulu Tanpa Paksaan.",
-        body: "Sebelum perbaikan dimulai, teknisi memeriksa akar masalah hingga ke level mikroskopis dan menjelaskan secara terbuka. Jika estimasi biaya tidak disetujui, perangkat bisa diambil kembali tanpa biaya cek.",
+        body: "Sebelum perbaikan dimulai, teknisi memeriksa akar masalah hingga ke level mikroskopis dan menjelaskan secara terbuka. Jika biaya tidak disetujui, unit dapat diambil tanpa biaya cek.",
         badge: "Bebas Biaya Cek",
     },
     {
         id: "hardware",
-        range: [0.25, 0.38],
+        range: [0.38, 0.60],
         eyebrow: "TAHAP 02 · PERBAIKAN & PENGGANTIAN SUKU CADANG",
         shortEyebrow: "TAHAP 02 · PERBAIKAN HARDWARE",
         title: "Dari Ganti Thermal Paste, Engsel, Hingga Masalah Motherboard.",
-        body: "Menangani laptop lemot, panas berlebih, engsel patah, layar pecah, mati total, hingga upgrade SSD dan RAM. Setiap part copotan atau bekas kami kembalikan utuh ke tangan Anda.",
+        body: "Menangani laptop lemot, panas berlebih, engsel patah, layar pecah, mati total, hingga upgrade SSD dan RAM. Setiap suku cadang copotan dikembalikan utuh ke tangan Anda.",
         badge: "Sparepart Transparan",
     },
     {
         id: "quality",
-        range: [0.38, 0.50],
+        range: [0.60, 0.82],
         eyebrow: "TAHAP 03 · PENGUJIAN STABILITAS & SUHU",
         shortEyebrow: "TAHAP 03 · UJI KESTABILAN & SUHU",
         title: "Dites Kestabilannya Sebelum Diserahkan Kembali.",
-        body: "Setiap unit dibersihkan dengan rapi dan diuji suhunya agar tidak lagi overheat atau sering hang saat dipakai bekerja. Kami pastikan perangkat benar-benar siap dan nyaman digunakan.",
+        body: "Setiap unit dibersihkan dengan rapi dan diuji suhunya agar tidak lagi overheat atau sering hang saat dipakai bekerja. Kami pastikan perangkat siap dan nyaman digunakan.",
         badge: "Pengujian Suhu & Stabilitas",
     },
     {
         id: "ready",
-        range: [0.50, 1.00],
+        range: [0.82, 1.00],
         eyebrow: "TAHAP 04 · SERAH TERIMA & GARANSI RESMI",
         shortEyebrow: "TAHAP 04 · SERAH TERIMA & GARANSI",
         title: "Pantau Progres Servis Kapan Saja, Disertai Garansi Jelas.",
@@ -259,24 +259,18 @@ export default function ServiceProcess3D({ onTrackClick }) {
             const dt = Math.min((time - lastTime) / 1000, 0.05);
             lastTime = time;
 
-            const VIDEO_COMPLETE_PROGRESS = 0.48;
+            // Spread all 240 frames across the storytelling timeline for buttery-smooth pacing
+            const VIDEO_COMPLETE_PROGRESS = 0.88;
             const rawVideoProgress = Math.min(1.0, targetProgress.current / VIDEO_COMPLETE_PROGRESS);
             const target = rawVideoProgress * (TOTAL_FRAMES - 1);
             const frameDiff = target - currentFrame.current;
 
-            if (Math.abs(frameDiff) > 0.005) {
-                // Adaptive lerp: fast catch-up when frameDiff is large, silky smooth on normal scroll
-                const baseLerp = 1 - Math.exp(-14.0 * dt);
-                const distanceRatio = Math.min(1.0, Math.abs(frameDiff) / 60);
-                const effectiveLerp = baseLerp + (1.0 - baseLerp) * (distanceRatio * 0.45);
-                let step = frameDiff * effectiveLerp;
-
-                const maxStep = 380 * dt;
-                if (Math.abs(step) > maxStep) {
-                    step = Math.sign(step) * maxStep;
-                }
-
-                currentFrame.current += step;
+            if (Math.abs(frameDiff) > 0.002) {
+                // Silky critically-damped spring follower without artificial clamp capping
+                const baseLerp = 1 - Math.exp(-22.0 * dt);
+                const distanceRatio = Math.min(1.0, Math.abs(frameDiff) / 40);
+                const effectiveLerp = baseLerp + (1.0 - baseLerp) * (distanceRatio * 0.35);
+                currentFrame.current += frameDiff * Math.min(1.0, effectiveLerp);
                 animFrameId.current = requestAnimationFrame(animate);
             } else {
                 currentFrame.current = target;
@@ -356,8 +350,8 @@ export default function ServiceProcess3D({ onTrackClick }) {
             observer.observe(container);
         }
 
-        // Progressive 3-Tier Image Hydration with Asynchronous Decoding
-        // Images are pre-decoded in the background thread (img.decode) so drawing to canvas never stutters
+        // High-Speed Concurrent Frame Streaming with Asynchronous Decoding
+        // Images are pre-decoded in parallel workers so canvas drawing never drops frames
         const loadFrameSequence = async () => {
             const loadAndDecode = async (index) => {
                 if (isCancelled || framesRef.current[index]) return framesRef.current[index];
@@ -386,7 +380,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 return null;
             };
 
-            // Tier 1: Instant First Frame
+            // Phase 1: Instant First Frame for fastest First Contentful Paint
             const firstImg = await loadAndDecode(0);
             if (isCancelled) return;
             if (firstImg) {
@@ -394,71 +388,52 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 lastRenderedFrame.current = 0;
             }
             setIsInitialReady(true);
-            setLoadProgress(3);
+            setLoadProgress(4);
             wakeLoop();
 
-            // Tier 2: Sparse Keyframe Skeleton (Every 4th frame)
-            // 59 keyframes load fast in parallel batches, giving immediate scrubbable disassembly in ~1s
-            const KEYFRAME_INTERVAL = 4;
-            const keyframeIndices = [];
-            for (let i = KEYFRAME_INTERVAL; i < TOTAL_FRAMES; i += KEYFRAME_INTERVAL) {
-                keyframeIndices.push(i);
+            // Phase 2: Instant Burst for first 16 frames
+            let loadedCount = 1;
+            const initialBurst = [];
+            for (let i = 1; i < Math.min(16, TOTAL_FRAMES); i++) {
+                initialBurst.push(i);
+            }
+            await Promise.all(
+                initialBurst.map(async (idx) => {
+                    const img = await loadAndDecode(idx);
+                    if (img) loadedCount++;
+                })
+            );
+            if (isCancelled) return;
+            setLoadProgress(Math.min(100, Math.round((loadedCount / TOTAL_FRAMES) * 100)));
+
+            // Phase 3: High-throughput Concurrent Stream for all remaining frames
+            // Concurrency of 16 downloads & decodes all 240 frames in parallel under ~400ms
+            const remainingIndices = [];
+            for (let i = 16; i < TOTAL_FRAMES; i++) {
+                remainingIndices.push(i);
             }
 
-            let loadedCount = 1;
-            const updateProgress = () => {
-                setLoadProgress(Math.min(100, Math.round((loadedCount / TOTAL_FRAMES) * 100)));
+            let currentIndex = 0;
+            const CONCURRENCY = 16;
+
+            const worker = async () => {
+                while (currentIndex < remainingIndices.length && !isCancelled) {
+                    const targetIdx = remainingIndices[currentIndex++];
+                    if (targetIdx === undefined) break;
+
+                    const img = await loadAndDecode(targetIdx);
+                    if (img && !isCancelled) {
+                        loadedCount++;
+                        setLoadProgress(Math.min(100, Math.round((loadedCount / TOTAL_FRAMES) * 100)));
+                        if (Math.round(currentFrame.current) === targetIdx) {
+                            wakeLoop();
+                        }
+                    }
+                }
             };
 
-            const BATCH_SIZE_KEYFRAMES = 8;
-            for (let b = 0; b < keyframeIndices.length; b += BATCH_SIZE_KEYFRAMES) {
-                if (isCancelled) return;
-                const batch = keyframeIndices.slice(b, b + BATCH_SIZE_KEYFRAMES);
-                await Promise.all(
-                    batch.map(async (idx) => {
-                        const img = await loadAndDecode(idx);
-                        if (img) {
-                            loadedCount++;
-                            updateProgress();
-                            if (lastRenderedFrame.current === idx) {
-                                drawFrame(idx);
-                            }
-                        }
-                    })
-                );
-            }
-
-            // Tier 3: Fill Remaining Intermediate Frames in Background
-            // Uses requestIdleCallback so the main UI thread stays 100% responsive
-            const remainingIndices = [];
-            for (let i = 1; i < TOTAL_FRAMES; i++) {
-                if (i % KEYFRAME_INTERVAL !== 0) {
-                    remainingIndices.push(i);
-                }
-            }
-
-            const BATCH_SIZE_REMAINING = 6;
-            for (let b = 0; b < remainingIndices.length; b += BATCH_SIZE_REMAINING) {
-                if (isCancelled) return;
-                const batch = remainingIndices.slice(b, b + BATCH_SIZE_REMAINING);
-                await Promise.all(
-                    batch.map(async (idx) => {
-                        const img = await loadAndDecode(idx);
-                        if (img) {
-                            loadedCount++;
-                            updateProgress();
-                        }
-                    })
-                );
-
-                await new Promise((resolve) => {
-                    if (window.requestIdleCallback) {
-                        window.requestIdleCallback(resolve, { timeout: 100 });
-                    } else {
-                        setTimeout(resolve, 16);
-                    }
-                });
-            }
+            const workers = Array.from({ length: CONCURRENCY }, () => worker());
+            await Promise.all(workers);
         };
 
         loadFrameSequence();
@@ -553,7 +528,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                             </h1>
 
                             {/* Dynamic Stage Description */}
-                            <p className="font-sans text-slate-600 text-xs sm:text-sm lg:text-base leading-relaxed text-left sm:text-justify [text-justify:inter-word]">
+                            <p className="font-sans text-slate-600 text-xs sm:text-sm lg:text-base leading-relaxed text-left">
                                 {currentStage.body}
                             </p>
 
@@ -562,20 +537,20 @@ export default function ServiceProcess3D({ onTrackClick }) {
                                 <button
                                     type="button"
                                     onClick={onTrackClick}
-                                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans font-semibold text-sm transition-all shadow-sm shadow-blue-500/20 cursor-pointer"
+                                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-sans font-semibold text-sm transition-all shadow-sm shadow-blue-500/20 cursor-pointer whitespace-nowrap shrink-0 w-fit max-w-max"
                                 >
-                                    <Search className="w-4 h-4" />
-                                    <span>Lacak Status Servis</span>
+                                    <Search className="w-4 h-4 shrink-0" />
+                                    <span className="whitespace-nowrap">Lacak Status Servis</span>
                                 </button>
 
                                 <a
                                     href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/95 hover:bg-white text-slate-700 border border-slate-200 font-sans font-medium text-sm transition-all shadow-2xs hover:border-slate-300"
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/95 hover:bg-white text-slate-700 border border-slate-200 font-sans font-medium text-sm transition-all shadow-2xs hover:border-slate-300 whitespace-nowrap shrink-0 w-fit max-w-max"
                                 >
-                                    <MessageCircle className="w-4 h-4 text-emerald-600" />
-                                    <span>Konsultasi WA</span>
+                                    <MessageCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                                    <span className="whitespace-nowrap">Konsultasi WA</span>
                                 </a>
                             </div>
                         </div>
@@ -629,10 +604,10 @@ export default function ServiceProcess3D({ onTrackClick }) {
 
                             {/* Badge Pill */}
                             <div className="flex items-center justify-between gap-2">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 font-mono text-3xs font-bold tracking-wider uppercase">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 font-mono text-3xs font-bold tracking-wider uppercase whitespace-nowrap shrink-0 w-fit max-w-max">
                                     ✦ {currentStage.badge}
                                 </span>
-                                <span className="text-3xs font-mono text-slate-400">
+                                <span className="text-3xs font-mono text-slate-400 whitespace-nowrap shrink-0">
                                     Swipe scroll ↓
                                 </span>
                             </div>
@@ -652,20 +627,20 @@ export default function ServiceProcess3D({ onTrackClick }) {
                                 <button
                                     type="button"
                                     onClick={onTrackClick}
-                                    className="flex-1 py-2.5 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer min-h-[40px] transition-all"
+                                    className="flex-1 py-2.5 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer min-h-[40px] transition-all whitespace-nowrap shrink-0 w-fit"
                                 >
                                     <Search className="w-3.5 h-3.5 shrink-0" />
-                                    <span>Lacak Status Servis</span>
+                                    <span className="whitespace-nowrap">Lacak Status Servis</span>
                                 </button>
                                 <a
                                     href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="py-2.5 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-98 text-emerald-700 border border-emerald-200 font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs min-h-[40px] transition-all shrink-0"
+                                    className="py-2.5 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-98 text-emerald-700 border border-emerald-200 font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs min-h-[40px] transition-all whitespace-nowrap shrink-0 w-fit max-w-max"
                                     title="Konsultasi WhatsApp"
                                 >
                                     <MessageCircle className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
-                                    <span>WA CS</span>
+                                    <span className="whitespace-nowrap">WA CS</span>
                                 </a>
                             </div>
                         </div>

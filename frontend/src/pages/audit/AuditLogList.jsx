@@ -231,21 +231,21 @@ export default function AuditLogList() {
                         type="button"
                         onClick={fetchLogs}
                         disabled={loading}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition-colors shadow-2xs cursor-pointer whitespace-nowrap shrink-0 w-fit max-w-max"
                         title="Segarkan Log"
                     >
-                        <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? "animate-spin" : ""}`} />
-                        <span>Segarkan</span>
+                        <RefreshCw className={`w-3.5 h-3.5 text-slate-500 shrink-0 ${loading ? "animate-spin" : ""}`} />
+                        <span className="whitespace-nowrap">Segarkan</span>
                     </button>
                     <button
                         type="button"
                         onClick={handleExportExcel}
                         disabled={isExporting || totalItems === 0}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0 w-fit max-w-max"
                         title="Unduh Laporan Audit ke Excel (.xlsx)"
                     >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>{isExporting ? "Mengekspor..." : "Ekspor Excel"}</span>
+                        <Download className="w-3.5 h-3.5 shrink-0" />
+                        <span className="whitespace-nowrap">{isExporting ? "Mengekspor..." : "Ekspor Excel"}</span>
                     </button>
                 </div>
             </div>
@@ -458,13 +458,13 @@ export default function AuditLogList() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-3.5">
-                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${entityInfo.color}`}>
-                                                <Icon className="w-3 h-3" />
-                                                <span>{entityInfo.label}</span>
+                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${entityInfo.color} whitespace-nowrap shrink-0 w-fit max-w-max`}>
+                                                <Icon className="w-3 h-3 shrink-0" />
+                                                <span className="whitespace-nowrap">{entityInfo.label}</span>
                                             </span>
                                         </td>
                                         <td className="px-6 py-3.5 text-slate-800 text-xs font-medium max-w-xl truncate">
-                                            <span title={log.action}>
+                                            <span className="truncate block" title={log.action}>
                                                 {log.action}
                                             </span>
                                         </td>

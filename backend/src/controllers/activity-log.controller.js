@@ -20,7 +20,7 @@ async function getAll(req, res) {
         }
 
         if (entity && entity !== "all") {
-            andConditions.push({ entity: { equals: entity } });
+            andConditions.push({ entity: { equals: entity.toLowerCase() } });
         }
 
         if (startDate || endDate) {

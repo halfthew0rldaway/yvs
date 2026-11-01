@@ -355,13 +355,13 @@ export default function TiketServisList() {
                     <p className="text-xs sm:text-sm text-slate-500 mt-1">Kelola tiket perbaikan perangkat pelanggan</p>
                 </div>
                 {isAdmin && (
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 shrink-0">
                         <Link
                             to="/tiket-servis/tambah"
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm shrink-0"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm shrink-0 whitespace-nowrap w-fit max-w-max"
                         >
-                            <Plus className="w-4 h-4" />
-                            <span>Buat Tiket</span>
+                            <Plus className="w-4 h-4 shrink-0" />
+                            <span className="whitespace-nowrap">Buat Tiket</span>
                         </Link>
                     </div>
                 )}
@@ -400,27 +400,27 @@ export default function TiketServisList() {
                         <button
                             type="button"
                             onClick={() => setIsScannerOpen(true)}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap w-fit max-w-max"
                             title="Pindai QR Fisik Tiket dengan Kamera"
                         >
-                            <Camera className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Scan QR</span>
+                            <Camera className="w-3.5 h-3.5 shrink-0" />
+                            <span className="hidden sm:inline whitespace-nowrap">Scan QR</span>
                         </button>
                     </div>
 
                     {/* Sorting Button */}
-                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
                         <button
                             type="button"
                             onClick={() => {
                                 setSortOrder(prev => prev === "desc" ? "asc" : "desc");
                                 setCurrentPage(1);
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap shrink-0 w-fit max-w-max"
                             title="Urutkan Waktu Pendaftaran"
                         >
-                            <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
-                            <span>{sortOrder === "desc" ? "Terbaru" : "Terlama"}</span>
+                            <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                            <span className="whitespace-nowrap">{sortOrder === "desc" ? "Terbaru" : "Terlama"}</span>
                         </button>
                     </div>
                 </div>
@@ -440,7 +440,7 @@ export default function TiketServisList() {
                                     setFilter("");
                                     setCurrentPage(1);
                                 }}
-                                className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                                     !filter 
                                         ? "bg-blue-600 text-white shadow-xs font-bold" 
                                         : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
@@ -454,7 +454,7 @@ export default function TiketServisList() {
                                     setFilter("aktif");
                                     setCurrentPage(1);
                                 }}
-                                className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                                     filter === "aktif" 
                                         ? "bg-amber-600 text-white shadow-xs font-bold" 
                                         : "bg-white text-amber-700 hover:bg-amber-50 border border-amber-200"
@@ -473,7 +473,7 @@ export default function TiketServisList() {
                                             setFilter(key);
                                             setCurrentPage(1);
                                         }}
-                                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                                             isActive 
                                                 ? "bg-blue-600 text-white shadow-xs font-bold" 
                                                 : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
@@ -508,15 +508,15 @@ export default function TiketServisList() {
                                         setSlaFilter(slaFilter === "express" ? "" : "express");
                                         setCurrentPage(1);
                                     }}
-                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                                         slaFilter === "express" 
                                             ? "bg-amber-500 text-white shadow-xs font-bold" 
                                             : "bg-white text-amber-800 hover:bg-amber-50 border border-amber-300"
                                     }`}
                                 >
-                                    <Zap className={`w-3.5 h-3.5 ${slaFilter === "express" ? "text-white fill-white" : "text-amber-500 fill-amber-500"}`} />
-                                    <span>Express Queue</span>
-                                    <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold ${
+                                    <Zap className={`w-3.5 h-3.5 shrink-0 ${slaFilter === "express" ? "text-white fill-white" : "text-amber-500 fill-amber-500"}`} />
+                                    <span className="whitespace-nowrap">Express Queue</span>
+                                    <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold whitespace-nowrap ${
                                         slaFilter === "express" ? "bg-amber-600 text-white" : "bg-amber-100 text-amber-700"
                                     }`}>
                                         {expressCount}
@@ -530,15 +530,15 @@ export default function TiketServisList() {
                                         setSlaFilter(slaFilter === "overdue" ? "" : "overdue");
                                         setCurrentPage(1);
                                     }}
-                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                                         slaFilter === "overdue" 
                                             ? "bg-rose-600 text-white shadow-xs font-bold" 
                                             : "bg-white text-rose-700 hover:bg-rose-50 border border-rose-200"
                                     }`}
                                 >
-                                    <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
-                                    <span>Overdue SLA</span>
-                                    <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold ${
+                                    <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                    <span className="whitespace-nowrap">Overdue SLA</span>
+                                    <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold whitespace-nowrap ${
                                         slaFilter === "overdue" ? "bg-rose-700 text-white" : "bg-rose-100 text-rose-700"
                                     }`}>
                                         {overdueCount}
@@ -554,15 +554,15 @@ export default function TiketServisList() {
                                             setSlaFilter("");
                                             setCurrentPage(1);
                                         }}
-                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                                             filter === "garansi_expiring" 
                                                 ? "bg-amber-600 text-white shadow-xs font-bold" 
                                                 : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
                                         }`}
                                     >
-                                        <Clock className="w-3.5 h-3.5 text-amber-600" />
-                                        <span>Garansi H-3 CRM</span>
-                                        <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold ${
+                                        <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                        <span className="whitespace-nowrap">Garansi H-3 CRM</span>
+                                        <span className={`text-3xs px-1.5 py-0.2 rounded-full font-bold whitespace-nowrap ${
                                             filter === "garansi_expiring" ? "bg-amber-700 text-white" : "bg-amber-100 text-amber-800"
                                         }`}>
                                             {expiringWarrantyCount}

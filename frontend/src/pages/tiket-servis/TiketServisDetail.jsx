@@ -1057,10 +1057,10 @@ export default function TiketServisDetail() {
                         <button
                             type="button"
                             onClick={() => handleOpenStatusModal("dalam_perbaikan")}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-indigo-600/20 shrink-0 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-indigo-600/20 shrink-0 cursor-pointer whitespace-nowrap w-fit max-w-max"
                         >
-                            <Play className="w-4 h-4" />
-                            <span>Mulai Perbaikan Unit</span>
+                            <Play className="w-4 h-4 shrink-0" />
+                            <span className="whitespace-nowrap">Mulai Perbaikan Unit</span>
                         </button>
                     )}
 
@@ -1069,10 +1069,10 @@ export default function TiketServisDetail() {
                         <button
                             type="button"
                             onClick={() => handleOpenStatusModal("selesai")}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-600/20 shrink-0 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-600/20 shrink-0 cursor-pointer whitespace-nowrap w-fit max-w-max"
                         >
-                            <Award className="w-4 h-4" />
-                            <span>Verifikasi QC & Selesaikan Servis</span>
+                            <Award className="w-4 h-4 shrink-0" />
+                            <span className="whitespace-nowrap">Verifikasi QC & Selesaikan Servis</span>
                         </button>
                     )}
 

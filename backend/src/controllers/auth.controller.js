@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
 const prisma = require("../config/database");
+const { recordActivity } = require("../services/activityLog.service");
 
 // Login
 async function login(req, res) {
@@ -28,6 +29,14 @@ async function login(req, res) {
             process.env.JWT_SECRET,
             { expiresIn }
         );
+
+        // Catat aktivitas login ke Audit Log
+        await recordActivity({
+            userId: user.id,
+            userNama: user.nama,
+            action: `Masuk ke dalam sistem (Login)${rememberMe ? " [Ingat Saya: Aktif]" : ""}`,
+            entity: "user"
+        });
 
         return res.json({
             message: "Login berhasil",
@@ -82,6 +91,14 @@ async function refreshSession(req, res) {
 
 // Logout (client-side, token dihapus di frontend)
 async function logout(req, res) {
+    if (req.user) {
+        await recordActivity({
+            userId: req.user.id,
+            userNama: req.user.nama || req.user.username || "Staff",
+            action: "Keluar dari sistem (Logout)",
+            entity: "user"
+        });
+    }
     return res.json({ message: "Logout berhasil" });
 }
 
@@ -145,6 +162,13 @@ async function updateProfile(req, res) {
             select: { id: true, nama: true, email: true, role: true, foto_profile: true }
         });
 
+        await recordActivity({
+            userId: req.user.id,
+            userNama: updatedUser.nama,
+            action: `Memperbarui profil akun (Nama: ${updatedUser.nama}, Email: ${updatedUser.email})`,
+            entity: "user"
+        });
+
         return res.json({ message: "Profil berhasil diperbarui", user: updatedUser });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan sistem", error: error.message });
@@ -178,6 +202,13 @@ async function uploadProfilePhoto(req, res) {
             select: { id: true, nama: true, email: true, role: true, foto_profile: true }
         });
 
+        await recordActivity({
+            userId: req.user.id,
+            userNama: updatedUser.nama,
+            action: "Memperbarui foto profil akun",
+            entity: "user"
+        });
+
         return res.json({
             message: "Foto profil berhasil diperbarui",
             foto_profile: newAvatarUrl,
@@ -206,6 +237,13 @@ async function removeProfilePhoto(req, res) {
             where: { id: userId },
             data: { foto_profile: null },
             select: { id: true, nama: true, email: true, role: true, foto_profile: true }
+        });
+
+        await recordActivity({
+            userId: req.user.id,
+            userNama: updatedUser.nama,
+            action: "Menghapus foto profil akun",
+            entity: "user"
         });
 
         return res.json({

@@ -35,7 +35,7 @@ export default function LandingFooter() {
                             </div>
                         </div>
 
-                        <p className="text-sm text-slate-600 leading-relaxed max-w-sm text-left sm:text-justify [text-justify:inter-word]">
+                        <p className="text-sm text-slate-600 leading-relaxed max-w-sm text-left">
                             Pusat spesialis servis laptop, MacBook, dan PC desktop di Pekayon, Bekasi. Mengedepankan pemeriksaan jujur, estimasi transparan tanpa paksaan, dan pengembalian utuh seluruh komponen lama.
                         </p>
 

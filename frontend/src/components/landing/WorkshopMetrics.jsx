@@ -150,7 +150,7 @@ export default function WorkshopMetrics() {
                                     Gratis Cek
                                 </span>
                             </div>
-                            <p className="text-3xs sm:text-xs font-sans text-slate-500 leading-normal text-left sm:text-justify [text-justify:inter-word]">
+                            <p className="text-3xs sm:text-xs font-sans text-slate-500 leading-normal text-left">
                                 Bebas biaya jika estimasi tidak disetujui, unit bisa langsung diambil kembali.
                             </p>
                         </div>
@@ -177,7 +177,7 @@ export default function WorkshopMetrics() {
                                     <AnimatedNumber to={100} suffix="%" /> Terbuka
                                 </span>
                             </div>
-                            <p className="text-3xs sm:text-xs font-sans text-slate-500 leading-normal text-left sm:text-justify [text-justify:inter-word]">
+                            <p className="text-3xs sm:text-xs font-sans text-slate-500 leading-normal text-left">
                                 Konfirmasi estimasi sebelum dikerjakan, tidak ada biaya siluman atau tak terduga.
                             </p>
                         </div>
@@ -203,11 +203,11 @@ export default function WorkshopMetrics() {
                                 <span className="font-display font-extrabold text-xl sm:text-2xl lg:text-[1.85rem] tracking-tight text-slate-900 leading-tight">
                                     Resmi Terbit
                                 </span>
-                                <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-3xs font-mono font-semibold">
+                                <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-3xs font-mono font-semibold whitespace-nowrap shrink-0">
                                     Digital QR
                                 </span>
                             </div>
-                            <p className="text-3xs sm:text-xs font-sans text-slate-500 leading-normal text-left sm:text-justify [text-justify:inter-word]">
+                            <p className="text-3xs sm:text-xs font-sans text-slate-500 leading-normal text-left">
                                 Nota fisik dan sertifikat garansi resmi otomatis tersimpan di sistem pelacakan.
                             </p>
                         </div>
@@ -219,14 +219,14 @@ export default function WorkshopMetrics() {
                     <div className="space-y-3 max-w-2xl">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80">
                             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                            <span className="text-xs font-mono font-semibold text-emerald-700 uppercase tracking-wider">
+                            <span className="text-xs font-mono font-semibold text-emerald-700 uppercase tracking-wider whitespace-nowrap shrink-0">
                                 Ulasan Asli Google Maps (4.7★)
                             </span>
                         </div>
                         <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-slate-900 tracking-tight leading-tight">
                             Kata Pelanggan di Google Maps Yangversa
                         </h2>
-                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
+                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-sans text-left">
                             Seluruh ulasan di bawah ini adalah review bintang 5 (★★★★★) murni dari pelanggan riil yang mempercayakan perangkat laptop dan komputernya ke workshop kami di Pekayon, Bekasi.
                         </p>
                     </div>
@@ -235,7 +235,7 @@ export default function WorkshopMetrics() {
                         href="https://www.google.com/maps/search/?api=1&query=Komputerawet.Com+By+Yangversa+Computer+Jl+Raya+Pekayon+Bekasi"
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-sans text-xs sm:text-sm font-semibold transition-all shadow-2xs hover:border-slate-300 shrink-0"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-sans text-xs sm:text-sm font-semibold transition-all shadow-2xs hover:border-slate-300 shrink-0 whitespace-nowrap"
                     >
                         <MapPin className="w-4 h-4 text-emerald-600" />
                         <span>Lihat Profil Google Maps (4.7★)</span>
@@ -257,13 +257,13 @@ export default function WorkshopMetrics() {
                                             <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />
                                         ))}
                                     </div>
-                                    <span className="inline-flex items-center gap-1 text-3xs font-mono font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                    <span className="inline-flex items-center gap-1 text-3xs font-mono font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 whitespace-nowrap shrink-0">
                                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                                         {r.badge}
                                     </span>
                                 </div>
 
-                                <p className="text-sm text-slate-700 leading-relaxed font-sans text-left sm:text-justify [text-justify:inter-word]">
+                                <p className="text-sm text-slate-700 leading-relaxed font-sans text-left">
                                     &ldquo;{r.text}&rdquo;
                                 </p>
                             </div>

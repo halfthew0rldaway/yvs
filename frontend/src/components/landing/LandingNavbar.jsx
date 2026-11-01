@@ -148,23 +148,23 @@ export default function LandingNavbar({ onSearchClick }) {
                     <button
                         type="button"
                         onClick={onSearchClick}
-                        className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-2xs hover:border-slate-300 whitespace-nowrap shrink-0"
+                        className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-2xs hover:border-slate-300 whitespace-nowrap shrink-0 w-fit max-w-max"
                         title="Lacak Tiket Servis"
                     >
                         <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
-                        <span className="hidden sm:inline">Lacak Tiket</span>
-                        <span className="sm:hidden text-xs">Lacak</span>
+                        <span className="hidden sm:inline whitespace-nowrap">Lacak Tiket</span>
+                        <span className="sm:hidden text-xs whitespace-nowrap">Lacak</span>
                     </button>
 
                     <a
                         href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
                         target="_blank"
                         rel="noreferrer"
-                        className="w-8 h-8 sm:w-auto sm:px-3.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                        className="w-8 h-8 sm:w-auto sm:px-3.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap w-fit max-w-max"
                         title="Chat WhatsApp CS"
                     >
                         <MessageCircle className="w-4 h-4 shrink-0" />
-                        <span className="hidden lg:inline">WhatsApp</span>
+                        <span className="hidden lg:inline whitespace-nowrap">WhatsApp</span>
                     </a>
 
                     <button

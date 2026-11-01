@@ -1090,13 +1090,10 @@ async function markWarrantyFollowUp(req, res) {
         }
 
         // Catat follow-up ke ActivityLog dan LogPerbaikan tanpa merusak counter pengingat pengambilan barang
-        await prisma.activityLog.create({
-            data: {
-                user_id: req.user.id,
-                user_nama: req.user.nama || "User",
-                action: `Mengirim Follow-Up CRM Pengingat Garansi (H-3/H-7) ke pelanggan`,
-                entity: `Tiket #${tiket.nomor_tiket}`
-            }
+        await recordActivity({
+            req,
+            action: `Mengirim Follow-Up CRM Pengingat Garansi (H-3/H-7) ke pelanggan #${tiket.nomor_tiket}`,
+            entity: "tiket"
         });
 
         const followUpLog = await prisma.logPerbaikan.create({
@@ -1239,13 +1236,10 @@ async function markMaintenanceFollowUp(req, res) {
             }
         }
 
-        await prisma.activityLog.create({
-            data: {
-                user_id: req.user.id,
-                user_nama: req.user.nama || "User",
-                action: `Mengirim Pengingat Servis Berkala ke ${tiket.perangkat?.customer?.nama || 'Pelanggan'} (${tiket.perangkat?.merek} ${tiket.perangkat?.model})`,
-                entity: `Tiket #${tiket.nomor_tiket}`
-            }
+        await recordActivity({
+            req,
+            action: `Mengirim Pengingat Servis Berkala ke ${tiket.perangkat?.customer?.nama || 'Pelanggan'} (${tiket.perangkat?.merek} ${tiket.perangkat?.model}) #${tiket.nomor_tiket}`,
+            entity: "tiket"
         });
 
         const followUpLog = await prisma.logPerbaikan.create({
@@ -1382,13 +1376,10 @@ async function markUnclaimedFollowUp(req, res) {
             }
         });
 
-        await prisma.activityLog.create({
-            data: {
-                user_id: req.user.id,
-                user_nama: req.user.nama || "User",
-                action: `Mengirim Pengingat Pengambilan Unit ke ${tiket.perangkat?.customer?.nama || 'Pelanggan'} (${tiket.perangkat?.merek} ${tiket.perangkat?.model})`,
-                entity: `Tiket #${tiket.nomor_tiket}`
-            }
+        await recordActivity({
+            req,
+            action: `Mengirim Pengingat Pengambilan Unit ke ${tiket.perangkat?.customer?.nama || 'Pelanggan'} (${tiket.perangkat?.merek} ${tiket.perangkat?.model}) #${tiket.nomor_tiket}`,
+            entity: "tiket"
         });
 
         const followUpLog = await prisma.logPerbaikan.create({

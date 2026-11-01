@@ -109,14 +109,14 @@ export default function Pagination({
                     onClick={() => onPageChange(Math.max(1, safeCurrentPage - 1))}
                     disabled={disabled || safeCurrentPage <= 1}
                     aria-label="Halaman Sebelumnya"
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap shrink-0"
                 >
-                    <ChevronLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">Sebelumnya</span>
+                    <ChevronLeft className="w-4 h-4 shrink-0" />
+                    <span className="hidden sm:inline whitespace-nowrap">Sebelumnya</span>
                 </button>
 
                 {/* Mobile Current Page Indicator */}
-                <div className="sm:hidden px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg">
+                <div className="sm:hidden px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg whitespace-nowrap shrink-0">
                     {safeCurrentPage} / {totalPages}
                 </div>
 
@@ -137,7 +137,7 @@ export default function Pagination({
                                 type="button"
                                 onClick={() => onPageChange(p)}
                                 disabled={disabled || isCurrent}
-                                className={`min-w-8 h-8 px-2 rounded-lg text-xs font-semibold transition-all ${
+                                className={`min-w-8 h-8 px-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
                                     isCurrent
                                         ? "bg-blue-600 text-white shadow-sm shadow-blue-500/20 pointer-events-none"
                                         : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-blue-600"
@@ -155,10 +155,10 @@ export default function Pagination({
                     onClick={() => onPageChange(Math.min(totalPages, safeCurrentPage + 1))}
                     disabled={disabled || safeCurrentPage >= totalPages}
                     aria-label="Halaman Selanjutnya"
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap shrink-0"
                 >
-                    <span className="hidden sm:inline">Selanjutnya</span>
-                    <ChevronRight className="w-4 h-4" />
+                    <span className="hidden sm:inline whitespace-nowrap">Selanjutnya</span>
+                    <ChevronRight className="w-4 h-4 shrink-0" />
                 </button>
 
                 {/* Last Page */}
