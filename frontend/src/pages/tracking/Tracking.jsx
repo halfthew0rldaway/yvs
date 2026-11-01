@@ -1928,7 +1928,7 @@ export default function Tracking() {
             <BrandTicker />
 
             {/* 3. Live Dedicated Tracking Hub Section (Immediate Natural Continuation) */}
-            <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 scroll-mt-14 sm:scroll-mt-16" id="track-lookup">
+            <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 scroll-mt-14 sm:scroll-mt-16 content-deferred" id="track-lookup">
                 <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
                         {/* Left Column: Heading, description, and trust guarantees */}

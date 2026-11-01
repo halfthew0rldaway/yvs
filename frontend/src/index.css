@@ -145,6 +145,12 @@
     will-change: transform, opacity;
   }
 
+  /* Core Web Vitals: Defer paint & style recalculations for off-screen sections */
+  .content-deferred {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 650px;
+  }
+
   .modal-backdrop {
     will-change: opacity;
     animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;

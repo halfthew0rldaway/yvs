@@ -30,7 +30,7 @@ export default function WorkshopLocation() {
     };
 
     return (
-        <section className="relative w-full bg-white py-16 sm:py-24 border-b border-slate-100 font-sans scroll-mt-14 sm:scroll-mt-16" id="workshop-location">
+        <section className="relative w-full bg-white py-16 sm:py-24 border-b border-slate-100 font-sans scroll-mt-14 sm:scroll-mt-16 content-deferred" id="workshop-location">
             <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 {/* Header */}
                 <div className="space-y-3 max-w-2xl pb-10 border-b border-slate-100 mb-10">

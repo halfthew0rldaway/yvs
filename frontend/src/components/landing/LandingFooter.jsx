@@ -16,7 +16,7 @@ export default function LandingFooter() {
     };
 
     return (
-        <footer className="relative w-full bg-slate-50 text-slate-700 py-12 sm:py-16 border-t border-slate-200 font-sans">
+        <footer className="relative w-full bg-slate-50 text-slate-700 py-12 sm:py-16 border-t border-slate-200 font-sans content-deferred">
             <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-10 pb-12 border-b border-slate-200">
                     {/* Brand Column */}
