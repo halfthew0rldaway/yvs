@@ -1145,21 +1145,48 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                     </div>
                 )}
 
-                {/* QR Code and Warranty Section for Selesai / Diambil (Enhanced with Holographic 3D Tilt Card & Boarding-Pass Notches) */}
+                {/* QR Code and Warranty Section for Selesai / Diambil (Enhanced with Equal-Height Balanced Holographic Cards) */}
                 {['selesai', 'diambil'].includes(t.status) && (
-                    <div id="warranty-section" className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-4 scroll-mt-24">
+                    <div id="warranty-section" className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch scroll-mt-24">
                         {/* Fast-Pass Pick-up Voucher Card */}
-                        <HolographicTiltCard isPerforated={true} foilType="silver" className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
-                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 shrink-0 shadow-inner">
-                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${t.nomor_tiket}`} alt="QR Code" className="w-20 h-20 sm:w-24 sm:h-24 mix-blend-multiply" />
-                            </div>
-                            <div className="text-center sm:text-left">
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-3xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 mb-2">
-                                    <QrCode className="w-3 h-3 text-blue-600"/>
-                                    <span>FAST-PASS PICKUP</span>
+                        <HolographicTiltCard foilType="silver" className="p-6 sm:p-7 flex flex-col justify-between h-full">
+                            <div className="flex flex-col h-full justify-between">
+                                {/* Top Header Badge */}
+                                <div className="flex items-center justify-between gap-2 mb-4">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-3xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        <QrCode className="w-3 h-3 text-blue-600" />
+                                        <span>FAST-PASS PICKUP</span>
+                                    </span>
+                                    <span className="text-3xs font-medium text-slate-400">Verifikasi Loket</span>
                                 </div>
-                                <h5 className="font-bold text-xl mb-1 text-slate-900">Tunjukkan QR Ini</h5>
-                                <p className="text-slate-500 text-sm leading-relaxed">Gunakan QR ini saat mengambil perangkat di toko untuk proses validasi yang lebih cepat.</p>
+
+                                {/* Content Body */}
+                                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 flex-1 my-auto">
+                                    <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/90 shrink-0 shadow-2xs flex items-center justify-center">
+                                        <img 
+                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(t.nomor_tiket)}`} 
+                                            alt={`QR ${t.nomor_tiket}`} 
+                                            className="w-20 h-20 sm:w-24 sm:h-24 mix-blend-multiply block" 
+                                        />
+                                    </div>
+                                    <div className="text-center sm:text-left flex-1 min-w-0">
+                                        <h5 className="font-bold text-lg sm:text-xl mb-1 text-slate-900">Tunjukkan QR Ini</h5>
+                                        <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
+                                            Tunjukkan ke kasir atau teknisi saat mengambil unit untuk validasi kilat serah terima tanpa antre.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Bottom Status / Meta Bar */}
+                                <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                    <span className="font-mono text-slate-600 font-semibold flex items-center gap-1.5">
+                                        <span className="text-slate-400 font-normal">Tiket:</span>
+                                        <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800">{t.nomor_tiket}</span>
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-slate-500 text-3xs font-medium">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Siap Dipindai
+                                    </span>
+                                </div>
                             </div>
                         </HolographicTiltCard>
 
@@ -1169,28 +1196,41 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                 <HolographicTiltCard 
                                     id="warranty-card" 
                                     foilType="slate" 
-                                    className={`p-6 sm:p-8 flex flex-col justify-center relative overflow-hidden transition-all duration-500 ${isWarrantyFocused ? 'ring-4 ring-rose-400 shadow-2xl scale-[1.015]' : ''}`}
+                                    className={`p-6 sm:p-7 flex flex-col justify-between h-full relative overflow-hidden transition-all duration-500 ${isWarrantyFocused ? 'ring-4 ring-rose-400 shadow-2xl scale-[1.015]' : ''}`}
                                 >
-                                    <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-slate-100 pointer-events-none" />
-                                    <div className="relative z-10">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2.5 py-1 rounded-full text-3xs font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
-                                                <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> Kedaluwarsa
+                                    <ShieldCheck className="absolute -right-8 -bottom-8 w-44 h-44 text-slate-100 pointer-events-none" />
+                                    <div className="relative z-10 flex flex-col h-full justify-between">
+                                        {/* Top Header Badge */}
+                                        <div className="flex items-center justify-between gap-2 mb-4">
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-3xs font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                <AlertTriangle className="w-3 h-3 text-rose-500" />
+                                                <span>MASA GARANSI BERAKHIR</span>
                                             </span>
+                                            <span className="text-3xs font-medium text-slate-400">Proteksi Resmi YVS</span>
                                         </div>
-                                        <h5 className="font-bold text-xl mb-1 flex items-center gap-2 text-slate-900">Masa Garansi Berakhir</h5>
-                                        <p className="text-slate-500 text-sm mb-3">
-                                            Garansi {t.durasi_garansi || "1 Bulan"} telah berakhir sejak {t.warranty_status?.lewatHari || 0} hari yang lalu.
-                                        </p>
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className="inline-block bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600">
-                                                Berakhir pada: {t.warranty_status?.garansi_berakhir_at ? new Date(t.warranty_status.garansi_berakhir_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}
+
+                                        {/* Content Body */}
+                                        <div className="flex-1 my-auto">
+                                            <h5 className="font-bold text-lg sm:text-xl mb-1 text-slate-900 flex items-center gap-2">
+                                                <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
+                                                <span>Garansi Telah Berakhir</span>
+                                            </h5>
+                                            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed mb-1">
+                                                Jaminan garansi {t.durasi_garansi || "1 Bulan"} telah berakhir sejak {t.warranty_status?.lewatHari || 0} hari yang lalu. Butuh pengecekan lanjutan? Hubungi teknisi kami.
+                                            </p>
+                                        </div>
+
+                                        {/* Bottom Action Row */}
+                                        <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 text-xs font-medium">
+                                                Berakhir: {t.warranty_status?.garansi_berakhir_at ? new Date(t.warranty_status.garansi_berakhir_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}
                                             </span>
                                             <button 
+                                                type="button"
                                                 onClick={() => setIsWarrantyModalOpen(true)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold transition-all border border-slate-200 shadow-2xs cursor-pointer"
+                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-all border border-slate-200 shadow-2xs cursor-pointer"
                                             >
-                                                <Award className="w-3.5 h-3.5 text-amber-500" /> Sertifikat Garansi
+                                                <Award className="w-3.5 h-3.5 text-amber-500" /> <span>Lihat Sertifikat</span>
                                             </button>
                                         </div>
                                     </div>
@@ -1199,28 +1239,42 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                 <HolographicTiltCard 
                                     id="warranty-card" 
                                     foilType="emerald" 
-                                    className={`p-6 sm:p-8 bg-slate-900 text-white border-slate-800 flex flex-col justify-center relative overflow-hidden transition-all duration-500 ${isWarrantyFocused ? 'ring-4 ring-emerald-400 shadow-2xl scale-[1.015]' : ''}`}
+                                    className={`p-6 sm:p-7 flex flex-col justify-between h-full relative overflow-hidden transition-all duration-500 ${isWarrantyFocused ? 'ring-4 ring-emerald-400 shadow-2xl scale-[1.015]' : ''}`}
                                 >
-                                    <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-emerald-500/10 pointer-events-none" />
-                                    <div className="relative z-10">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2.5 py-1 rounded-full text-3xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
-                                                <Clock className="w-3.5 h-3.5 text-emerald-400" /> Sisa {t.warranty_status?.sisaHari || 0} Hari Lagi
+                                    <ShieldCheck className="absolute -right-8 -bottom-8 w-44 h-44 text-emerald-500/10 pointer-events-none" />
+                                    <div className="relative z-10 flex flex-col h-full justify-between">
+                                        {/* Top Header Badge */}
+                                        <div className="flex items-center justify-between gap-2 mb-4">
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-3xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                                <Clock className="w-3 h-3 text-emerald-600" />
+                                                <span>GARANSI AKTIF • SISA {t.warranty_status?.sisaHari || 0} HARI</span>
                                             </span>
+                                            <span className="text-3xs font-medium text-emerald-600/80">Proteksi Resmi YVS</span>
                                         </div>
-                                        <h5 className="font-bold text-xl mb-1 flex items-center gap-2 text-white"><ShieldCheck className="w-6 h-6 text-emerald-400"/> Garansi Aktif</h5>
-                                        <p className="text-slate-300 text-sm mb-3">
-                                            Perbaikan Anda dilindungi garansi {t.durasi_garansi || "1 Bulan"} resmi YVS Computer.
-                                        </p>
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className="inline-block bg-slate-800/80 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide border border-slate-700/80 text-emerald-300 shadow-sm">
-                                                Berlaku hingga: {t.warranty_status?.garansi_berakhir_at ? new Date(t.warranty_status.garansi_berakhir_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}
+
+                                        {/* Content Body */}
+                                        <div className="flex-1 my-auto">
+                                            <h5 className="font-bold text-lg sm:text-xl mb-1 text-slate-900 flex items-center gap-2">
+                                                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                                                <span>Garansi Resmi Aktif</span>
+                                            </h5>
+                                            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-1">
+                                                Perbaikan unit dilindungi garansi {t.durasi_garansi || "1 Bulan"} resmi YVS Computer untuk fungsi pengerjaan dan suku cadang yang diganti.
+                                            </p>
+                                        </div>
+
+                                        {/* Bottom Action Row */}
+                                        <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-semibold">
+                                                <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                                                Hingga {t.warranty_status?.garansi_berakhir_at ? new Date(t.warranty_status.garansi_berakhir_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}
                                             </span>
                                             <button 
+                                                type="button"
                                                 onClick={() => setIsWarrantyModalOpen(true)}
-                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-slate-950 hover:bg-slate-100 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer"
                                             >
-                                                <Award className="w-3.5 h-3.5 text-emerald-600" /> Cetak Sertifikat Garansi
+                                                <Award className="w-3.5 h-3.5" /> <span>Cetak Sertifikat Garansi</span>
                                             </button>
                                         </div>
                                     </div>
@@ -1230,27 +1284,41 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                             <HolographicTiltCard 
                                 id="warranty-card" 
                                 foilType="silver" 
-                                className={`p-6 sm:p-8 bg-slate-900 text-white border-slate-800 flex flex-col justify-center relative overflow-hidden transition-all duration-500 ${isWarrantyFocused ? 'ring-4 ring-blue-400 shadow-2xl scale-[1.015]' : ''}`}
+                                className={`p-6 sm:p-7 flex flex-col justify-between h-full relative overflow-hidden transition-all duration-500 ${isWarrantyFocused ? 'ring-4 ring-blue-400 shadow-2xl scale-[1.015]' : ''}`}
                             >
-                                <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-blue-500/10 pointer-events-none" />
-                                <div className="relative z-10">
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-3xs font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 mb-2">
-                                        <ShieldCheck className="w-3 h-3 text-blue-400"/>
-                                        <span>SERTIFIKAT DIGITAL TERVERIFIKASI</span>
+                                <ShieldCheck className="absolute -right-8 -bottom-8 w-44 h-44 text-blue-500/10 pointer-events-none" />
+                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                    {/* Top Header Badge */}
+                                    <div className="flex items-center justify-between gap-2 mb-4">
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-3xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                            <ShieldCheck className="w-3 h-3 text-blue-600" />
+                                            <span>SERTIFIKAT DIGITAL TERVERIFIKASI</span>
+                                        </span>
+                                        <span className="text-3xs font-medium text-slate-400">Proteksi Resmi YVS</span>
                                     </div>
-                                    <h5 className="font-bold text-xl mb-2 flex items-center gap-2 text-white">Garansi Disiapkan</h5>
-                                    <p className="text-slate-300 text-sm mb-4">
-                                        Perangkat ini mendapatkan jaminan garansi {t.durasi_garansi || "1 Bulan"} yang otomatis aktif saat unit diambil.
-                                    </p>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span className="inline-block bg-slate-800/80 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide border border-slate-700/80 text-slate-300 shadow-sm">
-                                            Aktif saat serah terima perangkat
+
+                                    {/* Content Body */}
+                                    <div className="flex-1 my-auto">
+                                        <h5 className="font-bold text-lg sm:text-xl mb-1 text-slate-900 flex items-center gap-2">
+                                            <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0" />
+                                            <span>Garansi Siap Diaktifkan</span>
+                                        </h5>
+                                        <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-1">
+                                            Perangkat ini mendapatkan jaminan garansi {t.durasi_garansi || "1 Bulan"} yang otomatis aktif terhitung sejak tanggal serah terima unit di toko.
+                                        </p>
+                                    </div>
+
+                                    {/* Bottom Action Row */}
+                                    <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 text-xs font-medium">
+                                            <Clock className="w-3.5 h-3.5 text-slate-400" /> Aktif saat serah terima
                                         </span>
                                         <button 
+                                            type="button"
                                             onClick={() => setIsWarrantyModalOpen(true)}
-                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-slate-950 hover:bg-slate-100 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer"
                                         >
-                                            <Award className="w-3.5 h-3.5 text-blue-600" /> Preview Sertifikat Garansi
+                                            <Award className="w-3.5 h-3.5" /> <span>Preview Sertifikat Garansi</span>
                                         </button>
                                     </div>
                                 </div>

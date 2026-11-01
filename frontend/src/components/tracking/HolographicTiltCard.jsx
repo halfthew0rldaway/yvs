@@ -74,7 +74,7 @@ export default function HolographicTiltCard({
     }, [mouseX, mouseY]);
 
     return (
-        <div style={{ perspective: 1200 }} className="w-full">
+        <div style={{ perspective: 1200 }} className="w-full h-full flex flex-col">
             <motion.div
                 ref={cardRef}
                 onMouseMove={handleMouseMove}
@@ -85,7 +85,7 @@ export default function HolographicTiltCard({
                     rotateY,
                     transformStyle: "preserve-3d"
                 }}
-                className={`relative rounded-3xl border border-slate-200/90 bg-white shadow-md transition-shadow duration-300 hover:shadow-2xl overflow-hidden will-change-transform ${className}`}
+                className={`relative rounded-3xl border border-slate-200/90 bg-white shadow-sm transition-shadow duration-300 hover:shadow-xl overflow-hidden will-change-transform w-full h-full flex flex-col ${className}`}
                 {...props}
             >
                 {/* Micro-guilloché Security Watermark Pattern (Genuine physical certificate accent) */}
@@ -139,7 +139,7 @@ export default function HolographicTiltCard({
                         transform: `translateZ(${elevation}px)`,
                         transformStyle: "preserve-3d"
                     }}
-                    className="relative z-10 w-full h-full"
+                    className="relative z-10 w-full h-full flex flex-col flex-1"
                 >
                     {children}
                 </div>
