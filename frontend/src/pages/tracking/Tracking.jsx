@@ -20,6 +20,8 @@ import EngineeringStandards from "../../components/landing/EngineeringStandards"
 import WorkshopMetrics from "../../components/landing/WorkshopMetrics";
 import WorkshopLocation from "../../components/landing/WorkshopLocation";
 import LandingFooter from "../../components/landing/LandingFooter";
+import SpotlightCard from "../../components/tracking/SpotlightCard";
+import HolographicTiltCard from "../../components/tracking/HolographicTiltCard";
 
 const RECENT_TRACKING_KEY = "yvs_recent_tracking";
 
@@ -987,22 +989,28 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                     </div>
                 )}
 
-                {/* QR Code and Warranty Section for Selesai / Diambil */}
+                {/* QR Code and Warranty Section for Selesai / Diambil (Enhanced with Holographic 3D Tilt Card & Boarding-Pass Notches) */}
                 {['selesai', 'diambil'].includes(t.status) && (
                     <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 text-slate-900 flex flex-col sm:flex-row items-center gap-6 shadow-sm">
-                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 shrink-0">
-                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${t.nomor_tiket}`} alt="QR Code" className="w-20 h-20 sm:w-24 sm:h-24" />
+                        {/* Fast-Pass Pick-up Voucher Card */}
+                        <HolographicTiltCard isPerforated={true} foilType="silver" className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 shrink-0 shadow-inner">
+                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${t.nomor_tiket}`} alt="QR Code" className="w-20 h-20 sm:w-24 sm:h-24 mix-blend-multiply" />
                             </div>
                             <div className="text-center sm:text-left">
-                                <h5 className="font-bold text-xl mb-1 flex items-center justify-center sm:justify-start gap-2 text-slate-900"><QrCode className="w-5 h-5 text-blue-600"/> Tunjukkan QR ini</h5>
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-3xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 mb-2">
+                                    <QrCode className="w-3 h-3 text-blue-600"/>
+                                    <span>FAST-PASS PICKUP</span>
+                                </div>
+                                <h5 className="font-bold text-xl mb-1 text-slate-900">Tunjukkan QR Ini</h5>
                                 <p className="text-slate-500 text-sm leading-relaxed">Gunakan QR ini saat mengambil perangkat di toko untuk proses validasi yang lebih cepat.</p>
                             </div>
-                        </div>
-                        {/* Feature 9: Dynamic Real-time Warranty Card */}
+                        </HolographicTiltCard>
+
+                        {/* Feature 9: Dynamic Real-time Warranty Card Specimen */}
                         {t.status === "diambil" ? (
                             t.warranty_status?.isExpired ? (
-                                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 text-slate-900 flex flex-col justify-center shadow-sm relative overflow-hidden">
+                                <HolographicTiltCard foilType="slate" className="p-6 sm:p-8 flex flex-col justify-center relative overflow-hidden">
                                     <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-slate-100 pointer-events-none" />
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-2 mb-2">
@@ -1026,55 +1034,59 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                             </button>
                                         </div>
                                     </div>
-                                </div>
+                                </HolographicTiltCard>
                             ) : (
-                                <div className="bg-emerald-600 rounded-3xl p-6 sm:p-8 text-white flex flex-col justify-center shadow-xl relative overflow-hidden">
-                                    <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-white/10" />
+                                <HolographicTiltCard foilType="emerald" className="p-6 sm:p-8 bg-slate-900 text-white border-slate-800 flex flex-col justify-center relative overflow-hidden">
+                                    <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-emerald-500/10 pointer-events-none" />
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2.5 py-1 rounded-full text-3xs font-bold bg-white/20 text-white border border-white/30 flex items-center gap-1.5">
-                                                <Clock className="w-3.5 h-3.5" /> Sisa {t.warranty_status?.sisaHari || 0} Hari Lagi
+                                            <span className="px-2.5 py-1 rounded-full text-3xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                                                <Clock className="w-3.5 h-3.5 text-emerald-400" /> Sisa {t.warranty_status?.sisaHari || 0} Hari Lagi
                                             </span>
                                         </div>
-                                        <h5 className="font-bold text-xl mb-1 flex items-center gap-2"><ShieldCheck className="w-6 h-6"/> Garansi Aktif</h5>
-                                        <p className="text-emerald-50 text-sm mb-3">
+                                        <h5 className="font-bold text-xl mb-1 flex items-center gap-2 text-white"><ShieldCheck className="w-6 h-6 text-emerald-400"/> Garansi Aktif</h5>
+                                        <p className="text-slate-300 text-sm mb-3">
                                             Perbaikan Anda dilindungi garansi {t.durasi_garansi || "1 Bulan"} resmi YVS Computer.
                                         </p>
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="inline-block bg-white/20 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide shadow-sm">
+                                            <span className="inline-block bg-slate-800/80 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide border border-slate-700/80 text-emerald-300 shadow-sm">
                                                 Berlaku hingga: {t.warranty_status?.garansi_berakhir_at ? new Date(t.warranty_status.garansi_berakhir_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}
                                             </span>
                                             <button 
                                                 onClick={() => setIsWarrantyModalOpen(true)}
-                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-emerald-800 hover:bg-emerald-50 rounded-lg text-xs font-bold transition-all shadow-sm"
+                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-slate-950 hover:bg-slate-100 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
                                             >
                                                 <Award className="w-3.5 h-3.5 text-emerald-600" /> Cetak Sertifikat Garansi
                                             </button>
                                         </div>
                                     </div>
-                                </div>
+                                </HolographicTiltCard>
                             )
                         ) : (
-                            <div className="bg-blue-600 rounded-3xl p-6 sm:p-8 text-white flex flex-col justify-center shadow-xl relative overflow-hidden">
-                                <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-white/10" />
+                            <HolographicTiltCard foilType="silver" className="p-6 sm:p-8 bg-slate-900 text-white border-slate-800 flex flex-col justify-center relative overflow-hidden">
+                                <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-blue-500/10 pointer-events-none" />
                                 <div className="relative z-10">
-                                    <h5 className="font-bold text-xl mb-2 flex items-center gap-2"><ShieldCheck className="w-6 h-6"/> Garansi Disiapkan</h5>
-                                    <p className="text-blue-50 text-sm mb-4">
+                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-3xs font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 mb-2">
+                                        <ShieldCheck className="w-3 h-3 text-blue-400"/>
+                                        <span>SERTIFIKAT DIGITAL TERVERIFIKASI</span>
+                                    </div>
+                                    <h5 className="font-bold text-xl mb-2 flex items-center gap-2 text-white">Garansi Disiapkan</h5>
+                                    <p className="text-slate-300 text-sm mb-4">
                                         Perangkat ini mendapatkan jaminan garansi {t.durasi_garansi || "1 Bulan"} yang otomatis aktif saat unit diambil.
                                     </p>
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="inline-block bg-white/20 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide shadow-sm">
+                                        <span className="inline-block bg-slate-800/80 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide border border-slate-700/80 text-slate-300 shadow-sm">
                                             Aktif saat serah terima perangkat
                                         </span>
                                         <button 
                                             onClick={() => setIsWarrantyModalOpen(true)}
-                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-blue-800 hover:bg-blue-50 rounded-lg text-xs font-bold transition-all shadow-sm"
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-slate-950 hover:bg-slate-100 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
                                         >
                                             <Award className="w-3.5 h-3.5 text-blue-600" /> Preview Sertifikat Garansi
                                         </button>
                                     </div>
                                 </div>
-                            </div>
+                            </HolographicTiltCard>
                         )}
                     </div>
                 )}
@@ -1928,8 +1940,12 @@ export default function Tracking() {
             <BrandTicker />
 
             {/* 3. Live Dedicated Tracking Hub Section (Immediate Natural Continuation) */}
-            <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 scroll-mt-14 sm:scroll-mt-16 content-deferred" id="track-lookup">
-                <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
+            <section className="relative w-full bg-slate-50 py-16 sm:py-24 border-b border-slate-200 scroll-mt-14 sm:scroll-mt-16 content-deferred overflow-hidden" id="track-lookup">
+                {/* Architectural Studio Ambient Light (Clean subtle luminescence, zero neon) */}
+                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[340px] bg-blue-500/[0.035] blur-[140px] rounded-full pointer-events-none -z-10" />
+                <div className="absolute bottom-10 right-10 w-[500px] h-[260px] bg-slate-400/[0.04] blur-[120px] rounded-full pointer-events-none -z-10" />
+
+                <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
                         {/* Left Column: Heading, description, and trust guarantees */}
                         <div className="lg:col-span-5 space-y-5">
@@ -1968,9 +1984,9 @@ export default function Tracking() {
                             </div>
                         </div>
 
-                        {/* Right Column: Tracking Search Box & Scanner */}
+                        {/* Right Column: Tracking Search Box & Scanner with Interactive Spotlight Border */}
                         <div className="lg:col-span-7">
-                            <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xs relative">
+                            <SpotlightCard className="p-6 sm:p-8 relative">
                         {/* Tab Switcher & QR Scan Button */}
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-6">
                             <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl flex-1">
@@ -2141,7 +2157,7 @@ export default function Tracking() {
                                 </p>
                             </div>
                         )}
-                    </div>
+                    </SpotlightCard>
                 </div>
             </div>
         </div>
