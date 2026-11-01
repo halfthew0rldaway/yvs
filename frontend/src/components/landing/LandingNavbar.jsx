@@ -50,6 +50,10 @@ export default function LandingNavbar({ onSearchClick }) {
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 Buka 09:00–18:00
                             </span>
+                            <span className="inline-flex sm:hidden items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-3xs font-mono font-semibold">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                09–18
+                            </span>
                         </div>
                         <span className="text-3xs font-mono text-slate-400 tracking-wider uppercase">
                             Yangversa · komputerawet.com
@@ -111,10 +115,11 @@ export default function LandingNavbar({ onSearchClick }) {
                         href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer"
+                        className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer shrink-0"
+                        title="Chat WhatsApp CS"
                     >
-                        <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="hidden sm:inline">WhatsApp</span>
+                        <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                        <span className="hidden md:inline">WhatsApp</span>
                     </a>
 
                     <button

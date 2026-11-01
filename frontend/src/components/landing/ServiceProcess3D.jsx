@@ -13,6 +13,7 @@ const STORY_STAGES = [
         id: "intro",
         range: [0.00, 0.12],
         eyebrow: "KOMPUTERAWET.COM · YANGVERSA COMPUTER",
+        shortEyebrow: "YVS COMPUTER · PEKAYON",
         title: "Teman Terpercaya Merawat & Memperbaiki Komputer Anda.",
         body: "Pusat spesialis servis laptop, PC Desktop, dan MacBook di Pekayon, Bekasi. Fokus kami sederhana: solusi jujur, konsultasi transparan, dan pengerjaan yang rapi agar perangkat Anda awet digunakan.",
         badge: "Buka Setiap Hari 09–18 WIB",
@@ -21,6 +22,7 @@ const STORY_STAGES = [
         id: "inspection",
         range: [0.12, 0.25],
         eyebrow: "TAHAP 01 · PEMERIKSAAN DETAIL",
+        shortEyebrow: "TAHAP 01 · DIAGNOSIS DETAIL",
         title: "Pengecekan Tuntas, Estimasi Biaya Dulu Tanpa Paksaan.",
         body: "Sebelum perbaikan dimulai, teknisi memeriksa akar masalah hingga ke level mikroskopis dan menjelaskan secara terbuka. Jika estimasi biaya tidak disetujui, perangkat bisa diambil kembali tanpa biaya cek.",
         badge: "Bebas Biaya Cek",
@@ -29,6 +31,7 @@ const STORY_STAGES = [
         id: "hardware",
         range: [0.25, 0.38],
         eyebrow: "TAHAP 02 · PERBAIKAN & PENGGANTIAN SUKU CADANG",
+        shortEyebrow: "TAHAP 02 · PERBAIKAN HARDWARE",
         title: "Dari Ganti Thermal Paste, Engsel, Hingga Masalah Motherboard.",
         body: "Menangani laptop lemot, panas berlebih, engsel patah, layar pecah, mati total, hingga upgrade SSD dan RAM. Setiap part copotan atau bekas kami kembalikan utuh ke tangan Anda.",
         badge: "Sparepart Transparan",
@@ -37,6 +40,7 @@ const STORY_STAGES = [
         id: "quality",
         range: [0.38, 0.50],
         eyebrow: "TAHAP 03 · PENGUJIAN STABILITAS & SUHU",
+        shortEyebrow: "TAHAP 03 · UJI KESTABILAN & SUHU",
         title: "Dites Kestabilannya Sebelum Diserahkan Kembali.",
         body: "Setiap unit dibersihkan dengan rapi dan diuji suhunya agar tidak lagi overheat atau sering hang saat dipakai bekerja. Kami pastikan perangkat benar-benar siap dan nyaman digunakan.",
         badge: "Pengujian Suhu & Stabilitas",
@@ -45,6 +49,7 @@ const STORY_STAGES = [
         id: "ready",
         range: [0.50, 1.00],
         eyebrow: "TAHAP 04 · SERAH TERIMA & GARANSI RESMI",
+        shortEyebrow: "TAHAP 04 · SERAH TERIMA & GARANSI",
         title: "Pantau Progres Servis Kapan Saja, Disertai Garansi Jelas.",
         body: "Anda bisa memantau foto kondisi, riwayat pengerjaan, dan status garansi secara langsung melalui portal pelacakan ini tanpa harus bolak-balik tanya ke toko.",
         badge: "Garansi Resmi Servis",
@@ -113,24 +118,40 @@ export default function ServiceProcess3D({ onTrackClick }) {
             if (!isDesktopOrTablet) {
                 // Mobile portrait/landscape:
                 if (canvasAspect < 1.0) {
-                    // Hardware in source 1920x1080 frame spans x≈420 to x≈1460 (width ≈ 1040px, or 54.2% of image).
-                    // On mobile portrait, scale hardware so it fills ~92% of screen width (cw),
-                    // making motherboard, fans, heat pipes, and battery dramatic, visible, and tactile!
-                    const targetHwWidth = cw * 0.92;
+                    // Top HUD occupies ~54px, Bottom docked panel occupies ~180px
+                    const topHudHeight = 54;
+                    const bottomPanelHeight = 180;
+                    const availableH = Math.max(220, ch - topHudHeight - bottomPanelHeight);
+
+                    // Hardware aspect ratio in 1920x1080 source frame:
+                    // Hardware width ≈ 0.542 * iw, hardware height ≈ 0.89 * ih
+                    // Aspect ratio of the hardware itself = (0.542 / 0.89) * (1920 / 1080) ≈ 1.082
+                    const hwAspect = 1.082;
+
+                    // Available bounding box for the hardware (with breathing room):
+                    const maxHwW = Math.min(cw * 0.90, 480);
+                    const maxHwH = availableH * 0.86;
+
+                    let targetHwWidth, hwHeight;
+                    if (maxHwW / hwAspect <= maxHwH) {
+                        targetHwWidth = maxHwW;
+                        hwHeight = targetHwWidth / hwAspect;
+                    } else {
+                        hwHeight = maxHwH;
+                        targetHwWidth = hwHeight * hwAspect;
+                    }
+
                     dw = targetHwWidth / 0.542;
                     dh = dw / imgAspect;
 
                     // Center hardware horizontally: hardware center is at 0.52 * dw
                     dx = (cw / 2) - (dw * 0.52);
 
-                    // Vertically position in the upper half of screen, above the bottom card (~210px)
-                    const cardHeightEstimate = 210;
-                    const availableHeight = Math.max(dh * 0.90, ch - cardHeightEstimate);
-                    const hwHeight = dh * 0.89; // hardware height ratio
+                    // Center hardware vertically in the exact window between top HUD and bottom sheet:
                     const hwTopOffset = dh * 0.043;
-                    dy = Math.max(16, ((availableHeight - hwHeight) / 2) - hwTopOffset);
+                    dy = topHudHeight + ((availableH - hwHeight) / 2) - hwTopOffset;
                 } else {
-                    dh = ch * 0.90;
+                    dh = ch * 0.85;
                     dw = dh * imgAspect;
                     dx = (cw - dw) / 2;
                     dy = (ch - dh) / 2;
@@ -340,6 +361,19 @@ export default function ServiceProcess3D({ onTrackClick }) {
         };
     }, []);
 
+    const scrollToStage = (stageIdx) => {
+        if (!containerRef.current) return;
+        const stage = STORY_STAGES[stageIdx];
+        if (!stage) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const containerTop = rect.top + scrollTop;
+        const scrollable = containerRef.current.offsetHeight - window.innerHeight;
+        if (scrollable <= 0) return;
+        const targetScrollY = containerTop + (stage.range[0] + 0.01) * scrollable;
+        window.scrollTo({ top: targetScrollY, behavior: "smooth" });
+    };
+
     const currentStage = STORY_STAGES[activeStage] || STORY_STAGES[0];
 
     return (
@@ -384,14 +418,17 @@ export default function ServiceProcess3D({ onTrackClick }) {
                                 </span>
                             </div>
 
-                            {/* Balanced 5-Segment Progress Bar */}
+                            {/* Balanced 5-Segment Progress Bar - Clickable to Jump */}
                             <div className="grid grid-cols-5 gap-1.5 w-full max-w-xs">
                                 {STORY_STAGES.map((s, idx) => (
-                                    <div
+                                    <button
                                         key={idx}
-                                        className={`h-1.5 rounded-full transition-all duration-300 ${
-                                            idx <= activeStage ? "bg-blue-600" : "bg-slate-200"
+                                        type="button"
+                                        onClick={() => scrollToStage(idx)}
+                                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                            idx <= activeStage ? "bg-blue-600" : "bg-slate-200 hover:bg-slate-300"
                                         }`}
+                                        aria-label={`Loncat ke ${s.eyebrow}`}
                                     />
                                 ))}
                             </div>
@@ -431,64 +468,90 @@ export default function ServiceProcess3D({ onTrackClick }) {
                     </div>
                 </div>
 
-                {/* 4. Mobile Sticky Viewport Overlay - Architectural & Clean */}
+                {/* 4. Mobile Viewport Architecture: Integrated Top HUD & Docked Bottom Glass Sheet */}
                 <div className="md:hidden">
-                    {/* Top Status Capsule */}
-                    <div className="absolute top-3 left-4 right-4 z-20 pointer-events-none flex items-center justify-between">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-2xs">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                            <span className="font-mono text-3xs font-bold text-blue-700 uppercase tracking-wider truncate max-w-[200px]">
-                                {currentStage.eyebrow}
-                            </span>
+                    {/* Top Viewfinder HUD with Interactive Stage Stepper */}
+                    <div className="absolute top-0 left-0 right-0 z-20 pointer-events-auto px-4 pt-3 pb-3 bg-gradient-to-b from-white via-white/95 to-transparent">
+                        {/* 5-Segment Interactive Progress Line */}
+                        <div className="grid grid-cols-5 gap-1.5 w-full">
+                            {STORY_STAGES.map((s, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => scrollToStage(idx)}
+                                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                        idx === activeStage
+                                            ? "bg-blue-600 h-2 shadow-xs"
+                                            : idx < activeStage
+                                            ? "bg-blue-300"
+                                            : "bg-slate-200/90"
+                                    }`}
+                                    aria-label={`Pindah ke ${s.shortEyebrow || s.eyebrow}`}
+                                />
+                            ))}
                         </div>
-                        <span className="font-mono text-3xs font-bold text-slate-600 bg-white/95 backdrop-blur-md border border-slate-200/90 px-2.5 py-1.5 rounded-full shadow-2xs">
-                            0{activeStage + 1} / 0{STORY_STAGES.length}
-                        </span>
+
+                        {/* Top Metadata Row: Stage Label & Counter */}
+                        <div className="flex items-center justify-between gap-2 mt-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse shrink-0" />
+                                <span className="font-mono text-3xs font-bold text-blue-700 uppercase tracking-wider truncate">
+                                    {currentStage.shortEyebrow || currentStage.eyebrow}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="font-mono text-3xs font-extrabold text-slate-700 bg-white/90 border border-slate-200/80 px-2 py-0.5 rounded-full shadow-2xs">
+                                    0{activeStage + 1} / 0{STORY_STAGES.length}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Bottom Storytelling Card with Native Thumb Actions */}
-                    <div className="absolute bottom-3 left-3 right-3 z-20 pointer-events-auto pb-[env(safe-area-inset-bottom,0px)]">
-                        <div className="bg-white/98 backdrop-blur-xl border border-slate-200/90 rounded-2xl p-4 shadow-lg shadow-slate-900/5 space-y-2.5">
-                            {/* 5-Segment Micro Progress Indicator */}
-                            <div className="grid grid-cols-5 gap-1.5 w-full">
-                                {STORY_STAGES.map((s, idx) => (
-                                    <div
-                                        key={idx}
-                                        className={`h-1 rounded-full transition-all duration-300 ${
-                                            idx <= activeStage ? "bg-blue-600" : "bg-slate-100"
-                                        }`}
-                                    />
-                                ))}
+                    {/* Bottom Docked Editorial Glass Sheet (Edge-to-Edge, Seamless, Zero Pop-up Feel) */}
+                    <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-auto pb-[max(env(safe-area-inset-bottom,0px),10px)]">
+                        <div className="bg-white/94 backdrop-blur-xl border-t border-slate-200/80 rounded-t-3xl shadow-[0_-8px_30px_rgba(15,23,42,0.06)] px-4 sm:px-6 pt-2 pb-3 space-y-2">
+                            {/* Subtle Grab Bar Indicator */}
+                            <div className="w-8 h-1 bg-slate-300/80 rounded-full mx-auto mb-1" />
+
+                            {/* Badge Pill */}
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 font-mono text-3xs font-bold tracking-wider uppercase">
+                                    ✦ {currentStage.badge}
+                                </span>
+                                <span className="text-3xs font-mono text-slate-400">
+                                    Swipe scroll ↓
+                                </span>
                             </div>
 
                             {/* Stage Title */}
-                            <h3 className="font-display font-extrabold text-sm sm:text-base text-slate-900 leading-snug line-clamp-2">
+                            <h3 className="font-display font-extrabold text-sm sm:text-base text-slate-900 leading-snug">
                                 {currentStage.title}
                             </h3>
 
-                            {/* Stage Body - Natural Left-Aligned on Mobile (Zero distorted spacing) */}
-                            <p className="font-sans text-xs text-slate-600 leading-relaxed text-left line-clamp-3">
+                            {/* Stage Description */}
+                            <p className="font-sans text-xs text-slate-600 leading-relaxed text-left line-clamp-2">
                                 {currentStage.body}
                             </p>
 
-                            {/* Two Balanced Thumb-Friendly Action Buttons */}
+                            {/* Streamlined Mobile Action Bar */}
                             <div className="pt-1 flex items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={onTrackClick}
-                                    className="flex-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer min-h-[42px] transition-all"
+                                    className="flex-1 py-2.5 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer min-h-[40px] transition-all"
                                 >
                                     <Search className="w-3.5 h-3.5 shrink-0" />
-                                    <span>Lacak Servis</span>
+                                    <span>Lacak Status Servis</span>
                                 </button>
                                 <a
                                     href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-98 text-emerald-700 border border-emerald-200 font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs min-h-[42px] transition-all"
+                                    className="py-2.5 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-98 text-emerald-700 border border-emerald-200 font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs min-h-[40px] transition-all shrink-0"
+                                    title="Konsultasi WhatsApp"
                                 >
                                     <MessageCircle className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
-                                    <span>Konsultasi WA</span>
+                                    <span>WA CS</span>
                                 </a>
                             </div>
                         </div>
