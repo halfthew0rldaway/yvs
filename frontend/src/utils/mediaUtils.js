@@ -25,20 +25,44 @@ export function isVideo(item) {
 
 /**
  * Returns a browser-renderable source URL for an image or video file / path.
- * @param {string|File|Blob} media
+ * Automatically handles:
+ * - Direct http/https URLs, data URIs, and blob objects
+ * - Objects wrapping a URL (e.g. { url: "..." } or { path: "..." })
+ * - Relative workshop uploads (prefixes `/uploads/` if omitted)
+ * - Stray surrounding quotes from double-serialized database records
+ *
+ * @param {string|File|Blob|Object} media
  * @returns {string}
  */
 export function getMediaUrl(media) {
     if (!media) return "";
-    if (typeof media === "string") {
-        if (media.startsWith("http") || media.startsWith("data:") || media.startsWith("blob:")) {
-            return media;
-        }
-        return `/${media.replace(/^\/+/, "")}`;
+
+    // Support object wrappers like { url: "..." }, { path: "..." }, { foto_url: "..." }
+    if (typeof media === "object" && !(media instanceof File) && !(media instanceof Blob)) {
+        media = media.url || media.path || media.src || media.foto_url || media.filename || "";
     }
+
+    if (typeof media === "string") {
+        let clean = media.trim().replace(/^["']+|["']+$/g, "");
+        if (!clean) return "";
+
+        // Absolute URLs (http/https), data URLs, or local blob URLs
+        if (clean.startsWith("http://") || clean.startsWith("https://") || clean.startsWith("data:") || clean.startsWith("blob:")) {
+            return clean;
+        }
+
+        // Relative paths: ensure /uploads prefix for all stored workshop assets
+        clean = clean.replace(/^\/+/, "");
+        if (clean.startsWith("uploads/")) {
+            return `/${clean}`;
+        }
+        return `/uploads/${clean}`;
+    }
+
     if (media instanceof File || media instanceof Blob) {
         return URL.createObjectURL(media);
     }
+
     return "";
 }
 

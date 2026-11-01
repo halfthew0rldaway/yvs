@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../../services/api";
-import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, Clock, AlertTriangle, Check, CheckCircle2, Play, Video, ZoomIn, Share2, RefreshCw, Copy, Printer } from "lucide-react";
+import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, ImageOff, Clock, AlertTriangle, Check, CheckCircle2, Play, Video, ZoomIn, Share2, RefreshCw, Copy, Printer } from "lucide-react";
 import { isVideo, getMediaUrl } from "../../utils/mediaUtils";
 import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS, getChecklistValue } from "../../utils/checklistItems";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
@@ -96,30 +96,58 @@ function formatDateSafe(dateStr, options = { day: 'numeric', month: 'long', year
 function safeParseUrls(val) {
     if (!val) return [];
     let parsed = val;
-    if (typeof parsed === "string") {
-        try {
-            parsed = JSON.parse(parsed);
-        } catch (_) {
-            return [parsed];
+
+    // Robustly unwrap double or triple JSON-stringified payloads from database/APIs
+    for (let depth = 0; depth < 5; depth++) {
+        if (typeof parsed === "string") {
+            const trimmed = parsed.trim();
+            if (
+                (trimmed.startsWith("[") && trimmed.endsWith("]")) || 
+                (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+                (trimmed.startsWith('"') && trimmed.endsWith('"'))
+            ) {
+                try {
+                    const next = JSON.parse(trimmed);
+                    if (next === parsed) break;
+                    parsed = next;
+                } catch (_) {
+                    break;
+                }
+            } else {
+                break;
+            }
+        } else {
+            break;
         }
     }
-    if (typeof parsed === "string") {
-        try {
-            parsed = JSON.parse(parsed);
-        } catch (_) {
-            return [parsed];
+
+    const extractUrl = (item) => {
+        if (!item) return "";
+        if (typeof item === "string") {
+            let str = item.trim().replace(/^["']+|["']+$/g, "");
+            if (str.startsWith("[") || (str.startsWith("{") && str.endsWith("}"))) {
+                try {
+                    const inner = JSON.parse(str);
+                    if (Array.isArray(inner)) return inner.flatMap(extractUrl);
+                    if (inner && typeof inner === "object") return inner.url || inner.path || inner.src || inner.filename || "";
+                } catch (_) {}
+            }
+            return str;
         }
-    }
+        if (typeof item === "object") {
+            return item.url || item.path || item.src || item.foto_url || item.filename || "";
+        }
+        return String(item);
+    };
+
     if (Array.isArray(parsed)) {
-        return parsed.map(item => {
-            if (!item) return "";
-            if (typeof item === "string") return item;
-            if (typeof item === "object" && item.url) return item.url;
-            return String(item);
-        }).filter(Boolean);
+        return parsed.flatMap(extractUrl).filter(Boolean);
     }
     if (typeof parsed === "object" && parsed !== null) {
-        return Object.values(parsed).map(item => (typeof item === "object" && item?.url) ? item.url : String(item)).filter(Boolean);
+        return Object.values(parsed).flatMap(extractUrl).filter(Boolean);
+    }
+    if (typeof parsed === "string" && parsed.trim()) {
+        return [parsed.trim().replace(/^["']+|["']+$/g, "")].filter(Boolean);
     }
     return [];
 }
@@ -224,6 +252,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
     const [lightboxIdx, setLightboxIdx] = useState(0);
     const [customItem, setCustomItem] = useState(null);
     const [activeTab, setActiveTab] = useState("all");
+    const [imgErrors, setImgErrors] = useState({});
 
     // Collect all media into categorized array
     const allPhotos = [];
@@ -339,16 +368,51 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                     </div>
 
                     <div className="flex items-center gap-3 self-stretch sm:self-center justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
-                        {/* Stacked Preview Thumbnails */}
-                        <div className="flex -space-x-2.5 overflow-hidden">
-                            {allPhotos.slice(0, 4).map((p, i) => (
-                                <img 
-                                    key={i} 
-                                    src={getMediaUrl(p.url)} 
-                                    alt="" 
-                                    className="inline-block h-9 w-9 rounded-full ring-2 ring-white object-cover shadow-2xs" 
-                                />
-                            ))}
+                        {/* Stacked Interactive Preview Thumbnails with Video & Error Fallbacks */}
+                        <div className="flex -space-x-2.5 overflow-hidden py-1">
+                            {allPhotos.slice(0, 4).map((p, i) => {
+                                const url = getMediaUrl(p.url);
+                                const isVid = isVideo(p.url);
+                                const hasError = imgErrors[p.url];
+
+                                return (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => openLightbox(i)}
+                                        className="relative inline-flex items-center justify-center h-9 w-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden shrink-0 transition-transform hover:scale-110 hover:z-20 cursor-pointer bg-slate-100"
+                                        title={`Buka ${p.label || "Media"} (#${i + 1})`}
+                                    >
+                                        {isVid ? (
+                                            <div className="w-full h-full bg-slate-900 text-purple-400 flex items-center justify-center relative">
+                                                <video src={url} className="w-full h-full object-cover opacity-70" preload="metadata" muted />
+                                                <Play className="w-3.5 h-3.5 fill-current absolute drop-shadow-sm" />
+                                            </div>
+                                        ) : hasError ? (
+                                            <div className="w-full h-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200">
+                                                <Camera className="w-4 h-4" />
+                                            </div>
+                                        ) : (
+                                            <img 
+                                                src={url} 
+                                                alt={p.label || ""} 
+                                                onError={() => setImgErrors(prev => ({ ...prev, [p.url]: true }))}
+                                                className="w-full h-full object-cover" 
+                                            />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                            {allPhotos.length > 4 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsGalleryModalOpen(true)}
+                                    className="relative inline-flex items-center justify-center h-9 w-9 rounded-full ring-2 ring-white bg-blue-600 text-white text-3xs font-extrabold shadow-2xs shrink-0 hover:scale-110 hover:z-20 transition-transform cursor-pointer"
+                                    title="Lihat semua media"
+                                >
+                                    +{allPhotos.length - 4}
+                                </button>
+                            )}
                         </div>
 
                         <button
@@ -403,7 +467,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                                             activeTab === tab.id
-                                                ? "bg-blue-600 text-white shadow-xs"
+                                                 ? "bg-blue-600 text-white shadow-xs"
                                                 : "bg-white text-slate-600 hover:bg-slate-200/70 border border-slate-200"
                                         }`}
                                     >
@@ -419,6 +483,9 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                 {filteredPhotos.map((photo, idx) => {
                                     const globalIdx = allPhotos.indexOf(photo);
                                     const isVid = isVideo(photo.url);
+                                    const url = getMediaUrl(photo.url);
+                                    const hasError = imgErrors[photo.url];
+
                                     return (
                                         <button
                                             key={idx}
@@ -428,7 +495,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                         >
                                             {isVid ? (
                                                 <div className="w-full h-full relative flex items-center justify-center">
-                                                    <video src={getMediaUrl(photo.url)} className="w-full h-full object-cover opacity-80" preload="metadata" />
+                                                    <video src={url} className="w-full h-full object-cover opacity-80" preload="metadata" muted />
                                                     <div className="absolute inset-0 flex items-center justify-center">
                                                         <div className="w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center shadow-lg border border-white/20">
                                                             <Play className="w-4 h-4 fill-white ml-0.5" />
@@ -438,10 +505,16 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                                         VIDEO
                                                     </span>
                                                 </div>
+                                            ) : hasError ? (
+                                                <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center p-3 text-slate-400 gap-1.5">
+                                                    <ImageOff className="w-6 h-6 text-slate-300" />
+                                                    <span className="text-3xs font-medium text-slate-500 text-center line-clamp-1">{photo.label}</span>
+                                                </div>
                                             ) : (
                                                 <img 
-                                                    src={getMediaUrl(photo.url)} 
+                                                    src={url} 
                                                     alt={photo.label} 
+                                                    onError={() => setImgErrors(prev => ({ ...prev, [photo.url]: true }))}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
                                                 />
                                             )}
@@ -492,10 +565,19 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                     playsInline 
                                     className="max-h-[75vh] max-w-full rounded-2xl shadow-2xl bg-black border border-white/20"
                                 />
+                            ) : imgErrors[currentList[lightboxIdx].url] ? (
+                                <div className="max-h-[60vh] aspect-video w-full max-w-lg bg-slate-900/90 rounded-2xl flex flex-col items-center justify-center p-6 text-slate-300 border border-white/10 shadow-2xl">
+                                    <ImageOff className="w-12 h-12 text-slate-500 mb-3" />
+                                    <h4 className="font-bold text-sm text-white mb-1">Pratinjau Foto Tidak Dapat Dimuat</h4>
+                                    <p className="text-xs text-slate-400 text-center max-w-xs leading-relaxed">
+                                        Berkas media ini belum tersedia di server atau tautan penyedia tidak merespons.
+                                    </p>
+                                </div>
                             ) : (
                                 <img 
                                     src={getMediaUrl(currentList[lightboxIdx].url)} 
                                     alt={currentList[lightboxIdx].label} 
+                                    onError={() => setImgErrors(prev => ({ ...prev, [currentList[lightboxIdx].url]: true }))}
                                     className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl border border-white/20" 
                                 />
                             )}
@@ -525,6 +607,8 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                 {currentList.map((photo, idx) => {
                                     const photoUrl = typeof photo?.url === "string" ? photo.url : "";
                                     const isVid = isVideo(photoUrl);
+                                    const hasError = imgErrors[photoUrl];
+
                                     return (
                                         <button 
                                             key={idx} 
@@ -534,11 +618,20 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                         >
                                             {isVid ? (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <video src={getMediaUrl(photoUrl)} className="w-full h-full object-cover opacity-60" preload="metadata" />
+                                                    <video src={getMediaUrl(photoUrl)} className="w-full h-full object-cover opacity-60" preload="metadata" muted />
                                                     <Play className="w-3.5 h-3.5 text-white fill-white absolute" />
                                                 </div>
+                                            ) : hasError ? (
+                                                <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-500">
+                                                    <ImageOff className="w-4 h-4" />
+                                                </div>
                                             ) : (
-                                                <img src={getMediaUrl(photoUrl)} alt="" className="w-full h-full object-cover" />
+                                                <img 
+                                                    src={getMediaUrl(photoUrl)} 
+                                                    alt="" 
+                                                    onError={() => setImgErrors(prev => ({ ...prev, [photoUrl]: true }))}
+                                                    className="w-full h-full object-cover" 
+                                                />
                                             )}
                                         </button>
                                     );
