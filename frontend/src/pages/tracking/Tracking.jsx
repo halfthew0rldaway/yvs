@@ -152,7 +152,7 @@ function safeParseUrls(val) {
     return [];
 }
 
-function TrackingProgress({ currentStatus }) {
+function TrackingProgress({ currentStatus, onWarrantyClick }) {
     if (currentStatus === 'dibatalkan') {
         return (
             <div className="mb-10 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-700">
@@ -185,14 +185,27 @@ function TrackingProgress({ currentStatus }) {
                 {steps.map((step, idx) => {
                     const isCompleted = idx <= currentStepIndex;
                     const isActive = idx === currentStepIndex;
+                    const isWarrantyStep = (step.label === 'Selesai' || step.label === 'Diambil') && isCompleted;
+
                     return (
-                        <div key={idx} className="relative z-10 flex flex-col items-center gap-2">
+                        <div 
+                            key={idx} 
+                            onClick={() => {
+                                if (isWarrantyStep && onWarrantyClick) {
+                                    onWarrantyClick();
+                                }
+                            }}
+                            className={`relative z-10 flex flex-col items-center gap-2 ${isWarrantyStep ? 'cursor-pointer group' : ''}`}
+                            title={isWarrantyStep ? "Klik untuk langsung melompat ke Kartu Garansi & QR Pick-up" : undefined}
+                        >
                             <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-base border-4 transition-all duration-500 ${
                                 isCompleted ? 'bg-blue-600 border-blue-100 text-white shadow-md shadow-blue-500/20' : 'bg-white border-slate-100 text-slate-300'
-                            } ${isActive ? 'ring-4 ring-blue-50/80 scale-110' : ''}`}>
+                            } ${isActive ? 'ring-4 ring-blue-50/80 scale-110' : ''} ${isWarrantyStep ? 'group-hover:scale-115 group-hover:ring-4 group-hover:ring-emerald-200' : ''}`}>
                                 {isCompleted && !isActive ? <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6" /> : idx + 1}
                             </div>
-                            <span className={`text-4xs xs:text-3xs sm:text-xs md:text-sm font-bold absolute -bottom-6 sm:-bottom-8 whitespace-nowrap ${isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>{step.label}</span>
+                            <span className={`text-4xs xs:text-3xs sm:text-xs md:text-sm font-bold absolute -bottom-6 sm:-bottom-8 whitespace-nowrap transition-colors ${isCompleted ? 'text-slate-800' : 'text-slate-400'} ${isWarrantyStep ? 'group-hover:text-emerald-700' : ''}`}>
+                                {step.label}
+                            </span>
                         </div>
                     );
                 })}
@@ -862,6 +875,43 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
     // Live Status Refreshing State
     const [refreshing, setRefreshing] = useState(false);
 
+    // Highlight & auto-focus state for warranty card specimen
+    const [isWarrantyFocused, setIsWarrantyFocused] = useState(false);
+
+    // Auto-focus helper: smoothly scrolls into view and draws attention to the warranty card
+    const scrollToWarranty = (openModal = false) => {
+        const el = document.getElementById("warranty-section") || document.getElementById("warranty-card");
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            setIsWarrantyFocused(true);
+            setTimeout(() => setIsWarrantyFocused(false), 2400);
+        }
+        if (openModal) {
+            setTimeout(() => setIsWarrantyModalOpen(true), 400);
+        }
+    };
+
+    // Deep-linking / URL Parameter Auto-Scroll Support
+    useEffect(() => {
+        if (!['selesai', 'diambil'].includes(t.status)) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const hash = window.location.hash;
+        const wantsWarranty = 
+            params.get("focus") === "garansi" || 
+            params.get("action") === "garansi" || 
+            params.get("tab") === "garansi" ||
+            hash === "#garansi" || 
+            hash === "#warranty-section";
+
+        if (wantsWarranty) {
+            const timer = setTimeout(() => {
+                scrollToWarranty(params.get("open") === "true");
+            }, 350);
+            return () => clearTimeout(timer);
+        }
+    }, [t.status]);
+
     const handleRefreshStatus = async () => {
         if (refreshing) return;
         setRefreshing(true);
@@ -1017,21 +1067,22 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                 <>
                                     <button
                                         type="button"
-                                        onClick={() => setIsWarrantyModalOpen(true)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-amber-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
-                                        title="Buka sertifikat garansi resmi"
+                                        onClick={() => scrollToWarranty(false)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 hover:from-amber-100 hover:to-emerald-100 text-slate-800 border border-amber-300/80 text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer group"
+                                        title="Lompat dan fokuskan langsung ke Kartu Garansi Fisik/Digital"
                                     >
-                                        <Award className="w-3.5 h-3.5 text-amber-500" />
-                                        <span>Garansi</span>
+                                        <Award className="w-3.5 h-3.5 text-amber-600 group-hover:scale-110 transition-transform" />
+                                        <span>Cek Garansi</span>
+                                        <ChevronDown className="w-3 h-3 text-slate-400 group-hover:translate-y-0.5 transition-transform" />
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => window.print()}
-                                        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
-                                        title="Cetak lembar status & invoice servis"
+                                        onClick={() => setIsWarrantyModalOpen(true)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                                        title="Buka atau cetak sertifikat garansi resmi"
                                     >
                                         <Printer className="w-3.5 h-3.5 text-slate-500" />
-                                        <span>Cetak</span>
+                                        <span className="hidden sm:inline">Cetak Sertifikat</span>
                                     </button>
                                 </>
                             )}
@@ -1044,6 +1095,18 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                             {t.jenis_perangkat}
                         </span>
                         {t.sla_paket && <SlaBadge tiket={t} />}
+                        {['selesai', 'diambil'].includes(t.status) && (
+                            <button
+                                type="button"
+                                onClick={() => scrollToWarranty(false)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-all shadow-2xs cursor-pointer group"
+                                title="Klik untuk langsung melompat dan fokus ke Kartu Garansi"
+                            >
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                                <span>Garansi {t.durasi_garansi || "1 Bulan"}</span>
+                                <ChevronDown className="w-3 h-3 text-emerald-600 group-hover:translate-y-0.5 transition-transform" />
+                            </button>
+                        )}
                     </div>
                     <h4 className="text-slate-800 font-bold text-base sm:text-lg leading-tight break-words">{t.perangkat}</h4>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-6 mt-3">
@@ -1073,7 +1136,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
             </div>
 
             <div className="p-6 sm:p-8 flex-1">
-                <TrackingProgress currentStatus={t.status} />
+                <TrackingProgress currentStatus={t.status} onWarrantyClick={() => scrollToWarranty(false)} />
 
                 {/* Feature 7: SLA Target & Real-time Progress Countdown */}
                 {['diterima', 'didiagnosis', 'menunggu_persetujuan', 'disetujui', 'dalam_perbaikan'].includes(t.status) && (
@@ -1084,7 +1147,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
 
                 {/* QR Code and Warranty Section for Selesai / Diambil (Enhanced with Holographic 3D Tilt Card & Boarding-Pass Notches) */}
                 {['selesai', 'diambil'].includes(t.status) && (
-                    <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div id="warranty-section" className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-4 scroll-mt-24">
                         {/* Fast-Pass Pick-up Voucher Card */}
                         <HolographicTiltCard isPerforated={true} foilType="silver" className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 shrink-0 shadow-inner">
@@ -1103,7 +1166,11 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                         {/* Feature 9: Dynamic Real-time Warranty Card Specimen */}
                         {t.status === "diambil" ? (
                             t.warranty_status?.isExpired ? (
-                                <HolographicTiltCard foilType="slate" className="p-6 sm:p-8 flex flex-col justify-center relative overflow-hidden">
+                                <HolographicTiltCard 
+                                    id="warranty-card" 
+                                    foilType="slate" 
+                                    className={`p-6 sm:p-8 flex flex-col justify-center relative overflow-hidden transition-all duration-500 ${isWarrantyFocused ? 'ring-4 ring-rose-400 shadow-2xl scale-[1.015]' : ''}`}
+                                >
                                     <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-slate-100 pointer-events-none" />
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-2 mb-2">
@@ -1129,7 +1196,11 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                     </div>
                                 </HolographicTiltCard>
                             ) : (
-                                <HolographicTiltCard foilType="emerald" className="p-6 sm:p-8 bg-slate-900 text-white border-slate-800 flex flex-col justify-center relative overflow-hidden">
+                                <HolographicTiltCard 
+                                    id="warranty-card" 
+                                    foilType="emerald" 
+                                    className={`p-6 sm:p-8 bg-slate-900 text-white border-slate-800 flex flex-col justify-center relative overflow-hidden transition-all duration-500 ${isWarrantyFocused ? 'ring-4 ring-emerald-400 shadow-2xl scale-[1.015]' : ''}`}
+                                >
                                     <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-emerald-500/10 pointer-events-none" />
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-2 mb-2">
@@ -1156,7 +1227,11 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                 </HolographicTiltCard>
                             )
                         ) : (
-                            <HolographicTiltCard foilType="silver" className="p-6 sm:p-8 bg-slate-900 text-white border-slate-800 flex flex-col justify-center relative overflow-hidden">
+                            <HolographicTiltCard 
+                                id="warranty-card" 
+                                foilType="silver" 
+                                className={`p-6 sm:p-8 bg-slate-900 text-white border-slate-800 flex flex-col justify-center relative overflow-hidden transition-all duration-500 ${isWarrantyFocused ? 'ring-4 ring-blue-400 shadow-2xl scale-[1.015]' : ''}`}
+                            >
                                 <ShieldCheck className="absolute -right-8 -bottom-8 w-40 h-40 text-blue-500/10 pointer-events-none" />
                                 <div className="relative z-10">
                                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-3xs font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 mb-2">
