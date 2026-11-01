@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Printer, ShieldCheck, Check, Award, AlertTriangle, Clock, Laptop, User, Package, Calendar, Wrench, Shield, CheckCircle2 } from "lucide-react";
 import { WorkshopSignatureStamp, DigitalSignatureToggleBar } from "./DigitalSignatureStamp";
 import { DEFAULT_WORKSHOP_SIGNATURE } from "./AdminSignatureSelectorModal";
@@ -97,8 +98,8 @@ export default function WarrantyCertificateModal({
         window.print();
     };
 
-    return (
-        <div className="fixed inset-0 z-[999] overflow-y-auto flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm">
+    const modalContent = (
+        <div className="fixed inset-0 z-[999] overflow-y-auto flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm print:p-0 print:bg-white print:static print:inset-auto print:overflow-visible">
             {/* Inline Print Styles (Landscape Orientation) */}
             <style>{`
                 @page {
@@ -106,8 +107,19 @@ export default function WarrantyCertificateModal({
                     margin: 8mm;
                 }
                 @media print {
-                    body * {
-                        visibility: hidden !important;
+                    #root, #root * {
+                        display: none !important;
+                        height: 0 !important;
+                        overflow: hidden !important;
+                    }
+                    html, body {
+                        background: #ffffff !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        height: auto !important;
+                        overflow: visible !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     #warranty-certificate-document, #warranty-certificate-document * {
                         visibility: visible !important;
@@ -483,4 +495,6 @@ export default function WarrantyCertificateModal({
             </div>
         </div>
     );
+
+    return typeof document !== "undefined" ? createPortal(modalContent, document.body) : modalContent;
 }
