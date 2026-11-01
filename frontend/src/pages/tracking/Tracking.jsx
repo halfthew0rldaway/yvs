@@ -3,10 +3,11 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../../services/api";
-import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, ImageOff, Clock, AlertTriangle, Check, CheckCircle2, Play, Video, ZoomIn, Share2, RefreshCw, Copy, Printer } from "lucide-react";
+import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, ImageOff, Clock, AlertTriangle, Check, CheckCircle2, Play, Video, ZoomIn, Share2, RefreshCw, Copy, Printer, FileText } from "lucide-react";
 import { isVideo, getMediaUrl } from "../../utils/mediaUtils";
 import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS, getChecklistValue } from "../../utils/checklistItems";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
+import InvoiceModal from "../../components/InvoiceModal";
 import CameraScannerModal from "../../components/CameraScannerModal";
 import SlaBadge, { SlaCountdownCard } from "../../components/SlaBadge";
 import DefectMapperModal, { DefectMapBadge } from "../../components/DefectMapperModal";
@@ -872,6 +873,9 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
     const [isSignInvoiceModalOpen, setIsSignInvoiceModalOpen] = useState(false);
     const [submittingSignInvoice, setSubmittingSignInvoice] = useState(false);
 
+    // Official Invoice Modal State
+    const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+
     // Live Status Refreshing State
     const [refreshing, setRefreshing] = useState(false);
 
@@ -893,10 +897,23 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
 
     // Deep-linking / URL Parameter Auto-Scroll Support
     useEffect(() => {
-        if (!['selesai', 'diambil'].includes(t.status)) return;
-
         const params = new URLSearchParams(window.location.search);
         const hash = window.location.hash;
+
+        // Auto-open Invoice Modal if requested via URL
+        const wantsInvoice = 
+            params.get("focus") === "invoice" || 
+            params.get("action") === "invoice" || 
+            params.get("tab") === "invoice" ||
+            hash === "#invoice";
+
+        if (wantsInvoice && t.invoice) {
+            setIsInvoiceModalOpen(true);
+            return;
+        }
+
+        if (!['selesai', 'diambil'].includes(t.status)) return;
+
         const wantsWarranty = 
             params.get("focus") === "garansi" || 
             params.get("action") === "garansi" || 
@@ -910,7 +927,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
             }, 350);
             return () => clearTimeout(timer);
         }
-    }, [t.status]);
+    }, [t.status, t.invoice]);
 
     const handleRefreshStatus = async () => {
         if (refreshing) return;
@@ -1075,6 +1092,17 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                         <span>Cek Garansi</span>
                                         <ChevronDown className="w-3 h-3 text-slate-400 group-hover:translate-y-0.5 transition-transform" />
                                     </button>
+                                    {t.invoice && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsInvoiceModalOpen(true)}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                                            title="Buka atau cetak faktur invoice resmi"
+                                        >
+                                            <FileText className="w-3.5 h-3.5 text-blue-600" />
+                                            <span className="hidden sm:inline">Faktur Invoice</span>
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => setIsWarrantyModalOpen(true)}
@@ -1528,13 +1556,18 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                             </div>
                                             <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
                                                 <button 
+                                                    type="button"
+                                                    onClick={() => setIsInvoiceModalOpen(true)}
+                                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 rounded-xl font-bold text-sm transition-all shadow-xs shrink-0 w-full sm:w-auto cursor-pointer"
+                                                >
+                                                    <FileText className="w-4 h-4 text-emerald-600" /> Faktur Invoice
+                                                </button>
+                                                <button 
+                                                    type="button"
                                                     onClick={() => setIsWarrantyModalOpen(true)}
                                                     className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-bold text-sm transition-all shadow-sm shrink-0 w-full sm:w-auto cursor-pointer"
                                                 >
                                                     <Award className="w-4 h-4" /> Sertifikat Garansi
-                                                </button>
-                                                <button onClick={() => window.print()} className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 rounded-xl font-bold text-sm transition-all shadow-sm shrink-0 w-full sm:w-auto cursor-pointer">
-                                                    <Download className="w-4 h-4" /> Cetak Invoice
                                                 </button>
                                             </div>
                                         </div>
@@ -1739,6 +1772,14 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                     <RatingSection ticket={t} />
                 )}
             </div>
+
+            {/* Official Workshop Invoice Modal (Consistent with Admin) */}
+            <InvoiceModal
+                isOpen={isInvoiceModalOpen}
+                onClose={() => setIsInvoiceModalOpen(false)}
+                tiket={t}
+                invoice={t.invoice}
+            />
 
             {/* Digital Warranty Certificate Modal */}
             <WarrantyCertificateModal

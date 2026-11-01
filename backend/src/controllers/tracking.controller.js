@@ -52,7 +52,7 @@ async function track(req, res) {
                 teknisi: { select: { nama: true } },
                 diagnosis: { select: { masalah: true, solusi: true, estimasi_biaya: true } },
                 log_perbaikan: { orderBy: { created_at: "desc" } },
-                penggunaan_sparepart: { include: { sparepart: { select: { nama: true, kategori: true } } } },
+                penggunaan_sparepart: { include: { sparepart: { select: { nama: true, kategori: true, harga: true } } } },
                 invoice: true
             },
             orderBy: { created_at: "desc" },
@@ -83,6 +83,7 @@ async function track(req, res) {
                 nomor_tiket: t.nomor_tiket,
                 customer_nama: t.perangkat?.customer?.nama || "Pelanggan",
                 customer_telepon: t.perangkat?.customer?.nomor_telepon || "",
+                customer_alamat: t.perangkat?.customer?.alamat || "",
                 perangkat: perangkatNama,
                 merek: merek,
                 model: model,
@@ -113,7 +114,13 @@ async function track(req, res) {
                 penggunaan_sparepart: t.penggunaan_sparepart?.map(ps => ({
                     nama: ps.sparepart?.nama || "Sparepart",
                     kategori: ps.sparepart?.kategori || "Umum",
-                    jumlah: ps.jumlah || 1
+                    harga: ps.sparepart?.harga || 0,
+                    jumlah: ps.jumlah || 1,
+                    sparepart: {
+                        nama: ps.sparepart?.nama || "Sparepart",
+                        kategori: ps.sparepart?.kategori || "Umum",
+                        harga: ps.sparepart?.harga || 0
+                    }
                 })) || [],
                 invoice: t.invoice
                     ? { 
