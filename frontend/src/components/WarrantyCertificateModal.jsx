@@ -32,6 +32,9 @@ export default function WarrantyCertificateModal({
         serial_number: tiket.serial_number || "-"
     };
 
+    // Resolve invoice info
+    const effectiveInvoice = propInvoice || tiket.invoice || {};
+
     // Tracking & QR Verification URL
     const trackingUrl = typeof window !== "undefined"
         ? `${window.location.origin}/tracking?nomor_tiket=${tiket.nomor_tiket}`
@@ -417,9 +420,9 @@ export default function WarrantyCertificateModal({
                                                 Penerima Garansi
                                             </p>
                                             <div className="h-14 print:h-11 w-full flex items-center justify-center">
-                                                {effectiveIsDigital && tiket.invoice?.ttd_customer ? (
+                                                {effectiveIsDigital && (effectiveInvoice.ttd_customer || tiket.invoice?.ttd_customer) ? (
                                                     <img 
-                                                        src={tiket.invoice.ttd_customer} 
+                                                        src={effectiveInvoice.ttd_customer || tiket.invoice?.ttd_customer} 
                                                         alt="TTD Pelanggan" 
                                                         className="max-h-12 print:max-h-10 max-w-[90px] print:max-w-[75px] object-contain"
                                                     />
@@ -431,7 +434,7 @@ export default function WarrantyCertificateModal({
                                             </div>
                                             <div className="w-full border-b border-slate-300 my-0.5"></div>
                                             <p className="font-bold text-slate-900 text-4xs print:text-[8px] w-full truncate max-w-[105px]">
-                                                {tiket.invoice?.ttd_customer_nama || customer.nama || "Pelanggan"}
+                                                {effectiveInvoice.ttd_customer_nama || tiket.invoice?.ttd_customer_nama || customer.nama || "Pelanggan"}
                                             </p>
                                             <p className="text-4xs print:text-[6.5px] text-slate-400">
                                                 Pelanggan
@@ -446,7 +449,7 @@ export default function WarrantyCertificateModal({
                                             <div className="h-14 print:h-11 w-full flex items-center justify-center">
                                                 {effectiveIsDigital ? (
                                                     <img 
-                                                        src={tiket.invoice?.ttd_admin || DEFAULT_WORKSHOP_SIGNATURE} 
+                                                        src={effectiveInvoice.ttd_admin || tiket.invoice?.ttd_admin || DEFAULT_WORKSHOP_SIGNATURE} 
                                                         alt="TTD Petugas" 
                                                         className="max-h-12 print:max-h-10 max-w-[90px] print:max-w-[75px] object-contain"
                                                     />
@@ -458,7 +461,7 @@ export default function WarrantyCertificateModal({
                                             </div>
                                             <div className="w-full border-b border-slate-300 my-0.5"></div>
                                             <p className="font-bold text-slate-900 text-4xs print:text-[8px] w-full truncate max-w-[105px]">
-                                                {tiket.invoice?.ttd_admin_nama || "Yangversa Computer"}
+                                                {effectiveInvoice.ttd_admin_nama || tiket.invoice?.ttd_admin_nama || "Yangversa Computer"}
                                             </p>
                                             <p className="text-4xs print:text-[6.5px] text-slate-400">
                                                 Yangversa Computer
