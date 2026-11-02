@@ -43,15 +43,15 @@ function StatCard({ label, value, icon: Icon, color = "blue", to }) {
 
     const cardContent = (
         <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-xl border ${colors[color]}`}>
-                <Icon className="w-6 h-6" />
+            <div className={`p-2.5 sm:p-3 rounded-xl border shrink-0 ${colors[color]}`}>
+                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide truncate">{label}</p>
-                <p className="text-xl xl:text-2xl font-bold text-slate-900 mt-1 truncate" title={value}>{value}</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate">{label}</p>
+                <p className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-0.5 truncate tracking-tight" title={value}>{value}</p>
             </div>
             {to && (
-                <div className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all">
+                <div className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0">
                     <ArrowRight className="w-4 h-4" />
                 </div>
             )}
@@ -62,7 +62,7 @@ function StatCard({ label, value, icon: Icon, color = "blue", to }) {
         return (
             <Link 
                 to={to} 
-                className="group bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 flex flex-col justify-center h-full block cursor-pointer"
+                className="group bg-white rounded-xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 hover:border-blue-300 hover:shadow-md transition-all duration-200 flex flex-col justify-center h-full block cursor-pointer"
             >
                 {cardContent}
             </Link>
@@ -70,7 +70,7 @@ function StatCard({ label, value, icon: Icon, color = "blue", to }) {
     }
 
     return (
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200 flex flex-col justify-center h-full">
+        <div className="bg-white rounded-xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 hover:shadow-md transition-shadow duration-200 flex flex-col justify-center h-full">
             {cardContent}
         </div>
     );
@@ -167,22 +167,22 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
     const scopePrefix = isTeknisi ? "scope=my&" : "";
 
     return (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/90">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3.5 border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
                     <div className="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
                         <Timer className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                        <h2 className="text-base font-bold text-slate-900 tracking-tight">Kepatuhan Estimasi SLA & Antrean</h2>
-                        <p className="text-xs text-slate-400">Monitoring ketepatan waktu pengerjaan dan prioritas tiket aktif</p>
+                        <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Kepatuhan Estimasi SLA & Antrean</h2>
+                        <p className="text-xs sm:text-sm text-slate-500">Monitoring ketepatan waktu pengerjaan dan prioritas tiket aktif</p>
                     </div>
                 </div>
                 {overdueCount > 0 && (
                     <Link
                         to={`/tiket-servis?${scopePrefix}sla_urgency=overdue`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition-all group self-start sm:self-auto"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs sm:text-sm font-semibold transition-all group self-start sm:self-auto"
                     >
                         <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
                         <span>{overdueCount} Melewati Estimasi</span>
@@ -192,18 +192,18 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
             </div>
 
             {/* Content */}
-            <div className="flex flex-col lg:flex-row items-center gap-6">
+            <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-5">
                 {/* Donut Chart */}
                 <div className="w-full lg:w-5/12 flex flex-col items-center">
-                    <div className="w-full h-[210px] relative flex items-center justify-center">
+                    <div className="w-full h-[195px] relative flex items-center justify-center">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={chartSegments}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={62}
-                                    outerRadius={88}
+                                    innerRadius={58}
+                                    outerRadius={82}
                                     paddingAngle={hasData ? 3 : 0}
                                     dataKey="value"
                                     stroke="none"
@@ -239,10 +239,10 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                             </PieChart>
                         </ResponsiveContainer>
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                            <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                                 {totalActive}
                             </span>
-                            <span className="text-2xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-0.5">
                                 Tiket Aktif
                             </span>
                         </div>
@@ -253,35 +253,35 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                         {rawChartData.map((item, idx) => (
                             <div key={idx} className="flex items-center gap-1.5">
                                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }}></span>
-                                <span className="text-slate-500 font-medium">{item.shortName}:</span>
-                                <span className="font-bold text-slate-800">{item.value}</span>
+                                <span className="text-slate-600 font-medium">{item.shortName}:</span>
+                                <span className="font-bold text-slate-900">{item.value}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* 4 Cards (2x2 grid) */}
-                <div className="w-full lg:w-7/12 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="w-full lg:w-7/12 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                     {/* Melewati Estimasi */}
                     <Link
                         to={`/tiket-servis?${scopePrefix}sla_urgency=overdue`}
-                        className={`group p-4 rounded-xl border transition-all flex items-start justify-between ${
+                        className={`group p-3 sm:p-3.5 rounded-xl border transition-all flex items-start justify-between ${
                             overdueCount > 0 
                                 ? "bg-rose-50/50 border-rose-200 hover:bg-rose-50 hover:border-rose-300 hover:shadow-xs" 
                                 : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                         }`}
                     >
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
                                 <div className={`p-1.5 rounded-lg ${overdueCount > 0 ? "bg-rose-100 text-rose-600" : "bg-slate-100 text-slate-400"}`}>
                                     <ShieldAlert className="w-4 h-4" />
                                 </div>
-                                <span className="text-xs font-bold text-slate-700">Melewati Estimasi</span>
+                                <span className="text-xs sm:text-sm font-bold text-slate-800">Melewati Estimasi</span>
                             </div>
-                            <p className="text-2xs text-slate-400 pl-0.5">Overdue batas waktu servis</p>
+                            <p className="text-xs text-slate-500 pl-0.5">Overdue batas waktu servis</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xl font-extrabold ${overdueCount > 0 ? "text-rose-600" : "text-slate-400"}`}>
+                            <span className={`text-xl sm:text-2xl font-extrabold ${overdueCount > 0 ? "text-rose-600" : "text-slate-400"}`}>
                                 {overdueCount}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
@@ -291,23 +291,23 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                     {/* Prioritas Express */}
                     <Link
                         to={`/tiket-servis?${scopePrefix}sla_paket=express`}
-                        className={`group p-4 rounded-xl border transition-all flex items-start justify-between ${
+                        className={`group p-3 sm:p-3.5 rounded-xl border transition-all flex items-start justify-between ${
                             expressCount > 0 
                                 ? "bg-amber-50/50 border-amber-200 hover:bg-amber-50 hover:border-amber-300 hover:shadow-xs" 
                                 : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                         }`}
                     >
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
                                 <div className={`p-1.5 rounded-lg ${expressCount > 0 ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-400"}`}>
                                     <Zap className="w-4 h-4 fill-current" />
                                 </div>
-                                <span className="text-xs font-bold text-slate-700">Prioritas Express</span>
+                                <span className="text-xs sm:text-sm font-bold text-slate-800">Prioritas Express</span>
                             </div>
-                            <p className="text-2xs text-slate-400 pl-0.5">Antrean cepat paket kilat</p>
+                            <p className="text-xs text-slate-500 pl-0.5">Antrean cepat paket kilat</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xl font-extrabold ${expressCount > 0 ? "text-amber-600" : "text-slate-400"}`}>
+                            <span className={`text-xl sm:text-2xl font-extrabold ${expressCount > 0 ? "text-amber-600" : "text-slate-400"}`}>
                                 {expressCount}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
@@ -317,23 +317,23 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                     {/* Menunggu Persetujuan */}
                     <Link
                         to={`/tiket-servis?${scopePrefix}status=menunggu_persetujuan`}
-                        className={`group p-4 rounded-xl border transition-all flex items-start justify-between ${
+                        className={`group p-3 sm:p-3.5 rounded-xl border transition-all flex items-start justify-between ${
                             pendingApprovalCount > 0 
                                 ? "bg-slate-50 border-slate-200 hover:bg-slate-100/80 hover:border-slate-300 hover:shadow-xs" 
                                 : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                         }`}
                     >
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
                                 <div className={`p-1.5 rounded-lg ${pendingApprovalCount > 0 ? "bg-slate-200 text-slate-700" : "bg-slate-100 text-slate-400"}`}>
                                     <Clock className="w-4 h-4" />
                                 </div>
-                                <span className="text-xs font-bold text-slate-700">Menunggu Persetujuan</span>
+                                <span className="text-xs sm:text-sm font-bold text-slate-800">Menunggu Persetujuan</span>
                             </div>
-                            <p className="text-2xs text-slate-400 pl-0.5">Estimasi SLA dijeda (ACC)</p>
+                            <p className="text-xs text-slate-500 pl-0.5">Estimasi SLA dijeda (ACC)</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xl font-extrabold ${pendingApprovalCount > 0 ? "text-slate-700" : "text-slate-400"}`}>
+                            <span className={`text-xl sm:text-2xl font-extrabold ${pendingApprovalCount > 0 ? "text-slate-700" : "text-slate-400"}`}>
                                 {pendingApprovalCount}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
@@ -343,23 +343,23 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                     {/* Sesuai Estimasi */}
                     <Link
                         to={`/tiket-servis?${scopePrefix}status=aktif`}
-                        className={`group p-4 rounded-xl border transition-all flex items-start justify-between ${
+                        className={`group p-3 sm:p-3.5 rounded-xl border transition-all flex items-start justify-between ${
                             onTrackCount > 0 
                                 ? "bg-emerald-50/50 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-xs" 
                                 : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                         }`}
                     >
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
                                 <div className={`p-1.5 rounded-lg ${onTrackCount > 0 ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"}`}>
                                     <CheckCircle2 className="w-4 h-4" />
                                 </div>
-                                <span className="text-xs font-bold text-slate-700">Sesuai Estimasi</span>
+                                <span className="text-xs sm:text-sm font-bold text-slate-800">Sesuai Estimasi</span>
                             </div>
-                            <p className="text-2xs text-slate-400 pl-0.5">Pengerjaan tepat waktu</p>
+                            <p className="text-xs text-slate-500 pl-0.5">Pengerjaan tepat waktu</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xl font-extrabold ${onTrackCount > 0 ? "text-emerald-600" : "text-slate-400"}`}>
+                            <span className={`text-xl sm:text-2xl font-extrabold ${onTrackCount > 0 ? "text-emerald-600" : "text-slate-400"}`}>
                                 {onTrackCount}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
@@ -431,18 +431,18 @@ export default function Dashboard() {
 
     if (isAdmin) {
         return (
-            <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-4 sm:space-y-4.5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Halo, {user?.nama}!</h1>
-                        <p className="text-sm text-slate-500 mt-1">Selamat datang di Dashboard Admin. Berikut ringkasan performa sistem hari ini.</p>
+                        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Halo, {user?.nama}!</h1>
+                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Selamat datang di Dashboard Admin. Berikut ringkasan performa sistem hari ini.</p>
                     </div>
 
                     {/* Quick Access Toolbar: Backup Database & Log Audit */}
-                    <div className="flex items-center gap-2.5 flex-wrap self-end sm:self-auto">
+                    <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto">
                         <Link 
                             to="/audit-log" 
-                            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs group"
+                            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs group"
                             title="Buka Pusat Log Audit & Anti-Fraud"
                         >
                             <ShieldAlert className="w-4 h-4 text-blue-600" />
@@ -454,12 +454,12 @@ export default function Dashboard() {
                         <div className="relative">
                             <button 
                                 onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-                                className="flex items-center gap-2 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer"
+                                className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs cursor-pointer"
                                 title="Cadangkan seluruh database sistem"
                             >
-                                <Database className="w-4 h-4 text-emerald-400" />
+                                <Database className="w-4 h-4 text-emerald-600" />
                                 <span>Backup Database</span>
-                                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                                <ChevronDown className="w-3.5 h-3.5 text-slate-400 opacity-80" />
                             </button>
 
                             {exportDropdownOpen && (
@@ -530,7 +530,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-3.5">
                     <StatCard label="Total Customer" value={data?.totalCustomer || 0} icon={Users} color="blue" to="/customer" />
                     <StatCard label="Total Perangkat" value={data?.totalPerangkat || 0} icon={MonitorSmartphone} color="slate" to="/perangkat" />
                     <StatCard label="Tiket Aktif" value={data?.tiketAktif || 0} icon={Ticket} color="amber" to="/tiket-servis?status=aktif" />
@@ -541,15 +541,15 @@ export default function Dashboard() {
                 {/* SLA & Antrean Compliance Chart Card */}
                 <SlaMonitoringCard slaSummary={data?.slaSummary} isTeknisi={false} />
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
                     {/* Charts Section */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-[420px]">
-                        <div className="flex items-center justify-between mb-6">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col h-[380px]">
+                        <div className="flex items-center justify-between mb-3.5">
                             <div>
-                                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Distribusi Status Tiket</h2>
-                                <p className="text-xs text-slate-400 mt-0.5">Klik salah satu bar untuk melihat daftar tiket terkait</p>
+                                <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Distribusi Status Tiket</h2>
+                                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Klik salah satu bar untuk melihat daftar tiket terkait</p>
                             </div>
-                            <Link to="/tiket-servis" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                            <Link to="/tiket-servis" className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
                                 <span>Semua Tiket</span>
                                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                             </Link>
@@ -576,18 +576,18 @@ export default function Dashboard() {
                                             axisLine={false} 
                                             tickLine={false} 
                                             interval={0}
-                                            tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} 
-                                            dy={10} 
+                                            tick={{ fill: '#475569', fontSize: 11, fontWeight: 600 }} 
+                                            dy={8} 
                                         />
                                         <YAxis 
                                             axisLine={false} 
                                             tickLine={false} 
-                                            tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                                            tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} 
                                             allowDecimals={false} 
                                             dx={-10} 
                                         />
                                         <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                                        <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40} className="cursor-pointer">
+                                        <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={38} className="cursor-pointer">
                                             {data.chartData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.fillColor} className="hover:opacity-80 transition-opacity cursor-pointer" />
                                             ))}
@@ -596,20 +596,20 @@ export default function Dashboard() {
                                 </ResponsiveContainer>
                             </div>
                         ) : (
-                            <div className="flex-1 min-h-[300px] flex items-center justify-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            <div className="flex-1 min-h-[250px] flex items-center justify-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                                 Belum ada data tiket
                             </div>
                         )}
                     </div>
 
                     {/* Sparepart hampir habis */}
-                    <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-[420px]">
-                        <div className="flex items-center justify-between mb-6">
+                    <div className="lg:col-span-1 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col h-[380px]">
+                        <div className="flex items-center justify-between mb-3.5">
                             <div className="flex items-center gap-2">
                                 <AlertTriangle className="w-5 h-5 text-amber-500" />
-                                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Stok Menipis</h2>
+                                <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Stok Menipis</h2>
                             </div>
-                            <Link to="/sparepart" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                            <Link to="/sparepart" className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
                                 <span>Katalog</span>
                                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                             </Link>
@@ -618,9 +618,9 @@ export default function Dashboard() {
                             <div className="overflow-y-auto flex-1 custom-scrollbar pr-2 -mr-2">
                                 <table className="w-full text-sm text-left">
                                     <thead className="sticky top-0 bg-white z-10 shadow-[0_1px_0_0_#e2e8f0]">
-                                        <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
-                                            <th className="font-semibold py-3 px-4 rounded-tl-lg">Nama Suku Cadang</th>
-                                            <th className="font-semibold py-3 px-4 text-right rounded-tr-lg">Sisa</th>
+                                        <tr className="bg-slate-50 text-slate-600 border-b border-slate-200 text-xs font-bold uppercase tracking-wider">
+                                            <th className="py-2.5 px-3.5 rounded-tl-lg">Nama Suku Cadang</th>
+                                            <th className="py-2.5 px-3.5 text-right rounded-tr-lg">Sisa</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -634,10 +634,10 @@ export default function Dashboard() {
                                                 className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer group"
                                                 title="Klik untuk membuka katalog sparepart"
                                             >
-                                                <td className="py-3 px-4 font-medium text-slate-700 group-hover:text-blue-600 transition-colors">{s.nama}</td>
-                                                <td className="py-3 px-4 text-right">
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap shrink-0 w-fit max-w-max">
-                                                        {s.stok}
+                                                <td className="py-2.5 px-3.5 font-semibold text-slate-800 group-hover:text-blue-600 transition-colors text-xs sm:text-sm">{s.nama}</td>
+                                                <td className="py-2.5 px-3.5 text-right">
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200/80 whitespace-nowrap shrink-0">
+                                                        {s.stok} unit
                                                     </span>
                                                 </td>
                                             </tr>
@@ -650,23 +650,23 @@ export default function Dashboard() {
                                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mx-auto mb-3 text-emerald-600">
                                     <CheckCircle2 className="w-6 h-6" />
                                 </div>
-                                <p className="text-slate-600 font-medium">Stok Aman</p>
-                                <p className="text-slate-400 text-sm mt-1">Semua sparepart mencukupi.</p>
+                                <p className="text-slate-700 font-bold text-sm">Stok Aman</p>
+                                <p className="text-slate-500 text-xs mt-1">Semua sparepart mencukupi.</p>
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* Row 3: Tren Pendapatan + Avg Waktu + Top Kerusakan */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
                     {/* Tren Pendapatan Bulanan - Area Chart */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-[380px]">
-                        <div className="flex items-center justify-between mb-4">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col h-[350px]">
+                        <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                                 <TrendingUp className="w-5 h-5 text-blue-600" />
-                                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Tren Pendapatan 6 Bulan</h2>
+                                <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Tren Pendapatan 6 Bulan</h2>
                             </div>
-                            <Link to="/invoice" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                            <Link to="/invoice" className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
                                 <span>Rincian Invoice</span>
                                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                             </Link>
@@ -682,8 +682,8 @@ export default function Dashboard() {
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                        <XAxis dataKey="bulan" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(1)}jt` : v >= 1000 ? `${(v/1000).toFixed(0)}rb` : v} />
+                                        <XAxis dataKey="bulan" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 11, fontWeight: 600 }} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(1)}jt` : v >= 1000 ? `${(v/1000).toFixed(0)}rb` : v} />
                                         <Tooltip
                                             formatter={(value) => [formatRupiah(value), "Pendapatan"]}
                                             contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
@@ -701,35 +701,35 @@ export default function Dashboard() {
                     </div>
 
                     {/* Rata-rata Waktu + Top 5 Kerusakan */}
-                    <div className="lg:col-span-1 flex flex-col gap-6">
+                    <div className="lg:col-span-1 flex flex-col gap-3 sm:gap-3.5">
                         {/* Rata-rata Waktu Penyelesaian */}
                         <Link 
                             to="/tiket-servis?status=selesai"
-                            className="group bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer block"
+                            className="group bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer block"
                             title="Klik untuk melihat tiket yang telah selesai diperbaiki"
                         >
-                            <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    <Timer className="w-5 h-5 text-amber-500" />
-                                    <h2 className="text-sm font-bold text-slate-900 tracking-tight">Rata-rata Waktu Servis</h2>
+                                    <Timer className="w-4 h-4 text-amber-500" />
+                                    <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">Rata-rata Waktu Servis</h2>
                                 </div>
-                                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                                <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
                             </div>
                             <div className="flex items-baseline gap-1.5">
-                                <span className="text-3xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{data?.rataRataHari || 0}</span>
-                                <span className="text-sm font-medium text-slate-500">hari</span>
+                                <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors">{data?.rataRataHari || 0}</span>
+                                <span className="text-xs sm:text-sm font-semibold text-slate-600">hari kerja</span>
                             </div>
-                            <p className="text-xs text-slate-400 mt-1">
-                                Dari {data?.totalTiketSelesaiDihitung || 0} tiket yang sudah selesai
+                            <p className="text-xs text-slate-500 mt-1">
+                                Berdasarkan {data?.totalTiketSelesaiDihitung || 0} tiket yang telah selesai
                             </p>
                         </Link>
 
                         {/* Top 5 Jenis Kerusakan */}
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex-1">
-                            <div className="flex items-center justify-between mb-4">
+                        <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 flex-1">
+                            <div className="flex items-center justify-between mb-2.5">
                                 <div className="flex items-center gap-2">
-                                    <Wrench className="w-5 h-5 text-violet-500" />
-                                    <h2 className="text-sm font-bold text-slate-900 tracking-tight">Top Kerusakan</h2>
+                                    <Wrench className="w-4 h-4 text-violet-500" />
+                                    <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">Top Kerusakan</h2>
                                 </div>
                                 <Link to="/tiket-servis" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
                                     <span>Semua</span>
@@ -737,7 +737,7 @@ export default function Dashboard() {
                                 </Link>
                             </div>
                             {data?.topKerusakan?.length > 0 ? (
-                                <div className="space-y-3">
+                                <div className="space-y-2.5">
                                     {data.topKerusakan.map((item, i) => {
                                         const max = data.topKerusakan[0]?.value || 1;
                                         const pct = Math.round((item.value / max) * 100);
@@ -750,10 +750,10 @@ export default function Dashboard() {
                                                 title={`Cari tiket dengan kerusakan: ${item.name}`}
                                             >
                                                 <div className="flex items-center justify-between mb-1 gap-2">
-                                                    <span className="text-xs font-medium text-slate-700 group-hover:text-blue-600 truncate flex-1 min-w-0 transition-colors">{item.name}</span>
-                                                    <span className="text-xs font-bold text-slate-500 group-hover:text-blue-600 transition-colors shrink-0">{item.value} tiket</span>
+                                                    <span className="text-xs sm:text-sm font-semibold text-slate-800 group-hover:text-blue-600 truncate flex-1 min-w-0 transition-colors">{item.name}</span>
+                                                    <span className="text-xs sm:text-sm font-bold text-slate-600 group-hover:text-blue-600 transition-colors shrink-0">{item.value} tiket</span>
                                                 </div>
-                                                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                                     <div className={`h-full rounded-full ${colors[i % colors.length]} group-hover:opacity-80 transition-opacity`} style={{ width: `${pct}%` }} />
                                                 </div>
                                             </Link>
@@ -761,14 +761,14 @@ export default function Dashboard() {
                                     })}
                                 </div>
                             ) : (
-                                <p className="text-sm text-slate-400">Belum ada data diagnosis</p>
+                                <p className="text-xs sm:text-sm text-slate-400">Belum ada data diagnosis</p>
                             )}
                         </div>
                     </div>
                 </div>
 
                 {/* Audit & Compliance Quick Access Banner */}
-                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 mt-6">
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 mt-3.5 sm:mt-4">
                     <div className="flex items-center gap-2.5">
                         <ShieldAlert className="w-4 h-4 text-blue-600 shrink-0" />
                         <span>Sistem diawasi oleh <strong>Log Audit Forensik & Anti-Fraud</strong> otomatis untuk setiap mutasi status tiket, faktur, dan stok suku cadang.</span>
