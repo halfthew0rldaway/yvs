@@ -1214,7 +1214,11 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 flex-1 my-auto">
                                     <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/90 shrink-0 shadow-2xs flex items-center justify-center">
                                         <img 
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(t.nomor_tiket)}`} 
+                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
+                                                typeof window !== "undefined"
+                                                    ? `${window.location.origin}/tracking?nomor_tiket=${t.nomor_tiket}`
+                                                    : t.nomor_tiket
+                                            )}`} 
                                             alt={`QR ${t.nomor_tiket}`} 
                                             className="w-20 h-20 sm:w-24 sm:h-24 mix-blend-multiply block" 
                                         />

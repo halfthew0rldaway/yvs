@@ -197,15 +197,30 @@ export default function Layout({ children }) {
     function handleGlobalScan(decodedText) {
         setIsScannerOpen(false);
         const code = decodedText.trim();
-        toast.success(`Berhasil memindai: ${code}`);
 
-        // Extract clean code if scanned text was a direct tracking or ticket URL
         let cleanCode = code;
-        if (cleanCode.includes("/tracking/")) {
-            cleanCode = cleanCode.split("/tracking/")[1].split("?")[0].split("/")[0];
-        } else if (cleanCode.includes("/tiket-servis/")) {
-            cleanCode = cleanCode.split("/tiket-servis/")[1].split("?")[0].split("/")[0];
-        }
+        try {
+            if (cleanCode.startsWith("http://") || cleanCode.startsWith("https://")) {
+                const parsed = new URL(cleanCode);
+                const searchParam = parsed.searchParams.get("search") || parsed.searchParams.get("nomor_tiket") || parsed.searchParams.get("tiket") || parsed.searchParams.get("q");
+                if (searchParam) {
+                    cleanCode = searchParam.trim();
+                } else {
+                    const segments = parsed.pathname.split("/").filter(Boolean);
+                    if (segments.length > 0) {
+                        cleanCode = segments[segments.length - 1];
+                    }
+                }
+                // If scanned full app URL, navigate directly to path and query
+                if (parsed.origin === window.location.origin) {
+                    navigate(`${parsed.pathname}${parsed.search}`);
+                    toast.success(`Berhasil memindai: ${cleanCode}`);
+                    return;
+                }
+            }
+        } catch (_) {}
+
+        toast.success(`Berhasil memindai: ${cleanCode}`);
 
         // Smart route heuristics
         if (location.pathname.startsWith("/sparepart") || cleanCode.startsWith("PRT-") || cleanCode.startsWith("SP-") || cleanCode.startsWith("SKU-")) {

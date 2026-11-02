@@ -181,7 +181,7 @@ export default function TiketServisList() {
     const [filter, setFilter] = useState(() => searchParams.get("status") || "");
     const [slaFilter, setSlaFilter] = useState(""); // '' | 'express' | 'overdue' | 'warning'
     const [scopeFilter, setScopeFilter] = useState(() => searchParams.get("scope") || "all"); // 'all' | 'my'
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || searchParams.get("q") || "");
     const [sortOrder, setSortOrder] = useState("desc"); // 'desc' | 'asc'
     const [loading, setLoading] = useState(true);
     const [selectedQrTiket, setSelectedQrTiket] = useState(null);
@@ -190,10 +190,20 @@ export default function TiketServisList() {
     function handleScanSuccess(decodedText) {
         setIsScannerOpen(false);
         let code = decodedText.trim();
-        if (code.includes("/tracking/")) {
-            code = code.split("/tracking/")[1].split("?")[0].split("/")[0];
-        } else if (code.includes("/tiket-servis/")) {
-            code = code.split("/tiket-servis/")[1].split("?")[0].split("/")[0];
+        if (code.includes("/tracking")) {
+            try {
+                const parsed = new URL(code, window.location.origin);
+                const tParam = parsed.searchParams.get("nomor_tiket") || parsed.searchParams.get("tiket");
+                if (tParam) code = tParam;
+                else if (code.includes("/tracking/")) code = code.split("/tracking/")[1].split("?")[0].split("/")[0];
+            } catch (_) {}
+        } else if (code.includes("/tiket-servis")) {
+            try {
+                const parsed = new URL(code, window.location.origin);
+                const sParam = parsed.searchParams.get("search") || parsed.searchParams.get("q");
+                if (sParam) code = sParam;
+                else if (code.includes("/tiket-servis/")) code = code.split("/tiket-servis/")[1].split("?")[0].split("/")[0];
+            } catch (_) {}
         }
         setSearchTerm(code);
         setCurrentPage(1);
@@ -223,12 +233,17 @@ export default function TiketServisList() {
         setSelectedQrTiket(t);
     }, []);
 
-    // Sync state when URL search params change
+    // Sync state when URL search params change (e.g. from direct QR link opened in browser)
     useEffect(() => {
         const urlStatus = searchParams.get("status") || "";
         const urlScope = searchParams.get("scope") || "all";
+        const urlSearch = searchParams.get("search") || searchParams.get("q") || "";
         setFilter(urlStatus);
         setScopeFilter(urlScope);
+        if (urlSearch !== null && urlSearch !== undefined) {
+            setSearchTerm(urlSearch);
+            fetchTikets(urlSearch, 1);
+        }
         setCurrentPage(1);
     }, [searchParams]);
 

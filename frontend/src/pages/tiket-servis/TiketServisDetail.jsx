@@ -1647,7 +1647,11 @@ export default function TiketServisDetail() {
                         <div className="flex items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
                             <div className="flex items-center gap-3">
                                 <img
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=1&data=${encodeURIComponent(tiket.nomor_tiket)}`}
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=1&data=${encodeURIComponent(
+                                        typeof window !== "undefined"
+                                            ? `${window.location.origin}/tiket-servis?search=${tiket.nomor_tiket}`
+                                            : tiket.nomor_tiket
+                                    )}`}
                                     alt={`QR Code ${tiket.nomor_tiket}`}
                                     className="w-12 h-12 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs shrink-0 cursor-pointer hover:scale-105 transition-transform"
                                     onClick={() => setIsQrModalOpen(true)}

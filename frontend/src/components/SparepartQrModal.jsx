@@ -24,20 +24,20 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
 
     const [labelFormat, setLabelFormat] = useState("standard"); // "standard" (Box/Kemasan) | "compact" (Thermal 50x30mm) | "rack" (Label Rak Gudang)
     const [printCount, setPrintCount] = useState(1);
-    const [qrDataType, setQrDataType] = useState("sku"); // "sku" | "url"
+    const [qrDataType, setQrDataType] = useState("url"); // Default to "url" so scanning with ANY phone camera opens ERP directly
     const [copiedSku, setCopiedSku] = useState(false);
 
-    const skuCode = `SP-${String(sparepart.id).padStart(4, "0")}`;
+    const skuCode = sparepart.kode_sku || sparepart.kode || `SP-${String(sparepart.id).padStart(4, "0")}`;
     const brandPrefix = sparepart.brand?.nama && sparepart.brand.nama.toLowerCase() !== "lainnya" 
         ? `${sparepart.brand.nama} ` 
         : "";
     const fullName = `${brandPrefix}${sparepart.nama}`;
 
     const searchUrl = typeof window !== "undefined"
-        ? `${window.location.origin}/sparepart?search=${encodeURIComponent(sparepart.nama)}`
-        : `https://servio.app/sparepart?search=${encodeURIComponent(sparepart.nama)}`;
+        ? `${window.location.origin}/sparepart?search=${encodeURIComponent(skuCode)}`
+        : `https://komputerawet.com/sparepart?search=${encodeURIComponent(skuCode)}`;
 
-    const qrData = qrDataType === "url" ? searchUrl : skuCode;
+    const qrData = qrDataType === "sku" ? skuCode : searchUrl;
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=2&data=${encodeURIComponent(qrData)}`;
 
     const handlePrint = () => {
@@ -199,23 +199,23 @@ export default function SparepartQrModal({ isOpen, onClose, sparepart }) {
                         <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5">
                             <button
                                 type="button"
-                                onClick={() => setQrDataType("sku")}
+                                onClick={() => setQrDataType("url")}
                                 className={`px-2 py-1 rounded text-2xs font-semibold transition-all ${
-                                    qrDataType === "sku" ? "bg-slate-800 text-white" : "text-slate-600 hover:text-slate-900"
+                                    qrDataType === "url" ? "bg-blue-600 text-white font-bold" : "text-slate-600 hover:text-slate-900"
                                 }`}
-                                title="QR berisi kode SKU untuk barcode scanner"
+                                title="QR berisi tautan URL lengkap sehingga saat dipindai kamera HP langsung membuka ERP"
                             >
-                                SKU Code
+                                Link ERP Langsung
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setQrDataType("url")}
+                                onClick={() => setQrDataType("sku")}
                                 className={`px-2 py-1 rounded text-2xs font-semibold transition-all ${
-                                    qrDataType === "url" ? "bg-slate-800 text-white" : "text-slate-600 hover:text-slate-900"
+                                    qrDataType === "sku" ? "bg-slate-800 text-white font-bold" : "text-slate-600 hover:text-slate-900"
                                 }`}
-                                title="QR membuka halaman servis & pencarian part saat discan kamera HP"
+                                title="QR hanya berisi teks kode SKU (SP-xxxx)"
                             >
-                                Link Serv.io
+                                Teks SKU
                             </button>
                         </div>
                     </div>

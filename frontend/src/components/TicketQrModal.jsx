@@ -1,10 +1,21 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { X, Printer, Download, QrCode, MonitorSmartphone, User, Calendar, AlertCircle } from "lucide-react";
 
 export default function TicketQrModal({ isOpen, onClose, tiket }) {
     if (!isOpen || !tiket) return null;
 
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=2&data=${encodeURIComponent(tiket.nomor_tiket)}`;
+    const [qrTarget, setQrTarget] = useState("erp"); // "erp" (Buka di ERP Teknisi) | "tracking" (Portal Publik Pelanggan) | "text" (Nomor Tiket Saja)
+
+    const erpUrl = typeof window !== "undefined"
+        ? `${window.location.origin}/tiket-servis?search=${encodeURIComponent(tiket.nomor_tiket)}`
+        : `https://komputerawet.com/tiket-servis?search=${encodeURIComponent(tiket.nomor_tiket)}`;
+
+    const trackingUrl = typeof window !== "undefined"
+        ? `${window.location.origin}/tracking?nomor_tiket=${encodeURIComponent(tiket.nomor_tiket)}`
+        : `https://komputerawet.com/tracking?nomor_tiket=${encodeURIComponent(tiket.nomor_tiket)}`;
+
+    const qrData = qrTarget === "erp" ? erpUrl : qrTarget === "tracking" ? trackingUrl : tiket.nomor_tiket;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=2&data=${encodeURIComponent(qrData)}`;
 
     const handlePrint = () => {
         window.print();
@@ -95,6 +106,43 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                     </button>
                 </div>
 
+                {/* Target Link Selector Toolbar */}
+                <div className="px-6 py-2.5 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between gap-2 text-xs no-print">
+                    <span className="text-2xs text-slate-500 font-semibold">Tujuan Scan:</span>
+                    <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5">
+                        <button
+                            type="button"
+                            onClick={() => setQrTarget("erp")}
+                            className={`px-2.5 py-1 rounded text-2xs font-bold transition-all cursor-pointer ${
+                                qrTarget === "erp" ? "bg-blue-600 text-white shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                            }`}
+                            title="Saat discan kamera HP, langsung membuka halaman kerja tiket di ERP"
+                        >
+                            Link ERP (Teknisi)
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setQrTarget("tracking")}
+                            className={`px-2.5 py-1 rounded text-2xs font-bold transition-all cursor-pointer ${
+                                qrTarget === "tracking" ? "bg-emerald-600 text-white shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                            }`}
+                            title="Saat discan kamera HP pelanggan, membuka portal tracking publik"
+                        >
+                            Tracking Pelanggan
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setQrTarget("text")}
+                            className={`px-2 py-1 rounded text-2xs font-semibold transition-all cursor-pointer ${
+                                qrTarget === "text" ? "bg-slate-800 text-white" : "text-slate-600 hover:text-slate-900"
+                            }`}
+                            title="QR hanya berisi teks kode nomor tiket"
+                        >
+                            Teks
+                        </button>
+                    </div>
+                </div>
+
                 {/* Modal Body / Printable Label */}
                 <div className="p-6 overflow-y-auto flex flex-col items-center">
                     <div
@@ -119,8 +167,12 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                 alt={`QR Code ${tiket.nomor_tiket}`}
                                 className="w-48 h-48 object-contain"
                             />
-                            <span className="text-3xs font-mono font-semibold text-slate-400 mt-1">
-                                SCAN UNTUK KLAIM / TRACKING
+                            <span className="text-3xs font-mono font-semibold text-slate-500 mt-1 uppercase text-center tracking-tight">
+                                {qrTarget === "erp"
+                                    ? "SCAN UNTUK BUKA LEMBAR KERJA ERP"
+                                    : qrTarget === "tracking"
+                                    ? "SCAN UNTUK KLAIM / TRACKING PUBLIK"
+                                    : `KODE TIKET: ${tiket.nomor_tiket}`}
                             </span>
                         </div>
 

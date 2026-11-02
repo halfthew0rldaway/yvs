@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect, useMemo, useDeferredValue, useTransition, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { Plus, Edit2, Trash2, Wrench, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, PackagePlus, History, DollarSign, AlertTriangle, CheckCircle, ExternalLink, X, TrendingUp, Download, Calendar, Building2, FileSpreadsheet, ShoppingCart, Bell, Send, MessageCircle, RotateCcw, QrCode, Camera, ShieldCheck, Award } from "lucide-react";
@@ -19,6 +19,7 @@ function formatRupiah(num) {
 
 export default function SparepartList() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { isAdmin } = useAuth();
     const [spareparts, setSpareparts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -28,19 +29,36 @@ export default function SparepartList() {
 
     function handleScanSuccess(decodedText) {
         setIsScannerOpen(false);
-        const code = decodedText.trim();
+        let code = decodedText.trim();
+        // Support scanning direct ERP URL from QR code or raw SKU text
+        if (code.includes("/sparepart?")) {
+            try {
+                const parsed = new URL(code, window.location.origin);
+                const q = parsed.searchParams.get("search") || parsed.searchParams.get("q");
+                if (q) code = q;
+            } catch (_) {}
+        }
         setSearchQuery(code);
         toast.success(`Berhasil memindai barcode sparepart: ${code}`);
     }
 
-    // Filter & Sort States
-    const [searchQuery, setSearchQuery] = useState("");
+    // Filter & Sort States (Initialized from URL ?search= if opened directly via phone camera QR)
+    const initialSearch = searchParams.get("search") || searchParams.get("q") || "";
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [selectedBrands, setSelectedBrands] = useState([]);
     const [stockStatusFilter, setStockStatusFilter] = useState("all"); // 'all', 'low', 'out'
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isBrandFilterOpen, setIsBrandFilterOpen] = useState(false);
     const [sortBy, setSortBy] = useState("nama_asc");
+
+    // Sync search query when URL parameters change (e.g. from global scanner or external QR tap)
+    useEffect(() => {
+        const query = searchParams.get("search") || searchParams.get("q");
+        if (query !== null && query !== undefined) {
+            setSearchQuery(query);
+        }
+    }, [searchParams]);
 
     // Quick Restock Modal State
     const [restockModalTarget, setRestockModalTarget] = useState(null);
