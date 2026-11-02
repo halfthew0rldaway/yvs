@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
+const { normalizeBrand, normalizeWikiCategory, normalizeText } = require("../utils/normalize");
 
 // Mengambil seluruh entri wiki reparasi (dengan filter dan pagination)
 async function getAll(req, res) {
@@ -160,10 +161,13 @@ async function create(req, res) {
             return res.status(400).json({ message: "Judul, Gejala, dan Langkah Solusi wajib diisi!" });
         }
 
+        const cleanMerek = merek ? normalizeBrand(merek) : null;
+        const cleanKategori = normalizeWikiCategory(kategori);
+
         let resolvedBrandId = brand_id ? Number(brand_id) : null;
-        if (!resolvedBrandId && merek) {
+        if (!resolvedBrandId && cleanMerek) {
             const foundBrand = await prisma.brand.findFirst({
-                where: { nama: { equals: merek.trim() } }
+                where: { nama: cleanMerek }
             });
             if (foundBrand) resolvedBrandId = foundBrand.id;
         }
@@ -171,14 +175,14 @@ async function create(req, res) {
         const wiki = await prisma.repairWiki.create({
             data: {
                 brand_id: resolvedBrandId,
-                merek: merek || null,
-                model_seri: model_seri || "Umum",
-                kategori: kategori || "Motherboard / Power",
-                judul,
+                merek: cleanMerek,
+                model_seri: model_seri ? normalizeText(model_seri) : "Umum",
+                kategori: cleanKategori,
+                judul: normalizeText(judul),
                 gejala,
                 penyebab: penyebab || null,
                 solusi_langkah,
-                komponen_terkait: komponen_terkait || null,
+                komponen_terkait: komponen_terkait ? normalizeText(komponen_terkait) : null,
                 tingkat_kesulitan: tingkat_kesulitan || "Menengah",
                 estimasi_waktu: estimasi_waktu || "1-2 Jam",
                 tingkat_sukses: tingkat_sukses ? Number(tingkat_sukses) : 90,
@@ -310,14 +314,14 @@ async function update(req, res) {
         const updated = await prisma.repairWiki.update({
             where: { id },
             data: {
-                merek: merek !== undefined ? merek : undefined,
-                model_seri: model_seri !== undefined ? model_seri : undefined,
-                kategori: kategori !== undefined ? kategori : undefined,
-                judul: judul !== undefined ? judul : undefined,
+                merek: merek !== undefined ? (merek ? normalizeBrand(merek) : null) : undefined,
+                model_seri: model_seri !== undefined ? (model_seri ? normalizeText(model_seri) : null) : undefined,
+                kategori: kategori !== undefined ? (kategori ? normalizeWikiCategory(kategori) : undefined) : undefined,
+                judul: judul !== undefined ? (judul ? normalizeText(judul) : undefined) : undefined,
                 gejala: gejala !== undefined ? gejala : undefined,
                 penyebab: penyebab !== undefined ? penyebab : undefined,
                 solusi_langkah: solusi_langkah !== undefined ? solusi_langkah : undefined,
-                komponen_terkait: komponen_terkait !== undefined ? komponen_terkait : undefined,
+                komponen_terkait: komponen_terkait !== undefined ? (komponen_terkait ? normalizeText(komponen_terkait) : null) : undefined,
                 tingkat_kesulitan: tingkat_kesulitan !== undefined ? tingkat_kesulitan : undefined,
                 estimasi_waktu: estimasi_waktu !== undefined ? estimasi_waktu : undefined,
                 tingkat_sukses: tingkat_sukses !== undefined ? Number(tingkat_sukses) : undefined,

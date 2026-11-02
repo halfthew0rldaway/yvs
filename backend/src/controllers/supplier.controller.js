@@ -1,4 +1,11 @@
 const prisma = require("../config/database");
+const {
+    normalizePhone,
+    normalizeEmail,
+    normalizeText,
+    normalizeName,
+    normalizeSupplierCategory
+} = require("../utils/normalize");
 
 // Default initial suppliers if table is fresh/empty
 const DEFAULT_SUPPLIERS = [
@@ -155,21 +162,22 @@ async function create(req, res) {
             catatan
         } = req.body;
 
-        if (!nama || !nama.trim()) {
+        const cleanNama = normalizeText(nama);
+        if (!cleanNama) {
             return res.status(400).json({ success: false, message: "Nama distributor/supplier wajib diisi" });
         }
 
         const newSupplier = await prisma.supplier.create({
             data: {
-                nama: nama.trim(),
-                kategori: kategori?.trim() || "Distributor Resmi",
-                kontak_person: kontak_person?.trim() || null,
-                telepon: telepon?.trim() || null,
-                email: email?.trim() || null,
-                alamat: alamat?.trim() || null,
-                link_toko: link_toko?.trim() || null,
-                kebijakan_klaim: kebijakan_klaim?.trim() || null,
-                catatan: catatan?.trim() || null
+                nama: cleanNama,
+                kategori: normalizeSupplierCategory(kategori),
+                kontak_person: kontak_person ? normalizeName(kontak_person) : null,
+                telepon: telepon ? normalizePhone(telepon) : null,
+                email: email ? normalizeEmail(email) : null,
+                alamat: alamat ? normalizeText(alamat) : null,
+                link_toko: link_toko ? link_toko.trim() : null,
+                kebijakan_klaim: kebijakan_klaim ? normalizeText(kebijakan_klaim) : null,
+                catatan: catatan ? normalizeText(catatan) : null
             }
         });
 
@@ -204,15 +212,15 @@ async function update(req, res) {
         const updated = await prisma.supplier.update({
             where: { id },
             data: {
-                ...(nama && { nama: nama.trim() }),
-                ...(kategori !== undefined && { kategori: kategori?.trim() || null }),
-                ...(kontak_person !== undefined && { kontak_person: kontak_person?.trim() || null }),
-                ...(telepon !== undefined && { telepon: telepon?.trim() || null }),
-                ...(email !== undefined && { email: email?.trim() || null }),
-                ...(alamat !== undefined && { alamat: alamat?.trim() || null }),
+                ...(nama && { nama: normalizeText(nama) }),
+                ...(kategori !== undefined && { kategori: kategori ? normalizeSupplierCategory(kategori) : null }),
+                ...(kontak_person !== undefined && { kontak_person: kontak_person ? normalizeName(kontak_person) : null }),
+                ...(telepon !== undefined && { telepon: telepon ? normalizePhone(telepon) : null }),
+                ...(email !== undefined && { email: email ? normalizeEmail(email) : null }),
+                ...(alamat !== undefined && { alamat: alamat ? normalizeText(alamat) : null }),
                 ...(link_toko !== undefined && { link_toko: link_toko?.trim() || null }),
-                ...(kebijakan_klaim !== undefined && { kebijakan_klaim: kebijakan_klaim?.trim() || null }),
-                ...(catatan !== undefined && { catatan: catatan?.trim() || null }),
+                ...(kebijakan_klaim !== undefined && { kebijakan_klaim: kebijakan_klaim ? normalizeText(kebijakan_klaim) : null }),
+                ...(catatan !== undefined && { catatan: catatan ? normalizeText(catatan) : null }),
                 ...(is_active !== undefined && { is_active: Boolean(is_active) })
             }
         });

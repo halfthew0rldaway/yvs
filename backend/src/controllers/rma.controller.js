@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const { broadcast } = require("../utils/sse");
+const { normalizeSerialNumber, normalizePhone, normalizeCourier, normalizeText } = require("../utils/normalize");
 
 // Mengambil seluruh klaim RMA garansi distributor
 async function getAll(req, res) {
@@ -230,11 +231,12 @@ async function create(req, res) {
                     supplier_id: supplier_id ? parseInt(supplier_id) : (sparepart.supplier_id || null),
                     tipe_sumber: tipe_sumber || (tiket_id ? "tiket_user" : "stok_toko"),
                     customer_nama: resolvedCustomer,
-                    customer_kontak: resolvedKontak,
+                    customer_kontak: resolvedKontak ? normalizePhone(resolvedKontak) : null,
                     perangkat_nama: resolvedPerangkat,
-                    supplier_nama: supplier_nama.trim(),
+                    supplier_nama: normalizeText(supplier_nama),
                     nomor_faktur: nomor_faktur ? nomor_faktur.trim() : null,
-                    serial_number_lama: serial_number_lama ? serial_number_lama.trim() : null,
+                    serial_number_lama: normalizeSerialNumber(serial_number_lama),
+                    serial_number_baru: normalizeSerialNumber(serial_number_baru),
                     kebijakan_garansi: kebijakan_garansi || sparepart.sistem_perhitungan_garansi || "sejak_nota_customer",
                     tgl_pembelian_distri: tgl_pembelian_distri ? new Date(tgl_pembelian_distri) : null,
                     tgl_penjualan_customer: resolvedTglJual,
@@ -245,8 +247,8 @@ async function create(req, res) {
                     alasan_rusak: alasan_rusak.trim(),
                     foto_kondisi: foto_kondisi ? JSON.stringify(foto_kondisi) : null,
                     status: initialStatus,
-                    resi_pengiriman: resi_pengiriman ? resi_pengiriman.trim() : null,
-                    kurir_pengiriman: kurir_pengiriman ? kurir_pengiriman.trim() : null,
+                    resi_pengiriman: resi_pengiriman ? resi_pengiriman.trim().toUpperCase() : null,
+                    kurir_pengiriman: kurir_pengiriman ? normalizeCourier(kurir_pengiriman) : null,
                     ongkir: parseFloat(ongkir || 0),
                     tiket_id: tiket_id ? parseInt(tiket_id) : null,
                     created_by_nama: req.user.nama

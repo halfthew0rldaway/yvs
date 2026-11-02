@@ -5,13 +5,15 @@ const path = require("path");
 const fs = require("fs");
 const prisma = require("../config/database");
 const { recordActivity } = require("../services/activityLog.service");
+const { normalizeEmail, normalizeName } = require("../utils/normalize");
 
 // Login
 async function login(req, res) {
     try {
         const { email, password, rememberMe } = req.body;
+        const cleanEmail = normalizeEmail(email);
 
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
         if (!user) {
             return res.status(401).json({ message: "Email atau password salah" });
         }
@@ -132,13 +134,14 @@ async function updateProfile(req, res) {
         const dataToUpdate = {};
 
         // Validasi dan update email jika diubah
-        if (email && email !== user.email) {
-            const existingUser = await prisma.user.findUnique({ where: { email } });
+        const cleanEmail = email ? normalizeEmail(email) : undefined;
+        if (cleanEmail && cleanEmail !== user.email) {
+            const existingUser = await prisma.user.findUnique({ where: { email: cleanEmail } });
             if (existingUser) return res.status(400).json({ message: "Email sudah digunakan oleh akun lain" });
-            dataToUpdate.email = email;
+            dataToUpdate.email = cleanEmail;
         }
 
-        if (nama) dataToUpdate.nama = nama;
+        if (nama) dataToUpdate.nama = normalizeName(nama);
         if (foto_profile !== undefined) dataToUpdate.foto_profile = foto_profile;
 
         // Ubah password jika form diisi

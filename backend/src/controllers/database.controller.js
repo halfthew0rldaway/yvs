@@ -511,7 +511,7 @@ async function normalizeExisting(req, res) {
         const runNormalization = require("../../scripts/normalize_database");
         const stats = await runNormalization();
         return res.json({
-            message: `Normalisasi selesai! ${stats.customersUpdated} data customer dan ${stats.perangkatsUpdated} data perangkat berhasil distandarisasi secara kanonikal.`,
+            message: `Normalisasi selesai! Standarisasi berhasil diterapkan: ${stats.customersUpdated} customer, ${stats.perangkatsUpdated} perangkat, ${stats.brandsUpdated} brand (${stats.brandsMerged} digabung), ${stats.sparepartsUpdated} sparepart, ${stats.suppliersUpdated} supplier, dan ${stats.usersUpdated} user.`,
             stats
         });
     } catch (error) {

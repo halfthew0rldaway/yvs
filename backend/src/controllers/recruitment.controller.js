@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const bcrypt = require("bcrypt");
+const { normalizePhone, normalizeEmail, normalizeName, normalizeApplicantSource } = require("../utils/normalize");
 
 // Master seed initial positions based on Boss's Blueprint
 const DEFAULT_JOBS = [
@@ -341,15 +342,15 @@ async function createApplicant(req, res) {
         const newApplicant = await prisma.applicant.create({
             data: {
                 job_posting_id: parseInt(job_posting_id),
-                nama_lengkap: nama_lengkap.trim(),
-                email: email?.trim() || null,
-                nomor_telepon: nomor_telepon.trim(),
+                nama_lengkap: normalizeName(nama_lengkap),
+                email: email ? normalizeEmail(email) : null,
+                nomor_telepon: normalizePhone(nomor_telepon),
                 alamat: alamat?.trim() || null,
                 pendidikan: pendidikan?.trim() || null,
                 pengalaman_thn: parseInt(pengalaman_thn) || 0,
                 resume_url: resume_url?.trim() || null,
                 portofolio_url: portofolio_url?.trim() || null,
-                sumber_lamaran: (sumber_lamaran || "Walk-in").trim(),
+                sumber_lamaran: normalizeApplicantSource(sumber_lamaran),
                 status: status || "Baru Masuk"
             },
             include: {

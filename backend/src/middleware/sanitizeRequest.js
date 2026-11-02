@@ -3,7 +3,9 @@ const {
     normalizeBrand,
     normalizeSerialNumber,
     normalizeDeviceType,
-    normalizeText
+    normalizeText,
+    normalizeEmail,
+    normalizeCourier
 } = require("../utils/normalize");
 
 /**
@@ -14,23 +16,33 @@ function sanitizeValue(key, value) {
         // Strip null bytes and control characters
         let cleaned = value.replace(/\0/g, "").trim();
 
-        // Specific field normalizers based on key name
         const lowerKey = typeof key === "string" ? key.toLowerCase() : String(key ?? "").toLowerCase();
-        if (lowerKey === "nomor_telepon" || lowerKey === "phone" || lowerKey === "telepon") {
+
+        // Specific field normalizers based on key name
+        if (lowerKey === "nomor_telepon" || lowerKey === "phone" || lowerKey === "telepon" || lowerKey === "customer_kontak" || lowerKey === "distributor_kontak") {
             return normalizePhone(cleaned) || cleaned;
+        }
+        if (lowerKey === "email") {
+            return normalizeEmail(cleaned);
         }
         if (lowerKey === "merek" || lowerKey === "brand") {
             return normalizeBrand(cleaned);
         }
-        if (lowerKey === "serial_number" || lowerKey === "sn") {
+        if (lowerKey === "serial_number" || lowerKey === "sn" || lowerKey === "serial_number_lama" || lowerKey === "serial_number_baru") {
             return normalizeSerialNumber(cleaned);
         }
         if (lowerKey === "jenis_perangkat") {
             return normalizeDeviceType(cleaned);
         }
+        if (lowerKey === "kode_unit" || lowerKey === "nomor_rma" || lowerKey === "nomor_tiket") {
+            return cleaned.toUpperCase();
+        }
+        if (lowerKey === "kurir" || lowerKey === "kurir_pengiriman") {
+            return normalizeCourier(cleaned);
+        }
 
         // Default text normalization (collapse multi-spaces for prose fields)
-        if (lowerKey === "nama" || lowerKey === "model" || lowerKey === "kategori") {
+        if (lowerKey === "nama" || lowerKey === "nama_lengkap" || lowerKey === "model" || lowerKey === "kategori") {
             return normalizeText(cleaned);
         }
 
@@ -44,8 +56,14 @@ function sanitizeValue(key, value) {
     if (value !== null && typeof value === "object" && !(value instanceof Date)) {
         const sanitizedObj = {};
         for (const k of Object.keys(value)) {
-            // Skip binary / buffer / file fields
-            if (k === "password" || k === "password_perangkat" || k.includes("token")) {
+            // Skip binary / buffer / file / password / token fields
+            if (
+                k === "password" || 
+                k === "password_perangkat" || 
+                k === "currentPassword" || 
+                k === "newPassword" || 
+                k.includes("token")
+            ) {
                 sanitizedObj[k] = value[k]; // Do not modify passwords or tokens!
             } else {
                 sanitizedObj[k] = sanitizeValue(k, value[k]);
@@ -71,4 +89,3 @@ function sanitizeRequest(req, res, next) {
 }
 
 module.exports = sanitizeRequest;
-

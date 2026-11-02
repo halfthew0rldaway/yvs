@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const path = require("path");
 const fs = require("fs");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
+const { normalizeEmail, normalizeName } = require("../utils/normalize");
 
 function formatUsersWithStats(users) {
     return users.map(user => {
@@ -349,7 +350,11 @@ async function createUser(req, res) {
             return res.status(400).json({ message: "Nama, email, dan password wajib diisi" });
         }
 
-        const existing = await prisma.user.findUnique({ where: { email } });
+        const cleanEmail = normalizeEmail(email);
+        const cleanNama = normalizeName(nama);
+        const cleanRole = role ? role.trim().toLowerCase() : "teknisi";
+
+        const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
         if (existing) {
             return res.status(400).json({ message: "Email sudah terdaftar" });
         }
@@ -357,10 +362,10 @@ async function createUser(req, res) {
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({
             data: {
-                nama,
-                email,
+                nama: cleanNama,
+                email: cleanEmail,
                 password: hashedPassword,
-                role: role || "teknisi",
+                role: cleanRole,
                 foto_profile: req.body.foto_profile || null
             },
             select: {
@@ -390,21 +395,25 @@ async function updateUser(req, res) {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
-        if (email && email !== user.email) {
-            const existing = await prisma.user.findUnique({ where: { email } });
+        const cleanEmail = email ? normalizeEmail(email) : undefined;
+        const cleanNama = nama ? normalizeName(nama) : undefined;
+        const cleanRole = role ? role.trim().toLowerCase() : undefined;
+
+        if (cleanEmail && cleanEmail !== user.email) {
+            const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
             if (existing) {
                 return res.status(400).json({ message: "Email sudah digunakan oleh user lain" });
             }
         }
 
-        if (id === req.user.id && role && role !== "admin") {
+        if (id === req.user.id && cleanRole && cleanRole !== "admin") {
             return res.status(400).json({ message: "Anda tidak dapat menurunkan hak akses peran akun Anda sendiri" });
         }
 
         const updateData = {
-            nama: nama || user.nama,
-            email: email || user.email,
-            role: role || user.role,
+            nama: cleanNama || user.nama,
+            email: cleanEmail || user.email,
+            role: cleanRole || user.role,
             ...(foto_profile !== undefined && { foto_profile })
         };
 

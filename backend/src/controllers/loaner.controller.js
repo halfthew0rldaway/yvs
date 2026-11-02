@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const { broadcast } = require("../utils/sse");
+const { normalizeLoanerCategory, normalizeSerialNumber, normalizeText } = require("../utils/normalize");
 
 // --- LOANER DEVICES (POOL UNIT CADANGAN) ---
 
@@ -86,29 +87,32 @@ async function createDevice(req, res) {
             catatan
         } = req.body;
 
-        if (!kode_unit || !nama) {
+        const cleanKode = kode_unit ? kode_unit.trim().toUpperCase() : "";
+        const cleanNama = normalizeText(nama);
+
+        if (!cleanKode || !cleanNama) {
             return res.status(400).json({ message: "Kode unit dan nama perangkat wajib diisi" });
         }
 
         // Cek duplikasi kode_unit
         const existing = await prisma.loanerDevice.findUnique({
-            where: { kode_unit: kode_unit.trim() }
+            where: { kode_unit: cleanKode }
         });
         if (existing) {
-            return res.status(400).json({ message: `Kode unit "${kode_unit}" sudah digunakan` });
+            return res.status(400).json({ message: `Kode unit "${cleanKode}" sudah digunakan` });
         }
 
         const device = await prisma.loanerDevice.create({
             data: {
-                kode_unit: kode_unit.trim(),
-                nama: nama.trim(),
-                kategori: kategori || "Laptop",
-                serial_number: serial_number ? serial_number.trim() : null,
-                spesifikasi: spesifikasi || null,
-                kelengkapan: kelengkapan || "Unit + Charger",
-                kondisi_fisik: kondisi_fisik || "Mulus / Normal",
+                kode_unit: cleanKode,
+                nama: cleanNama,
+                kategori: normalizeLoanerCategory(kategori),
+                serial_number: normalizeSerialNumber(serial_number),
+                spesifikasi: spesifikasi ? normalizeText(spesifikasi) : null,
+                kelengkapan: kelengkapan ? normalizeText(kelengkapan) : "Unit + Charger",
+                kondisi_fisik: kondisi_fisik ? normalizeText(kondisi_fisik) : "Mulus / Normal",
                 status: status || "tersedia",
-                catatan: catatan || null
+                catatan: catatan ? normalizeText(catatan) : null
             }
         });
 
@@ -177,15 +181,15 @@ async function updateDevice(req, res) {
         const updated = await prisma.loanerDevice.update({
             where: { id: parseInt(id) },
             data: {
-                ...(kode_unit && { kode_unit: kode_unit.trim() }),
-                ...(nama && { nama: nama.trim() }),
-                ...(kategori && { kategori }),
-                serial_number: serial_number !== undefined ? (serial_number ? serial_number.trim() : null) : undefined,
-                spesifikasi: spesifikasi !== undefined ? spesifikasi : undefined,
-                kelengkapan: kelengkapan !== undefined ? kelengkapan : undefined,
-                kondisi_fisik: kondisi_fisik !== undefined ? kondisi_fisik : undefined,
+                ...(kode_unit && { kode_unit: kode_unit.trim().toUpperCase() }),
+                ...(nama && { nama: normalizeText(nama) }),
+                ...(kategori && { kategori: normalizeLoanerCategory(kategori) }),
+                serial_number: serial_number !== undefined ? normalizeSerialNumber(serial_number) : undefined,
+                spesifikasi: spesifikasi !== undefined ? (spesifikasi ? normalizeText(spesifikasi) : null) : undefined,
+                kelengkapan: kelengkapan !== undefined ? (kelengkapan ? normalizeText(kelengkapan) : null) : undefined,
+                kondisi_fisik: kondisi_fisik !== undefined ? (kondisi_fisik ? normalizeText(kondisi_fisik) : null) : undefined,
                 status: status !== undefined ? status : undefined,
-                catatan: catatan !== undefined ? catatan : undefined
+                catatan: catatan !== undefined ? (catatan ? normalizeText(catatan) : null) : undefined
             }
         });
 

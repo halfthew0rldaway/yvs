@@ -1,6 +1,6 @@
 const prisma = require("../config/database");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
-const { normalizeText } = require("../utils/normalize");
+const { normalizeText, normalizeSparepartCategory, normalizePhone } = require("../utils/normalize");
 
 // Mengambil seluruh data sparepart
 async function getAll(req, res) {
@@ -131,6 +131,7 @@ async function create(req, res) {
         if (!cleanNama) {
             return res.status(400).json({ message: "Nama sparepart wajib diisi" });
         }
+        const cleanKategori = normalizeSparepartCategory(kategori);
 
         // Cek apakah item sparepart ini sudah terdaftar pada brand yang sama
         const existing = await prisma.sparepart.findFirst({
@@ -156,16 +157,16 @@ async function create(req, res) {
                 nama: cleanNama, 
                 brand_id: Number(brand_id),
                 supplier_id: supplier_id ? Number(supplier_id) : null,
-                kategori: kategori || "Umum", 
+                kategori: cleanKategori, 
                 stok: initialStok, 
                 harga: Number(harga),
                 harga_beli: initialHpp,
                 has_garansi_distri: Boolean(has_garansi_distri),
                 tipe_garansi_distri: tipe_garansi_distri || null,
                 sistem_perhitungan_garansi: sistem_perhitungan_garansi || null,
-                distributor_nama: distributor_nama ? distributor_nama.trim() : (supplier_nama ? supplier_nama.trim() : null),
-                distributor_kontak: distributor_kontak ? distributor_kontak.trim() : null,
-                kebijakan_klaim: kebijakan_klaim ? kebijakan_klaim.trim() : null
+                distributor_nama: distributor_nama ? normalizeText(distributor_nama) : (supplier_nama ? normalizeText(supplier_nama) : null),
+                distributor_kontak: distributor_kontak ? normalizePhone(distributor_kontak) : null,
+                kebijakan_klaim: kebijakan_klaim ? normalizeText(kebijakan_klaim) : null
             },
             include: { brand: true, supplier: true }
         });
@@ -222,19 +223,19 @@ async function update(req, res) {
         const sparepart = await prisma.sparepart.update({
             where: { id },
             data: {
-                nama: nama || undefined,
+                nama: nama ? normalizeText(nama) : undefined,
                 brand_id: brand_id ? Number(brand_id) : undefined,
                 supplier_id: supplier_id !== undefined ? (supplier_id ? Number(supplier_id) : null) : undefined,
-                kategori: kategori || undefined,
+                kategori: kategori ? normalizeSparepartCategory(kategori) : undefined,
                 stok: stok !== undefined ? Number(stok) : undefined,
                 harga: harga !== undefined ? Number(harga) : undefined,
                 harga_beli: harga_beli !== undefined ? Number(harga_beli) : undefined,
                 has_garansi_distri: has_garansi_distri !== undefined ? Boolean(has_garansi_distri) : undefined,
                 tipe_garansi_distri: tipe_garansi_distri !== undefined ? tipe_garansi_distri : undefined,
                 sistem_perhitungan_garansi: sistem_perhitungan_garansi !== undefined ? sistem_perhitungan_garansi : undefined,
-                distributor_nama: distributor_nama !== undefined ? (distributor_nama ? distributor_nama.trim() : null) : undefined,
-                distributor_kontak: distributor_kontak !== undefined ? (distributor_kontak ? distributor_kontak.trim() : null) : undefined,
-                kebijakan_klaim: kebijakan_klaim !== undefined ? (kebijakan_klaim ? kebijakan_klaim.trim() : null) : undefined
+                distributor_nama: distributor_nama !== undefined ? (distributor_nama ? normalizeText(distributor_nama) : null) : undefined,
+                distributor_kontak: distributor_kontak !== undefined ? (distributor_kontak ? normalizePhone(distributor_kontak) : null) : undefined,
+                kebijakan_klaim: kebijakan_klaim !== undefined ? (kebijakan_klaim ? normalizeText(kebijakan_klaim) : null) : undefined
             },
             include: { brand: true, supplier: true }
         });
