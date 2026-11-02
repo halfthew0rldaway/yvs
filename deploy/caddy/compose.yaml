@@ -13,6 +13,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8080:8080"
     environment:
       PROD_DOMAIN: ${PROD_DOMAIN:-komputerawet.com}
       STAGING_DOMAIN: ${STAGING_DOMAIN:-staging.komputerawet.com}

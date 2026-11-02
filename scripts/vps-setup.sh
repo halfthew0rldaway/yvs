@@ -66,9 +66,9 @@ mkdir -p "$GATEWAY_DIR"
 
 cat << 'EOF' > "$GATEWAY_DIR/Caddyfile"
 # ==========================================
-# 1. PRODUCTION DOMAIN
+# 1. PRODUCTION DOMAIN & MAGIC SSLIP
 # ==========================================
-{$PROD_DOMAIN:komputerawet.com} {
+{$PROD_DOMAIN:komputerawet.com}, prod.101.32.127.55.sslip.io {
     encode zstd gzip
 
     @api path /api /api/*
@@ -87,9 +87,51 @@ cat << 'EOF' > "$GATEWAY_DIR/Caddyfile"
 }
 
 # ==========================================
-# 2. STAGING DOMAIN
+# 2. STAGING DOMAIN & MAGIC SSLIP
 # ==========================================
-{$STAGING_DOMAIN:staging.komputerawet.com} {
+{$STAGING_DOMAIN:staging.komputerawet.com}, staging.101.32.127.55.sslip.io {
+    encode zstd gzip
+
+    @api path /api /api/*
+    handle @api {
+        reverse_proxy yvs-staging-backend:5000
+    }
+
+    @uploads path /uploads /uploads/*
+    handle @uploads {
+        reverse_proxy yvs-staging-backend:5000
+    }
+
+    handle {
+        reverse_proxy yvs-staging-frontend:80
+    }
+}
+
+# ==========================================
+# 3. DIRECT IP PORT 80 (Production Live)
+# ==========================================
+:80 {
+    encode zstd gzip
+
+    @api path /api /api/*
+    handle @api {
+        reverse_proxy yvs-prod-backend:5000
+    }
+
+    @uploads path /uploads /uploads/*
+    handle @uploads {
+        reverse_proxy yvs-prod-backend:5000
+    }
+
+    handle {
+        reverse_proxy yvs-prod-frontend:80
+    }
+}
+
+# ==========================================
+# 4. DIRECT IP PORT 8080 (Staging Preview)
+# ==========================================
+:8080 {
     encode zstd gzip
 
     @api path /api /api/*
@@ -119,6 +161,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8080:8080"
     environment:
       PROD_DOMAIN: ${PROD_DOMAIN:-komputerawet.com}
       STAGING_DOMAIN: ${STAGING_DOMAIN:-staging.komputerawet.com}

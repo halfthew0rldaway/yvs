@@ -1,13 +1,12 @@
 # ==============================================================================
 # Serv.io / YVS Gateway - Central Reverse Proxy (Caddy)
-# Bertanggung jawab mengelola SSL otomatis (HTTPS) & routing port 80/443
-# untuk Staging (staging.komputerawet.com) dan Production (komputerawet.com)
+# Mendukung akses via Domain Resmi, Magic Domain (sslip.io), dan IP langsung
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. PRODUCTION ENVIRONMENT
+# 1. PRODUCTION ENVIRONMENT (Domain Resmi & sslip.io HTTPS)
 # ------------------------------------------------------------------------------
-{$PROD_DOMAIN:komputerawet.com} {
+{$PROD_DOMAIN:komputerawet.com}, prod.101.32.127.55.sslip.io {
     encode zstd gzip
 
     # API Backend Serv.io Production
@@ -29,9 +28,9 @@
 }
 
 # ------------------------------------------------------------------------------
-# 2. STAGING / R&D ENVIRONMENT
+# 2. STAGING / R&D ENVIRONMENT (Domain Resmi & sslip.io HTTPS)
 # ------------------------------------------------------------------------------
-{$STAGING_DOMAIN:staging.komputerawet.com} {
+{$STAGING_DOMAIN:staging.komputerawet.com}, staging.101.32.127.55.sslip.io {
     encode zstd gzip
 
     # API Backend Serv.io Staging
@@ -47,6 +46,50 @@
     }
 
     # Frontend Single Page App Staging
+    handle {
+        reverse_proxy yvs-staging-frontend:80
+    }
+}
+
+# ------------------------------------------------------------------------------
+# 3. DIRECT IP ACCESS - PORT 80 (Production Live)
+# Contoh: http://101.32.127.55
+# ------------------------------------------------------------------------------
+:80 {
+    encode zstd gzip
+
+    @api path /api /api/*
+    handle @api {
+        reverse_proxy yvs-prod-backend:5000
+    }
+
+    @uploads path /uploads /uploads/*
+    handle @uploads {
+        reverse_proxy yvs-prod-backend:5000
+    }
+
+    handle {
+        reverse_proxy yvs-prod-frontend:80
+    }
+}
+
+# ------------------------------------------------------------------------------
+# 4. DIRECT IP ACCESS - PORT 8080 (Staging Preview)
+# Contoh: http://101.32.127.55:8080
+# ------------------------------------------------------------------------------
+:8080 {
+    encode zstd gzip
+
+    @api path /api /api/*
+    handle @api {
+        reverse_proxy yvs-staging-backend:5000
+    }
+
+    @uploads path /uploads /uploads/*
+    handle @uploads {
+        reverse_proxy yvs-staging-backend:5000
+    }
+
     handle {
         reverse_proxy yvs-staging-frontend:80
     }
