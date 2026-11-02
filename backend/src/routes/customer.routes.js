@@ -2,7 +2,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate, authorize } = require("../middleware/auth");
-const { getAll, getById, create, update, remove, updateBadges } = require("../controllers/customer.controller");
+const { getAll, getById, create, update, remove, restore, updateBadges } = require("../controllers/customer.controller");
 const { normalizePhone, normalizeName, normalizeText } = require("../utils/normalize");
 
 const router = express.Router();
@@ -28,6 +28,8 @@ router.get("/", getAll);
 router.get("/:id", getById);
 router.patch("/:id/badges", authorize("admin", "pimpinan", "teknisi"), updateBadges);
 router.put("/:id/badges", authorize("admin", "pimpinan", "teknisi"), updateBadges);
+router.post("/:id/restore", authorize("admin", "frontman"), restore);
+router.put("/:id/restore", authorize("admin", "frontman"), restore);
 router.post("/", authorize("admin", "frontman"), customerValidation, validate, create);
 router.put("/:id", authorize("admin", "frontman"), customerValidation, validate, update);
 router.delete("/:id", authorize("admin"), remove);

@@ -39,6 +39,8 @@ model Customer {
   tipe_kepribadian String?  @default("Netral") // Netral, Koleris, Sanguinis, Plegmatis, Melankolis
   catatan_khusus   String?  @db.Text
   custom_badges    Json?    // Array of badge keys, e.g. ["revisi_acc_risk", "vip_loyal"]
+  is_active        Boolean  @default(true)
+  deleted_at       DateTime?
   created_at    DateTime @default(now())
 
   perangkat         Perangkat[]
@@ -46,6 +48,7 @@ model Customer {
 
   @@index([nomor_telepon])
   @@index([nama])
+  @@index([is_active])
 }
 
 model Perangkat {

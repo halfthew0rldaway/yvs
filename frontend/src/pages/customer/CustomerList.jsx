@@ -2,7 +2,7 @@ import toast from 'react-hot-toast';
 import { useState, useEffect, useCallback, useTransition, useDeferredValue, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import { Search, Plus, Edit2, Trash2, Users, Eye, MonitorSmartphone, X, Award, Filter, ArrowUpDown, RotateCcw } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, Users, Eye, MonitorSmartphone, X, Award, Filter, ArrowUpDown, RotateCcw, Archive } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import CustomerDetailModal from "../../components/CustomerDetailModal";
 import PerangkatDetailModal from "../../components/PerangkatDetailModal";
@@ -21,9 +21,11 @@ const CustomerRow = memo(function CustomerRow({
     rowNumber, 
     onSelect, 
     onDelete, 
+    onRestore,
     onCustomerUpdated 
 }) {
     const personality = PERSONALITY_TYPES[customer.tipe_kepribadian] || PERSONALITY_TYPES["Netral"];
+    const isArchived = customer.is_active === false;
 
     return (
         <tr 
@@ -33,18 +35,28 @@ const CustomerRow = memo(function CustomerRow({
                 if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
                 onSelect(customer.id);
             }}
-            className="hover:bg-blue-50/40 cursor-pointer transition-colors group"
+            className={`hover:bg-blue-50/40 cursor-pointer transition-colors group ${isArchived ? 'bg-slate-50/60 opacity-80 hover:opacity-100' : ''}`}
         >
             <td className="px-6 py-4 text-slate-400 font-mono text-xs">{rowNumber}</td>
             <td className="px-6 py-4">
-                <button
-                    type="button"
-                    onClick={() => onSelect(customer.id)}
-                    className="font-bold text-slate-900 hover:text-blue-600 transition-colors text-left group-hover:underline block cursor-pointer"
-                    title="Lihat detail data pelanggan & perangkat miliknya"
-                >
-                    {customer.nama}
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                        type="button"
+                        onClick={() => onSelect(customer.id)}
+                        className={`font-bold transition-colors text-left group-hover:underline block cursor-pointer ${
+                            isArchived ? 'text-slate-600 line-through decoration-slate-400' : 'text-slate-900 hover:text-blue-600'
+                        }`}
+                        title="Lihat detail data pelanggan & perangkat miliknya"
+                    >
+                        {customer.nama}
+                    </button>
+                    {isArchived && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                            <Archive className="w-2.5 h-2.5" />
+                            Diarsipkan
+                        </span>
+                    )}
+                </div>
                 {customer.catatan_khusus && (
                     <p className="text-2xs text-slate-500 truncate max-w-[240px] mt-0.5" title={customer.catatan_khusus}>
                         <span className="text-slate-400 font-medium">Catatan:</span> {customer.catatan_khusus}
@@ -97,14 +109,25 @@ const CustomerRow = memo(function CustomerRow({
                     >
                         <Edit2 className="w-4 h-4" />
                     </Link>
-                    <button
-                        type="button"
-                        onClick={() => onDelete(customer)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                        title="Hapus"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isArchived ? (
+                        <button
+                            type="button"
+                            onClick={() => onRestore(customer)}
+                            className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                            title="Aktifkan Kembali Pelanggan (Restore)"
+                        >
+                            <RotateCcw className="w-4 h-4 text-emerald-600" />
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => onDelete(customer)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Arsipkan / Hapus"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
             </td>
         </tr>
@@ -115,6 +138,8 @@ export default function CustomerList() {
     const navigate = useNavigate();
     const [customers, setCustomers] = useState([]);
     const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("active"); // "active" | "archived" | "all"
+    const [counts, setCounts] = useState({ totalActive: 0, totalArchived: 0, totalAll: 0 });
     const [tipeKepribadianFilter, setTipeKepribadianFilter] = useState("all");
     const [hasPerangkatFilter, setHasPerangkatFilter] = useState("all");
     const [sortBy, setSortBy] = useState("created_at_desc");
@@ -133,15 +158,16 @@ export default function CustomerList() {
     const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
-        fetchCustomers(search, currentPage, tipeKepribadianFilter, hasPerangkatFilter, sortBy);
-    }, [currentPage, pageSize, tipeKepribadianFilter, hasPerangkatFilter, sortBy]);
+        fetchCustomers(search, currentPage, tipeKepribadianFilter, hasPerangkatFilter, sortBy, statusFilter);
+    }, [currentPage, pageSize, tipeKepribadianFilter, hasPerangkatFilter, sortBy, statusFilter]);
 
     async function fetchCustomers(
         targetSearch = search, 
         page = currentPage, 
         targetPersonality = tipeKepribadianFilter,
         targetHasPerangkat = hasPerangkatFilter,
-        targetSortBy = sortBy
+        targetSortBy = sortBy,
+        targetStatus = statusFilter
     ) {
         setLoading(true);
         try {
@@ -149,6 +175,7 @@ export default function CustomerList() {
                 page,
                 limit: pageSize,
                 sortBy: targetSortBy,
+                status: targetStatus,
             };
             if (targetSearch.trim()) {
                 params.search = targetSearch.trim();
@@ -165,6 +192,9 @@ export default function CustomerList() {
                 setCustomers(res.data.data);
                 setTotalItems(res.data.pagination.total);
                 setTotalPages(res.data.pagination.totalPages);
+                if (res.data.counts) {
+                    setCounts(res.data.counts);
+                }
             } else if (Array.isArray(res.data)) {
                 setCustomers(res.data);
                 setTotalItems(res.data.length);
@@ -186,6 +216,16 @@ export default function CustomerList() {
         setDeleteTarget(customer);
     }, []);
 
+    const handleRestoreClick = useCallback(async (customer) => {
+        try {
+            const res = await api.post(`/customer/${customer.id}/restore`);
+            toast.success(res.data?.message || `Pelanggan "${customer.nama}" berhasil diaktifkan kembali.`);
+            fetchCustomers();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal mengaktifkan kembali pelanggan.");
+        }
+    }, [search, currentPage, tipeKepribadianFilter, hasPerangkatFilter, sortBy, statusFilter, pageSize]);
+
     const handleCustomerUpdated = useCallback((updated) => {
         setCustomers((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
     }, []);
@@ -193,12 +233,12 @@ export default function CustomerList() {
     async function executeDelete() {
         if (!deleteTarget) return;
         try {
-            await api.delete(`/customer/${deleteTarget.id}`);
-            toast.success("Customer berhasil dihapus");
+            const res = await api.delete(`/customer/${deleteTarget.id}`);
+            toast.success(res.data?.message || "Customer berhasil diproses");
             setDeleteTarget(null);
             fetchCustomers();
         } catch (err) {
-            toast.error(err.response?.data?.message || "Gagal menghapus");
+            toast.error(err.response?.data?.message || "Gagal memproses customer");
             setDeleteTarget(null);
         }
     }
@@ -207,7 +247,7 @@ export default function CustomerList() {
         e.preventDefault();
         startTransition(() => {
             setCurrentPage(1);
-            fetchCustomers(search, 1, tipeKepribadianFilter, hasPerangkatFilter, sortBy);
+            fetchCustomers(search, 1, tipeKepribadianFilter, hasPerangkatFilter, sortBy, statusFilter);
         });
     }
 
@@ -215,7 +255,7 @@ export default function CustomerList() {
         setSearch("");
         startTransition(() => {
             setCurrentPage(1);
-            fetchCustomers("", 1, tipeKepribadianFilter, hasPerangkatFilter, sortBy);
+            fetchCustomers("", 1, tipeKepribadianFilter, hasPerangkatFilter, sortBy, statusFilter);
         });
     }
 
@@ -224,9 +264,10 @@ export default function CustomerList() {
         setTipeKepribadianFilter("all");
         setHasPerangkatFilter("all");
         setSortBy("created_at_desc");
+        setStatusFilter("active");
         startTransition(() => {
             setCurrentPage(1);
-            fetchCustomers("", 1, "all", "all", "created_at_desc");
+            fetchCustomers("", 1, "all", "all", "created_at_desc", "active");
         });
     }
 
@@ -234,7 +275,8 @@ export default function CustomerList() {
         search.trim() || 
         tipeKepribadianFilter !== "all" || 
         hasPerangkatFilter !== "all" || 
-        sortBy !== "created_at_desc"
+        sortBy !== "created_at_desc" ||
+        statusFilter !== "active"
     );
 
     return (
@@ -263,6 +305,68 @@ export default function CustomerList() {
                         <span>Tambah Pelanggan</span>
                     </Link>
                 </div>
+            </div>
+
+            {/* Status Tabs: Pelanggan Aktif vs Diarsipkan (Soft Delete) */}
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-px overflow-x-auto">
+                <button
+                    type="button"
+                    onClick={() => {
+                        setStatusFilter("active");
+                        setCurrentPage(1);
+                    }}
+                    className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-xl border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                        statusFilter === "active"
+                            ? "border-blue-600 text-blue-600 bg-blue-50/50"
+                            : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    }`}
+                >
+                    <Users className="w-4 h-4" />
+                    <span>Pelanggan Aktif</span>
+                    {counts.totalActive > 0 && (
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                            statusFilter === "active" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"
+                        }`}>
+                            {counts.totalActive}
+                        </span>
+                    )}
+                </button>
+                <button
+                    type="button"
+                    onClick={() => {
+                        setStatusFilter("archived");
+                        setCurrentPage(1);
+                    }}
+                    className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-xl border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                        statusFilter === "archived"
+                            ? "border-amber-600 text-amber-600 bg-amber-50/50"
+                            : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    }`}
+                >
+                    <Archive className="w-4 h-4 text-amber-500" />
+                    <span>Diarsipkan (Nonaktif)</span>
+                    {counts.totalArchived > 0 && (
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                            statusFilter === "archived" ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-600"
+                        }`}>
+                            {counts.totalArchived}
+                        </span>
+                    )}
+                </button>
+                <button
+                    type="button"
+                    onClick={() => {
+                        setStatusFilter("all");
+                        setCurrentPage(1);
+                    }}
+                    className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-xl border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                        statusFilter === "all"
+                            ? "border-slate-800 text-slate-900 bg-slate-100/50"
+                            : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    }`}
+                >
+                    <span>Semua Pelanggan</span>
+                </button>
             </div>
 
             {/* Filter & Search Bar */}
@@ -481,6 +585,7 @@ export default function CustomerList() {
                                     rowNumber={(currentPage - 1) * pageSize + i + 1}
                                     onSelect={handleSelectCustomer}
                                     onDelete={handleDeleteClick}
+                                    onRestore={handleRestoreClick}
                                     onCustomerUpdated={handleCustomerUpdated}
                                 />
                             ))}
@@ -493,12 +598,24 @@ export default function CustomerList() {
             {deleteTarget && (
                 <ConfirmModal
                     isOpen={!!deleteTarget}
-                    title="Hapus Customer"
-                    message={`Apakah Anda yakin ingin menghapus pelanggan "${deleteTarget?.nama}"? Data yang sudah dihapus tidak dapat dikembalikan.`}
+                    title={
+                        ((deleteTarget.perangkat || []).length > 0)
+                            ? "Arsipkan Pelanggan"
+                            : "Hapus / Arsipkan Pelanggan"
+                    }
+                    message={
+                        ((deleteTarget.perangkat || []).length > 0)
+                            ? `Pelanggan "${deleteTarget.nama}" memiliki riwayat ${(deleteTarget.perangkat || []).length} unit perangkat servis. Pelanggan akan dialihkan ke status Diarsipkan (Nonaktif). Riwayat tiket servis, invoice, dan audit keuangan tetap aman tersimpan demi integritas laporan bengkel.`
+                            : `Apakah Anda yakin ingin mengarsipkan atau menghapus data pelanggan "${deleteTarget.nama}"?`
+                    }
                     onConfirm={executeDelete}
                     onCancel={() => setDeleteTarget(null)}
-                    confirmText="Hapus"
-                    isDanger={true}
+                    confirmText={
+                        ((deleteTarget.perangkat || []).length > 0)
+                            ? "Arsipkan Pelanggan"
+                            : "Arsipkan / Hapus"
+                    }
+                    isDanger={false}
                 />
             )}
 

@@ -4,7 +4,7 @@ import api from "../services/api";
 import { 
     User, Phone, MapPin, MonitorSmartphone, Plus, ExternalLink, X, 
     FileText, Calendar, MessageCircle, Edit2, Wrench, Laptop, Tv, Printer, 
-    Smartphone, AlertCircle, HeartHandshake, Sparkles, CheckCircle2, RotateCcw 
+    Smartphone, AlertCircle, HeartHandshake, Sparkles, CheckCircle2, RotateCcw, Archive 
 } from "lucide-react";
 import { PERSONALITY_TYPES } from "../constants/personalityTypes";
 import MaintenanceRecallModal from "./MaintenanceRecallModal";
@@ -117,6 +117,12 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                         {personality.label}
                                     </span>
                                 )}
+                                {customer?.is_active === false && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                                        <Archive className="w-2.5 h-2.5" />
+                                        Diarsipkan (Nonaktif)
+                                    </span>
+                                )}
                                 {customer && (
                                     <CustomerBadges 
                                         customer={customer} 
@@ -139,6 +145,25 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                        {isAdmin && customer && customer.is_active === false && (
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    try {
+                                        await api.post(`/customer/${customer.id}/restore`);
+                                        setCustomer(prev => ({ ...prev, is_active: true, deleted_at: null }));
+                                        if (onCustomerUpdated) onCustomerUpdated({ id: customer.id, is_active: true });
+                                    } catch (err) {
+                                        console.error(err);
+                                    }
+                                }}
+                                className="hidden xs:inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-xl border border-emerald-200 transition-all cursor-pointer"
+                                title="Aktifkan Kembali Pelanggan"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Aktifkan Pelanggan</span>
+                            </button>
+                        )}
                         {isAdmin && customer && (
                             <Link
                                 to={`/customer/edit/${customer.id}${window.location.pathname ? `?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}` : ''}`}

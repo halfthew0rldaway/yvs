@@ -45,11 +45,28 @@ function enrichCustomerWithBadges(c) {
 // Mengambil seluruh data customer dengan pencarian dan paginasi
 async function getAll(req, res) {
     try {
-        const { search, tipe_kepribadian, has_perangkat, sortBy } = req.query;
+        const { search, tipe_kepribadian, has_perangkat, sortBy, status } = req.query;
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
 
         let where = {};
         const andList = [];
+
+        // Filter status arsip:
+        // status === "archived": hanya tampilkan pelanggan yang diarsipkan (is_active === false)
+        // status === "all": tampilkan semua (aktif + diarsipkan)
+        // default / status === "active": hanya tampilkan pelanggan aktif (is_active === true atau null)
+        if (status === "archived") {
+            andList.push({ is_active: false });
+        } else if (status === "all") {
+            // Tampilkan seluruh pelanggan tanpa filter is_active
+        } else {
+            andList.push({
+                OR: [
+                    { is_active: true },
+                    { is_active: null }
+                ]
+            });
+        }
 
         if (search) {
             const trimmedSearch = search.trim();
@@ -113,7 +130,7 @@ async function getAll(req, res) {
             return res.json(enriched);
         }
 
-        const [total, customers] = await Promise.all([
+        const [total, customers, totalActive, totalArchived] = await Promise.all([
             prisma.customer.count({ where }),
             prisma.customer.findMany({
                 where,
@@ -122,10 +139,18 @@ async function getAll(req, res) {
                 skip,
                 take: limit,
             }),
+            prisma.customer.count({ where: { OR: [{ is_active: true }, { is_active: null }] } }).catch(() => 0),
+            prisma.customer.count({ where: { is_active: false } }).catch(() => 0),
         ]);
 
         const enriched = customers.map(enrichCustomerWithBadges);
-        return res.json(buildPaginationResponse(enriched, total, page, limit));
+        return res.json(buildPaginationResponse(enriched, total, page, limit, {
+            counts: {
+                totalActive,
+                totalArchived,
+                totalAll: (totalActive || 0) + (totalArchived || 0),
+            }
+        }));
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
     }
@@ -413,34 +438,99 @@ async function updateBadges(req, res) {
     }
 }
 
-// Menghapus customer
+// Menghapus / Mengarsipkan customer (Soft Delete)
 async function remove(req, res) {
     try {
         const id = Number(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "ID customer tidak valid" });
+        }
+
+        const existing = await prisma.customer.findUnique({
+            where: { id },
+            include: {
+                perangkat: {
+                    include: {
+                        tiket_servis: { select: { id: true, nomor_tiket: true } }
+                    }
+                },
+                peminjaman_loaner: { select: { id: true } }
+            }
+        });
+
+        if (!existing) {
+            return res.status(404).json({ message: "Customer tidak ditemukan" });
+        }
+
+        const totalTickets = (existing.perangkat || []).reduce((acc, p) => acc + (p.tiket_servis || []).length, 0);
+        const totalLoaners = (existing.peminjaman_loaner || []).length;
+        const forceHardDelete = req.query.force === "true";
+
+        // Jika customer memiliki riwayat tiket servis atau peminjaman unit:
+        // Lakukan Soft Delete (Arsipkan) demi integritas audit & keuangan
+        if (totalTickets > 0 || totalLoaners > 0 || !forceHardDelete) {
+            await prisma.customer.update({
+                where: { id },
+                data: {
+                    is_active: false,
+                    deleted_at: new Date()
+                }
+            });
+
+            return res.json({
+                message: totalTickets > 0
+                    ? `Pelanggan "${existing.nama}" berhasil diarsipkan (Status Nonaktif). Riwayat ${totalTickets} tiket servis & audit keuangan tetap aman tersimpan.`
+                    : `Pelanggan "${existing.nama}" berhasil diarsipkan.`,
+                isArchived: true,
+                data: { id, is_active: false }
+            });
+        }
+
+        // Jika tidak memiliki riwayat tiket/loaner sama sekali dan force = true:
+        if (existing.perangkat && existing.perangkat.length > 0) {
+            await prisma.perangkat.deleteMany({ where: { customer_id: id } });
+        }
+        await prisma.customer.delete({ where: { id } });
+
+        return res.json({
+            message: `Customer "${existing.nama}" berhasil dihapus permanen.`,
+            isDeleted: true
+        });
+    } catch (error) {
+        console.error("Error remove customer:", error);
+        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+    }
+}
+
+// Mengaktifkan kembali customer yang diarsipkan (Restore)
+async function restore(req, res) {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "ID customer tidak valid" });
+        }
 
         const existing = await prisma.customer.findUnique({ where: { id } });
         if (!existing) {
             return res.status(404).json({ message: "Customer tidak ditemukan" });
         }
 
-        // Proteksi integritas: Cegah penghapusan jika customer memiliki tiket servis
-        const existingTiket = await prisma.tiketServis.findFirst({
-            where: {
-                perangkat: { customer_id: id }
+        const updated = await prisma.customer.update({
+            where: { id },
+            data: {
+                is_active: true,
+                deleted_at: null
             }
         });
-        if (existingTiket) {
-            return res.status(400).json({
-                message: "Customer tidak dapat dihapus karena memiliki riwayat tiket servis dan perbaikan pada sistem demi integritas audit dan data keuangan."
-            });
-        }
 
-        await prisma.customer.delete({ where: { id } });
-
-        return res.json({ message: "Customer berhasil dihapus" });
+        return res.json({
+            message: `Pelanggan "${updated.nama}" berhasil diaktifkan kembali.`,
+            data: updated
+        });
     } catch (error) {
-        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+        console.error("Error restore customer:", error);
+        return res.status(500).json({ message: "Terjadi kesalahan saat mengaktifkan pelanggan", error: error.message });
     }
 }
 
-module.exports = { getAll, getById, create, update, remove, updateBadges };
+module.exports = { getAll, getById, create, update, remove, restore, updateBadges };

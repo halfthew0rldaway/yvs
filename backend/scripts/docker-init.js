@@ -39,6 +39,12 @@ async function main() {
             await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS custom_badges JSON NULL;`).catch(async () => {
                 await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN custom_badges JSON NULL;`).catch(() => {});
             });
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS is_active TINYINT(1) NOT NULL DEFAULT 1;`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1;`).catch(() => {});
+            });
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS deleted_at DATETIME NULL;`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN deleted_at DATETIME NULL;`).catch(() => {});
+            });
         }
         for (const tbl of ["TiketServis", "tiket_servis", "tiketservis"]) {
             await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS is_revisi_acc TINYINT(1) DEFAULT 0;`).catch(async () => {
