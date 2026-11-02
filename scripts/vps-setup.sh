@@ -37,9 +37,21 @@ if ! docker compose version &> /dev/null; then
 fi
 echo "✅ Dependensi siap (docker, docker compose, git, openssl)."
 
-# 2. Buat External Docker Gateway Network
+# 2. Hentikan kontainer lama jika ada (mencegah bentrok port 80/443)
 echo ""
-echo "🌐 [2/6] Mempersiapkan Docker Network bersama (yvs_gateway_net)..."
+echo "🛑 [2/6] Memeriksa & menghentikan kontainer lama..."
+if [ -d "$HOME/servio" ]; then
+  echo "📦 Menemukan instalasi lama di ~/servio, menghentikan layanannya..."
+  (cd "$HOME/servio" && docker compose down 2>/dev/null || true)
+  if [ ! -d "$PROD_DIR" ]; then
+    echo "📦 Memindahkan ~/servio ke $PROD_DIR..."
+    mv "$HOME/servio" "$PROD_DIR"
+  fi
+fi
+
+# 3. Buat External Docker Gateway Network
+echo ""
+echo "🌐 [3/6] Mempersiapkan Docker Network bersama (yvs_gateway_net)..."
 if ! docker network inspect yvs_gateway_net >/dev/null 2>&1; then
   docker network create yvs_gateway_net
   echo "✅ Docker network 'yvs_gateway_net' berhasil dibuat."
@@ -47,9 +59,9 @@ else
   echo "✅ Docker network 'yvs_gateway_net' sudah aktif."
 fi
 
-# 3. Setup Central Caddy Gateway (Auto HTTPS port 80/443)
+# 4. Setup Central Caddy Gateway (Auto HTTPS port 80/443)
 echo ""
-echo "🛡️  [3/6] Mengonfigurasi Central Caddy Gateway..."
+echo "🛡️  [4/6] Mengonfigurasi Central Caddy Gateway..."
 mkdir -p "$GATEWAY_DIR"
 
 cat << 'EOF' > "$GATEWAY_DIR/Caddyfile"
@@ -132,14 +144,9 @@ cd "$GATEWAY_DIR"
 docker compose up -d
 echo "✅ Caddy Gateway aktif mengawal port 80 & 443."
 
-# 4. Setup Production Environment (~/yvs-production)
+# 5. Setup Production Environment (~/yvs-production)
 echo ""
-echo "🏭 [4/6] Menyiapkan Lingkungan Production..."
-if [ -d "$HOME/servio" ] && [ ! -d "$PROD_DIR" ]; then
-  echo "📦 Memindahkan proyek lama dari ~/servio ke $PROD_DIR..."
-  mv "$HOME/servio" "$PROD_DIR"
-fi
-
+echo "🏭 [5/7] Menyiapkan Lingkungan Production..."
 if [ ! -d "$PROD_DIR" ]; then
   echo "📥 Cloning repository ke $PROD_DIR (branch main)..."
   git clone -b main "$REPO_URL" "$PROD_DIR"
@@ -171,9 +178,9 @@ echo "🐳 Membangun & menjalankan Production Stack..."
 docker compose -f compose.prod.yaml --env-file .env.production up -d --build
 echo "✅ Production Stack berhasil berjalan!"
 
-# 5. Setup Staging Environment (~/yvs-staging)
+# 6. Setup Staging Environment (~/yvs-staging)
 echo ""
-echo "🧪 [5/6] Menyiapkan Lingkungan Staging..."
+echo "🧪 [6/7] Menyiapkan Lingkungan Staging..."
 if [ ! -d "$STAGING_DIR" ]; then
   echo "📥 Cloning repository ke $STAGING_DIR (branch staging)..."
   git clone -b staging "$REPO_URL" "$STAGING_DIR" || git clone -b main "$REPO_URL" "$STAGING_DIR"
@@ -205,9 +212,9 @@ echo "🐳 Membangun & menjalankan Staging Stack..."
 docker compose -f compose.staging.yaml --env-file .env.staging up -d --build
 echo "✅ Staging Stack berhasil berjalan!"
 
-# 6. Reload Caddy & Verifikasi
+# 7. Reload Caddy & Verifikasi
 echo ""
-echo "🔄 [6/6] Melakukan sinkronisasi akhir reverse-proxy..."
+echo "🔄 [7/7] Melakukan sinkronisasi akhir reverse-proxy..."
 docker exec caddy-gateway caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || true
 
 echo ""
