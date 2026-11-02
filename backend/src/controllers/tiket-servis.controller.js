@@ -34,12 +34,13 @@ async function getAll(req, res) {
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
         const andConditions = [];
 
-        // Restriksi role Teknisi:
-        // Teknisi HANYA boleh melihat:
-        // 1. Tiket yang sedang ditangani oleh dirinya sendiri (teknisi_id === req.user.id)
-        // 2. Tiket baru dengan status 'diterima' yang belum di-assign ke siapapun (status: 'diterima', teknisi_id: null)
-        // Tiket yang ditangani oleh teknisi lain TIDAK PERNAH dimasukkan ke list.
-        if (req.user?.role === "teknisi") {
+        // Restriksi role Teknisi pada daftar antrean umum:
+        // Jika browsing antrean tanpa search, teknisi hanya melihat tiket tugasnya sendiri
+        // atau tiket baru berstatus 'diterima' yang belum ditangani teknisi siapapun.
+        // Jika parameter search aktif (misal saat scan barcode atau mencari no tiket / SN),
+        // izinkan pencarian mencakup seluruh tiket agar teknisi mengetahui status tiket tersebut
+        // (apakah tiket baru atau sudah ditangani teknisi lain).
+        if (req.user?.role === "teknisi" && !search) {
             andConditions.push({
                 OR: [
                     { teknisi_id: req.user.id },
@@ -229,18 +230,23 @@ async function getAll(req, res) {
     }
 }
 
-// Mengambil tiket servis berdasarkan ID (termasuk Riwayat Medis Perangkat / Device History)
+// Mengambil tiket servis berdasarkan ID atau Nomor Tiket (termasuk Riwayat Medis Perangkat / Device History)
 async function getById(req, res) {
     try {
-        const id = Number(req.params.id);
-        const tiket = await prisma.tiketServis.findUnique({
-            where: { id },
+        const rawId = req.params.id;
+        const isNumeric = /^\d+$/.test(rawId);
+        const whereClause = isNumeric
+            ? { id: Number(rawId) }
+            : { nomor_tiket: { equals: rawId, mode: "insensitive" } };
+
+        const tiket = await prisma.tiketServis.findFirst({
+            where: whereClause,
             include: {
                 perangkat: {
                     include: {
                         customer: true,
                         tiket_servis: {
-                            where: { id: { not: id } },
+                            where: isNumeric ? { id: { not: Number(rawId) } } : { nomor_tiket: { not: rawId } },
                             include: {
                                 teknisi: { select: { id: true, nama: true, foto_profile: true } },
                                 diagnosis: true,

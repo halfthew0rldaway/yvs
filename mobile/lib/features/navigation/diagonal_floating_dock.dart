@@ -75,7 +75,7 @@ class ScoopedFloatingDock extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               // 1. Scooped Dock Background with Drop Shadows and Border
-              Positioned(
+              const Positioned(
                 left: 0,
                 right: 0,
                 top: dockTop,
@@ -83,7 +83,7 @@ class ScoopedFloatingDock extends StatelessWidget {
                 child: CustomPaint(
                   painter: _ScoopedDockPainter(
                     backgroundColor: Colors.white,
-                    borderColor: const Color(0xFFE2E8F0),
+                    borderColor: Color(0xFFE2E8F0),
                     borderWidth: 1.2,
                     notchDepth: notchDepth,
                     notchHalfWidth: notchHalfWidth,

@@ -503,6 +503,48 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Banner peringatan jika tiket sedang ditangani teknisi lain
+              if (!isAssignedToMe && !isUnassigned && !isAdmin) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.assignment_ind_rounded, color: Color(0xFFD97706), size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Tiket Ditangani Teknisi Lain',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF92400E),
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              'Penanggung jawab: ${ticket.teknisiNama}. Anda dalam mode baca (Read-Only).',
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: Color(0xFFB45309),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               // Master Ticket Header Card
               Container(
                 padding: const EdgeInsets.all(16),

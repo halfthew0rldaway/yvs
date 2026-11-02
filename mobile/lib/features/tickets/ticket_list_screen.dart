@@ -7,7 +7,6 @@ import '../../core/widgets/ticket_card.dart';
 import '../../data/models/tiket_model.dart';
 import '../../data/providers/ticket_provider.dart';
 import '../../data/providers/auth_provider.dart';
-import '../scanner/qr_scanner_screen.dart';
 import 'ticket_detail_screen.dart';
 
 class TicketListScreen extends ConsumerStatefulWidget {

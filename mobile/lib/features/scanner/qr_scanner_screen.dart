@@ -1,20 +1,23 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data/providers/auth_provider.dart';
 import '../tickets/ticket_detail_screen.dart';
 
-class QrScannerScreen extends StatefulWidget {
+class QrScannerScreen extends ConsumerStatefulWidget {
   const QrScannerScreen({super.key});
 
   @override
-  State<QrScannerScreen> createState() => _QrScannerScreenState();
+  ConsumerState<QrScannerScreen> createState() => _QrScannerScreenState();
 }
 
-class _QrScannerScreenState extends State<QrScannerScreen> with SingleTickerProviderStateMixin {
+class _QrScannerScreenState extends ConsumerState<QrScannerScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _manualInputController = TextEditingController();
   late final MobileScannerController _scannerController;
   late final AnimationController _laserAnimationController;
@@ -116,8 +119,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> with SingleTickerProv
         items = res.data['data'] as List;
       }
 
-      // Jika tidak ketemu via search dan cleanQuery adalah ID angka, coba get by ID
-      if (items.isEmpty && int.tryParse(cleanQuery) != null) {
+      // Fallback: Jika tidak ketemu via search, coba getById (yang mendukung nomor_tiket maupun ID)
+      if (items.isEmpty) {
         try {
           final idRes = await client.dio.get('${ApiConstants.tickets}/$cleanQuery');
           if (idRes.data is Map && idRes.data['id'] != null) {
@@ -132,12 +135,48 @@ class _QrScannerScreenState extends State<QrScannerScreen> with SingleTickerProv
             ? firstTicket['id']
             : int.parse(firstTicket['id'].toString());
 
-        HapticFeedback.heavyImpact();
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => TicketDetailScreen(ticketId: ticketId)),
-          );
+        final int? techId = firstTicket['teknisi_id'] is int
+            ? firstTicket['teknisi_id']
+            : (firstTicket['teknisi']?['id'] is int
+                ? firstTicket['teknisi']['id']
+                : (firstTicket['teknisi_id'] != null
+                    ? int.tryParse(firstTicket['teknisi_id'].toString())
+                    : null));
+
+        final String? techName = firstTicket['teknisi']?['nama']?.toString();
+        final String status = firstTicket['status']?.toString() ?? 'diterima';
+        final String ticketNumber = firstTicket['nomor_tiket']?.toString() ?? cleanQuery;
+        final String deviceName = "${firstTicket['perangkat']?['merek'] ?? ''} ${firstTicket['perangkat']?['model'] ?? ''}".trim();
+
+        final currentUser = ref.read(authProvider).user;
+        final isTeknisi = currentUser?.role == 'teknisi';
+        final isAssignedToOtherTech = isTeknisi && techId != null && techId != currentUser?.id;
+
+        if (isAssignedToOtherTech) {
+          // Tiket sedang ditangani teknisi lain!
+          HapticFeedback.vibrate();
+          if (mounted) {
+            setState(() {
+              _isSearching = false;
+            });
+            await _showOtherTechnicianBottomSheet(
+              ticketId: ticketId,
+              ticketNumber: ticketNumber,
+              techName: techName ?? 'Teknisi Lain',
+              status: status,
+              deviceName: deviceName.isEmpty ? 'Perangkat Pelanggan' : deviceName,
+            );
+          }
+        } else {
+          // Tiket adalah milik teknisi ini, ATAU tiket baru berstatus 'diterima' yang belum dihandle,
+          // ATAU user adalah frontman / admin
+          HapticFeedback.heavyImpact();
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => TicketDetailScreen(ticketId: ticketId)),
+            );
+          }
         }
       } else {
         HapticFeedback.vibrate();
@@ -184,6 +223,292 @@ class _QrScannerScreenState extends State<QrScannerScreen> with SingleTickerProv
           _isSearching = false;
         });
       }
+    }
+  }
+
+  Future<void> _showOtherTechnicianBottomSheet({
+    required int ticketId,
+    required String ticketNumber,
+    required String techName,
+    required String status,
+    required String deviceName,
+  }) async {
+    final statusDisplay = _formatStatusLabel(status);
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x26000000),
+                blurRadius: 20,
+                offset: Offset(0, -4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top drag bar
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              // Warning / Notice Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7), // Amber 100
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.assignment_ind_rounded,
+                      color: Color(0xFFD97706), // Amber 600
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tiket Dikerjakan Teknisi Lain',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Perangkat ini sudah berada di meja kerja rekan Anda.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Detail Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '#$ticketNumber',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFBFDBFE)),
+                          ),
+                          child: Text(
+                            statusDisplay,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1D4ED8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 20, color: Color(0xFFE2E8F0)),
+                    _sheetInfoRow(Icons.laptop_chromebook_rounded, 'Perangkat', deviceName),
+                    const SizedBox(height: 10),
+                    _sheetInfoRow(
+                      Icons.person_pin_rounded,
+                      'Penanggung Jawab',
+                      techName,
+                      valueColor: const Color(0xFFD97706),
+                      valueWeight: FontWeight.w700,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Disclaimer text
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Color(0xFFB45309), size: 18),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Anda tidak dapat mengubah diagnosis/pekerjaan tiket ini. Anda dapat melihatnya dalam mode baca (Read-Only).',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF92400E),
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        setState(() {
+                          _hasScanned = false;
+                          _isSearching = false;
+                        });
+                      },
+                      child: const Text(
+                        'Scan Tiket Lain',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.visibility_outlined, size: 18),
+                      label: const Text(
+                        'Lihat Detail',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TicketDetailScreen(ticketId: ticketId),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    // Setelah bottom sheet ditutup jika user tidak memilih navigasi
+    if (mounted && !_hasScanned) {
+      setState(() {
+        _hasScanned = false;
+        _isSearching = false;
+      });
+    }
+  }
+
+  Widget _sheetInfoRow(IconData icon, String label, String value, {Color? valueColor, FontWeight? valueWeight}) {
+    return Row(
+      children: [
+        Icon(icon, size: 17, color: const Color(0xFF94A3B8)),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: valueWeight ?? FontWeight.w500,
+              color: valueColor ?? const Color(0xFF1E293B),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatStatusLabel(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'diterima':
+        return 'Diterima';
+      case 'didiagnosis':
+        return 'Didiagnosis';
+      case 'menunggu_persetujuan':
+        return 'Menunggu ACC';
+      case 'disetujui':
+        return 'Disetujui';
+      case 'dalam_perbaikan':
+        return 'Dalam Perbaikan';
+      case 'selesai':
+        return 'Selesai';
+      case 'diambil':
+        return 'Diambil';
+      case 'dibatalkan':
+        return 'Dibatalkan';
+      default:
+        return raw;
     }
   }
 
