@@ -6,10 +6,11 @@ export default function WebcamSelfieModal({
     isOpen,
     onClose,
     onCapture,
-    type = "check-in", // "check-in" | "check-out"
+    type = "check-in", // "check-in" | "check-out" | "tugas-luar"
     user,
     locationData,
-    policy
+    policy,
+    isTugasLuar = false
 }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
@@ -20,6 +21,9 @@ export default function WebcamSelfieModal({
     const [previewImage, setPreviewImage] = useState(null);
     const [capturedBlob, setCapturedBlob] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [alasanTugasLuar, setAlasanTugasLuar] = useState("");
+
+    const isActualTugasLuar = isTugasLuar || type === "tugas-luar";
 
     // Start video stream
     const startCamera = useCallback(async () => {
@@ -71,10 +75,12 @@ export default function WebcamSelfieModal({
     useEffect(() => {
         if (isOpen) {
             startCamera();
+            setAlasanTugasLuar("");
         } else {
             stopCamera();
             setPreviewImage(null);
             setCapturedBlob(null);
+            setAlasanTugasLuar("");
         }
         return () => {
             stopCamera();
@@ -109,7 +115,7 @@ export default function WebcamSelfieModal({
         ctx.fillRect(0, height - barHeight, width, barHeight);
 
         // Watermark Accent Strip
-        ctx.fillStyle = type === "check-in" ? "#10b981" : "#f59e0b"; // emerald or amber
+        ctx.fillStyle = isActualTugasLuar ? "#f59e0b" : type === "check-in" ? "#10b981" : "#f59e0b"; // emerald or amber
         ctx.fillRect(0, height - barHeight, width, 4);
 
         // Text Info
@@ -121,7 +127,12 @@ export default function WebcamSelfieModal({
             year: "numeric"
         }) + " • " + now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " WIB";
 
-        const typeLabel = type === "check-in" ? "CHECK-IN MASUK" : "CHECK-OUT PULANG";
+        const typeLabel = isActualTugasLuar
+            ? "CHECK-IN TUGAS LUAR"
+            : type === "check-in"
+                ? "CHECK-IN MASUK"
+                : "CHECK-OUT PULANG";
+
         const coordsStr = locationData?.latitude 
             ? `GPS: ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)} (±${Math.round(locationData.accuracy || 0)}m)`
             : "GPS: Menunggu sinyal";
@@ -146,7 +157,7 @@ export default function WebcamSelfieModal({
         canvas.toBlob(
             (blob) => {
                 if (blob) {
-                    const file = new File([blob], `selfie-${type}-${Date.now()}.jpg`, { type: "image/jpeg" });
+                    const file = new File([blob], `selfie-${isActualTugasLuar ? "tugas-luar" : type}-${Date.now()}.jpg`, { type: "image/jpeg" });
                     setCapturedBlob(file);
                 }
             },
@@ -169,9 +180,17 @@ export default function WebcamSelfieModal({
             return;
         }
 
+        if (isActualTugasLuar && !alasanTugasLuar.trim()) {
+            toast.error("Alasan atau deskripsi penugasan luar wajib diisi!");
+            return;
+        }
+
         setSubmitting(true);
         try {
-            await onCapture(capturedBlob);
+            await onCapture(capturedBlob, {
+                is_tugas_luar: isActualTugasLuar,
+                alasan_tugas_luar: isActualTugasLuar ? alasanTugasLuar.trim() : null
+            });
             onClose();
         } catch (err) {
             console.error("Submission error:", err);
@@ -188,15 +207,21 @@ export default function WebcamSelfieModal({
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
                     <div className="flex items-center gap-2.5">
-                        <div className={`p-2 rounded-xl text-white ${type === "check-in" ? "bg-emerald-600" : "bg-amber-600"}`}>
-                            <Camera className="w-5 h-5 stroke-[2.5]" />
+                        <div className={`p-2 rounded-xl text-white ${isActualTugasLuar ? "bg-amber-600" : type === "check-in" ? "bg-emerald-600" : "bg-blue-600"}`}>
+                            {isActualTugasLuar ? <MapPin className="w-5 h-5 stroke-[2.5]" /> : <Camera className="w-5 h-5 stroke-[2.5]" />}
                         </div>
                         <div>
                             <h3 className="font-bold text-slate-800 text-sm sm:text-base">
-                                {type === "check-in" ? "Verifikasi Wajah: Check-In Masuk" : "Verifikasi Wajah: Check-Out Pulang"}
+                                {isActualTugasLuar
+                                    ? "Check-In Tugas Luar (Di Luar Kantor)"
+                                    : type === "check-in"
+                                        ? "Verifikasi Wajah: Check-In Masuk"
+                                        : "Verifikasi Wajah: Check-Out Pulang"}
                             </h3>
                             <p className="text-2xs sm:text-xs text-slate-500 font-medium">
-                                Ambil foto selfie langsung dengan stempel lokasi & waktu
+                                {isActualTugasLuar
+                                    ? "Presensi di luar radius workshop dengan stempel GPS & review Owner"
+                                    : "Ambil foto selfie langsung dengan stempel lokasi & waktu"}
                             </p>
                         </div>
                     </div>
@@ -279,6 +304,26 @@ export default function WebcamSelfieModal({
                     )}
                 </div>
 
+                {/* External Duty Reason Input */}
+                {isActualTugasLuar && (
+                    <div className="px-5 py-3.5 bg-amber-50/80 border-t border-amber-200/70">
+                        <label className="block text-xs font-bold text-amber-900 mb-1">
+                            Alasan / Keperluan Penugasan Luar <span className="text-rose-500">* (Wajib diisi untuk review Owner)</span>
+                        </label>
+                        <textarea
+                            value={alasanTugasLuar}
+                            onChange={(e) => setAlasanTugasLuar(e.target.value)}
+                            rows={2}
+                            placeholder="Contoh: Mengantar unit laptop Asus servis ke pelanggan di Pekayon sebelum jam 9 / Ambil sparepart..."
+                            className="w-full px-3 py-2 text-xs bg-white border border-amber-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                            required
+                        />
+                        <p className="text-3xs text-amber-800 mt-1 font-medium">
+                            Presensi kategori Tugas Luar akan dikirim ke Superadmin / Owner untuk diverifikasi.
+                        </p>
+                    </div>
+                )}
+
                 {/* Actions Footer */}
                 <div className="p-4 border-t border-slate-100 flex items-center justify-end gap-2.5 bg-white">
                     {previewImage ? (
@@ -297,9 +342,11 @@ export default function WebcamSelfieModal({
                                 onClick={handleConfirm}
                                 disabled={submitting}
                                 className={`px-5 py-2 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-2 ${
-                                    type === "check-in"
-                                        ? "bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-500/20"
-                                        : "bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20"
+                                    isActualTugasLuar
+                                        ? "bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20"
+                                        : type === "check-in"
+                                            ? "bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-500/20"
+                                            : "bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-500/20"
                                 } ${submitting ? "opacity-75 cursor-not-allowed" : ""}`}
                             >
                                 {submitting ? (
@@ -310,7 +357,7 @@ export default function WebcamSelfieModal({
                                 ) : (
                                     <>
                                         <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-                                        <span>Konfirmasi & Simpan Presensi</span>
+                                        <span>{isActualTugasLuar ? "Kirim Presensi Tugas Luar" : "Konfirmasi & Simpan Presensi"}</span>
                                     </>
                                 )}
                             </button>

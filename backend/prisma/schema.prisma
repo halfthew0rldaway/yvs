@@ -27,6 +27,7 @@ model User {
   applicants_hired       Applicant[]    @relation("ApplicantHired")
   attendances            AttendanceRecord[]
   attendance_adjustments AttendanceRecord[] @relation("AttendanceAdjuster")
+  attendance_reviews     AttendanceRecord[] @relation("AttendanceReviewer")
   leave_requests         LeaveRequest[]
   leaves_approved        LeaveRequest[]     @relation("LeaveApprover")
 }
@@ -551,9 +552,9 @@ model Applicant {
 // Feature: Smart Attendance & Geofencing HR Management
 model AttendancePolicy {
   id                 Int      @id @default(autoincrement())
-  nama_kantor        String   @default("Workshop Utama") @db.VarChar(150)
-  latitude           Float    @default(-6.2088)
-  longitude          Float    @default(106.8456)
+  nama_kantor        String   @default("Workshop Utama Pekayon") @db.VarChar(150)
+  latitude           Float    @default(-6.274323)
+  longitude          Float    @default(106.977425)
   radius_meter       Int      @default(100)
   jam_masuk          String   @default("08:30") @db.VarChar(10)
   toleransi_menit    Int      @default(15)
@@ -582,6 +583,12 @@ model AttendanceRecord {
   longitude_pulang    Float?
   jarak_meter_pulang  Float?
   is_in_radius_pulang Boolean   @default(true)
+  is_tugas_luar       Boolean   @default(false)
+  alasan_tugas_luar   String?   @db.Text
+  status_review       String?   @default("valid") @db.VarChar(50) // valid, menunggu_review, ditolak
+  reviewed_by_id      Int?
+  reviewed_at         DateTime?
+  catatan_review      String?   @db.Text
   method              String    @default("web_selfie_gps") @db.VarChar(50) // web_selfie_gps, mobile_flutter, manual_adjustment
   device_info         String?   @db.VarChar(255)
   catatan             String?   @db.Text
@@ -593,11 +600,14 @@ model AttendanceRecord {
 
   user        User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   adjusted_by User? @relation("AttendanceAdjuster", fields: [adjusted_by_id], references: [id], onDelete: SetNull)
+  reviewed_by User? @relation("AttendanceReviewer", fields: [reviewed_by_id], references: [id], onDelete: SetNull)
 
   @@unique([user_id, tanggal])
   @@index([user_id])
   @@index([tanggal])
   @@index([status])
+  @@index([status_review])
+  @@index([is_tugas_luar])
 }
 
 model LeaveRequest {

@@ -23,7 +23,8 @@ import {
     X,
     Eye,
     Sliders,
-    HelpCircle
+    HelpCircle,
+    ExternalLink
 } from "lucide-react";
 import WebcamSelfieModal from "./WebcamSelfieModal";
 
@@ -120,9 +121,9 @@ export default function AttendancePage() {
 
     // Policy Settings Form State
     const [policyForm, setPolicyForm] = useState({
-        nama_kantor: "Workshop Utama",
-        latitude: -6.2088,
-        longitude: 106.8456,
+        nama_kantor: "Workshop Utama Pekayon",
+        latitude: -6.274323,
+        longitude: 106.977425,
         radius_meter: 100,
         jam_masuk: "08:30",
         toleransi_menit: 15,
@@ -131,6 +132,12 @@ export default function AttendancePage() {
         is_selfie_required: true
     });
     const [savingPolicy, setSavingPolicy] = useState(false);
+
+    // Superadmin / Owner: Review Presensi Tugas Luar
+    const [pendingReviews, setPendingReviews] = useState([]);
+    const [pendingReviewCount, setPendingReviewCount] = useState(0);
+    const [loadingReviews, setLoadingReviews] = useState(false);
+    const [reviewFilter, setReviewFilter] = useState("menunggu_review"); // 'menunggu_review' | 'all' | 'valid' | 'ditolak'
 
     // Preview Photo Modal State
     const [previewPhotoUrl, setPreviewPhotoUrl] = useState(null);
@@ -303,18 +310,70 @@ export default function AttendancePage() {
         }
     }, [recapMonth, recapYear]);
 
+    // 8. Load Pending Reviews (Admin / Superadmin / Owner)
+    const loadPendingReviews = useCallback(async () => {
+        if (!isPimpinanOrAdmin) return;
+        setLoadingReviews(true);
+        try {
+            const res = await api.get(`/attendance/pending-reviews?status_filter=${reviewFilter}`);
+            setPendingReviews(res.data.list || []);
+            setPendingReviewCount(res.data.pendingCount || 0);
+        } catch (err) {
+            console.error("Gagal memuat daftar review presensi tugas luar:", err);
+        } finally {
+            setLoadingReviews(false);
+        }
+    }, [isPimpinanOrAdmin, reviewFilter]);
+
+    useEffect(() => {
+        if (isPimpinanOrAdmin) {
+            loadPendingReviews();
+        }
+    }, [isPimpinanOrAdmin, loadPendingReviews]);
+
+    // Handle Review Action (Valid / Tolak)
+    const handleReviewAttendance = async (id, statusReview) => {
+        let note = "";
+        if (statusReview === "ditolak") {
+            const input = prompt("Masukkan alasan penolakan presensi tugas luar:", "Di luar jadwal/penugasan resmi");
+            if (input === null) return;
+            note = input;
+        }
+
+        try {
+            const res = await api.put(`/attendance/${id}/review`, {
+                status_review: statusReview,
+                catatan_review: note
+            });
+            toast.success(res.data.message || `Presensi berhasil ${statusReview === "valid" ? "disetujui" : "ditolak"}`);
+            loadPendingReviews();
+            loadTodayStatus();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memproses review presensi");
+        }
+    };
+
     // Check-In Submit via Webcam
-    const handleCheckInCapture = async (fileBlob) => {
+    const handleCheckInCapture = async (fileBlob, extraData = {}) => {
         const formData = new FormData();
         formData.append("foto", fileBlob);
         if (locationData.latitude !== null) formData.append("latitude", locationData.latitude);
         if (locationData.longitude !== null) formData.append("longitude", locationData.longitude);
         formData.append("device_info", navigator.userAgent);
+        if (extraData?.is_tugas_luar || cameraModalType === "tugas-luar") {
+            formData.append("is_tugas_luar", "true");
+            if (extraData?.alasan_tugas_luar) {
+                formData.append("alasan_tugas_luar", extraData.alasan_tugas_luar);
+            }
+        }
 
         try {
             const res = await api.post("/attendance/check-in", formData);
             toast.success(res.data.message || "Check-In berhasil!");
             loadTodayStatus();
+            if (isPimpinanOrAdmin) {
+                loadPendingReviews();
+            }
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal melakukan Check-In");
             throw err;
@@ -327,6 +386,9 @@ export default function AttendancePage() {
         formData.append("foto", fileBlob);
         if (locationData.latitude !== null) formData.append("latitude", locationData.latitude);
         if (locationData.longitude !== null) formData.append("longitude", locationData.longitude);
+        if (todayRecord?.is_tugas_luar) {
+            formData.append("is_tugas_luar", "true");
+        }
 
         try {
             const res = await api.post("/attendance/check-out", formData);
@@ -549,6 +611,23 @@ export default function AttendancePage() {
                     {isPimpinanOrAdmin && (
                         <>
                             <button
+                                onClick={() => setActiveTab("reviews")}
+                                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap relative ${
+                                    activeTab === "reviews"
+                                        ? "bg-blue-600 text-white shadow-xs"
+                                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                }`}
+                            >
+                                <ShieldCheck className="w-3.5 h-3.5 stroke-[2.5]" />
+                                <span>Review Tugas Luar</span>
+                                {pendingReviewCount > 0 && (
+                                    <span className="px-1.5 py-0.5 rounded-full text-3xs font-extrabold bg-amber-500 text-white leading-none animate-pulse">
+                                        {pendingReviewCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            <button
                                 onClick={() => setActiveTab("monitoring")}
                                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
                                     activeTab === "monitoring"
@@ -634,28 +713,43 @@ export default function AttendancePage() {
                                 </div>
                             </div>
                         ) : locationData.distance !== null && (
-                            <div className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs ${
+                            <div className={`p-3 rounded-xl border flex flex-col gap-2 text-xs ${
                                 locationData.isInRadius 
                                     ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
-                                    : "bg-rose-50 border-rose-200 text-rose-800"
+                                    : "bg-amber-50 border-amber-200 text-amber-900"
                             }`}>
-                                {locationData.isInRadius ? (
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                                ) : (
-                                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                                )}
-                                <div>
-                                    <p className="font-bold">
-                                        {locationData.isInRadius 
-                                            ? "Lokasi Valid: Dalam Radius Workshop" 
-                                            : "Lokasi di Luar Radius"}
-                                    </p>
-                                    <p className="text-2xs mt-0.5">
-                                        {locationData.isInRadius
-                                            ? `Anda terdeteksi berada di lokasi workshop (${locationData.distance}m <= ${policy?.radius_meter}m).`
-                                            : `Jarak Anda (${locationData.distance}m) melebihi batas geofence (${policy?.radius_meter}m).`}
-                                    </p>
+                                <div className="flex items-start gap-2.5">
+                                    {locationData.isInRadius ? (
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                    ) : (
+                                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                    )}
+                                    <div>
+                                        <p className="font-bold">
+                                            {locationData.isInRadius 
+                                                ? "Lokasi Valid: Dalam Radius Workshop" 
+                                                : "Di Luar Radius Workshop (Pekayon)"}
+                                        </p>
+                                        <p className="text-2xs mt-0.5">
+                                            {locationData.isInRadius
+                                                ? `Anda terdeteksi di lokasi workshop (${locationData.distance}m <= ${policy?.radius_meter}m).`
+                                                : `Jarak Anda (${locationData.distance}m) melebihi batas geofence (${policy?.radius_meter}m). Anda dapat menggunakan opsi Check-In Tugas Luar.`}
+                                        </p>
+                                    </div>
                                 </div>
+                                {!locationData.isInRadius && !todayRecord?.jam_masuk && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setCameraModalType("tugas-luar");
+                                            setCameraModalOpen(true);
+                                        }}
+                                        className="self-end px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-2xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+                                    >
+                                        <MapPin className="w-3 h-3" />
+                                        <span>Check-In Tugas Luar</span>
+                                    </button>
+                                )}
                             </div>
                         )}
 
@@ -782,38 +876,85 @@ export default function AttendancePage() {
                                     )}
                                 </div>
                             </div>
+                            {/* External Duty / Tugas Luar Review Status Banner */}
+                            {todayRecord?.is_tugas_luar && (
+                                <div className={`mt-3.5 p-3 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+                                    todayRecord.status_review === "valid"
+                                        ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+                                        : todayRecord.status_review === "ditolak"
+                                            ? "bg-rose-50 border-rose-200 text-rose-900"
+                                            : "bg-amber-50 border-amber-200 text-amber-900"
+                                }`}>
+                                    <div className="flex items-start sm:items-center gap-2">
+                                        <ShieldCheck className={`w-4 h-4 shrink-0 mt-0.5 sm:mt-0 ${
+                                            todayRecord.status_review === "valid" 
+                                                ? "text-emerald-600" 
+                                                : todayRecord.status_review === "ditolak" 
+                                                    ? "text-rose-600" 
+                                                    : "text-amber-600"
+                                        }`} />
+                                        <div>
+                                            <span className="font-bold">
+                                                {todayRecord.status_review === "valid"
+                                                    ? "Presensi Tugas Luar Disetujui Superadmin/Owner"
+                                                    : todayRecord.status_review === "ditolak"
+                                                        ? "Presensi Tugas Luar Ditolak"
+                                                        : "Kategori Tugas Luar (Menunggu Verifikasi Owner)"}
+                                            </span>
+                                            {todayRecord.alasan_tugas_luar && (
+                                                <p className="text-2xs opacity-90 mt-0.5">Alasan: {todayRecord.alasan_tugas_luar}</p>
+                                            )}
+                                            {todayRecord.catatan_review && (
+                                                <p className="text-2xs opacity-90 mt-0.5">Catatan Review: {todayRecord.catatan_review}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-3xs font-extrabold uppercase shrink-0 self-start sm:self-auto ${
+                                        todayRecord.status_review === "valid"
+                                            ? "bg-emerald-200 text-emerald-800"
+                                            : todayRecord.status_review === "ditolak"
+                                                ? "bg-rose-200 text-rose-800"
+                                                : "bg-amber-200 text-amber-800 animate-pulse"
+                                    }`}>
+                                        {todayRecord.status_review === "valid" ? "✓ Disetujui" : todayRecord.status_review === "ditolak" ? "✕ Ditolak" : "🕒 Menunggu"}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Action Buttons Section */}
                         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-end gap-3">
                             {!todayRecord?.jam_masuk ? (
-                                <button
-                                    onClick={() => {
-                                        setCameraModalType("check-in");
-                                        setCameraModalOpen(true);
-                                    }}
-                                    disabled={policy?.is_geofence_active && (!locationData.isInRadius || locationData.loading)}
-                                    className={`w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer ${
-                                        policy?.is_geofence_active && (!locationData.isInRadius || locationData.loading)
-                                            ? "bg-slate-400 cursor-not-allowed opacity-75"
-                                            : "bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-500/20"
-                                    }`}
-                                >
-                                    <Camera className="w-4 h-4 stroke-[2.5]" />
-                                    <span>Check In Masuk Sekarang</span>
-                                </button>
+                                policy?.is_geofence_active && (!locationData.isInRadius || locationData.loading) ? (
+                                    <button
+                                        onClick={() => {
+                                            setCameraModalType("tugas-luar");
+                                            setCameraModalOpen(true);
+                                        }}
+                                        className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20"
+                                    >
+                                        <MapPin className="w-4 h-4 stroke-[2.5]" />
+                                        <span>Check-In Tugas Luar (Di Luar Kantor)</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            setCameraModalType("check-in");
+                                            setCameraModalOpen(true);
+                                        }}
+                                        className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-500/20"
+                                    >
+                                        <Camera className="w-4 h-4 stroke-[2.5]" />
+                                        <span>Check In Masuk Sekarang</span>
+                                    </button>
+                                )
                             ) : !todayRecord?.jam_pulang ? (
                                 <button
                                     onClick={() => {
                                         setCameraModalType("check-out");
                                         setCameraModalOpen(true);
                                     }}
-                                    disabled={policy?.is_geofence_active && (!locationData.isInRadius || locationData.loading)}
-                                    className={`w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer ${
-                                        policy?.is_geofence_active && (!locationData.isInRadius || locationData.loading)
-                                            ? "bg-slate-400 cursor-not-allowed opacity-75"
-                                            : "bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20"
-                                    }`}
+                                    className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20"
                                 >
                                     <LogOut className="w-4 h-4 stroke-[2.5]" />
                                     <span>Check Out Pulang Sekarang</span>
@@ -1575,12 +1716,286 @@ export default function AttendancePage() {
                 </div>
             )}
 
+            {/* TAB 5: REVIEW TUGAS LUAR (ADMIN & OWNER / PIMPINAN) */}
+            {activeTab === "reviews" && isPimpinanOrAdmin && (
+                <div className="space-y-4">
+                    {/* Header Card & Filter Bar */}
+                    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                                    <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
+                                </div>
+                                <div>
+                                    <h2 className="text-sm sm:text-base font-bold text-slate-800">
+                                        Review Presensi Tugas Luar & Lapangan
+                                    </h2>
+                                    <p className="text-2xs sm:text-xs text-slate-500 font-medium">
+                                        Persetujuan dan audit presensi karyawan yang berada di luar radius kantor Pekayon (antar unit, jemput sparepart, servis luar).
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={loadPendingReviews}
+                                disabled={loadingReviews}
+                                className="self-start sm:self-auto px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                            >
+                                <RefreshCw className={`w-3.5 h-3.5 ${loadingReviews ? "animate-spin text-blue-600" : ""}`} />
+                                <span>Segarkan Data</span>
+                            </button>
+                        </div>
+
+                        {/* Filter Status Pills */}
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-2 border-t border-slate-100">
+                            {[
+                                { key: "menunggu_review", label: "Menunggu Review", count: pendingReviewCount },
+                                { key: "valid", label: "Disetujui (Valid)" },
+                                { key: "ditolak", label: "Ditolak" },
+                                { key: "all", label: "Semua Riwayat" }
+                            ].map((f) => (
+                                <button
+                                    key={f.key}
+                                    onClick={() => setReviewFilter(f.key)}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                                        reviewFilter === f.key
+                                            ? "bg-slate-900 text-white shadow-xs"
+                                            : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                                    }`}
+                                >
+                                    <span>{f.label}</span>
+                                    {f.count !== undefined && f.count > 0 && (
+                                        <span className="px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-amber-500 text-white leading-none">
+                                            {f.count}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Review Cards List */}
+                    {loadingReviews ? (
+                        <div className="py-16 text-center bg-white rounded-2xl border border-slate-200/80 p-8">
+                            <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                            <p className="text-xs font-semibold text-slate-500">Memuat data review presensi tugas luar...</p>
+                        </div>
+                    ) : pendingReviews.length === 0 ? (
+                        <div className="py-16 text-center bg-white rounded-2xl border border-slate-200/80 p-8 space-y-3">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                                <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+                            </div>
+                            <h3 className="text-sm font-bold text-slate-800">
+                                {reviewFilter === "menunggu_review"
+                                    ? "Semua Presensi Tugas Luar Bersih!"
+                                    : "Tidak Ada Data Ditemukan"}
+                            </h3>
+                            <p className="text-2xs text-slate-500 max-w-sm mx-auto">
+                                {reviewFilter === "menunggu_review"
+                                    ? "Tidak ada presensi karyawan di luar radius workshop yang menunggu verifikasi saat ini."
+                                    : "Tidak ada catatan presensi tugas luar pada filter status ini."}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3.5">
+                            {pendingReviews.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-all space-y-4"
+                                >
+                                    {/* Card Header */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-black text-sm shrink-0 overflow-hidden">
+                                                {item.user?.foto_profile ? (
+                                                    <img
+                                                        src={item.user.foto_profile}
+                                                        alt={item.user.nama}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    item.user?.nama?.charAt(0).toUpperCase() || "U"
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-bold text-slate-800 text-sm">
+                                                        {item.user?.nama || "Karyawan"}
+                                                    </span>
+                                                    <span className="px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase bg-slate-100 text-slate-700 border border-slate-200">
+                                                        {item.user?.role || "Staff"}
+                                                    </span>
+                                                </div>
+                                                <p className="text-2xs text-slate-500 mt-0.5">
+                                                    {item.user?.email || "-"} •{" "}
+                                                    {new Date(item.tanggal).toLocaleDateString("id-ID", {
+                                                        weekday: "short",
+                                                        day: "numeric",
+                                                        month: "short",
+                                                        year: "numeric"
+                                                    })}{" "}
+                                                    (Check-In:{" "}
+                                                    {item.jam_masuk
+                                                        ? new Date(item.jam_masuk).toLocaleTimeString("id-ID", {
+                                                              hour: "2-digit",
+                                                              minute: "2-digit"
+                                                          }) + " WIB"
+                                                        : "-"}
+                                                    )
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Status Badge */}
+                                        <div>
+                                            {item.status_review === "valid" ? (
+                                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    <span>Disetujui (Valid)</span>
+                                                </span>
+                                            ) : item.status_review === "ditolak" ? (
+                                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1.5">
+                                                    <X className="w-3.5 h-3.5" />
+                                                    <span>Ditolak</span>
+                                                </span>
+                                            ) : (
+                                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1.5 animate-pulse">
+                                                    <Clock className="w-3.5 h-3.5" />
+                                                    <span>Menunggu Review Owner</span>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Card Content Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                                        {/* Left 2 cols: Reason, GPS, Review note */}
+                                        <div className="md:col-span-2 space-y-3">
+                                            {/* Reason Box */}
+                                            <div className="p-3 bg-amber-50/70 border border-amber-200/90 rounded-xl space-y-1">
+                                                <span className="text-3xs font-extrabold text-amber-900 uppercase tracking-wider">
+                                                    Alasan / Penugasan Luar Karyawan:
+                                                </span>
+                                                <p className="text-xs font-medium text-slate-800 leading-relaxed italic">
+                                                    "{item.alasan_tugas_luar || "Tidak ada keterangan tertulis"}"
+                                                </p>
+                                            </div>
+
+                                            {/* Location & GPS Info */}
+                                            <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2 text-xs">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-slate-500 font-semibold flex items-center gap-1.5">
+                                                        <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                                                        <span>Jarak dari Workshop Pekayon:</span>
+                                                    </span>
+                                                    <span className="font-bold text-slate-800">
+                                                        {item.jarak_meter_masuk !== null
+                                                            ? `${item.jarak_meter_masuk} meter`
+                                                            : "Tidak terdeteksi"}
+                                                    </span>
+                                                </div>
+
+                                                {item.latitude_masuk !== null && item.longitude_masuk !== null && (
+                                                    <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                                                        <span className="text-slate-500 font-semibold">Koordinat GPS:</span>
+                                                        <a
+                                                            href={`https://www.google.com/maps?q=${item.latitude_masuk},${item.longitude_masuk}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline"
+                                                        >
+                                                            <span>{item.latitude_masuk.toFixed(6)}, {item.longitude_masuk.toFixed(6)}</span>
+                                                            <ExternalLink className="w-3 h-3" />
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Reviewer Note (if reviewed) */}
+                                            {item.reviewed_by && (
+                                                <div className="p-2.5 bg-slate-100 rounded-xl text-2xs text-slate-600 space-y-0.5">
+                                                    <p>
+                                                        <strong>Ditinjau oleh:</strong> {item.reviewed_by.nama}{" "}
+                                                        {item.reviewed_at
+                                                            ? `• ${new Date(item.reviewed_at).toLocaleDateString("id-ID", {
+                                                                  day: "numeric",
+                                                                  month: "short",
+                                                                  year: "numeric"
+                                                              })} ${new Date(item.reviewed_at).toLocaleTimeString("id-ID", {
+                                                                  hour: "2-digit",
+                                                                  minute: "2-digit"
+                                                              })} WIB`
+                                                            : ""}
+                                                    </p>
+                                                    {item.catatan_review && (
+                                                        <p><strong>Catatan Review:</strong> {item.catatan_review}</p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Right col: Selfie Photo Proof */}
+                                        <div className="space-y-1.5">
+                                            <span className="text-3xs font-extrabold text-slate-500 uppercase tracking-wider">
+                                                Foto Selfie Fisik:
+                                            </span>
+                                            {item.foto_masuk ? (
+                                                <div
+                                                    onClick={() => setPreviewPhotoUrl(item.foto_masuk)}
+                                                    className="relative aspect-4/3 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 group cursor-pointer shadow-2xs hover:ring-2 hover:ring-blue-500/30 transition-all"
+                                                >
+                                                    <img
+                                                        src={item.foto_masuk}
+                                                        alt="Selfie Bukti Tugas Luar"
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                                    />
+                                                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1.5 backdrop-blur-2xs">
+                                                        <Eye className="w-4 h-4" />
+                                                        <span>Lihat Detail</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="p-4 bg-slate-100 rounded-xl text-center text-xs text-slate-400">
+                                                    Tidak ada lampiran foto
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons (Only when Menunggu Review) */}
+                                    {item.status_review === "menunggu_review" && (
+                                        <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleReviewAttendance(item.id, "ditolak")}
+                                                className="px-4 py-2 border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                                <span>Tolak Presensi</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleReviewAttendance(item.id, "valid")}
+                                                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 ring-2 ring-emerald-500/20"
+                                            >
+                                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                                <span>Setujui (Valid)</span>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* MODAL 1: LIVE WEBCAM SELFIE */}
             <WebcamSelfieModal
                 isOpen={cameraModalOpen}
                 onClose={() => setCameraModalOpen(false)}
-                onCapture={cameraModalType === "check-in" ? handleCheckInCapture : handleCheckOutCapture}
+                onCapture={cameraModalType === "check-out" ? handleCheckOutCapture : handleCheckInCapture}
                 type={cameraModalType}
+                isTugasLuar={cameraModalType === "tugas-luar"}
                 user={user}
                 locationData={locationData}
                 policy={policy}

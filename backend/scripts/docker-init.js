@@ -70,6 +70,30 @@ async function main() {
                 await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN foto_profile VARCHAR(255) NULL;`).catch(() => {});
             });
         }
+        for (const tbl of ["AttendanceRecord", "attendance_record", "attendancerecord"]) {
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS is_tugas_luar TINYINT(1) DEFAULT 0;`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN is_tugas_luar TINYINT(1) DEFAULT 0;`).catch(() => {});
+            });
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS alasan_tugas_luar TEXT NULL;`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN alasan_tugas_luar TEXT NULL;`).catch(() => {});
+            });
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS status_review VARCHAR(50) DEFAULT 'valid';`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN status_review VARCHAR(50) DEFAULT 'valid';`).catch(() => {});
+            });
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS reviewed_by_id INT NULL;`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN reviewed_by_id INT NULL;`).catch(() => {});
+            });
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS reviewed_at DATETIME NULL;`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN reviewed_at DATETIME NULL;`).catch(() => {});
+            });
+            await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN IF NOT EXISTS catatan_review TEXT NULL;`).catch(async () => {
+                await prisma.$executeRawUnsafe(`ALTER TABLE ${tbl} ADD COLUMN catatan_review TEXT NULL;`).catch(() => {});
+            });
+        }
+        for (const tbl of ["AttendancePolicy", "attendance_policy", "attendancepolicy"]) {
+            // Update default workshop location to Pekayon if using the old default (-6.2088)
+            await prisma.$executeRawUnsafe(`UPDATE ${tbl} SET nama_kantor = 'Workshop Utama Pekayon', latitude = -6.274323, longitude = 106.977425 WHERE latitude BETWEEN -6.2090 AND -6.2080 OR nama_kantor = 'Workshop Utama';`).catch(() => {});
+        }
     } catch (e) {
         // Kolom sudah ada atau variasi casing diabaikan
     }

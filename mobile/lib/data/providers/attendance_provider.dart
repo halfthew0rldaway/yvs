@@ -14,6 +14,9 @@ class AttendanceStatus {
   final String? status; // 'tepat_waktu', 'terlambat', etc.
   final DateTime? serverTime;
   final Map<String, dynamic>? rawRecord;
+  final bool isTugasLuar;
+  final String? statusReview; // 'valid', 'menunggu_review', 'ditolak'
+  final String? alasanTugasLuar;
 
   const AttendanceStatus({
     this.hasCheckedIn = false,
@@ -23,6 +26,9 @@ class AttendanceStatus {
     this.status,
     this.serverTime,
     this.rawRecord,
+    this.isTugasLuar = false,
+    this.statusReview,
+    this.alasanTugasLuar,
   });
 
   factory AttendanceStatus.fromMap(Map<String, dynamic> data) {
@@ -37,6 +43,9 @@ class AttendanceStatus {
     final jamMasuk = record['jam_masuk']?.toString();
     final jamPulang = record['jam_pulang']?.toString();
     final status = record['status']?.toString();
+    final isTugasLuar = record['is_tugas_luar'] == true || record['is_tugas_luar'] == 1;
+    final statusReview = record['status_review']?.toString();
+    final alasanTugasLuar = record['alasan_tugas_luar']?.toString();
 
     return AttendanceStatus(
       hasCheckedIn: jamMasuk != null && jamMasuk.isNotEmpty,
@@ -46,6 +55,9 @@ class AttendanceStatus {
       status: status,
       serverTime: serverTime,
       rawRecord: record,
+      isTugasLuar: isTugasLuar,
+      statusReview: statusReview,
+      alasanTugasLuar: alasanTugasLuar,
     );
   }
 }

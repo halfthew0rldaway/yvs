@@ -99,7 +99,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     }
   }
 
-  Future<void> _handleCheckIn() async {
+  Future<void> _handleCheckIn({bool isTugasLuar = false, String? alasanTugasLuar}) async {
     HapticFeedback.mediumImpact();
 
     // 1. Ambil foto selfie via kamera depan
@@ -115,25 +115,37 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     setState(() => _isActionLoading = true);
     try {
       final client = ApiClient();
-      final formData = FormData.fromMap({
+      final formMap = <String, dynamic>{
         'foto': await MultipartFile.fromFile(photo.path, filename: 'selfie_masuk_${DateTime.now().millisecondsSinceEpoch}.jpg'),
         'device_info': 'Serv.io Companion Mobile App',
-      });
+      };
+
+      if (isTugasLuar) {
+        formMap['is_tugas_luar'] = 'true';
+        if (alasanTugasLuar != null && alasanTugasLuar.trim().isNotEmpty) {
+          formMap['alasan_tugas_luar'] = alasanTugasLuar.trim();
+        }
+      }
+
+      final formData = FormData.fromMap(formMap);
 
       await client.dio.post(ApiConstants.attendanceCheckIn, data: formData);
 
       HapticFeedback.heavyImpact();
       if (mounted) {
+        final successMsg = isTugasLuar
+            ? 'Check-In Tugas Luar berhasil diajukan dan menunggu verifikasi Owner.'
+            : 'Check-In berhasil tercatat!';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Text('Check-In berhasil tercatat!'),
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text(successMsg)),
               ],
             ),
-            backgroundColor: Color(0xFF10B981),
+            backgroundColor: const Color(0xFF10B981),
           ),
         );
         _loadAttendanceData(forceRefresh: true);
@@ -142,19 +154,156 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     } catch (e) {
       if (mounted) {
         String msg = 'Gagal melakukan check-in.';
-        if (e is DioException && e.response?.data is Map && e.response?.data['message'] != null) {
-          msg = e.response?.data['message'].toString() ?? msg;
+        bool isOutOfRadius = false;
+        if (e is DioException && e.response?.data is Map) {
+          final data = e.response!.data as Map;
+          if (data['message'] != null) {
+            msg = data['message'].toString();
+          }
+          if (data['out_of_radius'] == true) {
+            isOutOfRadius = true;
+          }
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            backgroundColor: AppTheme.error,
-          ),
-        );
+
+        if (isOutOfRadius && !isTugasLuar) {
+          _promptTugasLuarModal(reason: msg);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(msg),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isActionLoading = false);
     }
+  }
+
+  void _promptTugasLuarModal({String? reason}) {
+    final TextEditingController reasonController = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.location_off_rounded, color: Color(0xFFD97706), size: 22),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Check-In Tugas Luar / Lapangan',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      ),
+                      Text(
+                        'Di luar radius kantor workshop Pekayon',
+                        style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: const Text(
+                'Anda berada di luar radius workshop. Jika sedang bertugas (antar unit pelanggan sebelum jam 9, ambil sparepart, servis di lokasi), silakan masukkan alasan penugasan untuk diverifikasi oleh Superadmin / Owner.',
+                style: TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF92400E)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Alasan / Keterangan Tugas Luar *',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: reasonController,
+              maxLines: 3,
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Contoh: Mengantar unit laptop servis ke pelanggan sebelum jam 9...',
+                hintStyle: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppTheme.border),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD97706),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.camera_alt_rounded, size: 16),
+                    label: const Text('Ambil Selfie & Kirim', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    onPressed: () {
+                      final text = reasonController.text.trim();
+                      if (text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Alasan tugas luar wajib diisi!'),
+                            backgroundColor: AppTheme.error,
+                          ),
+                        );
+                        return;
+                      }
+                      Navigator.pop(ctx);
+                      _handleCheckIn(isTugasLuar: true, alasanTugasLuar: text);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _handleCheckOut() async {
@@ -366,7 +515,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                         const Icon(Icons.location_on_rounded, size: 13, color: Colors.white),
                         const SizedBox(width: 4),
                         Text(
-                          '${policy?['nama_kantor'] ?? "Workshop Utama"} (Radius ${policy?['radius_meter'] ?? 100}m)',
+                          '${policy?['nama_kantor'] ?? "Workshop Pekayon"} (Radius ${policy?['radius_meter'] ?? 100}m)',
                           style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
                         ),
                       ],
@@ -442,6 +591,94 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                     ),
                     const SizedBox(height: 12),
+
+                    // Banner Status Tugas Luar jika relevan
+                    if (record != null && (record['is_tugas_luar'] == true || record['is_tugas_luar'] == 1)) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: record['status_review'] == 'valid'
+                              ? const Color(0xFFECFDF5)
+                              : record['status_review'] == 'ditolak'
+                                  ? const Color(0xFFFFF1F2)
+                                  : const Color(0xFFFFFBEB),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: record['status_review'] == 'valid'
+                                ? const Color(0xFFA7F3D0)
+                                : record['status_review'] == 'ditolak'
+                                    ? const Color(0xFFFECDD3)
+                                    : const Color(0xFFFDE68A),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              record['status_review'] == 'valid'
+                                  ? Icons.check_circle_rounded
+                                  : record['status_review'] == 'ditolak'
+                                      ? Icons.cancel_rounded
+                                      : Icons.schedule_rounded,
+                              size: 18,
+                              color: record['status_review'] == 'valid'
+                                  ? const Color(0xFF059669)
+                                  : record['status_review'] == 'ditolak'
+                                      ? const Color(0xFFE11D48)
+                                      : const Color(0xFFD97706),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    record['status_review'] == 'valid'
+                                        ? 'Tugas Luar Disetujui Owner'
+                                        : record['status_review'] == 'ditolak'
+                                            ? 'Presensi Tugas Luar Ditolak'
+                                            : 'Tugas Luar • Menunggu Review Owner',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: record['status_review'] == 'valid'
+                                          ? const Color(0xFF065F46)
+                                          : record['status_review'] == 'ditolak'
+                                              ? const Color(0xFF9F1239)
+                                              : const Color(0xFF92400E),
+                                    ),
+                                  ),
+                                  if (record['alasan_tugas_luar'] != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        'Alasan: ${record['alasan_tugas_luar']}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: record['status_review'] == 'valid'
+                                              ? const Color(0xFF047857)
+                                              : record['status_review'] == 'ditolak'
+                                                  ? const Color(0xFFBE123C)
+                                                  : const Color(0xFFB45309),
+                                        ),
+                                      ),
+                                    ),
+                                  if (record['catatan_review'] != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        'Catatan Owner: ${record['catatan_review']}',
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
 
                     // Grid Info Jam Masuk & Pulang
                     Row(
@@ -520,7 +757,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     const SizedBox(height: 16),
 
                     // Action Buttons (Check-In or Check-Out)
-                    if (!hasCheckedIn)
+                    if (!hasCheckedIn) ...[
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
@@ -535,7 +772,25 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                             elevation: 0,
                           ),
                         ),
-                      )
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Center(
+                          child: TextButton.icon(
+                            onPressed: _isActionLoading ? null : () => _promptTugasLuarModal(),
+                            icon: const Icon(Icons.map_rounded, size: 15, color: Color(0xFFD97706)),
+                            label: const Text(
+                              'Sedang bertugas di luar workshop? Check-In Tugas Luar',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: Color(0xFFD97706),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ]
                     else if (!hasCheckedOut)
                       SizedBox(
                         width: double.infinity,

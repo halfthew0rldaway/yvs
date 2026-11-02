@@ -17,10 +17,12 @@ router.post("/check-in", uploadAttendance.single("foto"), attendanceController.c
 router.post("/check-out", uploadAttendance.single("foto"), attendanceController.checkOut);
 router.get("/my-history", attendanceController.getMyHistory);
 
-// 3. Supervisi & Rekapitulasi (Admin / Pimpinan)
+// 3. Supervisi & Rekapitulasi (Admin / Pimpinan / Owner)
 router.get("/daily-all", authorize("admin", "pimpinan"), attendanceController.getDailyAll);
 router.get("/recap", authorize("admin", "pimpinan"), attendanceController.getMonthlyRecap);
 router.post("/adjust", authorize("admin"), attendanceController.adjustAttendance);
+router.get("/pending-reviews", authorize("admin", "pimpinan"), attendanceController.getPendingReviews);
+router.put("/:id/review", authorize("admin", "pimpinan"), attendanceController.reviewAttendance);
 
 // 4. Pengajuan Izin / Cuti / Sakit
 router.get("/leaves", attendanceController.getLeaves);

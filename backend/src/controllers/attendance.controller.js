@@ -56,9 +56,9 @@ async function getOrCreatePolicy() {
     if (!policy) {
         policy = await prisma.attendancePolicy.create({
             data: {
-                nama_kantor: "Workshop Utama Serv.io",
-                latitude: -6.2088,
-                longitude: 106.8456,
+                nama_kantor: "Workshop Utama Pekayon",
+                latitude: -6.274323,
+                longitude: 106.977425,
                 radius_meter: 100,
                 jam_masuk: "08:30",
                 toleransi_menit: 15,
@@ -187,27 +187,48 @@ async function checkIn(req, res) {
         }
 
         // 2. Validasi Geolocation & Geofencing
-        const { latitude, longitude, device_info, catatan } = req.body;
-        const userLat = latitude ? parseFloat(latitude) : null;
-        const userLon = longitude ? parseFloat(longitude) : null;
+        const { latitude, longitude, device_info, catatan, is_tugas_luar, alasan_tugas_luar } = req.body;
+        const userLat = latitude !== undefined && latitude !== null && latitude !== "" ? parseFloat(latitude) : null;
+        const userLon = longitude !== undefined && longitude !== null && longitude !== "" ? parseFloat(longitude) : null;
+        const isTugasLuar = is_tugas_luar === "true" || is_tugas_luar === true;
+        const cleanAlasanTugasLuar = alasan_tugas_luar ? String(alasan_tugas_luar).trim() : null;
 
         let distanceMeters = 0;
         let isInRadius = true;
+        let statusReview = "valid";
 
-        if (userLat !== null && userLon !== null) {
+        if (userLat !== null && userLon !== null && !isNaN(userLat) && !isNaN(userLon)) {
             distanceMeters = calculateDistanceMeters(userLat, userLon, policy.latitude, policy.longitude);
-            if (policy.is_geofence_active && distanceMeters > policy.radius_meter) {
+            isInRadius = distanceMeters <= policy.radius_meter;
+
+            if (policy.is_geofence_active && !isInRadius) {
+                if (!isTugasLuar) {
+                    return res.status(400).json({
+                        message: `Check-In ditolak: Anda berada di luar radius workshop (${distanceMeters} meter dari workshop, batas maksimal ${policy.radius_meter} meter). Jika Anda sedang bertugas di luar (antar unit/jemput sparepart/tugas luar), silakan gunakan opsi Check-In Tugas Luar.`,
+                        out_of_radius: true,
+                        distanceMeters,
+                        maxRadius: policy.radius_meter
+                    });
+                }
+
+                if (!cleanAlasanTugasLuar) {
+                    return res.status(400).json({
+                        message: "Alasan atau keterangan penugasan tugas luar wajib diisi saat melakukan presensi di luar radius workshop."
+                    });
+                }
+
+                statusReview = "menunggu_review";
+            }
+        } else if (policy.is_geofence_active) {
+            if (isTugasLuar && cleanAlasanTugasLuar) {
+                isInRadius = false;
+                statusReview = "menunggu_review";
+            } else {
                 return res.status(400).json({
-                    message: `Check-In ditolak: Anda berada di luar radius workshop (${distanceMeters} meter dari workshop, batas maksimal ${policy.radius_meter} meter). Silakan lakukan absensi di lokasi workshop.`,
-                    distanceMeters,
-                    maxRadius: policy.radius_meter
+                    message: "Akses GPS wajib diaktifkan untuk melakukan presensi. Silakan izinkan akses lokasi pada browser atau aplikasi perangkat Anda.",
+                    out_of_radius: true
                 });
             }
-            isInRadius = distanceMeters <= policy.radius_meter;
-        } else if (policy.is_geofence_active) {
-            return res.status(400).json({
-                message: "Akses GPS wajib diaktifkan untuk melakukan presensi. Silakan izinkan akses lokasi pada browser Anda."
-            });
         }
 
         // 3. Validasi Foto Selfie
@@ -255,7 +276,10 @@ async function checkIn(req, res) {
                 longitude_masuk: userLon,
                 jarak_meter_masuk: distanceMeters,
                 is_in_radius_masuk: isInRadius,
-                method: "web_selfie_gps",
+                is_tugas_luar: isTugasLuar,
+                alasan_tugas_luar: isTugasLuar ? cleanAlasanTugasLuar : null,
+                status_review: statusReview,
+                method: req.headers["user-agent"]?.includes("Dart") || (device_info && device_info.includes("Companion")) ? "mobile_flutter" : "web_selfie_gps",
                 device_info: device_info || req.headers["user-agent"] || null,
                 catatan: catatan || null
             },
@@ -268,23 +292,32 @@ async function checkIn(req, res) {
                 longitude_masuk: userLon,
                 jarak_meter_masuk: distanceMeters,
                 is_in_radius_masuk: isInRadius,
+                is_tugas_luar: isTugasLuar,
+                alasan_tugas_luar: isTugasLuar ? cleanAlasanTugasLuar : null,
+                status_review: statusReview,
                 device_info: device_info || req.headers["user-agent"] || null,
                 catatan: catatan || null
             }
         });
 
         // 6. Audit Trail
+        const tugasLuarNote = isTugasLuar ? ` [TUGAS LUAR: Menunggu Review Owner, Alasan: ${cleanAlasanTugasLuar}]` : "";
         await recordActivity({
             userId,
             userNama: req.user.nama,
-            action: `Check-In Presensi [Status: ${status.toUpperCase()}, Jarak: ${distanceMeters}m, Terlambat: ${menitKeterlambatan} mnt]`,
+            action: `Check-In Presensi [Status: ${status.toUpperCase()}, Jarak: ${distanceMeters}m, Terlambat: ${menitKeterlambatan} mnt]${tugasLuarNote}`,
             entity: "presensi"
         });
 
+        let successMsg = status === "terlambat" 
+            ? `Check-In tercatat (Terlambat ${menitKeterlambatan} menit)` 
+            : "Check-In berhasil! Tepat waktu.";
+        if (isTugasLuar) {
+            successMsg += " (Kategori Tugas Luar: Menunggu verifikasi Superadmin / Owner)";
+        }
+
         return res.status(201).json({
-            message: status === "terlambat" 
-                ? `Check-In tercatat (Terlambat ${menitKeterlambatan} menit)` 
-                : "Check-In berhasil! Tepat waktu.",
+            message: successMsg,
             record
         });
     } catch (error) {
@@ -324,21 +357,25 @@ async function checkOut(req, res) {
         }
 
         // 2. Validasi Geolocation & Geofencing
-        const { latitude, longitude, catatan } = req.body;
-        const userLat = latitude ? parseFloat(latitude) : null;
-        const userLon = longitude ? parseFloat(longitude) : null;
+        const { latitude, longitude, catatan, is_tugas_luar } = req.body;
+        const userLat = latitude !== undefined && latitude !== null && latitude !== "" ? parseFloat(latitude) : null;
+        const userLon = longitude !== undefined && longitude !== null && longitude !== "" ? parseFloat(longitude) : null;
+        const isTugasLuar = existing.is_tugas_luar || is_tugas_luar === "true" || is_tugas_luar === true;
 
         let distanceMeters = 0;
         let isInRadius = true;
 
-        if (userLat !== null && userLon !== null) {
+        if (userLat !== null && userLon !== null && !isNaN(userLat) && !isNaN(userLon)) {
             distanceMeters = calculateDistanceMeters(userLat, userLon, policy.latitude, policy.longitude);
             if (policy.is_geofence_active && distanceMeters > policy.radius_meter) {
-                return res.status(400).json({
-                    message: `Check-Out ditolak: Anda berada di luar radius workshop (${distanceMeters} meter dari workshop, batas maksimal ${policy.radius_meter} meter).`,
-                    distanceMeters,
-                    maxRadius: policy.radius_meter
-                });
+                if (!isTugasLuar) {
+                    return res.status(400).json({
+                        message: `Check-Out ditolak: Anda berada di luar radius workshop (${distanceMeters} meter dari workshop, batas maksimal ${policy.radius_meter} meter).`,
+                        out_of_radius: true,
+                        distanceMeters,
+                        maxRadius: policy.radius_meter
+                    });
+                }
             }
             isInRadius = distanceMeters <= policy.radius_meter;
         }
@@ -811,6 +848,112 @@ async function reviewLeave(req, res) {
     }
 }
 
+// 11. GET /api/attendance/pending-reviews (Admin & Pimpinan / Owner: Review Presensi Tugas Luar)
+async function getPendingReviews(req, res) {
+    try {
+        const { status_filter } = req.query; // 'menunggu_review' | 'all' | 'valid' | 'ditolak'
+        const where = {
+            is_tugas_luar: true
+        };
+
+        if (status_filter && status_filter !== "all") {
+            where.status_review = status_filter;
+        } else if (!status_filter) {
+            where.status_review = "menunggu_review";
+        }
+
+        const list = await prisma.attendanceRecord.findMany({
+            where,
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        nama: true,
+                        email: true,
+                        role: true,
+                        foto_profile: true
+                    }
+                },
+                reviewed_by: {
+                    select: {
+                        id: true,
+                        nama: true
+                    }
+                }
+            },
+            orderBy: [
+                { tanggal: "desc" },
+                { jam_masuk: "desc" }
+            ]
+        });
+
+        const pendingCount = await prisma.attendanceRecord.count({
+            where: {
+                is_tugas_luar: true,
+                status_review: "menunggu_review"
+            }
+        });
+
+        return res.json({
+            pendingCount,
+            list
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal memuat daftar review presensi tugas luar", error: error.message });
+    }
+}
+
+// 12. PUT /api/attendance/:id/review (Admin & Pimpinan / Owner: Setujui atau Tolak Presensi Tugas Luar)
+async function reviewAttendance(req, res) {
+    try {
+        const id = parseInt(req.params.id);
+        const { status_review, catatan_review } = req.body;
+
+        if (!status_review || !["valid", "ditolak"].includes(status_review)) {
+            return res.status(400).json({ message: "Status review harus bernilai 'valid' (disetujui) atau 'ditolak'." });
+        }
+
+        const existing = await prisma.attendanceRecord.findUnique({
+            where: { id },
+            include: { user: true }
+        });
+
+        if (!existing) {
+            return res.status(404).json({ message: "Data presensi tidak ditemukan." });
+        }
+
+        const updated = await prisma.attendanceRecord.update({
+            where: { id },
+            data: {
+                status_review,
+                reviewed_by_id: req.user.id,
+                reviewed_at: new Date(),
+                catatan_review: catatan_review ? catatan_review.trim() : null
+            },
+            include: {
+                user: { select: { id: true, nama: true, email: true, role: true } },
+                reviewed_by: { select: { id: true, nama: true } }
+            }
+        });
+
+        const decisionText = status_review === "valid" ? "MENYETUJUI (VALID)" : "MENOLAK (TIDAK VALID)";
+
+        await recordActivity({
+            userId: req.user.id,
+            userNama: req.user.nama,
+            action: `${decisionText} Presensi Tugas Luar #${id} Karyawan ${existing.user.nama} (Tgl: ${existing.tanggal.toISOString().split("T")[0]})`,
+            entity: "presensi"
+        });
+
+        return res.json({
+            message: `Presensi tugas luar karyawan ${existing.user.nama} berhasil ${status_review === "valid" ? "disetujui (valid)" : "ditolak"}.`,
+            record: updated
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal memproses review presensi", error: error.message });
+    }
+}
+
 module.exports = {
     getPolicy,
     updatePolicy,
@@ -823,6 +966,8 @@ module.exports = {
     adjustAttendance,
     getLeaves,
     createLeave,
-    reviewLeave
+    reviewLeave,
+    getPendingReviews,
+    reviewAttendance
 };
 
