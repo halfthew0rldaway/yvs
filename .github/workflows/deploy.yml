@@ -1,4 +1,4 @@
-name: Auto Deploy to VPS
+name: Auto Deploy to Production (komputerawet.com)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  deploy:
+  deploy-production:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,39 +23,68 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script_stop: true
           script: |
-            echo "🚀 Starting Deployment on VPS..."
-            cd ~/servio
+            echo "🚀 [PROD] Memulai Deployment Production di VPS..."
 
-            echo "📥 Syncing latest changes from Git..."
+            # Deteksi direktori proyek di VPS (prioritaskan ~/yvs-production, fallback ~/servio)
+            if [ -d "$HOME/yvs-production" ]; then
+              TARGET_DIR="$HOME/yvs-production"
+            elif [ -d "$HOME/servio" ]; then
+              TARGET_DIR="$HOME/servio"
+            else
+              TARGET_DIR="$HOME/yvs-production"
+              mkdir -p "$TARGET_DIR"
+              git clone -b main https://github.com/halfthew0rldaway/yvs.git "$TARGET_DIR"
+            fi
+
+            cd "$TARGET_DIR"
+            echo "📂 Working directory: $TARGET_DIR"
+
+            echo "📥 Mengambil perubahan terbaru dari branch main..."
             git fetch origin main
             git reset --hard origin/main
 
-            if [ ! -f .env ] && [ -f .env.production ]; then
-              cp .env.production .env
+            # Pastikan network gateway bersama aktif
+            docker network inspect yvs_gateway_net >/dev/null 2>&1 || docker network create yvs_gateway_net
+
+            # Pastikan file env tersedia
+            if [ ! -f .env.production ] && [ -f .env ]; then
+              cp .env .env.production
+            elif [ ! -f .env.production ] && [ -f .env.production.example ]; then
+              cp .env.production.example .env.production
             fi
 
-            echo "🐳 Rebuilding and updating Docker containers..."
-            docker compose --env-file .env.production up -d --build
+            COMPOSE_FILE="compose.prod.yaml"
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              COMPOSE_FILE="compose.yaml"
+            fi
 
-            echo "⏳ Waiting for backend container to be running..."
+            echo "🐳 Membangun dan menjalankan kontainer Production ($COMPOSE_FILE)..."
+            docker compose -f "$COMPOSE_FILE" --env-file .env.production up -d --build
+
+            echo "⏳ Menunggu kontainer backend Production running..."
             for i in $(seq 1 30); do
-              STATUS=$(docker compose --env-file .env.production ps --format '{{.State}}' backend 2>/dev/null || true)
+              STATUS=$(docker compose -f "$COMPOSE_FILE" --env-file .env.production ps --format '{{.State}}' backend 2>/dev/null || true)
               if [ "$STATUS" = "running" ]; then
-                echo "✅ Backend container is running."
+                echo "✅ Backend Production berhasil aktif."
                 break
               fi
-              echo "Waiting for backend container (attempt $i/30, current status: $STATUS)..."
+              echo "Menunggu backend (percobaan $i/30, status saat ini: $STATUS)..."
               sleep 2
             done
 
-            echo "⏳ Allowing container self-initialization to complete..."
-            sleep 8
+            echo "⏳ Inisialisasi container database & migrasi..."
+            sleep 6
 
-            echo "📋 Checking container initialization logs:"
-            docker compose --env-file .env.production logs backend --tail 20
+            echo "📋 Log inisialisasi backend:"
+            docker compose -f "$COMPOSE_FILE" --env-file .env.production logs backend --tail 20
 
-            echo "🧹 Cleaning up unused Docker images..."
+            # Reload Caddy Gateway jika aktif
+            if docker ps --format '{{.Names}}' | grep -q "caddy-gateway"; then
+              echo "🔄 Me-reload konfigurasi Caddy Gateway..."
+              docker exec caddy-gateway caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || true
+            fi
+
+            echo "🧹 Membersihkan image lama..."
             docker image prune -f
 
-            echo "✅ Deployment completed successfully!"
-
+            echo "🎉 [PROD] Deployment Production Sukses! Akses: https://${PROD_DOMAIN:-komputerawet.com}"

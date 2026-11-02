@@ -1,0 +1,33 @@
+# ==============================================================================
+# Central Caddy Gateway - Reverse Proxy & Auto SSL
+# Berjalan sebagai service independen di VPS, menempel pada network 'yvs_gateway_net'
+# ==============================================================================
+
+name: yvs-gateway
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PROD_DOMAIN: ${PROD_DOMAIN:-komputerawet.com}
+      STAGING_DOMAIN: ${STAGING_DOMAIN:-staging.komputerawet.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - yvs_gateway_net
+    mem_limit: 128m
+
+networks:
+  yvs_gateway_net:
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:

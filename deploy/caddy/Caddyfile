@@ -1,0 +1,53 @@
+# ==============================================================================
+# Serv.io / YVS Gateway - Central Reverse Proxy (Caddy)
+# Bertanggung jawab mengelola SSL otomatis (HTTPS) & routing port 80/443
+# untuk Staging (staging.komputerawet.com) dan Production (komputerawet.com)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. PRODUCTION ENVIRONMENT
+# ------------------------------------------------------------------------------
+{$PROD_DOMAIN:komputerawet.com} {
+    encode zstd gzip
+
+    # API Backend Serv.io Production
+    @api path /api /api/*
+    handle @api {
+        reverse_proxy yvs-prod-backend:5000
+    }
+
+    # Uploads / Static Assets Media Production
+    @uploads path /uploads /uploads/*
+    handle @uploads {
+        reverse_proxy yvs-prod-backend:5000
+    }
+
+    # Frontend Single Page App Production
+    handle {
+        reverse_proxy yvs-prod-frontend:80
+    }
+}
+
+# ------------------------------------------------------------------------------
+# 2. STAGING / R&D ENVIRONMENT
+# ------------------------------------------------------------------------------
+{$STAGING_DOMAIN:staging.komputerawet.com} {
+    encode zstd gzip
+
+    # API Backend Serv.io Staging
+    @api path /api /api/*
+    handle @api {
+        reverse_proxy yvs-staging-backend:5000
+    }
+
+    # Uploads / Static Assets Media Staging
+    @uploads path /uploads /uploads/*
+    handle @uploads {
+        reverse_proxy yvs-staging-backend:5000
+    }
+
+    # Frontend Single Page App Staging
+    handle {
+        reverse_proxy yvs-staging-frontend:80
+    }
+}
