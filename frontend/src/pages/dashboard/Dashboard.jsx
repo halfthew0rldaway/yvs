@@ -437,6 +437,97 @@ export default function Dashboard() {
                         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Halo, {user?.nama}!</h1>
                         <p className="text-sm text-slate-500 mt-1">Selamat datang di Dashboard Admin. Berikut ringkasan performa sistem hari ini.</p>
                     </div>
+
+                    {/* Quick Access Toolbar: Backup Database & Log Audit */}
+                    <div className="flex items-center gap-2.5 flex-wrap self-end sm:self-auto">
+                        <Link 
+                            to="/audit-log" 
+                            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs group"
+                            title="Buka Pusat Log Audit & Anti-Fraud"
+                        >
+                            <ShieldAlert className="w-4 h-4 text-blue-600" />
+                            <span>Log Audit</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
+
+                        {/* Backup Database Dropdown */}
+                        <div className="relative">
+                            <button 
+                                onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                                className="flex items-center gap-2 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer"
+                                title="Cadangkan seluruh database sistem"
+                            >
+                                <Database className="w-4 h-4 text-emerald-400" />
+                                <span>Backup Database</span>
+                                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                            </button>
+
+                            {exportDropdownOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setExportDropdownOpen(false)}></div>
+                                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100">
+                                        <div className="py-1">
+                                            <button
+                                                onClick={async () => {
+                                                    setExportDropdownOpen(false);
+                                                    try {
+                                                        const res = await api.get('/dashboard/database/export');
+                                                        const dbData = res.data;
+                                                        delete dbData.exportedAt;
+                                                        
+                                                        const XLSX = await import('xlsx');
+                                                        const wb = XLSX.utils.book_new();
+                                                        
+                                                        for (const key of Object.keys(dbData)) {
+                                                            if (Array.isArray(dbData[key]) && dbData[key].length > 0) {
+                                                                const ws = XLSX.utils.json_to_sheet(dbData[key]);
+                                                                XLSX.utils.book_append_sheet(wb, ws, key.substring(0, 31));
+                                                            }
+                                                        }
+                                                        
+                                                        XLSX.writeFile(wb, `Servio_Backup_${new Date().toISOString().split('T')[0]}.xlsx`);
+                                                        toast.success("Database diekspor ke Excel!");
+                                                    } catch (error) {
+                                                        console.error("Gagal export excel", error);
+                                                        toast.error("Gagal mengekspor database ke Excel");
+                                                    }
+                                                }}
+                                                className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-2 transition-colors font-medium cursor-pointer"
+                                            >
+                                                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                                                Export as Excel
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    setExportDropdownOpen(false);
+                                                    try {
+                                                        const res = await api.get('/dashboard/database/export', {
+                                                            responseType: 'blob'
+                                                        });
+                                                        const url = window.URL.createObjectURL(new Blob([res.data]));
+                                                        const link = document.createElement('a');
+                                                        link.href = url;
+                                                        link.setAttribute('download', `servio_db_backup_${new Date().toISOString().split('T')[0]}.json`);
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        link.parentNode.removeChild(link);
+                                                        window.URL.revokeObjectURL(url);
+                                                    } catch (error) {
+                                                        console.error("Gagal export JSON", error);
+                                                        toast.error("Gagal mengekspor database JSON");
+                                                    }
+                                                }}
+                                                className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 flex items-center gap-2 transition-colors font-medium border-t border-slate-100 cursor-pointer"
+                                            >
+                                                <FileJson className="w-4 h-4 text-amber-600" />
+                                                Export as JSON
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -676,172 +767,19 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Activity Log Section */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mt-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
-                                <Activity className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Log Aktivitas Terbaru</h2>
-                                <p className="text-sm text-slate-500">Pantau pergerakan data dan tugas di dalam sistem</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <Link 
-                                to="/users" 
-                                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors shadow-sm group"
-                                title="Lihat daftar user & performa"
-                            >
-                                <span>User & Performa</span>
-                                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                            </Link>
-                            <button 
-                                onClick={async () => {
-                                    try {
-                                        const today = new Date().toISOString().split("T")[0];
-                                        const res = await api.get(`/dashboard/activities/export?date=${today}`, {
-                                            responseType: 'blob'
-                                        });
-                                        const url = window.URL.createObjectURL(new Blob([res.data]));
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.setAttribute('download', `activity_log_${today}.csv`);
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        link.parentNode.removeChild(link);
-                                        window.URL.revokeObjectURL(url);
-                                    } catch (error) {
-                                        console.error("Gagal export CSV", error);
-                                    }
-                                }}
-                                className="flex items-center gap-2 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors shadow-sm"
-                                title="Unduh log aktivitas harian ke format CSV"
-                            >
-                                <Download className="w-4 h-4 text-slate-500" />
-                                <span className="hidden sm:inline">Export Log</span>
-                            </button>
-
-                            {/* Backup Database Dropdown */}
-                            <div className="relative">
-                                <button 
-                                    onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-                                    className="flex items-center gap-2 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-all shadow-xs"
-                                    title="Cadangkan seluruh database sistem"
-                                >
-                                    <Database className="w-4 h-4 text-emerald-400" />
-                                    <span>Backup Database</span>
-                                    <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-                                </button>
-
-                                {exportDropdownOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-40" onClick={() => setExportDropdownOpen(false)}></div>
-                                        <div className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-50">
-                                            <div className="py-1">
-                                                <button
-                                                    onClick={async () => {
-                                                        setExportDropdownOpen(false);
-                                                        try {
-                                                            const res = await api.get('/dashboard/database/export');
-                                                            const dbData = res.data;
-                                                            delete dbData.exportedAt;
-                                                            
-                                                            // Dynamic import: Only download XLSX when user triggers export
-                                                            const XLSX = await import('xlsx');
-                                                            const wb = XLSX.utils.book_new();
-                                                            
-                                                            for (const key of Object.keys(dbData)) {
-                                                                if (Array.isArray(dbData[key]) && dbData[key].length > 0) {
-                                                                    const ws = XLSX.utils.json_to_sheet(dbData[key]);
-                                                                    XLSX.utils.book_append_sheet(wb, ws, key.substring(0, 31));
-                                                                }
-                                                            }
-                                                            
-                                                            XLSX.writeFile(wb, `Servio_Backup_${new Date().toISOString().split('T')[0]}.xlsx`);
-                                                            toast.success("Database diekspor ke Excel!");
-                                                        } catch (error) {
-                                                            console.error("Gagal export excel", error);
-                                                            toast.error("Gagal mengekspor database ke Excel");
-                                                        }
-                                                    }}
-                                                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-2 transition-colors font-medium"
-                                                >
-                                                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                                                    Export as Excel
-                                                </button>
-                                                <button
-                                                    onClick={async () => {
-                                                        setExportDropdownOpen(false);
-                                                        try {
-                                                            const res = await api.get('/dashboard/database/export', {
-                                                                responseType: 'blob'
-                                                            });
-                                                            const url = window.URL.createObjectURL(new Blob([res.data]));
-                                                            const link = document.createElement('a');
-                                                            link.href = url;
-                                                            link.setAttribute('download', `servio_db_backup_${new Date().toISOString().split('T')[0]}.json`);
-                                                            document.body.appendChild(link);
-                                                            link.click();
-                                                            link.parentNode.removeChild(link);
-                                                            window.URL.revokeObjectURL(url);
-                                                        } catch (error) {
-                                                            console.error("Gagal export JSON", error);
-                                                            toast.error("Gagal mengekspor database JSON");
-                                                        }
-                                                    }}
-                                                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 flex items-center gap-2 transition-colors font-medium border-t border-slate-100"
-                                                >
-                                                    <FileJson className="w-4 h-4 text-amber-600" />
-                                                    Export as JSON
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
+                {/* Audit & Compliance Quick Access Banner */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 mt-6">
+                    <div className="flex items-center gap-2.5">
+                        <ShieldAlert className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span>Sistem diawasi oleh <strong>Log Audit Forensik & Anti-Fraud</strong> otomatis untuk setiap mutasi status tiket, faktur, dan stok suku cadang.</span>
                     </div>
-                    
-                    {data?.recentActivities?.length > 0 ? (
-                        <div className="max-h-[400px] overflow-y-auto pr-4 custom-scrollbar">
-                            <div className="relative pl-4 space-y-7 before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px before:h-full before:w-[2px] before:bg-slate-100 pb-4 pt-2">
-                                {data.recentActivities.map((log) => {
-                                    // Generate a deterministic color based on the user's ID
-                                    const colors = [
-                                        "bg-blue-500 ring-blue-100", 
-                                        "bg-emerald-500 ring-emerald-100", 
-                                        "bg-purple-500 ring-purple-100", 
-                                        "bg-amber-500 ring-amber-100", 
-                                        "bg-rose-500 ring-rose-100",
-                                        "bg-teal-500 ring-teal-100"
-                                    ];
-                                    const colorIndex = log.user_id ? log.user_id % colors.length : 0;
-                                    const userColor = colors[colorIndex];
-
-                                    return (
-                                    <div key={log.id} className="relative flex items-start gap-6 group">
-                                        <div className={`absolute left-0 w-[14px] h-[14px] rounded-full border-[3px] border-white ring-1 mt-1 shadow-sm transition-transform ${userColor}`} />
-                                        <div className="ml-6 flex-1 bg-white">
-                                            <p className="text-sm font-medium text-slate-700 leading-tight">{log.action}</p>
-                                            <div className="flex items-center gap-2 mt-1.5">
-                                                <span className="text-xs text-slate-500 font-bold">{log.user_nama}</span>
-                                                <span className="w-1 h-1 rounded-full bg-slate-300" />
-                                                <span className="flex items-center gap-1 text-xs text-slate-400"><Clock className="w-3 h-3"/>{formatTimeAgo(log.created_at)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                            <Activity className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                            Belum ada aktivitas terekam.
-                        </div>
-                    )}
+                    <Link 
+                        to="/audit-log"
+                        className="inline-flex items-center gap-1.5 font-bold text-blue-600 hover:text-blue-700 hover:underline shrink-0"
+                    >
+                        <span>Buka Pusat Log Audit</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
                 </div>
 
             </div>
