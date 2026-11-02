@@ -30,6 +30,7 @@ services:
     mem_limit: 640m
     networks:
       - internal
+      - yvs_gateway_net
 
   backend:
     build:
