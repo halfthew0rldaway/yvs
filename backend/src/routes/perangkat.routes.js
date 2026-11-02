@@ -28,8 +28,8 @@ const perangkatValidation = [
 
 router.get("/", getAll);
 router.get("/:id", getById);
-router.post("/", authorize("admin"), perangkatValidation, validate, create);
-router.put("/:id", authorize("admin"), perangkatValidation, validate, update);
+router.post("/", authorize("admin", "frontman"), perangkatValidation, validate, create);
+router.put("/:id", authorize("admin", "frontman"), perangkatValidation, validate, update);
 router.delete("/:id", authorize("admin"), remove);
 
 module.exports = router;

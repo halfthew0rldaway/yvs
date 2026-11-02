@@ -1,3 +1,4 @@
+
 import { Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
@@ -49,6 +50,18 @@ function PageLoader() {
     );
 }
 
+function hasRoleAccess(userRole, allowedRoles) {
+    if (!allowedRoles || allowedRoles.length === 0) return true;
+    if (!userRole) return false;
+    if (allowedRoles.includes(userRole)) return true;
+    // Hierarki superset:
+    // Pimpinan mewarisi semua akses admin & frontman
+    if (userRole === "pimpinan" && (allowedRoles.includes("admin") || allowedRoles.includes("frontman"))) return true;
+    // Admin mewarisi semua akses frontman meja depan
+    if (userRole === "admin" && allowedRoles.includes("frontman")) return true;
+    return false;
+}
+
 function ProtectedRoute({ children, roles }) {
     const { token, user, loading } = useAuth();
     const location = useLocation();
@@ -66,7 +79,7 @@ function ProtectedRoute({ children, roles }) {
         return <Navigate to={`/login?redirect=${redirectParam}`} replace />;
     }
 
-    if (roles && roles.length > 0 && (!user || !roles.includes(user.role))) {
+    if (roles && roles.length > 0 && !hasRoleAccess(user?.role, roles)) {
         return <Navigate to="/dashboard" replace />;
     }
 
@@ -85,14 +98,14 @@ export default function App() {
                     {/* Protected routes */}
                     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                    <Route path="/customer" element={<ProtectedRoute roles={["admin"]}><CustomerList /></ProtectedRoute>} />
-                    <Route path="/customer/tambah" element={<ProtectedRoute roles={["admin"]}><CustomerForm /></ProtectedRoute>} />
-                    <Route path="/customer/edit/:id" element={<ProtectedRoute roles={["admin"]}><CustomerForm /></ProtectedRoute>} />
-                    <Route path="/perangkat" element={<ProtectedRoute roles={["admin"]}><PerangkatList /></ProtectedRoute>} />
-                    <Route path="/perangkat/tambah" element={<ProtectedRoute roles={["admin"]}><PerangkatForm /></ProtectedRoute>} />
-                    <Route path="/perangkat/edit/:id" element={<ProtectedRoute roles={["admin"]}><PerangkatForm /></ProtectedRoute>} />
+                    <Route path="/customer" element={<ProtectedRoute roles={["frontman", "admin"]}><CustomerList /></ProtectedRoute>} />
+                    <Route path="/customer/tambah" element={<ProtectedRoute roles={["frontman", "admin"]}><CustomerForm /></ProtectedRoute>} />
+                    <Route path="/customer/edit/:id" element={<ProtectedRoute roles={["frontman", "admin"]}><CustomerForm /></ProtectedRoute>} />
+                    <Route path="/perangkat" element={<ProtectedRoute roles={["frontman", "admin"]}><PerangkatList /></ProtectedRoute>} />
+                    <Route path="/perangkat/tambah" element={<ProtectedRoute roles={["frontman", "admin"]}><PerangkatForm /></ProtectedRoute>} />
+                    <Route path="/perangkat/edit/:id" element={<ProtectedRoute roles={["frontman", "admin"]}><PerangkatForm /></ProtectedRoute>} />
                     <Route path="/tiket-servis" element={<ProtectedRoute><TiketServisList /></ProtectedRoute>} />
-                    <Route path="/tiket-servis/tambah" element={<ProtectedRoute roles={["admin"]}><TiketServisForm /></ProtectedRoute>} />
+                    <Route path="/tiket-servis/tambah" element={<ProtectedRoute roles={["frontman", "admin"]}><TiketServisForm /></ProtectedRoute>} />
                     <Route path="/tiket-servis/:id" element={<ProtectedRoute><TiketServisDetail /></ProtectedRoute>} />
                     <Route path="/tiket-servis/:id/diagnosis" element={<ProtectedRoute><DiagnosisForm /></ProtectedRoute>} />
                     <Route path="/tiket-servis/:id/log" element={<ProtectedRoute><LogPerbaikanList /></ProtectedRoute>} />
@@ -107,8 +120,8 @@ export default function App() {
                     <Route path="/rma/new" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
                     <Route path="/supplier" element={<ProtectedRoute roles={["admin"]}><SupplierList /></ProtectedRoute>} />
                     <Route path="/suppliers" element={<ProtectedRoute roles={["admin"]}><SupplierList /></ProtectedRoute>} />
-                    <Route path="/invoice" element={<ProtectedRoute roles={["admin"]}><InvoiceList /></ProtectedRoute>} />
-                    <Route path="/invoice/tambah" element={<ProtectedRoute roles={["admin"]}><InvoiceForm /></ProtectedRoute>} />
+                    <Route path="/invoice" element={<ProtectedRoute roles={["frontman", "admin"]}><InvoiceList /></ProtectedRoute>} />
+                    <Route path="/invoice/tambah" element={<ProtectedRoute roles={["frontman", "admin"]}><InvoiceForm /></ProtectedRoute>} />
                     <Route path="/invoice/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />
                     <Route path="/users" element={<ProtectedRoute roles={["admin"]}><UserList /></ProtectedRoute>} />
                     <Route path="/database" element={<ProtectedRoute roles={["admin"]}><DatabaseManagement /></ProtectedRoute>} />

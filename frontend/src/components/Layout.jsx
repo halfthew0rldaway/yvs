@@ -142,6 +142,46 @@ const teknisiNavGroups = [
     }
 ];
 
+// Menu Groups untuk Frontman / Service Advisor / Kasir
+const frontmanNavGroups = [
+    {
+        id: "overview",
+        label: "Ringkasan",
+        items: [
+            { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard }
+        ]
+    },
+    {
+        id: "operasional",
+        label: "Meja Pelayanan & Kasir",
+        icon: Ticket,
+        items: [
+            { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
+            { path: "/invoice", label: "Invoice & Pembayaran", icon: FileText },
+            { path: "/perangkat", label: "Perangkat Pelanggan", icon: MonitorSmartphone },
+            { path: "/customer", label: "Data Pelanggan", icon: Users },
+            { path: "/loaner", label: "Unit Pinjaman (Loaner)", icon: Laptop },
+        ]
+    },
+    {
+        id: "logistik",
+        label: "Katalog & Stok",
+        icon: Wrench,
+        items: [
+            { path: "/sparepart", label: "Katalog Sparepart", icon: Wrench },
+        ]
+    },
+    {
+        id: "knowledge",
+        label: "Knowledge & Presensi",
+        icon: BookOpen,
+        items: [
+            { path: "/attendance", label: "Presensi & Absensi", icon: Clock },
+            { path: "/wiki", label: "Pusat SOP & Solusi", icon: BookOpen },
+        ]
+    }
+];
+
 export default function Layout({ children }) {
     const { 
         user, 
@@ -298,7 +338,7 @@ export default function Layout({ children }) {
         return () => window.removeEventListener("resize", handleResize);
     }, [isSidebarOpen]);
 
-    const navGroups = isAdmin ? adminNavGroups : teknisiNavGroups;
+    const navGroups = isAdmin ? adminNavGroups : (user?.role === "frontman" ? frontmanNavGroups : teknisiNavGroups);
 
     // Collapsible Groups state: open by default for core daily groups
     const [openGroups, setOpenGroups] = useState({

@@ -95,8 +95,11 @@ export function AuthProvider({ children }) {
         lockReason,
         lockSession,
         unlockSession,
-        isAdmin: user?.role === "admin",
-        isTeknisi: user?.role === "teknisi"
+        isAdmin: user?.role === "admin" || user?.role === "pimpinan",
+        isFrontman: user?.role === "frontman",
+        isTeknisi: user?.role === "teknisi",
+        isPimpinan: user?.role === "pimpinan",
+        canHandleFrontdesk: user?.role === "admin" || user?.role === "pimpinan" || user?.role === "frontman"
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -120,8 +123,11 @@ export function useAuth() {
             lockReason: "idle",
             lockSession: () => {},
             unlockSession: () => {},
-            isAdmin: storedUser?.role === "admin",
-            isTeknisi: storedUser?.role === "teknisi"
+            isAdmin: storedUser?.role === "admin" || storedUser?.role === "pimpinan",
+            isFrontman: storedUser?.role === "frontman",
+            isTeknisi: storedUser?.role === "teknisi",
+            isPimpinan: storedUser?.role === "pimpinan",
+            canHandleFrontdesk: storedUser?.role === "admin" || storedUser?.role === "pimpinan" || storedUser?.role === "frontman"
         };
     }
     return context;

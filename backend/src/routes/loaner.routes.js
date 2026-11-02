@@ -26,8 +26,8 @@ router.delete("/devices/:id", authorize("admin"), deleteDevice);
 // Records / loan activity routes
 router.get("/records", getRecords);
 router.get("/records/ticket/:tiketId", getRecordsByTicket);
-router.post("/records", authorize("admin", "teknisi"), createRecord);
-router.put("/records/:id/return", authorize("admin", "teknisi"), returnRecord);
+router.post("/records", authorize("admin", "frontman", "teknisi"), createRecord);
+router.put("/records/:id/return", authorize("admin", "frontman", "teknisi"), returnRecord);
 
 module.exports = router;
 

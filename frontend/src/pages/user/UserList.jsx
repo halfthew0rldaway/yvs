@@ -337,6 +337,14 @@ export default function UserList() {
                                 Admin
                             </button>
                             <button
+                                onClick={() => setRoleFilter("frontman")}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+                                    roleFilter === "frontman" ? "bg-amber-600 text-white border-amber-600" : "bg-white text-slate-600 border-slate-200"
+                                }`}
+                            >
+                                Frontman
+                            </button>
+                            <button
                                 onClick={() => setRoleFilter("teknisi")}
                                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
                                     roleFilter === "teknisi" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-200"
@@ -407,10 +415,12 @@ export default function UserList() {
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap shrink-0 w-fit max-w-max ${
                                                     u.role === "admin"
                                                         ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                                        : u.role === "frontman"
+                                                        ? "bg-amber-50 text-amber-700 border-amber-200"
                                                         : "bg-blue-50 text-blue-700 border-blue-200"
                                                 }`}>
-                                                    {u.role === "admin" ? <ShieldCheck className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
-                                                    <span className="capitalize">{u.role}</span>
+                                                    {u.role === "admin" ? <ShieldCheck className="w-3.5 h-3.5" /> : u.role === "frontman" ? <UserCheck className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
+                                                    <span className="capitalize">{u.role === "frontman" ? "Frontman" : u.role}</span>
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-xs text-slate-600">
@@ -432,6 +442,8 @@ export default function UserList() {
                                                             <ChevronRight className="w-3 h-3 text-emerald-600" />
                                                         </button>
                                                     </div>
+                                                ) : u.role === "frontman" ? (
+                                                    <span className="text-amber-700 font-medium">Service Advisor & Kasir</span>
                                                 ) : (
                                                     <span className="text-slate-400 italic">Administrator</span>
                                                 )}
@@ -679,6 +691,7 @@ export default function UserList() {
                                     className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                 >
                                     <option value="teknisi">Teknisi (Operasional Perbaikan)</option>
+                                    <option value="frontman">Frontman (Service Advisor & Kasir)</option>
                                     <option value="admin">Admin (Akses Full Manajerial)</option>
                                 </select>
                             </div>

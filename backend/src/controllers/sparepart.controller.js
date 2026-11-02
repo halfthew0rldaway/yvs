@@ -43,7 +43,8 @@ async function getAll(req, res) {
         }
 
         const include = { brand: true, supplier: true };
-        const isTeknisi = req.user?.role === "teknisi";
+        const isPrivileged = req.user?.role === "admin" || req.user?.role === "pimpinan";
+        const hideHpp = !isPrivileged;
 
         if (!isPaginated) {
             const spareparts = await prisma.sparepart.findMany({
@@ -51,7 +52,7 @@ async function getAll(req, res) {
                 include,
                 orderBy,
             });
-            const sanitized = isTeknisi
+            const sanitized = hideHpp
                 ? spareparts.map(s => {
                     const { harga_beli, ...rest } = s;
                     return rest;
@@ -81,14 +82,14 @@ async function getAll(req, res) {
             totalNilaiAset += (s.stok || 0) * (s.harga_beli || 0);
         });
 
-        const sanitizedList = isTeknisi
+        const sanitizedList = hideHpp
             ? spareparts.map(s => {
                 const { harga_beli, ...rest } = s;
                 return rest;
             })
             : spareparts;
 
-        const summary = isTeknisi
+        const summary = hideHpp
             ? { totalStok }
             : { totalStok, totalNilaiAset };
 

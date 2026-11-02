@@ -10,6 +10,7 @@ import '../../core/utils/whatsapp_helper.dart';
 import '../../core/widgets/digital_signature_pad.dart';
 import '../../core/widgets/offline_banner.dart';
 import '../../data/models/tiket_model.dart';
+import '../../data/providers/auth_provider.dart';
 import '../scanner/qr_scanner_screen.dart';
 
 class HandoverScreen extends ConsumerStatefulWidget {
@@ -115,6 +116,47 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authProvider).user;
+    final canAccessHandover = user?.role == 'frontman' || user?.role == 'admin' || user?.role == 'pimpinan';
+
+    if (!canAccessHandover) {
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(
+          title: const Text('Meja Serah Terima'),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFEF2F2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.shield_outlined, size: 48, color: AppTheme.error),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Akses Khusus Frontman & Admin',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Fitur Serah Terima (Handover) dan tanda tangan serah unit khusus ditujukan untuk Frontman (Service Advisor) dan Admin Meja Depan.\n\nSebagai Teknisi, silakan lanjutkan pekerjaan unit pada Meja Kerja Anda.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -209,7 +251,7 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primary.withOpacity(0.2),
+                          color: AppTheme.primary.withValues(alpha: 0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -317,7 +359,7 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppTheme.primary.withOpacity(0.2),
+                    color: AppTheme.primary.withValues(alpha: 0.2),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),

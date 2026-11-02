@@ -30,7 +30,7 @@ class ProfileScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.error.withOpacity(0.12),
+                color: AppTheme.error.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.logout_rounded, color: AppTheme.error, size: 20),
@@ -155,7 +155,7 @@ class ProfileScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primary.withOpacity(0.3),
+                          color: AppTheme.primary.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -275,7 +275,7 @@ class ProfileScreen extends ConsumerWidget {
                   'Ketuk kartu untuk rincian',
                   style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.primary.withOpacity(0.85),
+                    color: AppTheme.primary.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w600,
                   ),
                 ),

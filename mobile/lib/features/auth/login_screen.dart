@@ -180,7 +180,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Expanded(
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                                 side: const BorderSide(color: Color(0xFFCBD5E1)),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
@@ -192,17 +192,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               },
                               child: const Column(
                                 children: [
-                                  Text('Teknisi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primary)),
-                                  Text('Budi Santoso', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                  Text('Teknisi', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                                  Text('Budi', style: TextStyle(fontSize: 9.5, color: AppTheme.textSecondary)),
                                 ],
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                                 side: const BorderSide(color: Color(0xFFCBD5E1)),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
@@ -214,8 +214,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               },
                               child: const Column(
                                 children: [
-                                  Text('Frontman / Kasir', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.secondary)),
-                                  Text('Siti Rahmawati', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                  Text('Frontman', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFD97706))),
+                                  Text('Siti R.', style: TextStyle(fontSize: 9.5, color: AppTheme.textSecondary)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _emailController.text = 'admin@workshop.com';
+                                  _passwordController.text = 'password123';
+                                });
+                              },
+                              child: const Column(
+                                children: [
+                                  Text('Admin', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                                  Text('Utama', style: TextStyle(fontSize: 9.5, color: AppTheme.textSecondary)),
                                 ],
                               ),
                             ),

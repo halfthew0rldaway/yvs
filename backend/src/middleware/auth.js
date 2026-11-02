@@ -25,15 +25,20 @@ function authenticate(req, res, next) {
     }
 }
 
-// Memastikan role sesuai
+// Memastikan role sesuai dengan konsep hierarki superset:
+// - Pimpinan memiliki hak akses supervisi penuh (admin, frontman, teknisi)
+// - Admin memiliki hak operasional penuh setingkat frontman (admin is superset of frontman)
 function authorize(...roles) {
     return (req, res, next) => {
         if (!req.user) {
             return res.status(401).json({ message: "Tidak terautentikasi" });
         }
 
-        // Pimpinan memiliki hak akses supervisi penuh setingkat admin
-        const hasAccess = roles.includes(req.user.role) || (req.user.role === "pimpinan" && roles.includes("admin"));
+        const userRole = req.user.role;
+        const hasAccess = roles.includes(userRole)
+            || ((userRole === "admin" || userRole === "pimpinan") && roles.includes("frontman"))
+            || (userRole === "pimpinan" && roles.includes("admin"));
+
         if (!hasAccess) {
             return res.status(403).json({ message: "Tidak memiliki akses" });
         }

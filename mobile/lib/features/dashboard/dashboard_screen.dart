@@ -30,6 +30,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
+    final isFrontmanOrAdmin = user?.role == 'frontman' || user?.role == 'admin' || user?.role == 'pimpinan';
     final dashboardAsync = ref.watch(dashboardProvider);
 
     final nowStr = CurrencyFormatter.formatHeaderDateTime(DateTime.now());
@@ -247,18 +248,34 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.handshake_rounded,
-                    label: 'Handover',
-                    sublabel: 'Serah Unit',
-                    color: const Color(0xFF10B981),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const HandoverScreen()),
-                      );
-                    },
-                  ),
+                  child: isFrontmanOrAdmin
+                      ? _QuickActionButton(
+                          icon: Icons.handshake_rounded,
+                          label: 'Handover',
+                          sublabel: 'Serah Unit',
+                          color: const Color(0xFF10B981),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const HandoverScreen()),
+                            );
+                          },
+                        )
+                      : _QuickActionButton(
+                          icon: Icons.assignment_outlined,
+                          label: 'Tiket Saya',
+                          sublabel: 'Antrean Meja',
+                          color: const Color(0xFF10B981),
+                          onTap: () {
+                            ref.read(ticketFilterProvider.notifier).state = const TicketFilterState(
+                              onlyMyTickets: true,
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const TicketListScreen(initialOnlyMyTickets: true)),
+                            );
+                          },
+                        ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -1194,7 +1211,7 @@ class _QuickActionButton extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 18, color: color),
