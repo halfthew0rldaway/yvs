@@ -20,7 +20,13 @@ async function getAll(req, res) {
         }
 
         if (entity && entity !== "all") {
-            andConditions.push({ entity: { equals: entity.toLowerCase() } });
+            const ent = String(entity).toLowerCase().trim();
+            andConditions.push({
+                OR: [
+                    { entity: { equals: ent } },
+                    { entity: { contains: ent } }
+                ]
+            });
         }
 
         if (startDate || endDate) {
@@ -44,11 +50,11 @@ async function getAll(req, res) {
                 where,
                 include: {
                     user: {
-                        select: { id: true, nama: true, username: true, role: true }
+                        select: { id: true, nama: true, email: true, role: true }
                     }
                 },
                 orderBy,
-                take: 200
+                take: 500
             });
             return res.json(logs);
         }
@@ -58,7 +64,7 @@ async function getAll(req, res) {
                 where,
                 include: {
                     user: {
-                        select: { id: true, nama: true, username: true, role: true }
+                        select: { id: true, nama: true, email: true, role: true }
                     }
                 },
                 orderBy,
@@ -70,6 +76,7 @@ async function getAll(req, res) {
 
         return res.json(buildPaginationResponse(logs, total, page, limit));
     } catch (error) {
+        console.error("Error in activity-log getAll:", error);
         return res.status(500).json({ message: "Gagal mengambil log aktivitas", error: error.message });
     }
 }
@@ -80,7 +87,7 @@ async function getStats(req, res) {
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
 
-        const [totalLogs, todayLogs, entitiesGroup] = await Promise.all([
+        const [totalLogs, todayLogs, entitiesGroup, topUsers] = await Promise.all([
             prisma.activityLog.count(),
             prisma.activityLog.count({
                 where: { created_at: { gte: todayStart } }
@@ -88,18 +95,36 @@ async function getStats(req, res) {
             prisma.activityLog.groupBy({
                 by: ["entity"],
                 _count: { id: true }
+            }),
+            prisma.activityLog.groupBy({
+                by: ["user_nama"],
+                _count: { id: true },
+                orderBy: {
+                    _count: { id: "desc" }
+                },
+                take: 3
             })
         ]);
+
+        // Urutkan entitas terbanyak secara descending
+        const sortedEntities = entitiesGroup
+            .map(e => ({
+                entity: e.entity || "sistem",
+                count: e._count.id
+            }))
+            .sort((a, b) => b.count - a.count);
 
         return res.json({
             totalLogs,
             todayLogs,
-            entities: entitiesGroup.map(e => ({
-                entity: e.entity || "sistem",
-                count: e._count.id
+            entities: sortedEntities,
+            topUsers: topUsers.map(u => ({
+                user_nama: u.user_nama || "Sistem",
+                count: u._count.id
             }))
         });
     } catch (error) {
+        console.error("Error in activity-log getStats:", error);
         return res.status(500).json({ message: "Gagal mengambil statistik log", error: error.message });
     }
 }
@@ -108,4 +133,3 @@ module.exports = {
     getAll,
     getStats
 };
-
