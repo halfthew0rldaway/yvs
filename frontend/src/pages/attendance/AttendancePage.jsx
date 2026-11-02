@@ -478,7 +478,7 @@ export default function AttendancePage() {
     };
 
     return (
-        <div className="space-y-4 sm:space-y-4.5 max-w-7xl mx-auto pb-10">
+        <div className="space-y-4 sm:space-y-4.5 w-full pb-10">
             {/* Top Header Card */}
             <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1354,143 +1354,224 @@ export default function AttendancePage() {
 
             {/* TAB 5: KEBIJAKAN & PENGATURAN GEOFENCE (ADMIN) */}
             {activeTab === "policy" && isPimpinanOrAdmin && (
-                <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs max-w-2xl">
-                    <div className="border-b border-slate-100 pb-3 mb-4">
-                        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <Sliders className="w-4 h-4 text-blue-600" />
-                            <span>Konfigurasi Geofencing & Jam Operasional Workshop</span>
-                        </h2>
-                        <p className="text-2xs text-slate-500">Atur parameter verifikasi lokasi dan jam kerja standar untuk seluruh staf</p>
-                    </div>
-
-                    <form onSubmit={handleSavePolicy} className="space-y-4">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Nama Kantor / Cabang Workshop</label>
-                            <input
-                                type="text"
-                                value={policyForm.nama_kantor}
-                                onChange={(e) => setPolicyForm({ ...policyForm, nama_kantor: e.target.value })}
-                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
-                                required
-                            />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                    {/* Left: Main Configuration Form (8 cols) */}
+                    <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+                        <div className="border-b border-slate-100 pb-3">
+                            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <Sliders className="w-4 h-4 text-blue-600" />
+                                <span>Konfigurasi Geofencing & Jam Operasional Workshop</span>
+                            </h2>
+                            <p className="text-2xs text-slate-500">Atur parameter verifikasi lokasi dan jam kerja standar untuk seluruh staf</p>
                         </div>
 
-                        {/* Coordinates with Auto-Locate Button */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <form onSubmit={handleSavePolicy} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">Latitude Workshop</label>
+                                <label className="block text-xs font-bold text-slate-700 mb-1">Nama Kantor / Cabang Workshop</label>
                                 <input
-                                    type="number"
-                                    step="any"
-                                    value={policyForm.latitude}
-                                    onChange={(e) => setPolicyForm({ ...policyForm, latitude: parseFloat(e.target.value) })}
+                                    type="text"
+                                    value={policyForm.nama_kantor}
+                                    onChange={(e) => setPolicyForm({ ...policyForm, nama_kantor: e.target.value })}
                                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
                                     required
                                 />
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">Longitude Workshop</label>
-                                <input
-                                    type="number"
-                                    step="any"
-                                    value={policyForm.longitude}
-                                    onChange={(e) => setPolicyForm({ ...policyForm, longitude: parseFloat(e.target.value) })}
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
-                                    required
-                                />
-                            </div>
-                        </div>
 
-                        <button
-                            type="button"
-                            onClick={handleUseCurrentLocationForPolicy}
-                            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-2"
-                        >
-                            <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Gunakan Titik Koordinat GPS Saya Saat Ini</span>
-                        </button>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">Radius Geofence (Meter)</label>
-                                <input
-                                    type="number"
-                                    value={policyForm.radius_meter}
-                                    onChange={(e) => setPolicyForm({ ...policyForm, radius_meter: parseInt(e.target.value) })}
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
-                                    required
-                                    min="20"
-                                    max="5000"
-                                />
+                            {/* Coordinates with Auto-Locate Button */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Latitude Workshop</label>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        value={policyForm.latitude}
+                                        onChange={(e) => setPolicyForm({ ...policyForm, latitude: parseFloat(e.target.value) })}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Longitude Workshop</label>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        value={policyForm.longitude}
+                                        onChange={(e) => setPolicyForm({ ...policyForm, longitude: parseFloat(e.target.value) })}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
+                                        required
+                                    />
+                                </div>
                             </div>
+
+                            <button
+                                type="button"
+                                onClick={handleUseCurrentLocationForPolicy}
+                                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-2"
+                            >
+                                <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Gunakan Titik Koordinat GPS Saya Saat Ini</span>
+                            </button>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Radius Geofence (Meter)</label>
+                                    <input
+                                        type="number"
+                                        value={policyForm.radius_meter}
+                                        onChange={(e) => setPolicyForm({ ...policyForm, radius_meter: parseInt(e.target.value) })}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
+                                        required
+                                        min="20"
+                                        max="5000"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Jam Masuk</label>
+                                    <input
+                                        type="time"
+                                        value={policyForm.jam_masuk}
+                                        onChange={(e) => setPolicyForm({ ...policyForm, jam_masuk: e.target.value })}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Toleransi Terlambat (Mnt)</label>
+                                    <input
+                                        type="number"
+                                        value={policyForm.toleransi_menit}
+                                        onChange={(e) => setPolicyForm({ ...policyForm, toleransi_menit: parseInt(e.target.value) })}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
+                                        required
+                                        min="0"
+                                        max="120"
+                                    />
+                                </div>
+                            </div>
+
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">Jam Masuk</label>
+                                <label className="block text-xs font-bold text-slate-700 mb-1">Jam Pulang Standar</label>
                                 <input
                                     type="time"
-                                    value={policyForm.jam_masuk}
-                                    onChange={(e) => setPolicyForm({ ...policyForm, jam_masuk: e.target.value })}
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
+                                    value={policyForm.jam_pulang}
+                                    onChange={(e) => setPolicyForm({ ...policyForm, jam_pulang: e.target.value })}
+                                    className="w-full sm:w-1/2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
                                     required
                                 />
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">Toleransi Terlambat (Mnt)</label>
-                                <input
-                                    type="number"
-                                    value={policyForm.toleransi_menit}
-                                    onChange={(e) => setPolicyForm({ ...policyForm, toleransi_menit: parseInt(e.target.value) })}
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
-                                    required
-                                    min="0"
-                                    max="120"
-                                />
+
+                            {/* Toggles */}
+                            <div className="pt-2 space-y-2.5">
+                                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                                    <input
+                                        type="checkbox"
+                                        checked={policyForm.is_geofence_active}
+                                        onChange={(e) => setPolicyForm({ ...policyForm, is_geofence_active: e.target.checked })}
+                                        className="w-4 h-4 rounded text-blue-600"
+                                    />
+                                    <span>Wajibkan berada di dalam radius geofence untuk Check-In / Out</span>
+                                </label>
+
+                                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                                    <input
+                                        type="checkbox"
+                                        checked={policyForm.is_selfie_required}
+                                        onChange={(e) => setPolicyForm({ ...policyForm, is_selfie_required: e.target.checked })}
+                                        className="w-4 h-4 rounded text-blue-600"
+                                    />
+                                    <span>Wajibkan foto selfie webcam langsung saat Check-In</span>
+                                </label>
                             </div>
+
+                            <div className="pt-4 border-t border-slate-100 flex justify-end">
+                                <button
+                                    type="submit"
+                                    disabled={savingPolicy}
+                                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-2"
+                                >
+                                    {savingPolicy ? "Menyimpan..." : "Simpan Perubahan Kebijakan"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Right: Live Geofence Summary & Security Guide (4 cols) */}
+                    <div className="lg:col-span-5 xl:col-span-4 space-y-4">
+                        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+                            <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                    <MapPin className="w-4 h-4 text-blue-600" />
+                                    <span>Titik Koordinat Workshop</span>
+                                </h3>
+                                <span className={`px-2 py-0.5 rounded-full text-3xs font-bold ${
+                                    policyForm.is_geofence_active 
+                                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                                        : "bg-slate-100 text-slate-600"
+                                }`}>
+                                    {policyForm.is_geofence_active ? "Geofence Aktif" : "Geofence Bebas"}
+                                </span>
+                            </div>
+
+                            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2 text-xs">
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500 font-semibold">Cabang:</span>
+                                    <span className="font-bold text-slate-800">{policyForm.nama_kantor || "Workshop Utama"}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500 font-semibold">Latitude:</span>
+                                    <span className="font-mono font-semibold text-slate-700">{policyForm.latitude || "-"}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500 font-semibold">Longitude:</span>
+                                    <span className="font-mono font-semibold text-slate-700">{policyForm.longitude || "-"}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500 font-semibold">Batas Radius:</span>
+                                    <span className="font-bold text-blue-600">{policyForm.radius_meter || 100} Meter</span>
+                                </div>
+                                <div className="flex justify-between pt-1 border-t border-slate-200/60">
+                                    <span className="text-slate-500 font-semibold">Jarak Anda Saat Ini:</span>
+                                    <span className="font-bold text-slate-800">
+                                        {locationData.distance !== null ? `${locationData.distance} Meter` : "-"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {policyForm.latitude && policyForm.longitude && (
+                                <a
+                                    href={`https://www.google.com/maps?q=${policyForm.latitude},${policyForm.longitude}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                                >
+                                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>Buka Lokasi di Google Maps</span>
+                                </a>
+                            )}
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Jam Pulang Standar</label>
-                            <input
-                                type="time"
-                                value={policyForm.jam_pulang}
-                                onChange={(e) => setPolicyForm({ ...policyForm, jam_pulang: e.target.value })}
-                                className="w-full sm:w-1/3 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-blue-500"
-                                required
-                            />
+                        {/* Security Feature Highlights Card */}
+                        <div className="bg-slate-50 rounded-2xl border border-slate-200/80 p-4 space-y-3">
+                            <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                <span>Lapisan Keamanan Anti-Fraud</span>
+                            </h4>
+                            <ul className="text-2xs text-slate-600 space-y-2 leading-relaxed">
+                                <li className="flex items-start gap-1.5">
+                                    <span className="text-emerald-600 font-bold">•</span>
+                                    <span><strong>Geofence Radius:</strong> Sistem menolak absensi otomatis bila koordinat GPS perangkat berada di luar radius meter yang ditetapkan.</span>
+                                </li>
+                                <li className="flex items-start gap-1.5">
+                                    <span className="text-emerald-600 font-bold">•</span>
+                                    <span><strong>Live Webcam Watermark:</strong> Foto selfie dibubuhi stempel waktu jam detik, koordinat GPS aktual, dan identitas staf secara otomatis di canvas.</span>
+                                </li>
+                                <li className="flex items-start gap-1.5">
+                                    <span className="text-emerald-600 font-bold">•</span>
+                                    <span><strong>Audit Logging:</strong> Setiap check-in, check-out, revisi, dan perubahan kebijakan tercatat di pusat Log Audit Anti-Fraud.</span>
+                                </li>
+                            </ul>
                         </div>
-
-                        {/* Toggles */}
-                        <div className="pt-2 space-y-2.5">
-                            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
-                                <input
-                                    type="checkbox"
-                                    checked={policyForm.is_geofence_active}
-                                    onChange={(e) => setPolicyForm({ ...policyForm, is_geofence_active: e.target.checked })}
-                                    className="w-4 h-4 rounded text-blue-600"
-                                />
-                                <span>Wajibkan berada di dalam radius geofence untuk Check-In / Out</span>
-                            </label>
-
-                            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
-                                <input
-                                    type="checkbox"
-                                    checked={policyForm.is_selfie_required}
-                                    onChange={(e) => setPolicyForm({ ...policyForm, is_selfie_required: e.target.checked })}
-                                    className="w-4 h-4 rounded text-blue-600"
-                                />
-                                <span>Wajibkan foto selfie webcam langsung saat Check-In</span>
-                            </label>
-                        </div>
-
-                        <div className="pt-4 border-t border-slate-100 flex justify-end">
-                            <button
-                                type="submit"
-                                disabled={savingPolicy}
-                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-2"
-                            >
-                                {savingPolicy ? "Menyimpan..." : "Simpan Perubahan Kebijakan"}
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             )}
 
