@@ -1,23 +1,18 @@
 # ==============================================================================
 # Serv.io / YVS Gateway - Central Reverse Proxy (Caddy)
-# Mendukung akses via Domain Resmi, Magic Domain (sslip.io), dan IP langsung
+# Mendukung Valid HTTPS otomatis via sslip.io / nip.io & Domain Resmi
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. PRODUCTION ENVIRONMENT (Domain Resmi & sslip.io HTTPS)
+# 1. PRODUCTION ENVIRONMENT (Valid Auto HTTPS)
+# Akses: https://101.32.127.55.sslip.io atau https://komputerawet.com
 # ------------------------------------------------------------------------------
-{$PROD_DOMAIN:komputerawet.com}, prod.101.32.127.55.sslip.io {
+101.32.127.55.sslip.io, 101.32.127.55.nip.io, {$PROD_DOMAIN:komputerawet.com} {
     encode zstd gzip
 
     # API Backend Serv.io Production
-    @api path /api /api/*
+    @api path /api /api/* /uploads/*
     handle @api {
-        reverse_proxy yvs-prod-backend:5000
-    }
-
-    # Uploads / Static Assets Media Production
-    @uploads path /uploads /uploads/*
-    handle @uploads {
         reverse_proxy yvs-prod-backend:5000
     }
 
@@ -28,20 +23,15 @@
 }
 
 # ------------------------------------------------------------------------------
-# 2. STAGING / R&D ENVIRONMENT (Domain Resmi & sslip.io HTTPS)
+# 2. STAGING / R&D ENVIRONMENT (Valid Auto HTTPS)
+# Akses: https://staging.101.32.127.55.sslip.io atau https://staging.komputerawet.com
 # ------------------------------------------------------------------------------
-{$STAGING_DOMAIN:staging.komputerawet.com}, staging.101.32.127.55.sslip.io {
+staging.101.32.127.55.sslip.io, staging.101.32.127.55.nip.io, {$STAGING_DOMAIN:staging.komputerawet.com} {
     encode zstd gzip
 
     # API Backend Serv.io Staging
-    @api path /api /api/*
+    @api path /api /api/* /uploads/*
     handle @api {
-        reverse_proxy yvs-staging-backend:5000
-    }
-
-    # Uploads / Static Assets Media Staging
-    @uploads path /uploads /uploads/*
-    handle @uploads {
         reverse_proxy yvs-staging-backend:5000
     }
 
@@ -52,45 +42,14 @@
 }
 
 # ------------------------------------------------------------------------------
-# 3. DIRECT IP ACCESS - PORT 80 (Production Live)
-# Contoh: http://101.32.127.55
+# 3. AUTO-REDIRECT JIKA AKSES VIA IP MENTAH
+# Mengarahkan langsung ke URL HTTPS resmi ber-gembok hijau
 # ------------------------------------------------------------------------------
-:80 {
-    encode zstd gzip
-
-    @api path /api /api/*
-    handle @api {
-        reverse_proxy yvs-prod-backend:5000
-    }
-
-    @uploads path /uploads /uploads/*
-    handle @uploads {
-        reverse_proxy yvs-prod-backend:5000
-    }
-
-    handle {
-        reverse_proxy yvs-prod-frontend:80
-    }
+http://101.32.127.55 {
+    redir https://101.32.127.55.sslip.io{uri} permanent
 }
 
-# ------------------------------------------------------------------------------
-# 4. DIRECT IP ACCESS - PORT 8080 (Staging Preview)
-# Contoh: http://101.32.127.55:8080
-# ------------------------------------------------------------------------------
-:8080 {
-    encode zstd gzip
-
-    @api path /api /api/*
-    handle @api {
-        reverse_proxy yvs-staging-backend:5000
-    }
-
-    @uploads path /uploads /uploads/*
-    handle @uploads {
-        reverse_proxy yvs-staging-backend:5000
-    }
-
-    handle {
-        reverse_proxy yvs-staging-frontend:80
-    }
+https://101.32.127.55 {
+    tls internal
+    redir https://101.32.127.55.sslip.io{uri} permanent
 }
