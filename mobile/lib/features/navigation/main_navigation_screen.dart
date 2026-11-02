@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data/providers/auth_provider.dart';
 import '../../data/providers/notification_provider.dart';
+import '../attendance/attendance_screen.dart';
 import '../dashboard/dashboard_screen.dart';
-import '../tickets/ticket_list_screen.dart';
-import '../sparepart/sparepart_list_screen.dart';
+import '../handover/handover_screen.dart';
 import '../profile/profile_screen.dart';
+import '../sparepart/sparepart_list_screen.dart';
+import '../tickets/ticket_list_screen.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   final int initialIndex;
@@ -23,13 +26,6 @@ class MainNavigationScreen extends ConsumerStatefulWidget {
 class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   late int _currentIndex;
 
-  final List<Widget> _pages = const [
-    DashboardScreen(),
-    TicketListScreen(),
-    SparepartListScreen(),
-    ProfileScreen(),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -45,13 +41,37 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final isFrontmanOrAdmin = user?.role == 'admin' || user?.role == 'pimpinan' || user?.role == 'frontman';
+
     final notificationsAsync = ref.watch(notificationsProvider);
     final unreadCount = notificationsAsync.valueOrNull?.where((n) => !n.isRead).length ?? 0;
 
+    // Dynamic Pages based on role
+    final List<Widget> pages = isFrontmanOrAdmin
+        ? [
+            const DashboardScreen(),
+            const HandoverScreen(),
+            const TicketListScreen(),
+            const SparepartListScreen(),
+            const AttendanceScreen(),
+          ]
+        : [
+            const DashboardScreen(),
+            const TicketListScreen(),
+            const SparepartListScreen(),
+            const AttendanceScreen(),
+            const ProfileScreen(),
+          ];
+
+    // Ensure index within bounds
+    final safeIndex = _currentIndex >= pages.length ? 0 : _currentIndex;
+
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
+        index: safeIndex,
+        children: pages,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -70,44 +90,95 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
-                  index: 0,
-                  currentIndex: _currentIndex,
-                  icon: Icons.dashboard_outlined,
-                  selectedIcon: Icons.dashboard_rounded,
-                  label: 'Beranda',
-                  onTap: () => _onTabSelected(0),
-                ),
-                _NavItem(
-                  index: 1,
-                  currentIndex: _currentIndex,
-                  icon: Icons.assignment_outlined,
-                  selectedIcon: Icons.assignment_rounded,
-                  label: 'Tiket',
-                  onTap: () => _onTabSelected(1),
-                ),
-                _NavItem(
-                  index: 2,
-                  currentIndex: _currentIndex,
-                  icon: Icons.inventory_2_outlined,
-                  selectedIcon: Icons.inventory_2_rounded,
-                  label: 'Sparepart',
-                  onTap: () => _onTabSelected(2),
-                ),
-                _NavItem(
-                  index: 3,
-                  currentIndex: _currentIndex,
-                  icon: Icons.person_outline_rounded,
-                  selectedIcon: Icons.person_rounded,
-                  label: 'Profil',
-                  badgeCount: unreadCount > 0 ? unreadCount : null,
-                  onTap: () => _onTabSelected(3),
-                ),
-              ],
+              children: isFrontmanOrAdmin
+                  ? [
+                      _NavItem(
+                        index: 0,
+                        currentIndex: safeIndex,
+                        icon: Icons.dashboard_outlined,
+                        selectedIcon: Icons.dashboard_rounded,
+                        label: 'Beranda',
+                        onTap: () => _onTabSelected(0),
+                      ),
+                      _NavItem(
+                        index: 1,
+                        currentIndex: safeIndex,
+                        icon: Icons.handshake_outlined,
+                        selectedIcon: Icons.handshake_rounded,
+                        label: 'Handover',
+                        onTap: () => _onTabSelected(1),
+                      ),
+                      _NavItem(
+                        index: 2,
+                        currentIndex: safeIndex,
+                        icon: Icons.assignment_outlined,
+                        selectedIcon: Icons.assignment_rounded,
+                        label: 'Tiket',
+                        onTap: () => _onTabSelected(2),
+                      ),
+                      _NavItem(
+                        index: 3,
+                        currentIndex: safeIndex,
+                        icon: Icons.inventory_2_outlined,
+                        selectedIcon: Icons.inventory_2_rounded,
+                        label: 'Sparepart',
+                        onTap: () => _onTabSelected(3),
+                      ),
+                      _NavItem(
+                        index: 4,
+                        currentIndex: safeIndex,
+                        icon: Icons.pin_drop_outlined,
+                        selectedIcon: Icons.pin_drop_rounded,
+                        label: 'Presensi',
+                        onTap: () => _onTabSelected(4),
+                      ),
+                    ]
+                  : [
+                      _NavItem(
+                        index: 0,
+                        currentIndex: safeIndex,
+                        icon: Icons.dashboard_outlined,
+                        selectedIcon: Icons.dashboard_rounded,
+                        label: 'Beranda',
+                        onTap: () => _onTabSelected(0),
+                      ),
+                      _NavItem(
+                        index: 1,
+                        currentIndex: safeIndex,
+                        icon: Icons.assignment_outlined,
+                        selectedIcon: Icons.assignment_rounded,
+                        label: 'Tiket',
+                        onTap: () => _onTabSelected(1),
+                      ),
+                      _NavItem(
+                        index: 2,
+                        currentIndex: safeIndex,
+                        icon: Icons.inventory_2_outlined,
+                        selectedIcon: Icons.inventory_2_rounded,
+                        label: 'Sparepart',
+                        onTap: () => _onTabSelected(2),
+                      ),
+                      _NavItem(
+                        index: 3,
+                        currentIndex: safeIndex,
+                        icon: Icons.pin_drop_outlined,
+                        selectedIcon: Icons.pin_drop_rounded,
+                        label: 'Presensi',
+                        onTap: () => _onTabSelected(3),
+                      ),
+                      _NavItem(
+                        index: 4,
+                        currentIndex: safeIndex,
+                        icon: Icons.person_outline_rounded,
+                        selectedIcon: Icons.person_rounded,
+                        label: 'Profil',
+                        badgeCount: unreadCount > 0 ? unreadCount : null,
+                        onTap: () => _onTabSelected(4),
+                      ),
+                    ],
             ),
           ),
         ),
@@ -160,7 +231,7 @@ class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin 
   }
 
   @override
-  void didUpdateWidget(_NavItem oldWidget) {
+  void didUpdateWidget(covariant _NavItem oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.currentIndex == widget.index && oldWidget.currentIndex != widget.index) {
       _animController.forward(from: 0.0);
@@ -179,84 +250,64 @@ class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin 
   Widget build(BuildContext context) {
     final isSelected = widget.index == widget.currentIndex;
 
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(16),
-          splashColor: AppTheme.primary.withOpacity(0.08),
-          highlightColor: AppTheme.primary.withOpacity(0.04),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+    return InkWell(
+      onTap: widget.onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
               children: [
-                // Animated pill badge behind icon
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOutCubic,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isSelected ? 18 : 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: Icon(
-                          isSelected ? widget.selectedIcon : widget.icon,
-                          size: 22,
-                          color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
-                        ),
-                      ),
-                      if (widget.badgeCount != null && widget.badgeCount! > 0)
-                        Positioned(
-                          top: -3,
-                          right: -8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: AppTheme.error,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.white, width: 1.5),
-                            ),
-                            constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
-                            child: Center(
-                              child: Text(
-                                widget.badgeCount! > 9 ? '9+' : '${widget.badgeCount}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 3),
-                AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Icon(
+                    isSelected ? widget.selectedIcon : widget.icon,
+                    size: 22,
                     color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
-                    fontFamily: 'PlusJakartaSans',
                   ),
-                  child: Text(widget.label),
                 ),
+                if (widget.badgeCount != null && widget.badgeCount! > 0)
+                  Positioned(
+                    right: -6,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.error,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
+                      child: Text(
+                        widget.badgeCount! > 9 ? '9+' : '${widget.badgeCount}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
               ],
             ),
-          ),
+            const SizedBox(height: 3),
+            Text(
+              widget.label,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );

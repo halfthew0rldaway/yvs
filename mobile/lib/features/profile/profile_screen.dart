@@ -9,6 +9,7 @@ import '../../data/providers/ticket_provider.dart';
 import '../auth/login_screen.dart';
 import '../notifications/notification_screen.dart';
 import '../wiki/wiki_list_screen.dart';
+import '../attendance/attendance_screen.dart';
 import 'change_password_screen.dart';
 import 'completed_tickets_screen.dart';
 import 'csat_detail_screen.dart';
@@ -535,6 +536,20 @@ class ProfileScreen extends ConsumerWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                    );
+                  },
+                ),
+                _SettingsTile(
+                  icon: Icons.pin_drop_rounded,
+                  iconColor: const Color(0xFF10B981),
+                  iconBg: const Color(0xFFECFDF5),
+                  title: 'Presensi & Absensi Karyawan',
+                  subtitle: 'Selfie presensi, status kehadiran & GPS',
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AttendanceScreen()),
                     );
                   },
                 ),

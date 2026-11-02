@@ -14,20 +14,20 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: ServioTechnicianApp(),
+      child: ServioCompanionApp(),
     ),
   );
 }
 
-class ServioTechnicianApp extends ConsumerWidget {
-  const ServioTechnicianApp({super.key});
+class ServioCompanionApp extends ConsumerWidget {
+  const ServioCompanionApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
 
     return MaterialApp(
-      title: 'Serv.io Technician',
+      title: 'Serv.io Companion',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: authState.isAuthenticated ? const MainNavigationScreen() : const LoginScreen(),

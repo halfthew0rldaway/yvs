@@ -90,7 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Workbench Teknisi Servis',
+                        'Companion Operasional Workshop',
                         style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
                       ),
                     ],

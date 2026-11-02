@@ -42,6 +42,17 @@ class ApiConstants {
   static const String repairWikiSuggest = '/repair-wiki/suggest';
   static String repairWikiDetail(int id) => '/repair-wiki/$id';
 
+  // Presensi & Absensi (Selfie + GPS Geofencing)
+  static const String attendanceToday = '/attendance/today';
+  static const String attendanceCheckIn = '/attendance/check-in';
+  static const String attendanceCheckOut = '/attendance/check-out';
+  static const String attendanceMyHistory = '/attendance/my-history';
+  static const String attendancePolicy = '/attendance/policy';
+
+  // Invoice & Serah Terima (Handover)
+  static String invoiceDetail(int id) => '/invoice/$id';
+  static String invoiceCustomerSignature(int id) => '/invoice/$id/signature';
+
   // Helpers
   static String ticketDetail(int id) => '/tiket-servis/$id';
   static String ticketReminder(int id) => '/tiket-servis/$id/reminder';

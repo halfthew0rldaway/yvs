@@ -153,7 +153,7 @@ class DashboardData {
 // Technician Dashboard Provider
 final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async {
   final client = ApiClient();
-  final response = await client.dio.get(ApiConstants.teknisiDashboard);
+  final response = await client.getWithCache(ApiConstants.teknisiDashboard);
   return DashboardData.fromJson(response.data);
 });
 
@@ -214,7 +214,7 @@ final ticketsProvider = FutureProvider.autoDispose<List<TiketModel>>((ref) async
     queryParams['sla_paket'] = filter.slaPaket;
   }
 
-  final response = await client.dio.get(
+  final response = await client.getWithCache(
     ApiConstants.tickets,
     queryParameters: queryParams,
   );
@@ -231,14 +231,14 @@ final ticketsProvider = FutureProvider.autoDispose<List<TiketModel>>((ref) async
 // Single Ticket Detail Provider
 final ticketDetailProvider = FutureProvider.family.autoDispose<TiketModel, int>((ref, ticketId) async {
   final client = ApiClient();
-  final response = await client.dio.get('${ApiConstants.tickets}/$ticketId');
+  final response = await client.getWithCache('${ApiConstants.tickets}/$ticketId');
   return TiketModel.fromJson(response.data);
 });
 
 // Spareparts Inventory Provider
 final sparepartsProvider = FutureProvider.autoDispose<List<SparepartModel>>((ref) async {
   final client = ApiClient();
-  final response = await client.dio.get(ApiConstants.sparepart);
+  final response = await client.getWithCache(ApiConstants.sparepart);
   if (response.data is List) {
     return (response.data as List)
         .map((item) => SparepartModel.fromJson(item))
