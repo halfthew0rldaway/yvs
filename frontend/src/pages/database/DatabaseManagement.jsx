@@ -553,7 +553,7 @@ export default function DatabaseManagement() {
                                 onClick={() => setDateRange(item.id)}
                                 className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                                     dateRange === item.id
-                                        ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+                                        ? "bg-blue-600 text-white border-blue-600 shadow-xs"
                                         : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                                 }`}
                             >

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import api from "../../services/api";
 import { toast } from "react-hot-toast";
 import {
@@ -440,6 +441,13 @@ export default function UserList() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-1">
+                                                    <Link
+                                                        to="/attendance?tab=monitoring"
+                                                        title={`Lihat Log Presensi ${u.nama}`}
+                                                        className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                    >
+                                                        <UserCheck className="w-4 h-4" />
+                                                    </Link>
                                                     <button
                                                         type="button"
                                                         onClick={() => handleOpenResetModal(u)}

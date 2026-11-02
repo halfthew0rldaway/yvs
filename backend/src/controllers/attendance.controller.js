@@ -21,12 +21,31 @@ function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Normalisasi tanggal ke jam 00:00:00 untuk pemetaan unique key (user_id + tanggal)
+ * Normalisasi tanggal ke jam 00:00:00 WIB (Asia/Jakarta) untuk pemetaan unique key (user_id + tanggal)
  */
 function getTodayDate(targetDate = new Date()) {
-    const d = new Date(targetDate);
-    d.setHours(0, 0, 0, 0);
-    return d;
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jakarta",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    });
+    const [year, month, day] = formatter.format(targetDate).split("-").map(Number);
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+}
+
+/**
+ * Mengambil total menit dari tengah malam sesuai zona waktu WIB (Asia/Jakarta)
+ */
+function getWibMinutesFromMidnight(d = new Date()) {
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Jakarta",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+    });
+    const [hour, minute] = formatter.format(d).split(":").map(Number);
+    return hour * 60 + minute;
 }
 
 /**
@@ -207,7 +226,7 @@ async function checkIn(req, res) {
         const targetMinutesFromMidnight = targetHour * 60 + targetMinute;
         const maxOnTimeMinutes = targetMinutesFromMidnight + (policy.toleransi_menit || 0);
 
-        const currentMinutesFromMidnight = now.getHours() * 60 + now.getMinutes();
+        const currentMinutesFromMidnight = getWibMinutesFromMidnight(now);
 
         let status = "hadir";
         let menitKeterlambatan = 0;
@@ -335,7 +354,7 @@ async function checkOut(req, res) {
 
         const [pulangHour, pulangMinute] = policy.jam_pulang.split(":").map(Number);
         const targetPulangMinutes = pulangHour * 60 + pulangMinute;
-        const currentMinutesFromMidnight = now.getHours() * 60 + now.getMinutes();
+        const currentMinutesFromMidnight = getWibMinutesFromMidnight(now);
 
         let updatedStatus = existing.status;
         if (currentMinutesFromMidnight < targetPulangMinutes && existing.status === "hadir") {

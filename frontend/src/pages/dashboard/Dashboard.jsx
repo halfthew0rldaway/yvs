@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, AreaChart, Area, LineChart, Line } from 'recharts';
 import toast from 'react-hot-toast';
+import DashboardAttendanceCard from "../../components/DashboardAttendanceCard";
 
 function StatCard({ label, value, icon: Icon, color = "blue", to }) {
     const colors = {
@@ -530,6 +531,9 @@ export default function Dashboard() {
                     </div>
                 </div>
 
+                {/* Status Presensi & Geofencing Hari Ini */}
+                <DashboardAttendanceCard />
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-3.5">
                     <StatCard label="Total Customer" value={data?.totalCustomer || 0} icon={Users} color="blue" to="/customer" />
                     <StatCard label="Total Perangkat" value={data?.totalPerangkat || 0} icon={MonitorSmartphone} color="slate" to="/perangkat" />
@@ -788,15 +792,18 @@ export default function Dashboard() {
 
     // Dashboard Teknisi
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="space-y-4 sm:space-y-4.5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Halo, {user?.nama}!</h1>
-                    <p className="text-sm text-slate-500 mt-1">Selamat datang di Dashboard Teknisi. Berikut tugas perbaikan dan antrean Anda hari ini.</p>
+                    <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Halo, {user?.nama}!</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Selamat datang di Dashboard Teknisi. Berikut tugas perbaikan dan antrean Anda hari ini.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {/* Status Presensi & Geofencing Hari Ini */}
+            <DashboardAttendanceCard />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-3.5">
                 <StatCard label="Antrean Tersedia" value={data?.tiketTersedia || 0} icon={Ticket} color="red" to="/tiket-servis?status=diterima" />
                 <StatCard label="Tiket Ditugaskan" value={data?.tiketDitugaskan || 0} icon={ClipboardList} color="blue" to="/tiket-servis?scope=my" />
                 <StatCard label="Menunggu Diagnosis" value={data?.menungguDiagnosis || 0} icon={Search} color="amber" to="/tiket-servis?scope=my&status=diterima" />
