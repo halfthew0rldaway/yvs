@@ -535,8 +535,9 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/users") && "User"}
                                 {location.pathname.startsWith("/database") && "Database"}
                                 {location.pathname.startsWith("/audit-log") && "Audit Log"}
+                                {location.pathname.startsWith("/attendance") && "Presensi"}
                                 {location.pathname.startsWith("/profile") && "Profil"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
                             </span>
                         </div>
 
@@ -560,8 +561,9 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/users") && "User & Performa"}
                                 {location.pathname.startsWith("/database") && "Cadangan Database"}
                                 {location.pathname.startsWith("/audit-log") && "Log Audit Aktivitas (Anti-Fraud)"}
+                                {location.pathname.startsWith("/attendance") && "Presensi & Absensi Karyawan"}
                                 {location.pathname.startsWith("/profile") && "Profil Akun"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
                             </span>
                         </div>
                     </div>

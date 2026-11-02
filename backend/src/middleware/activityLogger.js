@@ -25,8 +25,9 @@ const activityLogger = async (req, res, next) => {
                         } catch (_) {}
                     }
 
-                    // Handled explicitly in auth.controller for login/logout
+                    // Handled explicitly in their respective controllers for detailed audit trails
                     if (url.includes("/auth/login") || url.includes("/auth/logout")) return;
+                    if (url.includes("/attendance")) return;
 
                     if (!currentUser) return;
 

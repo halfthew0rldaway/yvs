@@ -97,7 +97,7 @@ async function updatePolicy(req, res) {
             userId: req.user.id,
             userNama: req.user.nama,
             action: `Mengubah Kebijakan Presensi & Geofencing (Radius: ${updated.radius_meter}m, Jam Masuk: ${updated.jam_masuk})`,
-            entity: "attendance_policy"
+            entity: "presensi"
         });
 
         return res.json({ message: "Kebijakan presensi berhasil diperbarui", policy: updated });
@@ -259,7 +259,7 @@ async function checkIn(req, res) {
             userId,
             userNama: req.user.nama,
             action: `Check-In Presensi [Status: ${status.toUpperCase()}, Jarak: ${distanceMeters}m, Terlambat: ${menitKeterlambatan} mnt]`,
-            entity: "attendance"
+            entity: "presensi"
         });
 
         return res.status(201).json({
@@ -365,7 +365,7 @@ async function checkOut(req, res) {
             userId,
             userNama: req.user.nama,
             action: `Check-Out Presensi [Durasi: ${hours}j ${mins}m, Status: ${updatedStatus}]`,
-            entity: "attendance"
+            entity: "presensi"
         });
 
         return res.json({
@@ -661,7 +661,7 @@ async function adjustAttendance(req, res) {
             userId: req.user.id,
             userNama: req.user.nama,
             action: `Koreksi Presensi Karyawan #${record.user_id} (${record.user.nama}) [Alasan: ${cleanAlasan}]`,
-            entity: "attendance"
+            entity: "presensi"
         });
 
         return res.json({ message: "Presensi berhasil dikoreksi", record });
@@ -741,7 +741,7 @@ async function createLeave(req, res) {
             userId,
             userNama: req.user.nama,
             action: `Mengajukan Permohonan ${tipe.toUpperCase()} (${jumlahHari} Hari: ${tgl_mulai} s.d ${tgl_selesai})`,
-            entity: "leave_request"
+            entity: "presensi"
         });
 
         return res.status(201).json({ message: "Pengajuan berhasil dikirim dan menunggu persetujuan", leave });
@@ -783,7 +783,7 @@ async function reviewLeave(req, res) {
             userId: req.user.id,
             userNama: req.user.nama,
             action: `${status === "disetujui" ? "Menyetujui" : "Menolak"} Pengajuan ${leave.tipe.toUpperCase()} #${id} (${leave.user.nama})`,
-            entity: "leave_request"
+            entity: "presensi"
         });
 
         return res.json({ message: `Pengajuan izin berhasil ${status}`, leave: updated });
