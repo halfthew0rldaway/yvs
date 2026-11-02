@@ -14,8 +14,16 @@ const npmCmd = isWindows ? "npm.cmd" : "npm";
 
 async function checkAndSeed() {
     try {
+        require("dotenv").config({ path: path.join(backendDir, ".env") });
+        const { execSync } = require("child_process");
         const { PrismaClient } = require(path.join(backendDir, "node_modules/@prisma/client"));
         const prisma = new PrismaClient();
+
+        // Otomatis push skema jika database/tabel baru
+        try {
+            execSync("npx prisma db push --skip-generate --accept-data-loss", { cwd: backendDir, stdio: "pipe" });
+        } catch (_) {}
+
         const count = await prisma.user.count();
         if (count === 0) {
             console.log("🌱 Database kosong, menjalankan seed otomatis...");

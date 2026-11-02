@@ -23,27 +23,36 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM EXIT
 
-# 0. Pastikan database terisi (auto-seed jika kosong)
+# 0. Pastikan database terisi (auto-sync skema & auto-seed jika kosong)
 echo "🔍 Memeriksa status database..."
 cd "$DIR/backend" || exit 1
 node -e "
+require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
+const { execSync } = require('child_process');
 const prisma = new PrismaClient();
-prisma.user.count()
-  .then(count => {
+
+async function initDb() {
+  try {
+    // Sinkronkan skema Prisma otomatis jika tabel belum ada
+    execSync('npx prisma db push --skip-generate --accept-data-loss', { stdio: 'pipe' });
+    const count = await prisma.user.count();
     if (count === 0) {
       console.log('🌱 Database kosong, menjalankan seed otomatis...');
       require('./seed.js');
     } else {
       console.log('✅ Database siap (' + count + ' pengguna terdaftar).');
-      process.exit(0);
     }
-  })
-  .catch(err => {
+  } catch (err) {
     console.log('⚠️ Peringatan koneksi DB:', err.message);
+  } finally {
+    await prisma.\$disconnect();
     process.exit(0);
-  });
-" 2>/dev/null
+  }
+}
+
+initDb();
+"
 
 echo "📦 Menjalankan Backend (Port 5001)..."
 cd "$DIR/backend" || exit 1
