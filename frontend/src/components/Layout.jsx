@@ -27,7 +27,8 @@ import {
     ChevronDown,
     ChevronRight,
     QrCode,
-    ShieldAlert
+    ShieldAlert,
+    Clock
 } from "lucide-react";
 import toast from "react-hot-toast";
 import SopModal from "./SopModal";
@@ -86,6 +87,7 @@ const adminNavGroups = [
         label: "Knowledge & SDM",
         icon: BookOpen,
         items: [
+            { path: "/attendance", label: "Presensi & Absensi", icon: Clock },
             { path: "/wiki", label: "Pusat SOP & Wiki Teknis", icon: BookOpen },
             { path: "/recruitment", label: "Rekrutmen Tim (HR)", icon: UserPlus },
         ]
@@ -134,6 +136,7 @@ const teknisiNavGroups = [
         label: "Knowledge & SOP",
         icon: BookOpen,
         items: [
+            { path: "/attendance", label: "Presensi & Absensi", icon: Clock },
             { path: "/wiki", label: "Pusat SOP & Wiki Teknis", icon: BookOpen },
         ]
     }

@@ -69,6 +69,48 @@ const uploadAvatar = multer({
     fileFilter: avatarFilter
 });
 
+// Storage for Attendance selfie photos
+const attendanceStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const dir = path.join(__dirname, "../../uploads/attendance");
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname) || ".jpg";
+        cb(null, 'selfie-' + uniqueSuffix + ext.toLowerCase());
+    }
+});
+
+const uploadAttendance = multer({
+    storage: attendanceStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }
+});
+
+// Storage for Leave Request attachments (doctor note / evidence)
+const leaveStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const dir = path.join(__dirname, "../../uploads/leaves");
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname) || ".jpg";
+        cb(null, 'leave-' + uniqueSuffix + ext.toLowerCase());
+    }
+});
+
+const uploadLeave = multer({
+    storage: leaveStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }
+});
+
 /**
  * Express middleware to automatically compress and transcode uploaded videos
  * into optimized web-streaming MP4 format (+faststart, max 720p).
@@ -91,4 +133,6 @@ const compressMedia = async (req, res, next) => {
 module.exports = upload;
 module.exports.upload = upload;
 module.exports.uploadAvatar = uploadAvatar;
+module.exports.uploadAttendance = uploadAttendance;
+module.exports.uploadLeave = uploadLeave;
 module.exports.compressMedia = compressMedia;
