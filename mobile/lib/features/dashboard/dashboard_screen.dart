@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dio/dio.dart';
@@ -10,6 +11,7 @@ import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/whatsapp_helper.dart';
 import '../../core/widgets/ticket_card.dart';
 import '../../data/models/sparepart_model.dart';
+import '../../data/providers/attendance_provider.dart';
 import '../../data/providers/auth_provider.dart';
 import '../../data/providers/notification_provider.dart';
 import '../../data/providers/ticket_provider.dart';
@@ -32,6 +34,8 @@ class DashboardScreen extends ConsumerWidget {
     final user = authState.user;
     final isFrontmanOrAdmin = user?.role == 'frontman' || user?.role == 'admin' || user?.role == 'pimpinan';
     final dashboardAsync = ref.watch(dashboardProvider);
+    final attendanceAsync = ref.watch(attendanceStatusProvider);
+    final attendance = attendanceAsync.valueOrNull;
 
     final nowStr = CurrencyFormatter.formatHeaderDateTime(DateTime.now());
 
@@ -66,26 +70,22 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner_outlined, color: AppTheme.primary),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
-              );
-            },
-            tooltip: 'Scan Tiket Servis',
-          ),
-          const SizedBox(width: 8),
+          _buildAttendanceAppBarAction(context, ref, attendanceAsync),
+          const SizedBox(width: 12),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(dashboardProvider);
           ref.invalidate(ticketsProvider);
+          ref.invalidate(attendanceStatusProvider);
         },
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           children: [
+            // Scheduled Attendance Reminders (09:00 WIB Pagi & 18:00 WIB Sore)
+            _buildAttendanceScheduledReminder(context, ref, attendance),
+
             // Technician Greeting & Status Panel
             Container(
               padding: const EdgeInsets.all(14),
@@ -403,7 +403,7 @@ class DashboardScreen extends ConsumerWidget {
             dashboardAsync.when(
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
-              data: (data) => _buildLowStockSection(context, data.sparepartHampirHabis),
+              data: (data) => _buildLowStockSection(context, ref, data.sparepartHampirHabis),
             ),
             const SizedBox(height: 24),
           ],
@@ -913,7 +913,7 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLowStockSection(BuildContext context, List<SparepartModel> parts) {
+  Widget _buildLowStockSection(BuildContext context, WidgetRef ref, List<SparepartModel> parts) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1023,7 +1023,7 @@ class DashboardScreen extends ConsumerWidget {
                               ),
                               const SizedBox(width: 8),
                               InkWell(
-                                onTap: () => _handleReminderAdmin(context, part),
+                                onTap: () => _handleReminderAdmin(context, ref, part),
                                 borderRadius: BorderRadius.circular(6),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1057,7 +1057,8 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  static Future<void> _handleReminderAdmin(BuildContext context, SparepartModel part) async {
+  Future<void> _handleReminderAdmin(BuildContext context, WidgetRef ref, SparepartModel part) async {
+    if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'mengirim reminder restock')) return;
     final client = ApiClient();
     try {
       final res = await client.dio.post(ApiConstants.sparepartReminder(part.id));
@@ -1089,6 +1090,372 @@ class DashboardScreen extends ConsumerWidget {
         );
       }
     }
+  }
+
+  Widget _buildAttendanceAppBarAction(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<AttendanceStatus> attendanceAsync,
+  ) {
+    return attendanceAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      error: (_, __) => IconButton(
+        icon: const Icon(Icons.login_rounded, color: AppTheme.primary),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AttendanceScreen()),
+          );
+        },
+        tooltip: 'Presensi',
+      ),
+      data: (status) {
+        if (!status.hasCheckedIn) {
+          // Belum Check-In: Tombol Oranye/Amber Menonjol "Check In"
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AttendanceScreen()),
+                  );
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7), // Amber 100
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFF59E0B), width: 1.2),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1AD97706),
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.login_rounded, size: 15, color: Color(0xFFB45309)),
+                      SizedBox(width: 4),
+                      Text(
+                        'Check In',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF92400E),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        } else if (!status.hasCheckedOut) {
+          // Sedang Bekerja (Checked-In): Tombol "Check Out"
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AttendanceScreen()),
+                  );
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF), // Blue 50
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF3B82F6), width: 1.2),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF10B981),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      const Text(
+                        'Check Out',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1D4ED8),
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      const Icon(Icons.logout_rounded, size: 13, color: Color(0xFF1D4ED8)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        } else {
+          // Sudah Check-Out Selesai
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AttendanceScreen()),
+                  );
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF10B981)),
+                      SizedBox(width: 4),
+                      Text(
+                        'Selesai',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildAttendanceScheduledReminder(
+    BuildContext context,
+    WidgetRef ref,
+    AttendanceStatus? status,
+  ) {
+    final now = DateTime.now();
+    final hour = now.hour;
+    final minute = now.minute;
+    final totalMinutes = hour * 60 + minute;
+
+    final hasCheckedIn = status?.hasCheckedIn ?? false;
+    final hasCheckedOut = status?.hasCheckedOut ?? false;
+
+    // 1. Pengingat Check-In Pagi:
+    // Aktif jika jam >= 08:30 (atau jam 09:00 pagi) dan belum check-in
+    final isMorningWindow = totalMinutes >= (8 * 60 + 30);
+    if (!hasCheckedIn && isMorningWindow) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBEB), // Amber 50
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFFCD34D), width: 1.2), // Amber 300
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0DD97706),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.access_time_filled_rounded, color: Color(0xFFD97706), size: 18),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Pengingat Presensi Pagi • 09:00 WIB',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF92400E),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    'Wajib',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Anda belum melakukan Check-In hari ini. Seluruh aktivitas edit tiket, diagnosa, dan penggunaan sparepart dibatasi (Read-Only) hingga Anda melakukan presensi.',
+              style: TextStyle(fontSize: 11.5, color: Color(0xFF78350F), height: 1.35),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD97706),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                icon: const Icon(Icons.camera_alt_outlined, size: 16),
+                label: const Text(
+                  'Lakukan Check-In Sekarang (Selfie + GPS)',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AttendanceScreen()),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 2. Pengingat Check-Out Sore:
+    // Aktif jika jam >= 17:30 / 18:00 (jam 6 sore) dan sudah check-in tapi belum check-out
+    final isEveningWindow = totalMinutes >= (17 * 60 + 30);
+    if (hasCheckedIn && !hasCheckedOut && isEveningWindow) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEEF2FF), // Indigo 50
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFA5B4FC), width: 1.2), // Indigo 300
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D4338CA),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0E7FF),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.nightlight_round, color: Color(0xFF4F46E5), size: 18),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Pengingat Selesai Kerja • 18:00 WIB',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF3730A3),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4F46E5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    'Check-Out',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Jam operasional workshop telah selesai pukul 18:00 WIB. Pastikan meja kerja rapi dan jangan lupa lakukan Check-Out kehadiran sebelum pulang.',
+              style: TextStyle(fontSize: 11.5, color: Color(0xFF312E81), height: 1.35),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4F46E5),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                icon: const Icon(Icons.logout_rounded, size: 16),
+                label: const Text(
+                  'Lakukan Check-Out Sekarang',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AttendanceScreen()),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }
 

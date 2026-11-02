@@ -15,7 +15,9 @@ import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/image_viewer_dialog.dart';
 import '../../data/models/tiket_model.dart';
 import '../../data/providers/ticket_provider.dart';
+import '../../data/providers/attendance_provider.dart';
 import '../../data/providers/auth_provider.dart';
+import '../attendance/attendance_screen.dart';
 import '../wiki/wiki_detail_screen.dart';
 import 'widgets/diagnosis_modal.dart';
 import 'widgets/add_log_modal.dart';
@@ -48,6 +50,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
   // Update Status
   Future<void> _updateStatus(String newStatus, {String? catatanAdmin}) async {
+    if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'mengubah status tiket')) return;
+
     setState(() => _isActionLoading = true);
     try {
       final Map<String, dynamic> payload = {'status': newStatus};
@@ -91,6 +95,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
   // Take Over Ticket (Ambil Alih)
   Future<void> _takeOverTicket() async {
+    if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'mengambil alih pengerjaan tiket')) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -155,6 +161,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
   // Update QC Checklist
   Future<void> _toggleQc(Map<String, dynamic> currentQc, String key, bool value) async {
+    if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'memperbarui Quality Control')) return;
+
     final updated = Map<String, dynamic>.from(currentQc);
     updated[key] = value;
 
@@ -175,6 +183,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
   // Update Warranty Settings (Kategori & Durasi Garansi)
   Future<void> _editWarrantySettings(TiketModel ticket) async {
+    if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'mengubah pengaturan garansi')) return;
+
     String selectedKategori = ticket.kategoriPerbaikan ?? 'Umum';
     String selectedDurasi = ticket.durasiGaransi ?? '1 Bulan';
 
@@ -251,6 +261,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
   // Update Credentials Vault Modal
   void _editCredentials(TiketModel ticket) {
+    if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'mengubah kredensial perangkat')) return;
+
     String selectedTipe = ticket.tipeKunci ?? 'Tidak Ada';
     final passCtrl = TextEditingController(text: ticket.passwordPerangkat ?? '');
 
@@ -488,6 +500,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
         data: (ticket) {
           final isAssignedToMe = currentUser != null && ticket.teknisiId == currentUser.id;
           final isUnassigned = ticket.teknisiId == null;
+          final attendance = ref.watch(attendanceStatusProvider).valueOrNull;
+          final hasCheckedIn = attendance?.hasCheckedIn ?? false;
           final qcMap = ticket.checklistQc ?? {};
           final intakeMap = ticket.checklistIntake ?? {};
           final reminderDue = _getReminderDue(ticket);
@@ -503,6 +517,61 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Banner peringatan jika user belum Check-In hari ini
+              if (!hasCheckedIn) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFECACA), width: 1.2),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.lock_clock_rounded, color: Color(0xFFDC2626), size: 24),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Akses Dibatasi: Belum Check-In',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF991B1B),
+                              ),
+                            ),
+                            SizedBox(height: 1),
+                            Text(
+                              'Anda dalam mode baca (Read-Only). Lakukan Presensi / Check-In untuk mengaktifkan izin pengerjaan tiket.',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: Color(0xFFB91C1C),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFDC2626),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AttendanceScreen()),
+                          );
+                        },
+                        child: const Text('Check-In', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               // Banner peringatan jika tiket sedang ditangani teknisi lain
               if (!isAssignedToMe && !isUnassigned && !isAdmin) ...[
                 Container(
@@ -1206,6 +1275,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                             icon: const Icon(Icons.add, size: 16),
                             label: const Text('Input Diagnosis'),
                             onPressed: () {
+                              if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'menginput diagnosis')) return;
                               showModalBottomSheet(
                                 context: context,
                                 isScrollControlled: true,
@@ -1315,6 +1385,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                             icon: const Icon(Icons.add, size: 16),
                             label: const Text('Tambah Part'),
                             onPressed: () {
+                              if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'menggunakan sparepart')) return;
                               showModalBottomSheet(
                                 context: context,
                                 isScrollControlled: true,
@@ -1522,6 +1593,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                             icon: const Icon(Icons.add, size: 16),
                             label: const Text('Tambah Log'),
                             onPressed: () {
+                              if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'menambah log perbaikan')) return;
                               showModalBottomSheet(
                                 context: context,
                                 isScrollControlled: true,
@@ -1783,6 +1855,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                   onPressed: _isActionLoading
                       ? null
                       : () {
+                          if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'memverifikasi QC')) return;
                           showModalBottomSheet(
                             context: context,
                             isScrollControlled: true,
@@ -1870,6 +1943,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
             minimumSize: const Size.fromHeight(48),
           ),
           onPressed: () {
+            if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'menginput hasil diagnosis')) return;
             showModalBottomSheet(
               context: context,
               isScrollControlled: true,
@@ -1971,6 +2045,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
         onPressed: _isActionLoading
             ? null
             : () {
+                if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'memverifikasi QC')) return;
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,

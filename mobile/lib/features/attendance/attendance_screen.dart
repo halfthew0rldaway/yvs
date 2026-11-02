@@ -9,6 +9,7 @@ import '../../core/constants/api_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/offline_banner.dart';
+import '../../data/providers/attendance_provider.dart';
 import '../../data/providers/auth_provider.dart';
 
 class AttendanceScreen extends ConsumerStatefulWidget {
@@ -136,6 +137,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           ),
         );
         _loadAttendanceData(forceRefresh: true);
+        ref.invalidate(attendanceStatusProvider);
       }
     } catch (e) {
       if (mounted) {
@@ -221,6 +223,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           ),
         );
         _loadAttendanceData(forceRefresh: true);
+        ref.invalidate(attendanceStatusProvider);
       }
     } catch (e) {
       if (mounted) {

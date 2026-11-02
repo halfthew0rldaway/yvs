@@ -10,6 +10,7 @@ import '../../core/utils/whatsapp_helper.dart';
 import '../../core/widgets/digital_signature_pad.dart';
 import '../../core/widgets/offline_banner.dart';
 import '../../data/models/tiket_model.dart';
+import '../../data/providers/attendance_provider.dart';
 import '../../data/providers/auth_provider.dart';
 import '../scanner/qr_scanner_screen.dart';
 
@@ -105,6 +106,7 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
   }
 
   void _openHandoverProcess(TiketModel tiket) {
+    if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'memproses serah terima unit')) return;
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
