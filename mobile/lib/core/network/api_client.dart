@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/api_constants.dart';
 import '../services/offline_cache_service.dart';
@@ -23,6 +25,18 @@ class ApiClient {
         },
       ),
     );
+
+    // Bypass SSL handshake alerts / certificate issues for sslip.io / VPS IP on mobile networks
+    if (dio.httpClientAdapter is IOHttpClientAdapter) {
+      (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+        final client = HttpClient();
+        client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+          // Allow connection to VPS IP, sslip.io, nip.io and local networks
+          return true;
+        };
+        return client;
+      };
+    }
 
     dio.interceptors.add(
       InterceptorsWrapper(

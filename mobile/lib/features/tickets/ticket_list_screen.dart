@@ -132,17 +132,6 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const QrScannerScreen()),
-          );
-        },
-        backgroundColor: AppTheme.primary,
-        tooltip: 'Pindai QR / Barcode',
-        child: const Icon(Icons.qr_code_scanner, color: Colors.white),
-      ),
       body: Column(
         children: [
           // Filter & Search Controls Header

@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/providers/auth_provider.dart';
 import '../../data/providers/notification_provider.dart';
-import '../attendance/attendance_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../handover/handover_screen.dart';
 import '../profile/profile_screen.dart';
+import '../scanner/qr_scanner_screen.dart';
 import '../sparepart/sparepart_list_screen.dart';
 import '../tickets/ticket_list_screen.dart';
 import 'diagonal_floating_dock.dart';
@@ -40,6 +40,13 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     }
   }
 
+  void _openQrScanner() {
+    HapticFeedback.mediumImpact();
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -49,24 +56,22 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     final notificationsAsync = ref.watch(notificationsProvider);
     final unreadCount = notificationsAsync.valueOrNull?.where((n) => !n.isRead).length ?? 0;
 
-    // Dynamic Pages based on role
+    // Dynamic Pages based on role (4 destinations flanked around center QR scanner)
     final List<Widget> pages = isFrontmanOrAdmin
         ? [
             const DashboardScreen(),
             const HandoverScreen(),
             const TicketListScreen(),
-            const SparepartListScreen(),
             const ProfileScreen(),
           ]
         : [
             const DashboardScreen(),
             const TicketListScreen(),
             const SparepartListScreen(),
-            const AttendanceScreen(),
             const ProfileScreen(),
           ];
 
-    // Dynamic Destinations for Diagonal Floating Dock
+    // Dynamic Destinations for Scooped Floating Dock
     final List<NavDestination> destinations = isFrontmanOrAdmin
         ? [
             const NavDestination(
@@ -87,14 +92,8 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               icon: Icons.assignment_outlined,
               selectedIcon: Icons.assignment_rounded,
             ),
-            const NavDestination(
-              index: 3,
-              label: 'Sparepart',
-              icon: Icons.inventory_2_outlined,
-              selectedIcon: Icons.inventory_2_rounded,
-            ),
             NavDestination(
-              index: 4,
+              index: 3,
               label: 'Profil',
               icon: Icons.person_outline_rounded,
               selectedIcon: Icons.person_rounded,
@@ -120,14 +119,8 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               icon: Icons.inventory_2_outlined,
               selectedIcon: Icons.inventory_2_rounded,
             ),
-            const NavDestination(
-              index: 3,
-              label: 'Presensi',
-              icon: Icons.pin_drop_outlined,
-              selectedIcon: Icons.pin_drop_rounded,
-            ),
             NavDestination(
-              index: 4,
+              index: 3,
               label: 'Profil',
               icon: Icons.person_outline_rounded,
               selectedIcon: Icons.person_rounded,
@@ -148,10 +141,13 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         top: false,
         bottom: true,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-          child: DiagonalFloatingDock(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+          child: ScoopedFloatingDock(
             currentIndex: safeIndex,
             onItemSelected: _onTabSelected,
+            onCenterAction: _openQrScanner,
+            centerIcon: Icons.qr_code_scanner_rounded,
+            centerTooltip: 'Pindai QR Tiket / Unit',
             destinations: destinations,
           ),
         ),

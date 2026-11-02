@@ -24,12 +24,6 @@ void main() {
     ),
     NavDestination(
       index: 3,
-      label: 'Presensi',
-      icon: Icons.pin_drop_outlined,
-      selectedIcon: Icons.pin_drop_rounded,
-    ),
-    NavDestination(
-      index: 4,
       label: 'Profil',
       icon: Icons.person_outline_rounded,
       selectedIcon: Icons.person_rounded,
@@ -37,19 +31,24 @@ void main() {
     ),
   ];
 
-  testWidgets('DiagonalFloatingDock renders all destinations and responds to tap', (WidgetTester tester) async {
+  testWidgets('ScoopedFloatingDock renders destinations, center QR button, and responds to tap', (WidgetTester tester) async {
     int selectedIndex = 0;
+    bool qrTapped = false;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           bottomNavigationBar: StatefulBuilder(
             builder: (context, setState) {
-              return DiagonalFloatingDock(
+              return ScoopedFloatingDock(
                 currentIndex: selectedIndex,
                 onItemSelected: (idx) {
                   setState(() => selectedIndex = idx);
                 },
+                onCenterAction: () {
+                  qrTapped = true;
+                },
+                centerIcon: Icons.qr_code_scanner_rounded,
                 destinations: sampleDestinations,
               );
             },
@@ -58,14 +57,16 @@ void main() {
       ),
     );
 
-    // Verify all 5 destination labels are rendered
+    // Verify all 4 destination labels are rendered
     expect(find.text('Beranda'), findsOneWidget);
     expect(find.text('Tiket'), findsOneWidget);
     expect(find.text('Sparepart'), findsOneWidget);
-    expect(find.text('Presensi'), findsOneWidget);
     expect(find.text('Profil'), findsOneWidget);
 
-    // Verify badge count 3 is rendered
+    // Verify center QR scanner icon is rendered
+    expect(find.byIcon(Icons.qr_code_scanner_rounded), findsOneWidget);
+
+    // Verify badge count 3 is rendered on Profil
     expect(find.text('3'), findsOneWidget);
 
     // Tap on 'Tiket' (index 1)
@@ -74,5 +75,11 @@ void main() {
 
     // Verify selection updated
     expect(selectedIndex, 1);
+
+    // Tap on Center QR button
+    await tester.tap(find.byIcon(Icons.qr_code_scanner_rounded));
+    await tester.pumpAndSettle();
+
+    expect(qrTapped, isTrue);
   });
 }
