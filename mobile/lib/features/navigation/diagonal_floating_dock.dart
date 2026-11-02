@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_theme.dart';
@@ -25,9 +26,9 @@ class NavDestination {
 /// designed for the Serv.io Workshop Companion application.
 ///
 /// Visual Highlights:
-/// - Continuous smooth scooped cradle notch in the center using cubic bezier curves.
+/// - Mathematically continuous smooth circular cradle notch with tangent shoulder fillets.
 /// - Elevated circular center action button (QR Scanner) with vibrant sky-to-primary blue gradient and ambient glow.
-/// - Dark obsidian pill active state for selected tabs with white icon and typography.
+/// - Dark obsidian pill active state for selected tabs with crisp white icon and typography.
 /// - Muted slate inactive states with clear touch targets.
 /// - Soft layered drop shadows and crisp outer border.
 class ScoopedFloatingDock extends StatelessWidget {
@@ -57,12 +58,16 @@ class ScoopedFloatingDock extends StatelessWidget {
     final leftDestinations = destinations.sublist(0, splitIndex);
     final rightDestinations = destinations.sublist(splitIndex);
 
-    const double dockHeight = 64.0;
-    const double buttonSize = 52.0;
-    const double stackHeight = 80.0;
-    const double dockTop = stackHeight - dockHeight; // 16.0
-    const double notchDepth = 36.0;
-    const double notchHalfWidth = 38.0;
+    const double dockHeight = 66.0;
+    const double buttonSize = 56.0;
+    const double buttonRadius = buttonSize / 2; // 28.0
+    const double gap = 7.0; // uniform cradle clearance
+    const double buttonCenterY = 4.0; // center Y of button relative to dock top edge
+    const double shoulderRadius = 20.0; // gentle fillet radius
+    const double cornerRadius = 33.0; // pill radius (dockHeight / 2)
+
+    const double stackHeight = 92.0;
+    const double dockTop = stackHeight - dockHeight; // 26.0
 
     return SizedBox(
       height: stackHeight,
@@ -74,7 +79,7 @@ class ScoopedFloatingDock extends StatelessWidget {
           return Stack(
             clipBehavior: Clip.none,
             children: [
-              // 1. Scooped Dock Background with Drop Shadows and Border
+              // 1. Scooped Dock Background with Tangent Fillets, Drop Shadows and Border
               const Positioned(
                 left: 0,
                 right: 0,
@@ -85,18 +90,20 @@ class ScoopedFloatingDock extends StatelessWidget {
                     backgroundColor: Colors.white,
                     borderColor: Color(0xFFE2E8F0),
                     borderWidth: 1.2,
-                    notchDepth: notchDepth,
-                    notchHalfWidth: notchHalfWidth,
-                    cornerRadius: 32.0,
+                    cornerRadius: cornerRadius,
+                    buttonRadius: buttonRadius,
+                    gap: gap,
+                    buttonCenterY: buttonCenterY,
+                    shoulderRadius: shoulderRadius,
                   ),
                 ),
               ),
 
               // 2. Left Destinations Row
               Positioned(
-                left: 6,
+                left: 8,
                 top: dockTop,
-                width: centerX - notchHalfWidth - 2,
+                width: centerX - 46,
                 height: dockHeight,
                 child: Row(
                   children: leftDestinations.map((destination) {
@@ -114,8 +121,8 @@ class ScoopedFloatingDock extends StatelessWidget {
 
               // 3. Right Destinations Row
               Positioned(
-                left: centerX + notchHalfWidth + 2,
-                right: 6,
+                left: centerX + 46,
+                right: 8,
                 top: dockTop,
                 height: dockHeight,
                 child: Row(
@@ -134,8 +141,8 @@ class ScoopedFloatingDock extends StatelessWidget {
 
               // 4. Center Elevated Circular Action Button (QR Scanner)
               Positioned(
-                left: centerX - (buttonSize / 2),
-                top: 2.0, // Protrudes 14px above the dock top
+                left: centerX - buttonRadius,
+                top: dockTop + buttonCenterY - buttonRadius, // 26 + 4 - 28 = 2.0
                 width: buttonSize,
                 height: buttonSize,
                 child: _CenterActionButton(
@@ -156,21 +163,27 @@ class ScoopedFloatingDock extends StatelessWidget {
 typedef DiagonalFloatingDock = ScoopedFloatingDock;
 
 /// Custom painter for the continuous scooped floating dock surface.
+/// Uses exact circular tangency geometry to produce seamless, organic shoulder fillets
+/// and a uniform concentric cradle around the center button.
 class _ScoopedDockPainter extends CustomPainter {
   final Color backgroundColor;
   final Color borderColor;
   final double borderWidth;
-  final double notchDepth;
-  final double notchHalfWidth;
   final double cornerRadius;
+  final double buttonRadius;
+  final double gap;
+  final double buttonCenterY;
+  final double shoulderRadius;
 
   const _ScoopedDockPainter({
     required this.backgroundColor,
     required this.borderColor,
     this.borderWidth = 1.2,
-    this.notchDepth = 36.0,
-    this.notchHalfWidth = 38.0,
-    this.cornerRadius = 32.0,
+    this.cornerRadius = 33.0,
+    this.buttonRadius = 28.0,
+    this.gap = 7.0,
+    this.buttonCenterY = 4.0,
+    this.shoulderRadius = 20.0,
   });
 
   Path _buildPath(Size size) {
@@ -178,52 +191,68 @@ class _ScoopedDockPainter extends CustomPainter {
     final h = size.height;
     final cx = w / 2;
     final r = cornerRadius.clamp(0.0, h / 2);
-    final nw = notchHalfWidth;
-    final nd = notchDepth;
+
+    final cradleR = buttonRadius + gap;
+    final cy = buttonCenterY;
+    final s = shoulderRadius;
+
+    final sPlusR = s + cradleR;
+    final deltaY = s - cy;
+    final xs = math.sqrt(math.max(0.0, sPlusR * sPlusR - deltaY * deltaY));
+
+    final xt = cradleR * xs / sPlusR;
+    final yt = cy + cradleR * deltaY / sPlusR;
 
     final path = Path();
-    // Start at top left just after corner
+    // 1. Start at top-left corner
     path.moveTo(r, 0);
 
-    // Straight top edge leading to the scoop
-    path.lineTo(cx - nw, 0);
+    // 2. Flat top edge leading to left departure of cradle notch
+    path.lineTo(cx - xs, 0);
 
-    // Smooth cubic bezier curve down into the center cradle
-    path.cubicTo(
-      cx - nw * 0.55, 0,
-      cx - nw * 0.45, nd,
-      cx, nd,
+    // 3. Left shoulder fillet: convex arc curving downward into the cradle
+    path.arcToPoint(
+      Offset(cx - xt, yt),
+      radius: Radius.circular(s),
+      clockwise: true,
     );
 
-    // Smooth cubic bezier curve back up to the flat top edge
-    path.cubicTo(
-      cx + nw * 0.45, nd,
-      cx + nw * 0.55, 0,
-      cx + nw, 0,
+    // 4. Center cradle: concave circular arc wrapping smoothly under the button
+    path.arcToPoint(
+      Offset(cx + xt, yt),
+      radius: Radius.circular(cradleR),
+      clockwise: false,
     );
 
-    // Straight top edge to top-right corner
+    // 5. Right shoulder fillet: convex arc curving upward back to flat edge
+    path.arcToPoint(
+      Offset(cx + xs, 0),
+      radius: Radius.circular(s),
+      clockwise: true,
+    );
+
+    // 6. Flat top edge to top-right corner
     path.lineTo(w - r, 0);
 
-    // Top-right corner arc
+    // 7. Top-right rounded pill corner
     path.arcToPoint(Offset(w, r), radius: Radius.circular(r));
 
-    // Right edge
+    // 8. Right vertical edge
     path.lineTo(w, h - r);
 
-    // Bottom-right corner arc
+    // 9. Bottom-right rounded pill corner
     path.arcToPoint(Offset(w - r, h), radius: Radius.circular(r));
 
-    // Bottom edge
+    // 10. Bottom flat edge
     path.lineTo(r, h);
 
-    // Bottom-left corner arc
+    // 11. Bottom-left rounded pill corner
     path.arcToPoint(Offset(0, h - r), radius: Radius.circular(r));
 
-    // Left edge
+    // 12. Left vertical edge
     path.lineTo(0, r);
 
-    // Top-left corner arc
+    // 13. Top-left rounded pill corner
     path.arcToPoint(Offset(r, 0), radius: Radius.circular(r));
 
     path.close();
@@ -236,12 +265,12 @@ class _ScoopedDockPainter extends CustomPainter {
 
     // 1. Layered Ambient Drop Shadows
     final shadowPaint1 = Paint()
-      ..color = const Color(0x180F172A)
+      ..color = const Color(0x140F172A)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
     canvas.drawPath(path.shift(const Offset(0, 6)), shadowPaint1);
 
     final shadowPaint2 = Paint()
-      ..color = const Color(0x0A0F172A)
+      ..color = const Color(0x080F172A)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     canvas.drawPath(path.shift(const Offset(0, 2)), shadowPaint2);
 
@@ -264,9 +293,11 @@ class _ScoopedDockPainter extends CustomPainter {
     return oldDelegate.backgroundColor != backgroundColor ||
         oldDelegate.borderColor != borderColor ||
         oldDelegate.borderWidth != borderWidth ||
-        oldDelegate.notchDepth != notchDepth ||
-        oldDelegate.notchHalfWidth != notchHalfWidth ||
-        oldDelegate.cornerRadius != cornerRadius;
+        oldDelegate.cornerRadius != cornerRadius ||
+        oldDelegate.buttonRadius != buttonRadius ||
+        oldDelegate.gap != gap ||
+        oldDelegate.buttonCenterY != buttonCenterY ||
+        oldDelegate.shoulderRadius != shoulderRadius;
   }
 }
 
@@ -292,11 +323,11 @@ class _DockItem extends StatelessWidget {
           onTap();
         },
         borderRadius: BorderRadius.circular(24),
-        splashColor: AppTheme.primary.withValues(alpha: 0.12),
-        highlightColor: AppTheme.primary.withValues(alpha: 0.06),
+        splashColor: AppTheme.primary.withValues(alpha: 0.10),
+        highlightColor: Colors.transparent,
         child: Center(
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             padding: EdgeInsets.symmetric(
               horizontal: isSelected ? 12 : 8,
@@ -304,11 +335,11 @@ class _DockItem extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: isSelected ? const Color(0xFF0F172A) : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
               boxShadow: isSelected
                   ? const [
                       BoxShadow(
-                        color: Color(0x200F172A),
+                        color: Color(0x280F172A),
                         blurRadius: 8,
                         offset: Offset(0, 3),
                       ),
@@ -325,7 +356,7 @@ class _DockItem extends StatelessWidget {
                   children: [
                     Icon(
                       isSelected ? destination.selectedIcon : destination.icon,
-                      size: isSelected ? 19 : 20,
+                      size: isSelected ? 20 : 21,
                       color: isSelected ? Colors.white : const Color(0xFF64748B),
                     ),
                     const SizedBox(height: 2),
@@ -346,8 +377,8 @@ class _DockItem extends StatelessWidget {
                 // Unread Badge Indicator
                 if (destination.badgeCount != null && destination.badgeCount! > 0)
                   Positioned(
-                    top: -4,
-                    right: -10,
+                    top: -3,
+                    right: -8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
                       decoration: BoxDecoration(
@@ -414,21 +445,25 @@ class _CenterActionButton extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: const LinearGradient(
           colors: [
-            Color(0xFF38BDF8), // Sky Blue (Reference match)
-            Color(0xFF2563EB), // Serv.io Primary Blue
+            Color(0xFF38BDF8), // Vibrant Sky Blue (Reference match)
+            Color(0xFF0284C7), // Deep Ocean Blue
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.35),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0284C7).withValues(alpha: 0.42),
+            color: const Color(0xFF0284C7).withValues(alpha: 0.40),
             blurRadius: 14,
             offset: const Offset(0, 6),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+            color: const Color(0xFF38BDF8).withValues(alpha: 0.25),
             blurRadius: 4,
             offset: const Offset(0, 2),
             spreadRadius: 0,

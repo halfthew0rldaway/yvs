@@ -63,9 +63,6 @@ const STORY_STAGES = [
 export default function ServiceProcess3D({ onTrackClick }) {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
-    const [isInitialReady, setIsInitialReady] = useState(false);
-    const [isScrollReady, setIsScrollReady] = useState(false);
-    const [loadProgress, setLoadProgress] = useState(0);
     const [activeStage, setActiveStage] = useState(0);
 
     const framesRef = useRef(new Array(TOTAL_FRAMES).fill(null));
@@ -74,7 +71,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
     const animFrameId = useRef(null);
     const activeStageRef = useRef(0);
     const lastRenderedFrame = useRef(-1);
-    const scrollReadyRef = useRef(false);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -236,10 +232,31 @@ export default function ServiceProcess3D({ onTrackClick }) {
 
             if (lastRenderedFrame.current >= 0) {
                 drawFrame(lastRenderedFrame.current);
+            } else if (framesRef.current[0]) {
+                drawFrame(0);
             }
         };
 
         resizeCanvas();
+
+        // Instant First Frame paint (already preloaded via index.html <link rel="preload">)
+        const initialImg = new Image();
+        initialImg.src = getFrameSrc(0);
+        const onFirstFrameReady = () => {
+            if (!isCancelled) {
+                framesRef.current[0] = initialImg;
+                drawFrame(0);
+                lastRenderedFrame.current = 0;
+            }
+        };
+        if (initialImg.complete && initialImg.naturalWidth > 0) {
+            onFirstFrameReady();
+        } else {
+            initialImg.onload = onFirstFrameReady;
+            if (initialImg.decode) {
+                initialImg.decode().then(onFirstFrameReady).catch(() => {});
+            }
+        }
 
         // Cached layout metrics to completely eliminate layout reflow / thrashing during scroll
         let cachedContainerTop = 0;
@@ -389,43 +406,33 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 return null;
             };
 
-            // Phase 1: Instant First Frame for fastest First Contentful Paint
-            const firstImg = await loadAndDecode(0);
-            if (isCancelled) return;
-            if (firstImg) {
-                drawFrame(0);
-                lastRenderedFrame.current = 0;
+            // Phase 1: Ensure First Frame is painted
+            if (!framesRef.current[0]) {
+                const firstImg = await loadAndDecode(0);
+                if (isCancelled) return;
+                if (firstImg) {
+                    drawFrame(0);
+                    lastRenderedFrame.current = 0;
+                }
             }
-            setIsInitialReady(true);
-            setLoadProgress(2);
             wakeLoop();
 
-            // Phase 2: Load all keyframes (stage-boundary frames) BEFORE unlocking scroll.
-            // This guarantees every stage transition has a real frame available — no stale/stuck frames.
-            const keyframePromises = KEYFRAME_INDICES.filter(i => i !== 0).map(idx => loadAndDecode(idx));
-            await Promise.all(keyframePromises);
+            // Phase 2: Immediate burst for first 24 frames (smooth initial scroll transition)
+            const earlyFrames = Array.from({ length: 24 }, (_, i) => i + 1);
+            await Promise.all(earlyFrames.map(idx => loadAndDecode(idx)));
             if (isCancelled) return;
-
-            let loadedCount = KEYFRAME_INDICES.length;
-            setLoadProgress(Math.min(100, Math.round((loadedCount / TOTAL_FRAMES) * 100)));
-
-            // Unlock scroll — keyframes are ready, animation can track scroll smoothly
-            scrollReadyRef.current = true;
-            setIsScrollReady(true);
-            handleScroll();
             wakeLoop();
 
-            // Phase 3: Fill in the gaps between keyframes with burst loading
-            // Prioritize frames near keyframes first for dense coverage, then fill remaining
+            // Phase 3: Fast parallel stream for all keyframes and remaining frames
             const remaining = [];
-            for (let i = 1; i < TOTAL_FRAMES; i++) {
-                if (!KEYFRAME_INDICES.includes(i)) {
+            for (let i = 25; i < TOTAL_FRAMES; i++) {
+                if (!framesRef.current[i]) {
                     remaining.push(i);
                 }
             }
 
             let currentIndex = 0;
-            const CONCURRENCY = 16;
+            const CONCURRENCY = 20;
 
             const worker = async () => {
                 while (currentIndex < remaining.length && !isCancelled) {
@@ -434,11 +441,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
 
                     const img = await loadAndDecode(targetIdx);
                     if (img && !isCancelled) {
-                        loadedCount++;
-                        // Throttle progress updates to avoid excessive re-renders
-                        if (loadedCount % 12 === 0 || loadedCount === TOTAL_FRAMES) {
-                            setLoadProgress(Math.min(100, Math.round((loadedCount / TOTAL_FRAMES) * 100)));
-                        }
                         if (Math.round(currentFrame.current) === targetIdx) {
                             wakeLoop();
                         }
@@ -448,9 +450,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
 
             const workers = Array.from({ length: CONCURRENCY }, () => worker());
             await Promise.all(workers);
-            if (!isCancelled) {
-                setLoadProgress(100);
-            }
         };
 
         loadFrameSequence();
@@ -482,33 +481,15 @@ export default function ServiceProcess3D({ onTrackClick }) {
 
     const currentStage = STORY_STAGES[activeStage] || STORY_STAGES[0];
 
-    // Scroll-gate: prevent the user from scrolling past the animation section
-    // while keyframes are still loading. Once isScrollReady is true, the container
-    // expands to its full scrollable height and the animation plays seamlessly.
-    const containerHeight = isScrollReady
-        ? undefined // use CSS class height
-        : "100vh";  // collapse to single viewport — no scroll travel until keyframes ready
-
     return (
         <section
             ref={containerRef}
-            className={`relative w-full bg-white font-sans ${isScrollReady ? 'h-[440vh] sm:h-[650vh]' : ''}`}
-            style={!isScrollReady ? { height: containerHeight } : undefined}
+            className="relative w-full bg-white font-sans h-[440vh] sm:h-[650vh]"
             id="service-workflow"
         >
             {/* Sticky viewport container (True 100dvh Fullscreen Studio, isolated render layer) */}
             <div className="sticky top-0 w-full h-[100dvh] overflow-hidden bg-white [contain:paint]">
-                {/* 1. Preload Progress Indicator */}
-                {loadProgress < 100 && (
-                    <div className="absolute top-0 left-0 right-0 z-30 h-1 bg-slate-100 overflow-hidden">
-                        <div
-                            className="h-full bg-blue-600 transition-all duration-200"
-                            style={{ width: `${loadProgress}%` }}
-                        />
-                    </div>
-                )}
-
-                {/* 2. Full-Bleed 3D Canvas Centerpiece (Dedicated GPU layer, zero ghosting, pure blend) */}
+                {/* 1. Full-Bleed 3D Canvas Centerpiece (Dedicated GPU layer, zero ghosting, pure blend) */}
                 <canvas
                     ref={canvasRef}
                     className="absolute inset-0 w-full h-full block transform-gpu will-change-transform"
@@ -671,25 +652,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
                         </div>
                     </div>
                 </div>
-
-                {/* Subtle initial spinner — shows until first frame is painted */}
-                {!isInitialReady && (
-                    <div className="absolute inset-0 z-30 flex items-center justify-center bg-white transition-opacity duration-300">
-                        <div className="w-8 h-8 border-3 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
-                    </div>
-                )}
-
-                {/* Keyframe loading overlay — shows after first frame but before scroll is unlocked.
-                    Covers the canvas with a gentle indicator so the user knows scrolling will be 
-                    enabled momentarily, without the animation appearing frozen. */}
-                {isInitialReady && !isScrollReady && (
-                    <div className="absolute inset-0 z-25 flex flex-col items-center justify-end pb-[max(env(safe-area-inset-bottom,0px),24px)] pointer-events-none transition-opacity duration-500">
-                        <div className="flex flex-col items-center gap-2 animate-pulse">
-                            <div className="w-5 h-5 border-2 border-blue-500/40 border-t-blue-600 rounded-full animate-spin" />
-                            <span className="text-3xs font-mono font-medium text-slate-400 tracking-wider uppercase">Menyiapkan animasi...</span>
-                        </div>
-                    </div>
-                )}
             </div>
         </section>
     );

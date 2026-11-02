@@ -141,7 +141,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         top: false,
         bottom: true,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: ScoopedFloatingDock(
             currentIndex: safeIndex,
             onItemSelected: _onTabSelected,
