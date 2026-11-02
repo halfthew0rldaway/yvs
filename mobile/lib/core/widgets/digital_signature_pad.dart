@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
@@ -179,22 +178,22 @@ class _DigitalSignaturePadState extends State<DigitalSignaturePad> {
 
                 // Placeholder watermark if empty
                 if (widget.controller.isEmpty)
-                  Center(
+                  const Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.draw_outlined,
                           size: 32,
-                          color: Colors.slate.shade300,
+                          color: Color(0xFFCBD5E1),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         Text(
                           'Goreskan tanda tangan pelanggan di sini',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.slate.shade400,
                             fontWeight: FontWeight.w500,
+                            color: Color(0xFF94A3B8),
                           ),
                         ),
                       ],
@@ -271,3 +270,4 @@ class _SignaturePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SignaturePainter oldDelegate) => true;
 }
+

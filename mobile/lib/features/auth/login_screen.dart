@@ -110,7 +110,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Masuk Akun Teknisi',
+                        'Masuk Akun Workshop',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -119,7 +119,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Gunakan email dan password terdaftar Anda',
+                        'Akses meja kerja Teknisi atau operasional Frontman',
                         style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                       ),
                       const SizedBox(height: 20),
@@ -164,7 +164,63 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 width: 20,
                                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                               )
-                            : const Text('Masuk ke Meja Servis'),
+                            : const Text('Masuk ke Sistem'),
+                      ),
+
+                      const SizedBox(height: 16),
+                      const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Akun Cepat (Testing / Demo):',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _emailController.text = 'teknisi1@workshop.com';
+                                  _passwordController.text = 'password123';
+                                });
+                              },
+                              child: const Column(
+                                children: [
+                                  Text('Teknisi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                                  Text('Budi Santoso', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _emailController.text = 'siti.admin@workshop.com';
+                                  _passwordController.text = 'password123';
+                                });
+                              },
+                              child: const Column(
+                                children: [
+                                  Text('Frontman / Kasir', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.secondary)),
+                                  Text('Siti Rahmawati', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

@@ -1,7 +1,7 @@
 class ApiConstants {
   // Base URLs
   // Live Production VPS Backend
-  static const String baseUrl = 'https://101.32.127.55.nip.io/api';
+  static const String baseUrl = 'https://101.32.127.55.sslip.io/api';
   static const String localUrl = 'http://127.0.0.1:5001/api';
   static const String emulatorUrl = 'http://10.0.2.2:5001/api';
   static const String lanUrl = 'http://192.168.18.131:5001/api';

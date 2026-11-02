@@ -5,7 +5,6 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/whatsapp_helper.dart';
 import '../../core/widgets/status_badge.dart';
-import '../../data/models/tiket_model.dart';
 import '../../data/providers/ticket_provider.dart';
 import '../tickets/ticket_detail_screen.dart';
 

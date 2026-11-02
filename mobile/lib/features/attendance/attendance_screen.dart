@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -83,12 +82,18 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memuat status presensi: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
+        // Only show notification if it's an actual unexpected error, not 404 (endpoint pending sync)
+        if (e is DioException && e.response?.statusCode != 404) {
+          final String errorMsg = (e.response?.data is Map && e.response?.data['message'] != null)
+              ? e.response!.data['message'].toString()
+              : 'Gagal memuat status presensi terbaru';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMsg),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
       }
     }
   }
@@ -662,3 +667,4 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     );
   }
 }
+

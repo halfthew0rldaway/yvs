@@ -74,7 +74,7 @@ mobile/
    flutter pub get
    ```
 3. Konfigurasi alamat server ERP di `lib/core/constants/api_constants.dart`:
-   - Production VPS: `https://101.32.127.55.nip.io/api`
+   - Production VPS: `https://101.32.127.55.sslip.io/api`
    - Android Emulator: `http://10.0.2.2:5001/api`
    - HP Fisik via Wi-Fi: `http://<IP_LAN_KOMPUTER>:5001/api`
 4. Jalankan aplikasi:

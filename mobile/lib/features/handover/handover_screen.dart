@@ -1,9 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/api_client.dart';
-import '../../core/services/offline_cache_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/whatsapp_helper.dart';
@@ -73,9 +73,12 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        final String msg = (e is DioException && e.response?.data is Map && e.response?.data['message'] != null)
+            ? e.response!.data['message'].toString()
+            : 'Gagal memuat daftar unit handover';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memuat daftar unit handover: ${e.toString()}'),
+            content: Text(msg),
             backgroundColor: AppTheme.error,
           ),
         );
@@ -621,9 +624,12 @@ class _HandoverBottomSheetState extends State<_HandoverBottomSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
+        final String msg = (e is DioException && e.response?.data is Map && e.response?.data['message'] != null)
+            ? e.response!.data['message'].toString()
+            : 'Gagal menyelesaikan serah terima unit';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menyelesaikan serah terima: ${e.toString()}'),
+            content: Text(msg),
             backgroundColor: AppTheme.error,
           ),
         );
@@ -851,3 +857,4 @@ class _HandoverBottomSheetState extends State<_HandoverBottomSheet> {
     );
   }
 }
+

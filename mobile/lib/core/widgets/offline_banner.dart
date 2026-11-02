@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 
 class OfflineBanner extends StatelessWidget {
   final String cachedTime;
@@ -94,3 +93,4 @@ class OfflineBanner extends StatelessWidget {
     );
   }
 }
+
