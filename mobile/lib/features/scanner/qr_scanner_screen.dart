@@ -46,26 +46,88 @@ class _QrScannerScreenState extends State<QrScannerScreen> with SingleTickerProv
     super.dispose();
   }
 
+  String _extractTicketNumber(String raw) {
+    final input = raw.trim();
+    if (input.isEmpty) return '';
+
+    // 1. Cek pola regex tiket standar: SRV-YYYY-XXX (contoh: SRV-2026-035)
+    final srvRegex = RegExp(r'SRV-\d{4}-\d{3,4}', caseSensitive: false);
+    final match = srvRegex.firstMatch(input);
+    if (match != null) {
+      return match.group(0)!.toUpperCase();
+    }
+
+    // 2. Jika input berupa URL / URI, ekstrak dari query params atau path
+    final uri = Uri.tryParse(input);
+    if (uri != null && uri.hasScheme) {
+      // Cek query parameter search, nomor_tiket, ticket, atau id
+      final searchParam = uri.queryParameters['search'] ??
+          uri.queryParameters['nomor_tiket'] ??
+          uri.queryParameters['ticket'] ??
+          uri.queryParameters['id'];
+      if (searchParam != null && searchParam.isNotEmpty) {
+        final innerMatch = srvRegex.firstMatch(searchParam);
+        if (innerMatch != null) {
+          return innerMatch.group(0)!.toUpperCase();
+        }
+        return searchParam.trim();
+      }
+
+      // Cek path segments (misal /tiket-servis/SRV-2026-035 atau /tiket-servis/91)
+      if (uri.pathSegments.isNotEmpty) {
+        for (final seg in uri.pathSegments.reversed) {
+          final segMatch = srvRegex.firstMatch(seg);
+          if (segMatch != null) {
+            return segMatch.group(0)!.toUpperCase();
+          }
+          if (int.tryParse(seg) != null) {
+            return seg;
+          }
+        }
+      }
+    }
+
+    // 3. Fallback: gunakan teks mentah
+    return input;
+  }
+
   Future<void> _searchAndNavigate(String ticketQuery) async {
-    final query = ticketQuery.trim();
-    if (query.isEmpty) return;
+    final cleanQuery = _extractTicketNumber(ticketQuery);
+    if (cleanQuery.isEmpty) return;
 
     HapticFeedback.mediumImpact();
     setState(() {
       _isSearching = true;
       _hasScanned = true;
-      _lastDetectedCode = query;
+      _lastDetectedCode = cleanQuery;
     });
 
     try {
       final client = ApiClient();
       final res = await client.dio.get(
         ApiConstants.tickets,
-        queryParameters: {'search': query},
+        queryParameters: {'search': cleanQuery},
       );
 
-      if (res.data is List && (res.data as List).isNotEmpty) {
-        final firstTicket = (res.data as List).first;
+      List<dynamic> items = [];
+      if (res.data is List) {
+        items = res.data as List;
+      } else if (res.data is Map && res.data['data'] is List) {
+        items = res.data['data'] as List;
+      }
+
+      // Jika tidak ketemu via search dan cleanQuery adalah ID angka, coba get by ID
+      if (items.isEmpty && int.tryParse(cleanQuery) != null) {
+        try {
+          final idRes = await client.dio.get('${ApiConstants.tickets}/$cleanQuery');
+          if (idRes.data is Map && idRes.data['id'] != null) {
+            items = [idRes.data];
+          }
+        } catch (_) {}
+      }
+
+      if (items.isNotEmpty) {
+        final firstTicket = items.first;
         final int ticketId = firstTicket['id'] is int
             ? firstTicket['id']
             : int.parse(firstTicket['id'].toString());
@@ -86,7 +148,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> with SingleTickerProv
                 children: [
                   const Icon(Icons.error_outline, color: Colors.white, size: 20),
                   const SizedBox(width: 10),
-                  Expanded(child: Text('Tiket "$query" tidak ditemukan di sistem')),
+                  Expanded(child: Text('Tiket "$cleanQuery" tidak ditemukan di sistem live.')),
                 ],
               ),
               backgroundColor: AppTheme.error,

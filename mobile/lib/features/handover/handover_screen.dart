@@ -50,8 +50,13 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
         forceRefresh: forceRefresh,
       );
 
-      if (res.data is List) {
-        final list = (res.data as List)
+      dynamic rawData = res.data;
+      if (rawData is Map && rawData['data'] is List) {
+        rawData = rawData['data'];
+      }
+
+      if (rawData is List) {
+        final list = rawData
             .map((item) {
               try {
                 return TiketModel.fromJson(item as Map<String, dynamic>);

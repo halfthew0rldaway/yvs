@@ -369,8 +369,14 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
               data: (tickets) {
                 // Filter client-side for "only my tickets"
                 List<TiketModel> displayList = tickets;
-                if (filter.onlyMyTickets && currentUser != null) {
-                  displayList = displayList.where((t) => t.teknisiId == currentUser.id).toList();
+                final isTeknisi = currentUser?.role == 'teknisi';
+                if (filter.onlyMyTickets && currentUser != null && isTeknisi) {
+                  displayList = displayList.where((t) {
+                    if (filter.status == 'diterima') {
+                      return t.teknisiId == currentUser.id || t.teknisiId == null;
+                    }
+                    return t.teknisiId == currentUser.id;
+                  }).toList();
                 }
 
                 if (displayList.isEmpty) {

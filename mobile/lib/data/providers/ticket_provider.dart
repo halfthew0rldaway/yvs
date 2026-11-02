@@ -168,7 +168,7 @@ class TicketFilterState {
   const TicketFilterState({
     this.status = 'all',
     this.searchQuery = '',
-    this.onlyMyTickets = true,
+    this.onlyMyTickets = false,
     this.slaUrgency,
     this.slaPaket,
   });
@@ -219,9 +219,21 @@ final ticketsProvider = FutureProvider.autoDispose<List<TiketModel>>((ref) async
     queryParameters: queryParams,
   );
 
-  if (response.data is List) {
-    final list = (response.data as List)
-        .map((item) => TiketModel.fromJson(item))
+  dynamic rawData = response.data;
+  if (rawData is Map && rawData['data'] is List) {
+    rawData = rawData['data'];
+  }
+
+  if (rawData is List) {
+    final list = rawData
+        .map((item) {
+          try {
+            return TiketModel.fromJson(item as Map<String, dynamic>);
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<TiketModel>()
         .toList();
     return list;
   }
@@ -239,9 +251,20 @@ final ticketDetailProvider = FutureProvider.family.autoDispose<TiketModel, int>(
 final sparepartsProvider = FutureProvider.autoDispose<List<SparepartModel>>((ref) async {
   final client = ApiClient();
   final response = await client.getWithCache(ApiConstants.sparepart);
-  if (response.data is List) {
-    return (response.data as List)
-        .map((item) => SparepartModel.fromJson(item))
+  dynamic rawData = response.data;
+  if (rawData is Map && rawData['data'] is List) {
+    rawData = rawData['data'];
+  }
+  if (rawData is List) {
+    return rawData
+        .map((item) {
+          try {
+            return SparepartModel.fromJson(item as Map<String, dynamic>);
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<SparepartModel>()
         .toList();
   }
   return [];
@@ -312,9 +335,20 @@ final technicianTicketsProvider = FutureProvider.autoDispose<List<TiketModel>>((
     ApiConstants.tickets,
     queryParameters: queryParams,
   );
-  if (response.data is List) {
-    return (response.data as List)
-        .map((item) => TiketModel.fromJson(item))
+  dynamic rawData = response.data;
+  if (rawData is Map && rawData['data'] is List) {
+    rawData = rawData['data'];
+  }
+  if (rawData is List) {
+    return rawData
+        .map((item) {
+          try {
+            return TiketModel.fromJson(item as Map<String, dynamic>);
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<TiketModel>()
         .toList();
   }
   return [];
