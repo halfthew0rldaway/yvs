@@ -65,7 +65,7 @@ const FLOW_STAGES = [
                 badge: "Durasi 15-45 Menit",
                 badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
                 condition: "Kerusakan ringan seperti ganti pasta thermal, pasang RAM/SSD baru, bersihkan debu kipas, atau aktivasi OS.",
-                outcome: "Unit langsung diserahkan ke teknisi di meja belakang untuk dieksekusi saat itu juga. Pelanggan dapat menunggu di lounge.",
+                outcome: "Unit langsung diserahkan ke teknisi di meja belakang untuk dieksekusi saat itu juga. Pelanggan dapat menunggu di lounge bengkel.",
                 icon: Clock
             },
             {
@@ -212,12 +212,12 @@ const CASE_STUDIES = [
         badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
         scenario: "Pelanggan membawa laptop Asus yang terkena tumpahan teh manis. Laptop tidak bisa dinyalakan sama sekali.",
         steps: [
-            { stage: "01. Intake", actor: "Frontman", action: "Catat unit mati total kena air, terima charger original dan tas. Terbitkan Tiket Servis #SRV-1029." },
+            { stage: "01. Intake", actor: "Frontman", action: "Catat unit mati total kena air, terima charger original dan tas. Terbitkan Tiket Servis resmi berlabel barcode QR." },
             { stage: "02. Diagnosa", actor: "Teknisi", action: "Bongkar unit, bersihkan korosi dengan ultrasonic cleaner, temukan IC Power short circuit. Estimasi: Rp 350.000." },
             { stage: "03. Penawaran", actor: "Admin", action: "Kirim pesan WA rincian biaya Rp 350.000 dengan garansi 30 hari. Pelanggan membalas: 'Setuju kak, tolong dikerjakan'." },
             { stage: "04. Pengerjaan", actor: "Teknisi", action: "Ganti IC Power, ukur tegangan 19V & 3.3V/5V normal, running test YouTube 1 jam stabil. Status: Lolos QC." },
-            { stage: "05. Notifikasi", actor: "Admin", action: "Kirim pesan WA penjemputan unit ke pelanggan beserta foto hasil tes." },
-            { stage: "06. Handover", actor: "Kasir", action: "Pelanggan live test, bayar via QRIS Rp 350.000, TTD serah terima digital, cetak kartu garansi." }
+            { stage: "05. Notifikasi", actor: "Admin", action: "Kirim pesan WA penjemputan unit ke pelanggan beserta foto hasil tes dan segel garansi workshop." },
+            { stage: "06. Handover", actor: "Kasir", action: "Pelanggan live test, bayar via QRIS Rp 350.000, TTD serah terima digital, cetak invoice dan kartu garansi resmi." }
         ]
     },
     {
@@ -228,9 +228,9 @@ const CASE_STUDIES = [
         scenario: "Pelanggan membawa laptop Lenovo kerja yang terasa lambat saat membuka browser dan bersuhu panas.",
         steps: [
             { stage: "01. Intake", actor: "Frontman", action: "Inspeksi fisik normal. Konsultasi: disepakati tambah RAM 8GB DDR4 dan repaste thermal grizzly. Unit TIDAK perlu ditinggal." },
-            { stage: "02. Eksekusi Cepat", actor: "Teknisi", action: "Bawa ke meja belakang langsung: buka casing, bersihkan debu kipas, pasang RAM 8GB, oles pasta baru (20 menit)." },
-            { stage: "03. QC Kilat", actor: "Teknisi", action: "Nyalakan laptop, cek Task Manager RAM terbaca 16GB, suhu idle turun ke 42°C." },
-            { stage: "04. Administrasi", actor: "Kasir", action: "Pelanggan yang menunggu di lounge langsung dipanggil, bayar jasa + part, invoice cetak, selesai!" }
+            { stage: "02. Eksekusi Cepat", actor: "Teknisi", action: "Bawa ke meja belakang langsung: buka casing, bersihkan debu kipas, pasang RAM 8GB, oles pasta baru (durasi 20 menit)." },
+            { stage: "03. QC Kilat", actor: "Teknisi", action: "Nyalakan laptop, cek Task Manager RAM terbaca 16GB dual channel, suhu idle stabil di 42°C." },
+            { stage: "04. Administrasi", actor: "Kasir", action: "Pelanggan yang menunggu di lounge langsung dipanggil, bayar jasa + part, invoice cetak, selesai tanpa tiket inap!" }
         ]
     },
     {
@@ -238,11 +238,11 @@ const CASE_STUDIES = [
         title: "Kasus 3: Layar Pecah & Pelanggan Batal (Alur Cancel)",
         type: "Alur Pembatalan & Reassembly",
         badgeColor: "bg-rose-50 text-rose-700 border-rose-200",
-        scenario: "Pelanggan membawa laptop dengan layar pecah garis-garis karena tertekan benda keras.",
+        scenario: "Pelanggan membawa laptop dengan layar pecah garis-garis karena tertekan benda keras saat dimasukkan ke tas.",
         steps: [
-            { stage: "01. Intake", actor: "Frontman", action: "Dokumentasikan retakan layar luar-dalam di form tiket, simpan unit ke rak servis." },
+            { stage: "01. Intake", actor: "Frontman", action: "Dokumentasikan retakan layar luar-dalam di form tiket, simpan unit ke rak servis antrian diagnosa." },
             { stage: "02. Diagnosa", actor: "Teknisi", action: "Cek tipe panel (14 inch IPS 144Hz FHD), estimasi part LCD original Rp 1.150.000 + Jasa Rp 100.000." },
-            { stage: "03. Penawaran", actor: "Admin", action: "Hubungi pelanggan via WA. Pelanggan menyatakan belum ada budget dan memilih BATAL perbaikan." },
+            { stage: "03. Penawaran", actor: "Admin", action: "Hubungi pelanggan via WA. Pelanggan menyatakan belum ada budget saat ini dan memilih BATAL perbaikan." },
             { stage: "04. Reassembly", actor: "Teknisi", action: "WAJIB: Pasang kembali layar lama dan baut unit secara rapi ke kondisi semula tanpa merusak komponen lain." },
             { stage: "05. Pengembalian", actor: "Frontman", action: "Pelanggan mengambil unit, verifikasi barang bawaan lengkap, status tiket diubah menjadi Dibatalkan." }
         ]
@@ -250,6 +250,7 @@ const CASE_STUDIES = [
 ];
 
 export default function BusinessProcessFlowModal({ isOpen, onClose }) {
+    // 3 Dedicated Distinct Sections
     const [activeTab, setActiveTab] = useState("pipeline"); // 'pipeline' | 'detail' | 'cases'
     const [selectedStageId, setSelectedStageId] = useState("intake");
     const [selectedCaseId, setSelectedCaseId] = useState("case-water-damage");
@@ -271,14 +272,15 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
 
     return (
         <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 lg:p-6 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-4 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-200"
             onClick={onClose}
         >
+            {/* WIDE-TO-EDGE MODAL CONTAINER */}
             <div 
-                className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-7xl h-[92vh] flex flex-col overflow-hidden text-slate-900"
+                className="bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-slate-200 w-[98vw] max-w-[1650px] h-[95vh] max-h-[95vh] flex flex-col overflow-hidden text-slate-900"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* 1. STANDARDIZED CLEAN LIGHT HEADER */}
+                {/* 1. STANDARDIZED CLEAN LIGHT HEADER WITH DISTINCT PAGE TABS */}
                 <div className="px-5 sm:px-7 py-3.5 border-b border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-2xs shrink-0">
@@ -289,23 +291,23 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                 <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight whitespace-nowrap">
                                     Alur Kerja Operasional Bengkel Serv.io
                                 </h2>
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-3xs font-extrabold uppercase bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
-                                    <Sparkles className="w-3 h-3 text-blue-600" /> SOP Bengkel
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+                                    <Sparkles className="w-3.5 h-3.5 text-blue-600" /> SOP Bengkel
                                 </span>
                             </div>
-                            <p className="text-xs text-slate-500 mt-0.5">
-                                Panduan terstandarisasi untuk pemula: dari penerimaan unit pelanggan hingga serah terima & garansi resmi.
+                            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                                Panduan terstandarisasi untuk pemula: dari penerimaan unit, diagnosa, penawaran, pengerjaan, hingga serah terima & garansi.
                             </p>
                         </div>
                     </div>
 
-                    {/* View Switcher Tabs (Consistent Light Design) */}
+                    {/* View Switcher Tabs: 3 Explicit, Distinct Sections */}
                     <div className="flex items-center gap-2 self-end md:self-auto">
                         <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
                             {[
-                                { id: "pipeline", label: "Diagram Alur", icon: GitFork },
-                                { id: "detail", label: "Langkah Detail", icon: Layers },
-                                { id: "cases", label: "Simulasi Kasus", icon: Laptop }
+                                { id: "pipeline", label: "1. Diagram Alur Sederhana", icon: GitFork },
+                                { id: "detail", label: "2. Langkah Detail & Checklist", icon: Layers },
+                                { id: "cases", label: "3. Simulasi Kasus Nyata", icon: Laptop }
                             ].map((tab) => {
                                 const TabIcon = tab.icon;
                                 const isActive = activeTab === tab.id;
@@ -314,13 +316,13 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                         key={tab.id}
                                         type="button"
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                                        className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
                                             isActive
-                                                ? "bg-white text-blue-600 shadow-xs border border-slate-200/80"
+                                                ? "bg-white text-blue-600 shadow-xs border border-slate-200"
                                                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
                                         }`}
                                     >
-                                        <TabIcon className={`w-3.5 h-3.5 ${isActive ? "text-blue-600" : "text-slate-500"}`} />
+                                        <TabIcon className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-slate-500"}`} />
                                         <span>{tab.label}</span>
                                     </button>
                                 );
@@ -338,137 +340,105 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                     </div>
                 </div>
 
-                {/* 2. HORIZONTAL INTERACTIVE STEP PROGRESS BAR (Full Horizontal Alignment) */}
-                <div className="px-5 sm:px-7 py-2.5 bg-slate-50 border-b border-slate-200 shrink-0 overflow-x-auto custom-scrollbar">
-                    <div className="flex items-center justify-between min-w-[760px] gap-2">
-                        {FLOW_STAGES.map((stage, idx) => {
-                            const isSelected = stage.id === selectedStageId;
-                            const RoleIcon = stage.roleIcon;
-
-                            return (
-                                <div key={stage.id} className="flex items-center flex-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedStageId(stage.id);
-                                            if (activeTab === "cases") setActiveTab("detail");
-                                        }}
-                                        className={`flex items-center gap-2.5 p-2 rounded-xl transition-all cursor-pointer w-full text-left border ${
-                                            isSelected
-                                                ? "bg-white border-blue-600 shadow-xs ring-2 ring-blue-500/10"
-                                                : "bg-white/60 hover:bg-white border-slate-200 hover:border-slate-300"
-                                        }`}
-                                    >
-                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold font-mono shrink-0 transition-colors ${
-                                            isSelected
-                                                ? "bg-blue-600 text-white"
-                                                : "bg-slate-100 text-slate-600"
-                                        }`}>
-                                            {stage.stepNumber}
-                                        </div>
-
-                                        <div className="min-w-0 flex-1">
-                                            <p className={`text-xs font-bold truncate leading-snug ${
-                                                isSelected ? "text-blue-600" : "text-slate-800"
-                                            }`}>
-                                                {stage.title}
-                                            </p>
-                                            <div className="flex items-center gap-1 mt-0.5">
-                                                <RoleIcon className="w-3 h-3 text-slate-400 shrink-0" />
-                                                <span className="text-3xs font-semibold text-slate-500 truncate whitespace-nowrap">
-                                                    {stage.role}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    {idx < FLOW_STAGES.length - 1 && (
-                                        <ChevronRight className="w-4 h-4 text-slate-300 mx-1 shrink-0" />
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* 3. MAIN WORKSPACE VIEWPORT */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 bg-slate-50/40">
+                {/* 2. MAIN WORKSPACE VIEWPORT (EDGE TO EDGE WIDE VIEW) */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 bg-slate-50/50">
                     
-                    {/* VIEW 1: DIAGRAM ALUR VISUAL (Interactive Visual Branching Canvas) */}
+                    {/* =========================================================================
+                        SECTION 1: DIAGRAM ALUR SEDERHANA (Dedicated Visual Flowchart Page)
+                        ========================================================================= */}
                     {activeTab === "pipeline" && (
-                        <div className="max-w-5xl mx-auto space-y-6">
+                        <div className="w-full max-w-full space-y-6">
                             
-                            <div className="text-center max-w-2xl mx-auto space-y-1">
-                                <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                                    Peta Visual Alur Kerja Bengkel
-                                </h3>
-                                <p className="text-xs text-slate-500">
-                                    Klik salah satu tahapan atau percabangan di bawah untuk membaca SOP dan panduan langkahnya.
-                                </p>
+                            {/* Section Header Card */}
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <GitFork className="w-5 h-5 text-blue-600" />
+                                        <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                                            Halaman 1: Peta Alur Visual Keseluruhan Bengkel
+                                        </h3>
+                                    </div>
+                                    <p className="text-xs sm:text-sm text-slate-600">
+                                        Alur kronologis mulai dari pelanggan membawa perangkat sampai unit selesai dan diserahkan kembali dengan garansi resmi.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab("detail")}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer whitespace-nowrap self-start md:self-auto"
+                                >
+                                    <span>Pelajari Checklist & SOP Detail</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
                             </div>
 
-                            {/* Flow Diagram Cards Connected Sequentially */}
+                            {/* Wide Flow Pipeline Grid (Edge to Edge) */}
                             <div className="space-y-4">
                                 
                                 {/* STAGE 01: INTAKE WITH BRANCHING */}
-                                <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5">
-                                            <span className="w-6 h-6 rounded-md bg-blue-100 text-blue-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">
+                                <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-4">
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-mono text-sm font-bold flex items-center justify-center shrink-0">
                                                 01
                                             </span>
-                                            <h4 className="text-sm font-bold text-slate-900 whitespace-nowrap">
-                                                Tahap 1: Intake & Konsultasi Awal (Frontman)
-                                            </h4>
+                                            <div>
+                                                <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                                                    Tahap 1: Intake & Konsultasi Awal (Frontman)
+                                                </h4>
+                                                <span className="text-xs text-slate-500 font-medium">
+                                                    Area: Meja Depan Bengkel
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span className="text-3xs font-bold uppercase px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
-                                            Meja Depan
+                                        <span className="text-xs font-bold uppercase px-3 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+                                            Frontman
                                         </span>
                                     </div>
 
-                                    <p className="text-xs text-slate-600 text-justify leading-relaxed">
-                                        Pelanggan datang membawa unit bermasalah. Frontman mendengarkan keluhan secara seksama, mencatat riwayat pemakaian, kelengkapan unit (charger/tas), dan memeriksa kondisi fisik luar.
+                                    <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
+                                        Pelanggan datang membawa unit bermasalah. Frontman mendengarkan keluhan secara seksama, mencatat riwayat pemakaian, kelengkapan unit (charger, tas), serta melakukan inspeksi fisik visual kilat di hadapan pelanggan.
                                     </p>
 
                                     {/* Decision Split Diamond */}
-                                    <div className="pt-2 border-t border-slate-100">
-                                        <div className="flex items-center gap-2 mb-3">
+                                    <div className="pt-3 border-t border-slate-100 space-y-3">
+                                        <div className="flex items-center gap-2">
                                             <GitFork className="w-4 h-4 text-amber-500 shrink-0" />
-                                            <span className="text-xs font-bold text-slate-800">
-                                                Keputusan Intake: Apakah pengerjaan perlu ditinggal?
+                                            <span className="text-xs sm:text-sm font-bold text-slate-900">
+                                                Percabangan Keputusan: Apakah pengerjaan unit perlu ditinggal di bengkel?
                                             </span>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {/* Branch A: Quick Service */}
-                                            <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/40 space-y-1.5">
+                                            <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-2">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
-                                                        <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                                                        TIDAK (Quick Service)
+                                                    <span className="text-xs sm:text-sm font-bold text-emerald-900 flex items-center gap-2">
+                                                        <Clock className="w-4 h-4 text-emerald-600" />
+                                                        TIDAK DITINGGAL (Quick Service)
                                                     </span>
-                                                    <span className="text-3xs font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                                        15-45 Menit
+                                                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                                        Durasi 15-45 Menit
                                                     </span>
                                                 </div>
-                                                <p className="text-2xs text-emerald-800 text-justify leading-relaxed">
-                                                    Ganti pasta thermal, pasang RAM/SSD, bersihkan debu kipas. Unit langsung dibawa ke meja teknisi belakang untuk dikerjakan saat itu juga tanpa tiket inap. Pelanggan menunggu di lounge.
+                                                <p className="text-xs text-emerald-900 text-justify leading-relaxed">
+                                                    Kerusakan ringan seperti ganti pasta thermal, pasang RAM/SSD baru, bersihkan debu kipas, atau aktivasi software. Unit langsung diserahkan ke teknisi meja belakang untuk dieksekusi saat itu juga. Pelanggan dapat menunggu di lounge.
                                                 </p>
                                             </div>
 
                                             {/* Branch B: Tiket Servis Resmi */}
-                                            <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/40 space-y-1.5">
+                                            <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/50 space-y-2">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
-                                                        <QrCode className="w-3.5 h-3.5 text-blue-600" />
-                                                        YA (Wajib Ditinggal)
+                                                    <span className="text-xs sm:text-sm font-bold text-blue-900 flex items-center gap-2">
+                                                        <QrCode className="w-4 h-4 text-blue-600" />
+                                                        WAJIB DITINGGAL (Tiket Servis Resmi)
                                                     </span>
-                                                    <span className="text-3xs font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-300">
-                                                        Masuk Tiket Servis
+                                                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-300">
+                                                        Masuk Antrian Tiket
                                                     </span>
                                                 </div>
-                                                <p className="text-2xs text-blue-800 text-justify leading-relaxed">
-                                                    Motherboard mati, reballing chip, perbaikan IC, part inden. Wajib diinput ke ERP: Data Pelanggan, Data Perangkat, SN, Keluhan, Password, & Foto Kelengkapan. Tiket resmi terbit dan barcode QR ditempel pada unit.
+                                                <p className="text-xs text-blue-900 text-justify leading-relaxed">
+                                                    Motherboard mati, reballing chip, perbaikan IC, part inden, atau butuh running test berjam-jam. Wajib diinput ke ERP: Data Pelanggan, Data Perangkat, SN, Keluhan, Password, & Foto Kelengkapan. Tiket resmi terbit dan label barcode QR ditempel pada casing unit.
                                                 </p>
                                             </div>
                                         </div>
@@ -477,97 +447,107 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
 
                                 {/* Flow Connecting Arrow */}
                                 <div className="flex items-center justify-center">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
                                         <ArrowDown className="w-4 h-4" />
                                     </div>
                                 </div>
 
                                 {/* STAGE 02: DIAGNOSA */}
-                                <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2.5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5">
-                                            <span className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">
+                                <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-3">
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 font-mono text-sm font-bold flex items-center justify-center shrink-0">
                                                 02
                                             </span>
-                                            <h4 className="text-sm font-bold text-slate-900 whitespace-nowrap">
-                                                Tahap 2: Diagnosa Menyeluruh & SOP Checklist (Teknisi)
-                                            </h4>
+                                            <div>
+                                                <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                                                    Tahap 2: Diagnosa Menyeluruh & SOP Checklist (Teknisi)
+                                                </h4>
+                                                <span className="text-xs text-slate-500 font-medium">
+                                                    Area: Meja Belakang Teknisi
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span className="text-3xs font-bold uppercase px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">
-                                            Meja Belakang
+                                        <span className="text-xs font-bold uppercase px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">
+                                            Teknisi
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-600 text-justify leading-relaxed">
-                                        Teknisi mengambil alih tiket ('Take Over'). Melakukan pengujian 21-titik checklist (Layar LCD, Keyboard, Port USB, Baterai, Suhu Thermal, Storage S.M.A.R.T), foto bukti fisik (Defect Mapping), serta merumuskan kalkulasi estimasi jasa dan sparepart yang dibutuhkan.
+                                    <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
+                                        Teknisi mengklaim tiket ('Take Over') dari antrian pengerjaan. Menggunakan SOP checklist 21 titik (Port USB, Keyboard, Layar LCD, Speaker, WiFi, Charger, Webcam, Baterai, Suhu Thermal), teknisi memeriksa unit, mendokumentasikan foto kerusakan fisik (Defect Mapping), dan merumuskan kalkulasi estimasi kebutuhan jasa serta suku cadang.
                                     </p>
                                 </div>
 
                                 {/* Flow Connecting Arrow */}
                                 <div className="flex items-center justify-center">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
                                         <ArrowDown className="w-4 h-4" />
                                     </div>
                                 </div>
 
                                 {/* STAGE 03: QUOTATION & DECISION */}
-                                <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5">
-                                            <span className="w-6 h-6 rounded-md bg-amber-100 text-amber-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">
+                                <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-4">
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 font-mono text-sm font-bold flex items-center justify-center shrink-0">
                                                 03
                                             </span>
-                                            <h4 className="text-sm font-bold text-slate-900 whitespace-nowrap">
-                                                Tahap 3: Penawaran Biaya & Konfirmasi Pelanggan (Admin)
-                                            </h4>
+                                            <div>
+                                                <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                                                    Tahap 3: Penawaran Biaya & Konfirmasi Pelanggan (Admin)
+                                                </h4>
+                                                <span className="text-xs text-slate-500 font-medium">
+                                                    Area: Komunikasi WhatsApp Resmi
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span className="text-3xs font-bold uppercase px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
-                                            Komunikasi WhatsApp
+                                        <span className="text-xs font-bold uppercase px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+                                            Admin / Frontman
                                         </span>
                                     </div>
 
-                                    <p className="text-xs text-slate-600 text-justify leading-relaxed">
-                                        Admin menghubungi pelanggan secara resmi via WhatsApp otomatis untuk menyampaikan diagnosa kerusakan, rincian biaya estimasi (Jasa + Part), serta estimasi masa garansi yang diberikan.
+                                    <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
+                                        Admin bengkel menghubungi pelanggan secara resmi via WhatsApp untuk menyampaikan hasil diagnosa, rincian biaya estimasi (Jasa Teknisi + Harga Suku Cadang), serta durasi masa garansi yang diberikan.
                                     </p>
 
                                     {/* Decision Split Diamond */}
-                                    <div className="pt-2 border-t border-slate-100">
-                                        <div className="flex items-center gap-2 mb-3">
+                                    <div className="pt-3 border-t border-slate-100 space-y-3">
+                                        <div className="flex items-center gap-2">
                                             <GitFork className="w-4 h-4 text-amber-500 shrink-0" />
-                                            <span className="text-xs font-bold text-slate-800">
-                                                Keputusan Pelanggan: Apakah menyetujui biaya estimasi?
+                                            <span className="text-xs sm:text-sm font-bold text-slate-900">
+                                                Percabangan Keputusan: Bagaimana keputusan pelanggan atas biaya estimasi?
                                             </span>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {/* Branch Cancel */}
-                                            <div className="p-3.5 rounded-xl border border-rose-200 bg-rose-50/40 space-y-1.5">
+                                            <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 space-y-2">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-xs font-bold text-rose-900 flex items-center gap-1.5">
-                                                        <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                                    <span className="text-xs sm:text-sm font-bold text-rose-900 flex items-center gap-2">
+                                                        <XCircle className="w-4 h-4 text-rose-600" />
                                                         BATAL (Cancel Servis)
                                                     </span>
-                                                    <span className="text-3xs font-bold px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-300">
+                                                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-300">
                                                         Kembalikan Utuh
                                                     </span>
                                                 </div>
-                                                <p className="text-2xs text-rose-800 text-justify leading-relaxed">
-                                                    Teknisi WAJIB mengembalikan unit ke kondisi semula secara rapi (seluruh baut terpasang, tanpa cacat baru). Status tiket diubah menjadi Dibatalkan. Pelanggan dapat mengambil unitnya.
+                                                <p className="text-xs text-rose-900 text-justify leading-relaxed">
+                                                    Biaya dirasa terlalu tinggi atau perangkat tidak ekonomis diperbaiki. Teknisi WAJIB merakit kembali unit ke kondisi semula secara rapi (seluruh baut terpasang, tanpa cacat baru). Status tiket diubah menjadi Dibatalkan dan unit siap diambil kembali.
                                                 </p>
                                             </div>
 
                                             {/* Branch ACC */}
-                                            <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/40 space-y-1.5">
+                                            <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-2">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
-                                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                                        SETUJU (ACC Lanjut Servis)
+                                                    <span className="text-xs sm:text-sm font-bold text-emerald-900 flex items-center gap-2">
+                                                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                                        SETUJU (ACC / Lanjut Servis)
                                                     </span>
-                                                    <span className="text-3xs font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
                                                         Mulai Pengerjaan
                                                     </span>
                                                 </div>
-                                                <p className="text-2xs text-emerald-800 text-justify leading-relaxed">
-                                                    Status tiket diperbarui menjadi 'Dalam Pengerjaan'. Teknisi langsung menjadwalkan eksekusi pengerjaan, mengambil sparepart gudang, dan mengisi log perbaikan berkala.
+                                                <p className="text-xs text-emerald-900 text-justify leading-relaxed">
+                                                    Pelanggan menyetujui total biaya dan estimasi waktu. Status tiket diperbarui menjadi 'Dalam Pengerjaan'. Teknisi langsung menjadwalkan eksekusi pengerjaan, mengambil sparepart dari gudang, dan mengisi log perbaikan berkala.
                                                 </p>
                                             </div>
                                         </div>
@@ -576,82 +556,97 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
 
                                 {/* Flow Connecting Arrow */}
                                 <div className="flex items-center justify-center">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
                                         <ArrowDown className="w-4 h-4" />
                                     </div>
                                 </div>
 
                                 {/* STAGE 04: EXECUTION & SPAREPART */}
-                                <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2.5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5">
-                                            <span className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">
+                                <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-3">
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 font-mono text-sm font-bold flex items-center justify-center shrink-0">
                                                 04
                                             </span>
-                                            <h4 className="text-sm font-bold text-slate-900 whitespace-nowrap">
-                                                Tahap 4: Eksekusi Servis, Sparepart & QC (Teknisi)
-                                            </h4>
+                                            <div>
+                                                <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                                                    Tahap 4: Eksekusi Servis, Sparepart & QC (Teknisi)
+                                                </h4>
+                                                <span className="text-xs text-slate-500 font-medium">
+                                                    Area: Meja Servis & Gudang Suku Cadang
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span className="text-3xs font-bold uppercase px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">
-                                            Teknis & Gudang
+                                        <span className="text-xs font-bold uppercase px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">
+                                            Teknisi
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-600 text-justify leading-relaxed">
-                                        Teknisi melakukan reparasi (soldering, perbaikan motherboard, penggantian layar). Mengambil suku cadang resmi dari katalog gudang Serv.io (stok terpotong otomatis). Mengisi log perbaikan dan menjalankan stress test pengujian mutu (Quality Control).
+                                    <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
+                                        Teknisi melakukan reparasi teknis (soldering IC, reballing chip, flashing BIOS, ganti LCD, pasang engsel). Suku cadang resmi diambil dari gudang katalog ERP (stok terpotong otomatis). Teknisi mengisi log perbaikan dan menjalankan stress test pengujian mutu (Quality Control) minimal 30-60 menit.
                                     </p>
                                 </div>
 
                                 {/* Flow Connecting Arrow */}
                                 <div className="flex items-center justify-center">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
                                         <ArrowDown className="w-4 h-4" />
                                     </div>
                                 </div>
 
                                 {/* STAGE 05: COMPLETION NOTIFICATION */}
-                                <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2.5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5">
-                                            <span className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">
+                                <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-3">
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 font-mono text-sm font-bold flex items-center justify-center shrink-0">
                                                 05
                                             </span>
-                                            <h4 className="text-sm font-bold text-slate-900 whitespace-nowrap">
-                                                Tahap 5: Dokumentasi Pasca-Servis & Notifikasi Selesai (Admin)
-                                            </h4>
+                                            <div>
+                                                <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                                                    Tahap 5: Dokumentasi Pasca-Servis & Notifikasi Selesai (Admin)
+                                                </h4>
+                                                <span className="text-xs text-slate-500 font-medium">
+                                                    Area: Meja QC & Notifikasi WhatsApp
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span className="text-3xs font-bold uppercase px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-                                            Selesai QC
+                                        <span className="text-xs font-bold uppercase px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                            Admin
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-600 text-justify leading-relaxed">
-                                        Unit lolos uji QC. Teknisi mendokumentasikan foto hasil servis dan menempel segel garansi workshop. Admin mengirim pesan WhatsApp resmi otomatis bahwa unit telah selesai dan siap diambil di workshop.
+                                    <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
+                                        Unit dinyatakan lolos uji kelayakan QC. Teknisi mendokumentasikan foto hasil servis dan menempel segel garansi workshop. Admin mengirim pesan WhatsApp resmi otomatis bahwa unit telah selesai dan siap diambil di workshop beserta rincian total tagihan.
                                     </p>
                                 </div>
 
                                 {/* Flow Connecting Arrow */}
                                 <div className="flex items-center justify-center">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
+                                    <div className="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
                                         <ArrowDown className="w-4 h-4" />
                                     </div>
                                 </div>
 
                                 {/* STAGE 06: HANDOVER, PAYMENT, WARRANTY */}
-                                <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2.5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5">
-                                            <span className="w-6 h-6 rounded-md bg-purple-100 text-purple-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">
+                                <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-3">
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 font-mono text-sm font-bold flex items-center justify-center shrink-0">
                                                 06
                                             </span>
-                                            <h4 className="text-sm font-bold text-slate-900 whitespace-nowrap">
-                                                Tahap 6: Serah Terima, Kasir, Garansi & Tanda Tangan Digital (Kasir)
-                                            </h4>
+                                            <div>
+                                                <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                                                    Tahap 6: Serah Terima, Kasir, Garansi & Tanda Tangan Digital (Kasir)
+                                                </h4>
+                                                <span className="text-xs text-slate-500 font-medium">
+                                                    Area: Meja Kasir & Serah Terima
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span className="text-3xs font-bold uppercase px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 whitespace-nowrap">
-                                            Administrasi & Invoice
+                                        <span className="text-xs font-bold uppercase px-3 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 whitespace-nowrap">
+                                            Kasir & Pelanggan
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-600 text-justify leading-relaxed">
-                                        Pelanggan menguji unit secara langsung di meja serah terima (live testing). Kasir menerbitkan Invoice pembayaran (Tunai, QRIS, Transfer). Pelanggan menandatangani bukti serah terima secara digital di layar HP/tablet. Sertifikat garansi aktif dan tiket resmi ditutup ('CLOSED').
+                                    <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
+                                        Pelanggan menguji unit secara langsung di meja serah terima (live testing). Kasir menerbitkan Invoice pembayaran (Tunai, QRIS, Transfer Bank). Pelanggan menandatangani bukti serah terima secara digital di layar HP/tablet. Sertifikat garansi aktif dan tiket resmi ditutup ('CLOSED').
                                     </p>
                                 </div>
 
@@ -659,183 +654,284 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                         </div>
                     )}
 
-                    {/* VIEW 2: LANGKAH DETAIL & CHECKLIST OPERASIONAL (In-Depth Stage View) */}
+                    {/* =========================================================================
+                        SECTION 2: LANGKAH DETAIL & CHECKLIST OPERASIONAL (Dedicated SOP Page)
+                        ========================================================================= */}
                     {activeTab === "detail" && (
-                        <div className="max-w-4xl mx-auto space-y-6">
+                        <div className="w-full max-w-full space-y-6">
                             
-                            {/* Current Stage Card (Clean Light Design, Zero AI Slop) */}
-                            <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                                    <div className="flex items-center gap-3">
-                                        <span className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center font-mono text-sm font-bold text-blue-600 shrink-0">
-                                            {currentStage.stepNumber}
-                                        </span>
-                                        <div>
-                                            <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                                                {currentStage.title}
-                                            </h3>
-                                            <span className={`inline-flex items-center gap-1 text-3xs font-bold px-2 py-0.5 mt-1 rounded-md border ${currentStage.roleBadgeBg}`}>
-                                                Penanggung Jawab: {currentStage.role}
-                                            </span>
-                                        </div>
+                            {/* Section Header Card */}
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <Layers className="w-5 h-5 text-blue-600" />
+                                        <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                                            Halaman 2: Panduan Langkah Detail & Checklist SOP
+                                        </h3>
                                     </div>
-
-                                    {currentStage.erpActionLink && (
-                                        <Link
-                                            to={currentStage.erpActionLink}
-                                            onClick={onClose}
-                                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer whitespace-nowrap self-start sm:self-auto"
-                                        >
-                                            <span>{currentStage.erpActionText}</span>
-                                            <ExternalLink className="w-3.5 h-3.5" />
-                                        </Link>
-                                    )}
+                                    <p className="text-xs sm:text-sm text-slate-600">
+                                        Pilih tahapan di bawah ini untuk mempelajari SOP lengkap, tanggung jawab peran, dan checklist wajib pengerjaan.
+                                    </p>
                                 </div>
-
-                                <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
-                                    {currentStage.description}
-                                </p>
+                                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 whitespace-nowrap self-start md:self-auto">
+                                    Tahap Aktif: {currentStage.stepNumber} - {currentStage.title}
+                                </span>
                             </div>
 
-                            {/* Branching Options If Applicable */}
-                            {currentStage.hasBranching && currentStage.branches && (
-                                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <GitFork className="w-4 h-4 text-amber-500" />
-                                        <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                                            {currentStage.branchQuestion}
-                                        </h4>
-                                    </div>
+                            {/* Horizontal Interactive Step Navigation Exclusively Scoped to This Page */}
+                            <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-2xs overflow-x-auto custom-scrollbar">
+                                <div className="flex items-center justify-between min-w-[760px] gap-2">
+                                    {FLOW_STAGES.map((stage, idx) => {
+                                        const isSelected = stage.id === selectedStageId;
+                                        const RoleIcon = stage.roleIcon;
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
-                                        {currentStage.branches.map((branch, bIdx) => {
-                                            const BranchIcon = branch.icon;
-                                            return (
-                                                <div 
-                                                    key={bIdx}
-                                                    className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2 flex flex-col justify-between"
+                                        return (
+                                            <div key={stage.id} className="flex items-center flex-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedStageId(stage.id)}
+                                                    className={`flex items-center gap-2.5 p-2 rounded-xl transition-all cursor-pointer w-full text-left border ${
+                                                        isSelected
+                                                            ? "bg-blue-50/70 border-blue-600 shadow-xs ring-2 ring-blue-500/10"
+                                                            : "bg-white hover:bg-slate-50 border-slate-200"
+                                                    }`}
                                                 >
-                                                    <div>
-                                                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <BranchIcon className="w-4 h-4 text-slate-700" />
-                                                                <span className="text-xs font-bold text-slate-900">
-                                                                    {branch.label}
-                                                                </span>
-                                                            </div>
-                                                            <span className={`text-3xs font-bold px-2 py-0.5 rounded-md border ${branch.badgeClass}`}>
-                                                                {branch.badge}
+                                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold font-mono shrink-0 transition-colors ${
+                                                        isSelected
+                                                            ? "bg-blue-600 text-white"
+                                                            : "bg-slate-100 text-slate-600"
+                                                    }`}>
+                                                        {stage.stepNumber}
+                                                    </div>
+
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className={`text-xs font-bold truncate leading-snug ${
+                                                            isSelected ? "text-blue-700" : "text-slate-800"
+                                                        }`}>
+                                                            {stage.title}
+                                                        </p>
+                                                        <div className="flex items-center gap-1 mt-0.5">
+                                                            <RoleIcon className="w-3 h-3 text-slate-400 shrink-0" />
+                                                            <span className="text-xs font-medium text-slate-500 truncate whitespace-nowrap">
+                                                                {stage.role}
                                                             </span>
                                                         </div>
-
-                                                        <div className="text-2xs text-slate-500 bg-white p-2 rounded-lg border border-slate-200 mb-2">
-                                                            <strong className="text-slate-700">Kondisi: </strong>
-                                                            {branch.condition}
-                                                        </div>
-
-                                                        <p className="text-xs text-slate-600 text-justify leading-relaxed">
-                                                            {branch.outcome}
-                                                        </p>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
+                                                </button>
 
-                            {/* Mandatory Checklist Tasks */}
-                            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
-                                <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
-                                    <ClipboardCheck className="w-4 h-4 text-blue-600" />
-                                    <span>Checklist Tugas Wajib Pada Tahap Ini</span>
-                                </h4>
-
-                                <div className="space-y-2">
-                                    {currentStage.keyTasks.map((task, tIdx) => (
-                                        <div 
-                                            key={tIdx}
-                                            className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
-                                        >
-                                            <div className="w-5 h-5 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-                                                <Check className="w-3.5 h-3.5" />
+                                                {idx < FLOW_STAGES.length - 1 && (
+                                                    <ChevronRight className="w-4 h-4 text-slate-300 mx-1 shrink-0" />
+                                                )}
                                             </div>
-                                            <span className="text-xs text-slate-700 leading-relaxed text-justify font-medium">
-                                                {task}
-                                            </span>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
 
-                            {/* Anti-Fraud / Pro Tip Notice */}
-                            {currentStage.proTip && (
-                                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 text-amber-900">
-                                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                                    <div>
-                                        <h5 className="text-xs font-bold text-amber-950 uppercase tracking-wider mb-0.5">
-                                            Standar Keamanan & Anti-Fraud Bengkel
-                                        </h5>
-                                        <p className="text-xs text-amber-900 text-justify leading-relaxed">
-                                            {currentStage.proTip}
+                            {/* Wide 2-Column Responsive Layout for Selected Stage Details */}
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                                
+                                {/* Left Column: Stage Overview & Branching (5 Cols) */}
+                                <div className="lg:col-span-5 space-y-4">
+                                    
+                                    {/* Stage Identification Card */}
+                                    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-4">
+                                        <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                                            <div className="flex items-center gap-3">
+                                                <span className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center font-mono text-sm font-bold text-blue-600 shrink-0">
+                                                    {currentStage.stepNumber}
+                                                </span>
+                                                <div>
+                                                    <h4 className="text-base font-bold text-slate-900 tracking-tight">
+                                                        {currentStage.title}
+                                                    </h4>
+                                                    <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 mt-1 rounded-md border ${currentStage.roleBadgeBg}`}>
+                                                        Penanggung Jawab: {currentStage.role}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
+                                            {currentStage.description}
                                         </p>
+
+                                        {currentStage.erpActionLink && (
+                                            <div className="pt-2 border-t border-slate-100">
+                                                <Link
+                                                    to={currentStage.erpActionLink}
+                                                    onClick={onClose}
+                                                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer whitespace-nowrap"
+                                                >
+                                                    <span>{currentStage.erpActionText}</span>
+                                                    <ExternalLink className="w-4 h-4" />
+                                                </Link>
+                                            </div>
+                                        )}
                                     </div>
+
+                                    {/* Branching Card If Applicable */}
+                                    {currentStage.hasBranching && currentStage.branches && (
+                                        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <GitFork className="w-4 h-4 text-amber-500" />
+                                                <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                                                    {currentStage.branchQuestion}
+                                                </h4>
+                                            </div>
+
+                                            <div className="space-y-3 pt-1">
+                                                {currentStage.branches.map((branch, bIdx) => {
+                                                    const BranchIcon = branch.icon;
+                                                    return (
+                                                        <div 
+                                                            key={bIdx}
+                                                            className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2"
+                                                        >
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <BranchIcon className="w-4 h-4 text-slate-700" />
+                                                                    <span className="text-xs font-bold text-slate-900">
+                                                                        {branch.label}
+                                                                    </span>
+                                                                </div>
+                                                                <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${branch.badgeClass}`}>
+                                                                    {branch.badge}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="text-xs text-slate-600 bg-white p-2 rounded-lg border border-slate-200">
+                                                                <strong className="text-slate-800">Kondisi: </strong>
+                                                                {branch.condition}
+                                                            </div>
+
+                                                            <p className="text-xs text-slate-700 text-justify leading-relaxed">
+                                                                {branch.outcome}
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
-                            )}
 
-                            {/* Stage Navigation Footer */}
-                            <div className="pt-2 flex items-center justify-between">
-                                <button
-                                    type="button"
-                                    disabled={currentIndex === 0}
-                                    onClick={() => setSelectedStageId(FLOW_STAGES[currentIndex - 1].id)}
-                                    className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer whitespace-nowrap"
-                                >
-                                    ← Tahap Sebelumnya
-                                </button>
+                                {/* Right Column: Mandatory Tasks Checklist & Security Guidelines (7 Cols) */}
+                                <div className="lg:col-span-7 space-y-4">
+                                    
+                                    {/* Mandatory Checklist Tasks */}
+                                    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+                                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                                            <ClipboardCheck className="w-4 h-4 text-blue-600" />
+                                            <span>Daftar Checklist Tugas Wajib Pada Tahap Ini</span>
+                                        </h4>
 
-                                <span className="text-xs font-bold text-slate-400 font-mono">
-                                    {currentIndex + 1} / {FLOW_STAGES.length}
-                                </span>
+                                        <div className="space-y-2.5">
+                                            {currentStage.keyTasks.map((task, tIdx) => (
+                                                <div 
+                                                    key={tIdx}
+                                                    className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200"
+                                                >
+                                                    <div className="w-5 h-5 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                                                        <Check className="w-3.5 h-3.5" />
+                                                    </div>
+                                                    <span className="text-xs sm:text-sm text-slate-700 leading-relaxed text-justify font-medium">
+                                                        {task}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
 
-                                {currentIndex < FLOW_STAGES.length - 1 ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedStageId(FLOW_STAGES[currentIndex + 1].id)}
-                                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-2xs transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5"
-                                    >
-                                        <span>Tahap Berikutnya</span>
-                                        <ArrowRight className="w-3.5 h-3.5" />
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab("cases")}
-                                        className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-white shadow-2xs transition-all cursor-pointer whitespace-nowrap"
-                                    >
-                                        Buka Simulasi Kasus →
-                                    </button>
-                                )}
+                                    {/* Anti-Fraud / Pro Tip Notice */}
+                                    {currentStage.proTip && (
+                                        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 text-amber-900">
+                                            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                            <div>
+                                                <h5 className="text-xs font-bold text-amber-950 uppercase tracking-wider mb-0.5">
+                                                    Standar Keamanan & Anti-Fraud Bengkel
+                                                </h5>
+                                                <p className="text-xs sm:text-sm text-amber-900 text-justify leading-relaxed">
+                                                    {currentStage.proTip}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Stage Navigation Buttons */}
+                                    <div className="pt-2 flex items-center justify-between">
+                                        <button
+                                            type="button"
+                                            disabled={currentIndex === 0}
+                                            onClick={() => setSelectedStageId(FLOW_STAGES[currentIndex - 1].id)}
+                                            className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer whitespace-nowrap"
+                                        >
+                                            ← Tahap Sebelumnya
+                                        </button>
+
+                                        <span className="text-xs font-bold text-slate-400 font-mono">
+                                            Tahap {currentIndex + 1} dari {FLOW_STAGES.length}
+                                        </span>
+
+                                        {currentIndex < FLOW_STAGES.length - 1 ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedStageId(FLOW_STAGES[currentIndex + 1].id)}
+                                                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm font-bold text-white shadow-2xs transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+                                            >
+                                                <span>Tahap Berikutnya</span>
+                                                <ArrowRight className="w-4 h-4" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setActiveTab("cases")}
+                                                className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs sm:text-sm font-bold text-white shadow-2xs transition-all cursor-pointer whitespace-nowrap"
+                                            >
+                                                Lanjut Simulasi Kasus →
+                                            </button>
+                                        )}
+                                    </div>
+
+                                </div>
+
                             </div>
 
                         </div>
                     )}
 
-                    {/* VIEW 3: SIMULASI KASUS NYATA (Real-World Case Walkthroughs for Beginners) */}
+                    {/* =========================================================================
+                        SECTION 3: SIMULASI KASUS NYATA (Dedicated Real-World Case Studies Page)
+                        ========================================================================= */}
                     {activeTab === "cases" && (
-                        <div className="max-w-4xl mx-auto space-y-6">
+                        <div className="w-full max-w-full space-y-6">
                             
-                            <div className="text-center max-w-2xl mx-auto space-y-1">
-                                <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                                    Simulasi Kasus Nyata di Meja Servis
-                                </h3>
-                                <p className="text-xs text-slate-500">
-                                    Pelajari bagaimana alur kerja diterapkan pada 3 skenario pelanggan yang paling sering terjadi.
-                                </p>
+                            {/* Section Header Card */}
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <Laptop className="w-5 h-5 text-blue-600" />
+                                        <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                                            Halaman 3: Simulasi Kasus Nyata di Meja Servis
+                                        </h3>
+                                    </div>
+                                    <p className="text-xs sm:text-sm text-slate-600">
+                                        Pelajari bagaimana alur kerja dan pembagian peran petugas diterapkan secara nyata pada 3 skenario yang paling sering ditemui.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab("pipeline")}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap self-start md:self-auto"
+                                >
+                                    <span>Kembali ke Diagram Alur</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
                             </div>
 
-                            {/* Case Study Switcher Buttons */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            {/* Case Selector Tabs Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 {CASE_STUDIES.map((c) => {
                                     const isSelected = c.id === selectedCaseId;
                                     return (
@@ -843,16 +939,16 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                             key={c.id}
                                             type="button"
                                             onClick={() => setSelectedCaseId(c.id)}
-                                            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                            className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                                                 isSelected
-                                                    ? "bg-white border-blue-600 shadow-xs ring-2 ring-blue-500/10"
-                                                    : "bg-white/70 hover:bg-white border-slate-200"
+                                                    ? "bg-blue-50/70 border-blue-600 shadow-xs ring-2 ring-blue-500/10"
+                                                    : "bg-white hover:bg-slate-50 border-slate-200"
                                             }`}
                                         >
-                                            <span className={`text-3xs font-bold px-2 py-0.5 rounded-md border ${c.badgeColor} whitespace-nowrap`}>
+                                            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${c.badgeColor} whitespace-nowrap`}>
                                                 {c.type}
                                             </span>
-                                            <h4 className="text-xs font-bold text-slate-900 mt-2 truncate">
+                                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 mt-2 truncate">
                                                 {c.title}
                                             </h4>
                                         </button>
@@ -860,26 +956,28 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                 })}
                             </div>
 
-                            {/* Selected Case Detail Breakdown */}
-                            <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4">
+                            {/* Selected Case Detail Breakdown (Wide Edge to Edge) */}
+                            <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-4">
                                 <div className="border-b border-slate-100 pb-3">
                                     <div className="flex items-center justify-between gap-2">
-                                        <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                                        <h4 className="text-base sm:text-lg font-bold text-slate-900">
                                             {currentCase.title}
                                         </h4>
-                                        <span className={`text-3xs font-bold px-2.5 py-0.5 rounded-full border ${currentCase.badgeColor} whitespace-nowrap`}>
+                                        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${currentCase.badgeColor} whitespace-nowrap`}>
                                             {currentCase.type}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-600 text-justify mt-1.5 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200/80">
-                                        <strong className="text-slate-800">Skenario Lapangan: </strong>
-                                        {currentCase.scenario}
-                                    </p>
+                                    <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                        <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
+                                            <strong className="text-slate-900">Skenario Masalah: </strong>
+                                            {currentCase.scenario}
+                                        </p>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-3 pt-1">
                                     <h5 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                                        <Workflow className="w-3.5 h-3.5 text-blue-600" />
+                                        <Workflow className="w-4 h-4 text-blue-600" />
                                         <span>Kronologi & Eksekusi Peran Petugas</span>
                                     </h5>
 
@@ -887,18 +985,18 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                         {currentCase.steps.map((st, sIdx) => (
                                             <div 
                                                 key={sIdx}
-                                                className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 p-3 rounded-xl bg-slate-50/70 border border-slate-200/70"
+                                                className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200"
                                             >
-                                                <div className="flex items-center gap-2 sm:w-44 shrink-0">
-                                                    <span className="text-xs font-bold text-blue-700 whitespace-nowrap">
+                                                <div className="flex items-center gap-2 sm:w-48 shrink-0">
+                                                    <span className="text-xs sm:text-sm font-bold text-blue-700 whitespace-nowrap">
                                                         {st.stage}
                                                     </span>
-                                                    <span className="text-3xs font-semibold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 whitespace-nowrap">
+                                                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 whitespace-nowrap">
                                                         {st.actor}
                                                     </span>
                                                 </div>
 
-                                                <p className="text-xs text-slate-700 text-justify leading-relaxed flex-1">
+                                                <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed flex-1">
                                                     {st.action}
                                                 </p>
                                             </div>
@@ -912,22 +1010,22 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
 
                 </div>
 
-                {/* 4. MODAL FOOTER BAR (Clean Light Slate) */}
-                <div className="px-6 py-3 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-2xs text-slate-500 shrink-0">
+                {/* 3. MODAL FOOTER BAR (Clean Light Slate) */}
+                <div className="px-6 py-3 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 shrink-0">
                     <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1.5 whitespace-nowrap">
-                            <span className="w-2 h-2 rounded-full bg-blue-600"></span> Frontman (Meja Depan)
+                        <span className="flex items-center gap-1.5 whitespace-nowrap font-medium">
+                            <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Frontman (Meja Depan)
                         </span>
-                        <span className="flex items-center gap-1.5 whitespace-nowrap">
-                            <span className="w-2 h-2 rounded-full bg-indigo-600"></span> Teknisi (Meja Belakang)
+                        <span className="flex items-center gap-1.5 whitespace-nowrap font-medium">
+                            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> Teknisi (Meja Belakang)
                         </span>
-                        <span className="flex items-center gap-1.5 whitespace-nowrap">
-                            <span className="w-2 h-2 rounded-full bg-purple-600"></span> Admin & Kasir (Administrasi)
+                        <span className="flex items-center gap-1.5 whitespace-nowrap font-medium">
+                            <span className="w-2.5 h-2.5 rounded-full bg-purple-600"></span> Admin & Kasir (Administrasi)
                         </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 font-mono text-slate-400">
-                        <span>Tekan <kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded-md text-slate-700 text-3xs font-bold">ESC</kbd> untuk menutup</span>
+                        <span>Tekan <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded-md text-slate-700 text-xs font-bold">ESC</kbd> untuk menutup</span>
                     </div>
                 </div>
             </div>
