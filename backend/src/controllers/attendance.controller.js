@@ -694,24 +694,61 @@ async function adjustAttendance(req, res) {
             return res.status(400).json({ message: "Alasan koreksi absensi wajib diisi sebagai rekam jejak audit!" });
         }
 
-        let record;
         const cleanAlasan = alasan_adjustment.trim();
+        let targetDate = tanggal ? getTodayDate(new Date(tanggal)) : getTodayDate();
 
+        let existingRecord = null;
+        if (record_id) {
+            existingRecord = await prisma.attendanceRecord.findUnique({
+                where: { id: parseInt(record_id) }
+            });
+            if (existingRecord && existingRecord.tanggal) {
+                targetDate = existingRecord.tanggal;
+            }
+        }
+
+        const parseTimeOrDateTime = (val, baseDate) => {
+            if (val === null || val === "") return null;
+            if (typeof val === "string" && val.length <= 8 && val.includes(":")) {
+                const d = new Date(baseDate);
+                const parts = val.split(":");
+                const h = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10);
+                const s = parts[2] ? parseInt(parts[2], 10) : 0;
+                d.setHours(h, m, s, 0);
+                return d;
+            }
+            const parsed = new Date(val);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        };
+
+        const parsedMasuk = jam_masuk !== undefined ? parseTimeOrDateTime(jam_masuk, targetDate) : undefined;
+        const parsedPulang = jam_pulang !== undefined ? parseTimeOrDateTime(jam_pulang, targetDate) : undefined;
+
+        // Hitung durasi kerja jika masuk & pulang ada
+        let durasiMenit = undefined;
+        if (parsedMasuk && parsedPulang && parsedPulang > parsedMasuk) {
+            durasiMenit = Math.round((parsedPulang.getTime() - parsedMasuk.getTime()) / (1000 * 60));
+        } else if (status === "izin" || status === "sakit" || status === "alfa") {
+            durasiMenit = 0;
+        }
+
+        let record;
         if (record_id) {
             record = await prisma.attendanceRecord.update({
                 where: { id: parseInt(record_id) },
                 data: {
-                    ...(jam_masuk && { jam_masuk: new Date(jam_masuk) }),
-                    ...(jam_pulang && { jam_pulang: new Date(jam_pulang) }),
+                    ...(parsedMasuk !== undefined && { jam_masuk: parsedMasuk }),
+                    ...(parsedPulang !== undefined && { jam_pulang: parsedPulang }),
                     ...(status && { status }),
+                    ...(durasiMenit !== undefined && { durasi_kerja_menit: durasiMenit }),
                     is_adjusted: true,
                     adjusted_by_id: req.user.id,
                     alasan_adjustment: cleanAlasan
                 },
                 include: { user: true }
             });
-        } else if (user_id && tanggal) {
-            const targetDate = getTodayDate(new Date(tanggal));
+        } else if (user_id && targetDate) {
             record = await prisma.attendanceRecord.upsert({
                 where: {
                     user_id_tanggal: {
@@ -722,18 +759,20 @@ async function adjustAttendance(req, res) {
                 create: {
                     user_id: parseInt(user_id),
                     tanggal: targetDate,
-                    jam_masuk: jam_masuk ? new Date(jam_masuk) : new Date(),
-                    jam_pulang: jam_pulang ? new Date(jam_pulang) : null,
+                    jam_masuk: parsedMasuk !== undefined ? parsedMasuk : (status === "hadir" ? targetDate : null),
+                    jam_pulang: parsedPulang !== undefined ? parsedPulang : null,
                     status: status || "hadir",
                     method: "manual_adjustment",
+                    durasi_kerja_menit: durasiMenit || 0,
                     is_adjusted: true,
                     adjusted_by_id: req.user.id,
                     alasan_adjustment: cleanAlasan
                 },
                 update: {
-                    ...(jam_masuk && { jam_masuk: new Date(jam_masuk) }),
-                    ...(jam_pulang && { jam_pulang: new Date(jam_pulang) }),
+                    ...(parsedMasuk !== undefined && { jam_masuk: parsedMasuk }),
+                    ...(parsedPulang !== undefined && { jam_pulang: parsedPulang }),
                     ...(status && { status }),
+                    ...(durasiMenit !== undefined && { durasi_kerja_menit: durasiMenit }),
                     is_adjusted: true,
                     adjusted_by_id: req.user.id,
                     alasan_adjustment: cleanAlasan

@@ -24,7 +24,12 @@ import {
     Eye,
     Sliders,
     HelpCircle,
-    ExternalLink
+    ExternalLink,
+    Zap,
+    AlertTriangle,
+    ShieldAlert,
+    Edit3,
+    Loader2
 } from "lucide-react";
 import WebcamSelfieModal from "./WebcamSelfieModal";
 
@@ -185,15 +190,31 @@ export default function AttendancePage() {
 
     // Admin Adjustment Modal State
     const [adjustModalOpen, setAdjustModalOpen] = useState(false);
+    const [isSubmittingAdjust, setIsSubmittingAdjust] = useState(false);
     const [adjustForm, setAdjustForm] = useState({
         record_id: null,
         user_id: null,
         userName: "",
+        userRole: "",
         tanggal: "",
         jam_masuk: "",
         jam_pulang: "",
         status: "hadir",
         alasan_adjustment: ""
+    });
+
+    // Quick Action Double Confirmation Modal State
+    const [quickActionModal, setQuickActionModal] = useState({
+        isOpen: false,
+        step: 1, // 1: initial review & reason, 2: final anti-fraud confirmation
+        user: null,
+        attendanceId: null,
+        tanggal: "",
+        targetStatus: "hadir", // "hadir" | "izin" | "sakit" | "alfa"
+        jam_masuk: "08:30",
+        jam_pulang: "17:00",
+        reason: "",
+        isSubmitting: false
     });
 
     // Policy Settings Form State
@@ -632,16 +653,156 @@ export default function AttendancePage() {
         });
     };
 
-    // Submit Adjustment (Admin)
+    // Helper: Terapkan Template Preset Koreksi Cepat
+    const applyAdjustPreset = (presetKey) => {
+        switch (presetKey) {
+            case "hadir_normal":
+                setAdjustForm(prev => ({
+                    ...prev,
+                    status: "hadir",
+                    jam_masuk: "08:30",
+                    jam_pulang: "17:00",
+                    alasan_adjustment: "Koreksi kehadiran penuh tepat waktu (08:30 - 17:00) oleh admin"
+                }));
+                break;
+            case "terlambat":
+                setAdjustForm(prev => ({
+                    ...prev,
+                    status: "terlambat",
+                    jam_masuk: "09:15",
+                    jam_pulang: "17:00",
+                    alasan_adjustment: "Koreksi presensi keterlambatan oleh admin"
+                }));
+                break;
+            case "pulang_cepat":
+                setAdjustForm(prev => ({
+                    ...prev,
+                    status: "pulang_cepat",
+                    jam_masuk: "08:30",
+                    jam_pulang: "14:00",
+                    alasan_adjustment: "Koreksi izin pulang lebih awal oleh admin"
+                }));
+                break;
+            case "izin":
+                setAdjustForm(prev => ({
+                    ...prev,
+                    status: "izin",
+                    jam_masuk: "",
+                    jam_pulang: "",
+                    alasan_adjustment: "Koreksi izin resmi disetujui admin"
+                }));
+                break;
+            case "sakit":
+                setAdjustForm(prev => ({
+                    ...prev,
+                    status: "sakit",
+                    jam_masuk: "",
+                    jam_pulang: "",
+                    alasan_adjustment: "Koreksi izin sakit karyawan oleh admin"
+                }));
+                break;
+            case "alfa":
+                setAdjustForm(prev => ({
+                    ...prev,
+                    status: "alfa",
+                    jam_masuk: "",
+                    jam_pulang: "",
+                    alasan_adjustment: "Koreksi absensi alfa / tidak hadir tanpa keterangan"
+                }));
+                break;
+            default:
+                break;
+        }
+    };
+
+    // Submit Manual Adjustment (Admin)
     const handleAdjustSubmit = async (e) => {
         e.preventDefault();
+        if (!adjustForm.alasan_adjustment.trim()) {
+            toast.error("Alasan koreksi absensi wajib diisi sebagai rekam jejak audit!");
+            return;
+        }
+        setIsSubmittingAdjust(true);
         try {
-            const res = await api.post("/attendance/adjust", adjustForm);
+            const payload = {
+                ...adjustForm,
+                jam_masuk: adjustForm.jam_masuk ? `${adjustForm.tanggal}T${adjustForm.jam_masuk}:00` : null,
+                jam_pulang: adjustForm.jam_pulang ? `${adjustForm.tanggal}T${adjustForm.jam_pulang}:00` : null
+            };
+            const res = await api.post("/attendance/adjust", payload);
             toast.success(res.data.message || "Presensi berhasil dikoreksi");
             setAdjustModalOpen(false);
             loadDailyAll();
+            if (activeTab === "recap") loadMonthlyRecap();
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal mengoreksi presensi");
+        } finally {
+            setIsSubmittingAdjust(false);
+        }
+    };
+
+    // Quick Action Trigger (Membuka Dialog Double Konfirmasi)
+    const startQuickAction = (row, targetStatus) => {
+        let defaultMasuk = "08:30";
+        let defaultPulang = "17:00";
+        let defaultReason = "";
+
+        if (targetStatus === "hadir") {
+            defaultReason = `Quick Action: Koreksi kehadiran tepat waktu (${row.user.nama})`;
+        } else if (targetStatus === "izin") {
+            defaultMasuk = "";
+            defaultPulang = "";
+            defaultReason = `Quick Action: Koreksi status izin karyawan (${row.user.nama})`;
+        } else if (targetStatus === "sakit") {
+            defaultMasuk = "";
+            defaultPulang = "";
+            defaultReason = `Quick Action: Koreksi status sakit karyawan (${row.user.nama})`;
+        } else if (targetStatus === "alfa") {
+            defaultMasuk = "";
+            defaultPulang = "";
+            defaultReason = `Quick Action: Koreksi status alfa (${row.user.nama})`;
+        }
+
+        setQuickActionModal({
+            isOpen: true,
+            step: 1, // Step 1: verify status & reason
+            user: row.user,
+            attendanceId: row.attendance?.id || null,
+            tanggal: filterDailyDate,
+            targetStatus,
+            jam_masuk: defaultMasuk,
+            jam_pulang: defaultPulang,
+            reason: defaultReason,
+            isSubmitting: false
+        });
+    };
+
+    // Quick Action Execution (Setelah lolos Step 2 Double Konfirmasi)
+    const handleExecuteQuickAction = async () => {
+        if (!quickActionModal.reason.trim()) {
+            toast.error("Alasan koreksi wajib diisi!");
+            return;
+        }
+
+        setQuickActionModal(prev => ({ ...prev, isSubmitting: true }));
+        try {
+            const payload = {
+                record_id: quickActionModal.attendanceId,
+                user_id: quickActionModal.user.id,
+                tanggal: quickActionModal.tanggal,
+                jam_masuk: quickActionModal.jam_masuk ? `${quickActionModal.tanggal}T${quickActionModal.jam_masuk}:00` : null,
+                jam_pulang: quickActionModal.jam_pulang ? `${quickActionModal.tanggal}T${quickActionModal.jam_pulang}:00` : null,
+                status: quickActionModal.targetStatus,
+                alasan_adjustment: quickActionModal.reason
+            };
+            const res = await api.post("/attendance/adjust", payload);
+            toast.success(res.data.message || `Quick action berhasil: ${quickActionModal.user.nama} diubah ke ${quickActionModal.targetStatus.toUpperCase()}`);
+            setQuickActionModal(prev => ({ ...prev, isOpen: false, isSubmitting: false }));
+            loadDailyAll();
+            if (activeTab === "recap") loadMonthlyRecap();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal memproses quick action");
+            setQuickActionModal(prev => ({ ...prev, isSubmitting: false }));
         }
     };
 
@@ -1601,24 +1762,70 @@ export default function AttendancePage() {
                                                     </div>
                                                 </td>
                                                 <td className="py-3 px-4 text-center">
-                                                    <button
-                                                        onClick={() => {
-                                                            setAdjustForm({
-                                                                record_id: row.attendance?.id || null,
-                                                                user_id: row.user.id,
-                                                                userName: row.user.nama,
-                                                                tanggal: filterDailyDate,
-                                                                jam_masuk: row.attendance?.jam_masuk ? new Date(row.attendance.jam_masuk).toISOString().slice(11, 16) : "08:30",
-                                                                jam_pulang: row.attendance?.jam_pulang ? new Date(row.attendance.jam_pulang).toISOString().slice(11, 16) : "17:00",
-                                                                status: row.attendance?.status || "hadir",
-                                                                alasan_adjustment: ""
-                                                            });
-                                                            setAdjustModalOpen(true);
-                                                        }}
-                                                        className="px-2.5 py-1 text-2xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
-                                                    >
-                                                        Koreksi
-                                                    </button>
+                                                    <div className="flex items-center justify-center gap-1.5 flex-nowrap">
+                                                        {/* Quick Action 1: Auto Hadir */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => startQuickAction(row, "hadir")}
+                                                            className="px-2 py-1 text-3xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all cursor-pointer whitespace-nowrap shadow-2xs"
+                                                            title="Quick Action: Auto Hadir (08:30 - 17:00)"
+                                                        >
+                                                            + Hadir
+                                                        </button>
+
+                                                        {/* Quick Action 2: Auto Izin */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => startQuickAction(row, "izin")}
+                                                            className="px-2 py-1 text-3xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all cursor-pointer whitespace-nowrap shadow-2xs"
+                                                            title="Quick Action: Auto Izin"
+                                                        >
+                                                            + Izin
+                                                        </button>
+
+                                                        {/* Quick Action 3: Auto Sakit */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => startQuickAction(row, "sakit")}
+                                                            className="px-2 py-1 text-3xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-all cursor-pointer whitespace-nowrap shadow-2xs"
+                                                            title="Quick Action: Auto Sakit"
+                                                        >
+                                                            + Sakit
+                                                        </button>
+
+                                                        {/* Quick Action 4: Auto Alfa */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => startQuickAction(row, "alfa")}
+                                                            className="px-2 py-1 text-3xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-all cursor-pointer whitespace-nowrap shadow-2xs"
+                                                            title="Quick Action: Auto Alfa"
+                                                        >
+                                                            + Alfa
+                                                        </button>
+
+                                                        {/* Manual Detail Koreksi Button */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setAdjustForm({
+                                                                    record_id: row.attendance?.id || null,
+                                                                    user_id: row.user.id,
+                                                                    userName: row.user.nama,
+                                                                    userRole: row.user.role,
+                                                                    tanggal: filterDailyDate,
+                                                                    jam_masuk: row.attendance?.jam_masuk ? new Date(row.attendance.jam_masuk).toISOString().slice(11, 16) : "08:30",
+                                                                    jam_pulang: row.attendance?.jam_pulang ? new Date(row.attendance.jam_pulang).toISOString().slice(11, 16) : "17:00",
+                                                                    status: row.attendance?.status || "hadir",
+                                                                    alasan_adjustment: ""
+                                                                });
+                                                                setAdjustModalOpen(true);
+                                                            }}
+                                                            className="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                                                            title="Buka Formulir Koreksi Presensi Lengkap"
+                                                        >
+                                                            <Sliders className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -2447,48 +2654,98 @@ export default function AttendancePage() {
                 </div>
             )}
 
-            {/* MODAL 3: KOREKSI PRESENSI MANUAL (ADMIN ONLY) */}
+            {/* MODAL 3: KOREKSI PRESENSI MANUAL & PRESET (ADMIN ONLY) */}
             {adjustModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 border border-slate-100 animate-fadeIn">
+                <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in"
+                    onClick={() => !isSubmittingAdjust && setAdjustModalOpen(false)}
+                >
+                    <div 
+                        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-lg w-full p-5 sm:p-6 border border-slate-200 text-slate-900 animate-in zoom-in-95 duration-150"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                            <div>
-                                <h3 className="font-bold text-slate-800 text-sm">Koreksi Presensi Manual</h3>
-                                <p className="text-2xs text-slate-500">Karyawan: <strong>{adjustForm.userName}</strong> ({adjustForm.tanggal})</p>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-2xs shrink-0">
+                                    <Sliders className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 text-base">Koreksi Presensi Manual</h3>
+                                    <p className="text-xs text-slate-500">
+                                        Karyawan: <strong className="text-slate-800">{adjustForm.userName}</strong> • {adjustForm.tanggal}
+                                    </p>
+                                </div>
                             </div>
-                            <button onClick={() => setAdjustModalOpen(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
-                                <X className="w-4 h-4" />
-                            </button>
+                            {!isSubmittingAdjust && (
+                                <button 
+                                    type="button"
+                                    onClick={() => setAdjustModalOpen(false)} 
+                                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Quick Presets Bar */}
+                        <div className="mb-4 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                            <span className="text-2xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                                <span>Pilihan Cepat Preset Koreksi (1-Klik Isi Otomatis)</span>
+                            </span>
+                            <div className="grid grid-cols-3 gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => applyAdjustPreset("hadir_normal")}
+                                    className="px-2 py-1.5 rounded-lg border text-2xs font-bold transition-all cursor-pointer bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200"
+                                >
+                                    Hadir Normal (08:30)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => applyAdjustPreset("terlambat")}
+                                    className="px-2 py-1.5 rounded-lg border text-2xs font-bold transition-all cursor-pointer bg-white hover:bg-amber-50 text-amber-800 border-amber-200"
+                                >
+                                    Terlambat (09:15)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => applyAdjustPreset("pulang_cepat")}
+                                    className="px-2 py-1.5 rounded-lg border text-2xs font-bold transition-all cursor-pointer bg-white hover:bg-indigo-50 text-indigo-800 border-indigo-200"
+                                >
+                                    Pulang Cepat (14:00)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => applyAdjustPreset("izin")}
+                                    className="px-2 py-1.5 rounded-lg border text-2xs font-bold transition-all cursor-pointer bg-white hover:bg-blue-50 text-blue-800 border-blue-200"
+                                >
+                                    Izin Resmi
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => applyAdjustPreset("sakit")}
+                                    className="px-2 py-1.5 rounded-lg border text-2xs font-bold transition-all cursor-pointer bg-white hover:bg-amber-50 text-amber-800 border-amber-200"
+                                >
+                                    Sakit
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => applyAdjustPreset("alfa")}
+                                    className="px-2 py-1.5 rounded-lg border text-2xs font-bold transition-all cursor-pointer bg-white hover:bg-rose-50 text-rose-800 border-rose-200"
+                                >
+                                    Alfa (Tanpa Ket.)
+                                </button>
+                            </div>
                         </div>
 
                         <form onSubmit={handleAdjustSubmit} className="space-y-3.5">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Jam Masuk</label>
-                                    <input
-                                        type="time"
-                                        value={adjustForm.jam_masuk}
-                                        onChange={(e) => setAdjustForm({ ...adjustForm, jam_masuk: e.target.value })}
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Jam Pulang</label>
-                                    <input
-                                        type="time"
-                                        value={adjustForm.jam_pulang}
-                                        onChange={(e) => setAdjustForm({ ...adjustForm, jam_pulang: e.target.value })}
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800"
-                                    />
-                                </div>
-                            </div>
-
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 mb-1">Status Kehadiran</label>
                                 <select
                                     value={adjustForm.status}
                                     onChange={(e) => setAdjustForm({ ...adjustForm, status: e.target.value })}
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 outline-none focus:border-blue-500"
                                 >
                                     <option value="hadir">Hadir (Tepat Waktu)</option>
                                     <option value="terlambat">Terlambat</option>
@@ -2497,6 +2754,29 @@ export default function AttendancePage() {
                                     <option value="sakit">Sakit</option>
                                     <option value="alfa">Alfa (Tanpa Keterangan)</option>
                                 </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Jam Masuk</label>
+                                    <input
+                                        type="time"
+                                        value={adjustForm.jam_masuk}
+                                        disabled={adjustForm.status === "izin" || adjustForm.status === "sakit" || adjustForm.status === "alfa"}
+                                        onChange={(e) => setAdjustForm({ ...adjustForm, jam_masuk: e.target.value })}
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 disabled:bg-slate-100 disabled:text-slate-400"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Jam Pulang</label>
+                                    <input
+                                        type="time"
+                                        value={adjustForm.jam_pulang}
+                                        disabled={adjustForm.status === "izin" || adjustForm.status === "sakit" || adjustForm.status === "alfa"}
+                                        onChange={(e) => setAdjustForm({ ...adjustForm, jam_pulang: e.target.value })}
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 disabled:bg-slate-100 disabled:text-slate-400"
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -2508,27 +2788,204 @@ export default function AttendancePage() {
                                     onChange={(e) => setAdjustForm({ ...adjustForm, alasan_adjustment: e.target.value })}
                                     rows="2"
                                     placeholder="Contoh: Lupa check-out saat lembur mendadak servis client..."
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:border-blue-500"
                                     required
                                 />
                             </div>
 
-                            <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-amber-900 text-2xs">
+                                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                <span>Perubahan ini dicatat permanen dalam Audit Log Sistem Serv.io dengan identitas admin yang sedang login.</span>
+                            </div>
+
+                            <div className="pt-3 border-t border-slate-100 flex justify-end gap-2.5">
                                 <button
                                     type="button"
+                                    disabled={isSubmittingAdjust}
                                     onClick={() => setAdjustModalOpen(false)}
-                                    className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold cursor-pointer"
+                                    className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-50"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer"
+                                    disabled={isSubmittingAdjust}
+                                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer shadow-2xs flex items-center gap-1.5 disabled:opacity-50"
                                 >
-                                    Simpan Koreksi
+                                    {isSubmittingAdjust && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                    <span>Simpan Koreksi</span>
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL 3B: QUICK ACTION DENGAN DOUBLE KONFIRMASI */}
+            {quickActionModal.isOpen && (
+                <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in"
+                    onClick={() => !quickActionModal.isSubmitting && setQuickActionModal(prev => ({ ...prev, isOpen: false }))}
+                >
+                    <div 
+                        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full p-6 border border-slate-200 text-slate-900 animate-in zoom-in-95 duration-150"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* STEP 1: INITIAL VERIFICATION & REASON INPUT */}
+                        {quickActionModal.step === 1 && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+                                            <Zap className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900 text-sm">Quick Action Koreksi Presensi</h3>
+                                            <p className="text-3xs font-semibold text-slate-400">Langkah 1 dari 2: Verifikasi Awal</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setQuickActionModal(prev => ({ ...prev, isOpen: false }))} 
+                                        className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                {/* Employee & Target Status Summary Card */}
+                                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500">Karyawan:</span>
+                                        <span className="text-xs font-bold text-slate-900">{quickActionModal.user?.nama}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500">Tanggal Presensi:</span>
+                                        <span className="text-xs font-mono font-bold text-slate-700">{quickActionModal.tanggal}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                                        <span className="text-xs text-slate-500">Target Status:</span>
+                                        <span className={`text-xs font-bold px-2.5 py-0.5 rounded-md border uppercase ${
+                                            quickActionModal.targetStatus === "hadir" 
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                : quickActionModal.targetStatus === "izin"
+                                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                                : quickActionModal.targetStatus === "sakit"
+                                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                : "bg-rose-50 text-rose-700 border-rose-200"
+                                        }`}>
+                                            {quickActionModal.targetStatus === "hadir" ? "HADIR (08:30 - 17:00)" : quickActionModal.targetStatus}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Editable Audit Reason */}
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-bold text-slate-700">
+                                        Alasan Koreksi <span className="text-rose-500">* (Audit Log)</span>
+                                    </label>
+                                    <textarea
+                                        value={quickActionModal.reason}
+                                        onChange={(e) => setQuickActionModal(prev => ({ ...prev, reason: e.target.value }))}
+                                        rows="2"
+                                        placeholder="Tulis alasan koreksi..."
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-blue-500"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-2 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setQuickActionModal(prev => ({ ...prev, isOpen: false }))}
+                                        className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={!quickActionModal.reason.trim()}
+                                        onClick={() => setQuickActionModal(prev => ({ ...prev, step: 2 }))}
+                                        className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+                                    >
+                                        Lanjut ke Konfirmasi Final →
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* STEP 2: DOUBLE CONFIRMATION FINAL AUTHORIZATION */}
+                        {quickActionModal.step === 2 && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+                                            <ShieldAlert className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900 text-sm">Konfirmasi Final Otorisasi</h3>
+                                            <p className="text-3xs font-semibold text-rose-600">Langkah 2 dari 2: Verifikasi Eksekusi</p>
+                                        </div>
+                                    </div>
+                                    {!quickActionModal.isSubmitting && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => setQuickActionModal(prev => ({ ...prev, isOpen: false }))} 
+                                            className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Prominent Anti-Fraud Warning Box */}
+                                <div className="p-4 bg-rose-50/70 border border-rose-200 rounded-2xl text-rose-950 space-y-2">
+                                    <div className="flex items-center gap-2 text-rose-800 text-xs font-bold">
+                                        <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+                                        <span>Peringatan Audit Anti-Fraud</span>
+                                    </div>
+                                    <p className="text-xs text-rose-900 leading-relaxed text-justify">
+                                        Apakah Anda yakin 100% ingin menerapkan koreksi presensi ini? Tindakan ini akan <strong>langsung menimpa data absensi riil</strong> dan dicatat permanen dalam rekam jejak audit bengkel atas nama akun Anda.
+                                    </p>
+                                </div>
+
+                                {/* Review Data Verification */}
+                                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-2xs space-y-1.5">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">Target Karyawan:</span>
+                                        <span className="font-bold text-slate-800">{quickActionModal.user?.nama}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">Status Baru:</span>
+                                        <span className="font-bold text-slate-800 uppercase">{quickActionModal.targetStatus}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">Alasan Audit:</span>
+                                        <span className="font-medium text-slate-700 italic truncate max-w-[200px]">{quickActionModal.reason}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 pt-2">
+                                    <button
+                                        type="button"
+                                        disabled={quickActionModal.isSubmitting}
+                                        onClick={() => setQuickActionModal(prev => ({ ...prev, step: 1 }))}
+                                        className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                                    >
+                                        ← Kembali
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={quickActionModal.isSubmitting}
+                                        onClick={handleExecuteQuickAction}
+                                        className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                    >
+                                        {quickActionModal.isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                        <span>Terapkan Koreksi (Final)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
