@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, RefreshCw, CheckCircle2, X, AlertTriangle, MapPin, Clock } from "lucide-react";
+import { Camera, RefreshCw, CheckCircle2, X, AlertTriangle, MapPin, Clock, Smartphone, Upload, ShieldAlert, Info } from "lucide-react";
 import toast from "react-hot-toast";
 
 // Helper: Draw rounded rectangle on Canvas
@@ -69,6 +69,7 @@ export default function WebcamSelfieModal({
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const streamRef = useRef(null);
+    const nativeCameraInputRef = useRef(null);
 
     const [cameraActive, setCameraActive] = useState(false);
     const [cameraError, setCameraError] = useState(null);
@@ -79,41 +80,72 @@ export default function WebcamSelfieModal({
 
     const isActualTugasLuar = isTugasLuar || type === "tugas-luar";
 
-    // Start video stream
+    // Start video stream with multi-tier constraint ladder for mobile & desktop
     const startCamera = useCallback(async () => {
         setCameraError(null);
         setPreviewImage(null);
         setCapturedBlob(null);
 
-        try {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error("Browser Anda tidak mendukung akses kamera langsung.");
-            }
+        // Check for secure context (HTTPS / localhost requirement)
+        if (typeof window !== "undefined" && window.isSecureContext === false && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+            setCameraError("Akses kamera langsung di browser mobile membutuhkan koneksi aman (HTTPS). Silakan gunakan tombol 'Kamera HP (Native)' di bawah untuk presensi langsung.");
+            return;
+        }
 
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: "user",
-                    width: { ideal: 720 },
-                    height: { ideal: 720 }
-                },
-                audio: false
-            });
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            setCameraError("Browser mobile ini membatasi akses webcam langsung. Silakan gunakan tombol 'Kamera HP (Native)' di bawah.");
+            return;
+        }
 
-            streamRef.current = stream;
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                await videoRef.current.play();
-                setCameraActive(true);
+        // Tiered constraints to guarantee support on all mobile front cameras
+        const constraintTiers = [
+            // Tier 1: Front camera (selfie) ideal portrait
+            { video: { facingMode: { ideal: "user" }, width: { ideal: 720 }, height: { ideal: 720 } }, audio: false },
+            // Tier 2: Front camera relaxed resolution
+            { video: { facingMode: "user" }, audio: false },
+            // Tier 3: Any video device available
+            { video: true, audio: false }
+        ];
+
+        let stream = null;
+        let lastErr = null;
+
+        for (const constraints of constraintTiers) {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                if (stream) break;
+            } catch (err) {
+                lastErr = err;
+                console.warn("Retrying with relaxed camera constraints due to:", err.name);
             }
-        } catch (err) {
-            console.error("Camera access error:", err);
+        }
+
+        if (!stream) {
+            console.error("Camera access error:", lastErr);
             let msg = "Gagal mengakses webcam/kamera.";
-            if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-                msg = "Izin kamera ditolak. Silakan izinkan akses kamera di ikon gembok pada browser Anda.";
-            } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-                msg = "Kamera tidak terdeteksi pada perangkat Anda.";
+            if (lastErr?.name === "NotAllowedError" || lastErr?.name === "PermissionDeniedError") {
+                msg = "Izin kamera ditolak. Silakan izinkan akses kamera di ikon gembok pada browser Anda atau gunakan tombol 'Kamera HP (Native)'.";
+            } else if (lastErr?.name === "NotFoundError" || lastErr?.name === "DevicesNotFoundError") {
+                msg = "Kamera tidak terdeteksi pada perangkat Anda. Silakan gunakan tombol 'Kamera HP (Native)'.";
+            } else if (lastErr?.name === "NotReadableError" || lastErr?.name === "TrackStartError") {
+                msg = "Kamera sedang digunakan aplikasi lain. Tutup aplikasi kamera lain lalu coba lagi.";
+            } else if (lastErr?.name === "OverconstrainedError") {
+                msg = "Resolusi kamera perangkat tidak didukung browser.";
             }
             setCameraError(msg);
+            return;
+        }
+
+        streamRef.current = stream;
+        if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            try {
+                await videoRef.current.play();
+                setCameraActive(true);
+            } catch (playErr) {
+                console.warn("Autoplay prevented, user gesture will activate video:", playErr);
+                setCameraActive(true);
+            }
         }
     }, []);
 
@@ -141,29 +173,8 @@ export default function WebcamSelfieModal({
         };
     }, [isOpen, startCamera, stopCamera]);
 
-    // Capture & Watermark on HTML5 Canvas (Format Watermark Kamera HP)
-    const handleSnap = () => {
-        if (!videoRef.current) return;
-        const video = videoRef.current;
-        const canvas = canvasRef.current || document.createElement("canvas");
-
-        const width = video.videoWidth || 720;
-        const height = video.videoHeight || 720;
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        // 1. Draw live camera video frame (mirror horizontal for selfie)
-        ctx.save();
-        ctx.translate(width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, width, height);
-        ctx.restore();
-
-        // 2. Watermark Bar Geometry (Kamera HP Smartphone Style)
+    // Render watermark bar onto canvas (Used for both live webcam snap & native camera photo)
+    const applyWatermark = (ctx, width, height) => {
         const barHeight = Math.max(138, Math.round(height * 0.23));
         const barTop = height - barHeight;
 
@@ -271,6 +282,32 @@ export default function WebcamSelfieModal({
         ctx.font = "bold 8.5px monospace";
         ctx.fillText("GEOFENCE VERIFIED", width - padX, line4Y);
         ctx.textAlign = "left";
+    };
+
+    // Capture from Live Video Stream
+    const handleSnap = () => {
+        if (!videoRef.current) return;
+        const video = videoRef.current;
+        const canvas = canvasRef.current || document.createElement("canvas");
+
+        const width = video.videoWidth || 720;
+        const height = video.videoHeight || 720;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        // 1. Draw live camera video frame (mirror horizontal for selfie)
+        ctx.save();
+        ctx.translate(width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, width, height);
+        ctx.restore();
+
+        // 2. Apply Watermark Overlay
+        applyWatermark(ctx, width, height);
 
         // Generate data URL for preview & Blob for upload
         const dataUrl = canvas.toDataURL("image/jpeg", 0.90);
@@ -288,6 +325,60 @@ export default function WebcamSelfieModal({
         );
 
         stopCamera();
+    };
+
+    // Fallback: Capture using Smartphone Native Camera App
+    const handleNativeCapture = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = canvasRef.current || document.createElement("canvas");
+                // Limit max dimensions to 1440 for snappy processing & crisp watermark
+                let w = img.naturalWidth || img.width || 720;
+                let h = img.naturalHeight || img.height || 720;
+                const maxDim = 1440;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+                }
+
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return;
+
+                ctx.drawImage(img, 0, 0, w, h);
+                applyWatermark(ctx, w, h);
+
+                const dataUrl = canvas.toDataURL("image/jpeg", 0.90);
+                setPreviewImage(dataUrl);
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            const stampedFile = new File([blob], `selfie-${isActualTugasLuar ? "tugas-luar" : type}-${Date.now()}.jpg`, { type: "image/jpeg" });
+                            setCapturedBlob(stampedFile);
+                        }
+                    },
+                    "image/jpeg",
+                    0.90
+                );
+                stopCamera();
+                toast.success("Foto kamera HP berhasil diverifikasi dengan stempel GPS & Waktu.");
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+        e.target.value = "";
     };
 
     const handleRetake = () => {
@@ -360,6 +451,16 @@ export default function WebcamSelfieModal({
                     </button>
                 </div>
 
+                {/* Hidden Native File & Camera Input for 100% Reliable Mobile Fallback */}
+                <input
+                    ref={nativeCameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="user"
+                    onChange={handleNativeCapture}
+                    className="hidden"
+                />
+
                 {/* Camera / Preview Area */}
                 <div className="p-5 flex flex-col items-center justify-center bg-slate-900 relative min-h-[340px]">
                     {cameraError ? (
@@ -368,16 +469,27 @@ export default function WebcamSelfieModal({
                                 <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
                             </div>
                             <p className="text-sm font-semibold text-white mb-2">{cameraError}</p>
-                            <p className="text-xs text-slate-400 mb-4">
-                                Pastikan kamera tidak sedang digunakan aplikasi lain dan izin browser telah diberikan.
+                            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                                Browser mobile sering membatasi streaming webcam langsung tanpa HTTPS atau izin khusus. Anda dapat langsung menggunakan kamera bawaan ponsel:
                             </p>
-                            <button
-                                onClick={startCamera}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all shadow-xs cursor-pointer inline-flex items-center gap-2"
-                            >
-                                <RefreshCw className="w-3.5 h-3.5" />
-                                <span>Coba Lagi</span>
-                            </button>
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => nativeCameraInputRef.current?.click()}
+                                    className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer inline-flex items-center justify-center gap-2"
+                                >
+                                    <Smartphone className="w-4 h-4" />
+                                    <span>Gunakan Kamera HP (Native)</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={startCamera}
+                                    className="w-full sm:w-auto px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-2"
+                                >
+                                    <RefreshCw className="w-3.5 h-3.5" />
+                                    <span>Coba Live Lagi</span>
+                                </button>
+                            </div>
                         </div>
                     ) : previewImage ? (
                         <div className="relative w-full max-w-[360px] aspect-square rounded-xl overflow-hidden shadow-lg border border-slate-700 bg-black">
@@ -405,6 +517,17 @@ export default function WebcamSelfieModal({
                                     Posisikan Wajah di Lingkaran
                                 </span>
                             </div>
+
+                            {/* Mobile Quick Native Camera Switch Pill */}
+                            <button
+                                type="button"
+                                onClick={() => nativeCameraInputRef.current?.click()}
+                                className="absolute top-3 right-3 bg-slate-900/80 hover:bg-slate-900 text-white border border-white/20 text-3xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm transition-all flex items-center gap-1.5 cursor-pointer z-10"
+                                title="Buka aplikasi kamera bawaan HP jika live stream browser macet"
+                            >
+                                <Smartphone className="w-3 h-3 text-emerald-400" />
+                                <span>Kamera HP</span>
+                            </button>
 
                             {/* Live Smartphone Camera Watermark Overlay Preview */}
                             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950/95 via-slate-900/80 to-transparent p-3 pointer-events-none text-left border-t border-white/10">
@@ -527,6 +650,15 @@ export default function WebcamSelfieModal({
                                 className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-all cursor-pointer"
                             >
                                 Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => nativeCameraInputRef.current?.click()}
+                                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                                title="Buka aplikasi kamera bawaan HP langsung"
+                            >
+                                <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Kamera HP</span>
                             </button>
                             <button
                                 type="button"

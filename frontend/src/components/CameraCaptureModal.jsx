@@ -60,14 +60,41 @@ export default function CameraCaptureModal({
         }
 
         try {
-            const constraints = {
-                audio: false,
-                video: selectedDeviceId 
-                    ? { deviceId: { exact: selectedDeviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-                    : { facingMode: { ideal: facingMode }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-            };
+            // Tiered constraints to ensure smooth compatibility across desktop and mobile browsers
+            const constraintTiers = [
+                {
+                    audio: false,
+                    video: selectedDeviceId 
+                        ? { deviceId: { exact: selectedDeviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+                        : { facingMode: { ideal: facingMode }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+                },
+                {
+                    audio: false,
+                    video: selectedDeviceId 
+                        ? { deviceId: selectedDeviceId }
+                        : { facingMode: { ideal: facingMode } }
+                },
+                {
+                    audio: false,
+                    video: true
+                }
+            ];
 
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            let stream = null;
+            let lastErr = null;
+            for (const c of constraintTiers) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia(c);
+                    if (stream) break;
+                } catch (err) {
+                    lastErr = err;
+                }
+            }
+
+            if (!stream) {
+                throw lastErr || new Error("Tidak dapat mengakses kamera.");
+            }
+
             streamRef.current = stream;
 
             if (videoRef.current) {

@@ -259,9 +259,20 @@ export default function AttendancePage() {
         return () => clearInterval(timer);
     }, []);
 
-    // 2. Browser Geolocation Tracker
+    // 2. Browser Geolocation Tracker (With Mobile Indoor Retry & High-Accuracy Fallback)
     const fetchLocation = useCallback(() => {
         setLocationData(prev => ({ ...prev, loading: true, error: null }));
+
+        if (typeof window !== "undefined" && window.isSecureContext === false && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+            setLocationData(prev => ({
+                ...prev,
+                loading: false,
+                addressName: WORKSHOP_DEFAULT_ADDRESS,
+                error: "Browser mobile mewajibkan koneksi aman (HTTPS) untuk mengizinkan GPS. Silakan buka aplikasi melalui protokol HTTPS atau atur flag insecure origin di browser."
+            }));
+            return;
+        }
+
         if (!navigator.geolocation) {
             setLocationData(prev => ({
                 ...prev,
@@ -272,59 +283,77 @@ export default function AttendancePage() {
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                const acc = position.coords.accuracy;
+        const handleSuccess = async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const acc = position.coords.accuracy;
 
-                let dist = null;
-                let inRadius = true;
+            let dist = null;
+            let inRadius = true;
 
-                if (policy?.latitude && policy?.longitude) {
-                    dist = calculateDistanceMeters(lat, lon, policy.latitude, policy.longitude);
-                    inRadius = dist <= policy.radius_meter;
-                }
+            if (policy?.latitude && policy?.longitude) {
+                dist = calculateDistanceMeters(lat, lon, policy.latitude, policy.longitude);
+                inRadius = dist <= policy.radius_meter;
+            }
 
-                const preliminaryAddress = inRadius ? WORKSHOP_DEFAULT_ADDRESS : "Mencari alamat lokasi real...";
+            const preliminaryAddress = inRadius ? WORKSHOP_DEFAULT_ADDRESS : "Mencari alamat lokasi real...";
 
-                setLocationData({
-                    latitude: lat,
-                    longitude: lon,
-                    accuracy: acc,
-                    distance: dist,
-                    isInRadius: inRadius,
-                    addressName: preliminaryAddress,
-                    loading: false,
-                    error: null
-                });
+            setLocationData({
+                latitude: lat,
+                longitude: lon,
+                accuracy: acc,
+                distance: dist,
+                isInRadius: inRadius,
+                addressName: preliminaryAddress,
+                loading: false,
+                error: null
+            });
 
-                // Jika di luar radius, lakukan reverse geocoding asynchronous agar nama jalan & kecamatan detail
-                if (!inRadius) {
-                    const realAddress = await fetchRealLocationAddress(lat, lon, false);
-                    setLocationData(prev => ({
-                        ...prev,
-                        addressName: realAddress
-                    }));
-                }
-            },
-            (error) => {
-                let msg = "Gagal mendapatkan lokasi GPS.";
-                if (error.code === error.PERMISSION_DENIED) {
-                    msg = "Izin akses lokasi ditolak oleh browser. Harap izinkan akses lokasi untuk presensi.";
-                } else if (error.code === error.POSITION_UNAVAILABLE) {
-                    msg = "Sinyal GPS tidak tersedia atau perangkat sedang offline.";
-                } else if (error.code === error.TIMEOUT) {
-                    msg = "Waktu pencarian sinyal lokasi GPS habis (Timeout).";
-                }
+            // Jika di luar radius, lakukan reverse geocoding asynchronous agar nama jalan & kecamatan detail
+            if (!inRadius) {
+                const realAddress = await fetchRealLocationAddress(lat, lon, false);
                 setLocationData(prev => ({
                     ...prev,
-                    loading: false,
-                    addressName: WORKSHOP_DEFAULT_ADDRESS,
-                    error: msg
+                    addressName: realAddress
                 }));
+            }
+        };
+
+        const handleFinalError = (error) => {
+            let msg = "Gagal mendapatkan lokasi GPS.";
+            if (error.code === error.PERMISSION_DENIED) {
+                msg = "Izin akses lokasi ditolak oleh browser. Ketuk ikon gembok / pengaturan situs di bilah alamat browser lalu pilih 'Izinkan Lokasi'.";
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                msg = "Sinyal GPS tidak terdeteksi. Pastikan Lokasi/GPS aktif di pengaturan ponsel Anda.";
+            } else if (error.code === error.TIMEOUT) {
+                msg = "Waktu pencarian satelit GPS habis (Timeout). Pastikan GPS ponsel aktif dan coba lagi.";
+            }
+            setLocationData(prev => ({
+                ...prev,
+                loading: false,
+                addressName: WORKSHOP_DEFAULT_ADDRESS,
+                error: msg
+            }));
+        };
+
+        // Attempt 1: High Accuracy with 60-second cached location tolerance
+        navigator.geolocation.getCurrentPosition(
+            handleSuccess,
+            (error) => {
+                // If timed out or satellite unavailable (e.g. inside building/workshop roof),
+                // fall back to network/cell tower triangulation (instant & indoor-friendly)
+                if (error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
+                    console.warn("High-accuracy GPS timed out/unavailable. Falling back to standard network triangulation...");
+                    navigator.geolocation.getCurrentPosition(
+                        handleSuccess,
+                        handleFinalError,
+                        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+                    );
+                } else {
+                    handleFinalError(error);
+                }
             },
-            { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
         );
     }, [policy]);
 
@@ -1222,11 +1251,24 @@ export default function AttendancePage() {
 
                         {/* Radius Verification Alert Banner */}
                         {locationData.error ? (
-                            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-xs text-rose-800">
-                                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="font-bold">Akses Lokasi Diblokir</p>
-                                    <p className="text-2xs text-rose-700 mt-0.5">{locationData.error}</p>
+                            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-2 text-xs text-rose-800">
+                                <div className="flex items-start gap-2.5">
+                                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold">Kendala Izin / Sinyal Lokasi</p>
+                                        <p className="text-2xs text-rose-700 mt-0.5 leading-relaxed">{locationData.error}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 pt-1 border-t border-rose-200/60">
+                                    <button
+                                        type="button"
+                                        onClick={fetchLocation}
+                                        disabled={locationData.loading}
+                                        className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-2xs transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                    >
+                                        <RefreshCw className={`w-3 h-3 ${locationData.loading ? "animate-spin" : ""}`} />
+                                        <span>Coba Deteksi Lokasi Lagi</span>
+                                    </button>
                                 </div>
                             </div>
                         ) : locationData.distance !== null && (
