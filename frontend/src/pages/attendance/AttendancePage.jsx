@@ -45,6 +45,63 @@ function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
     return Math.round(R * c);
 }
 
+// Alamat fisik resmi workshop Pekayon
+const WORKSHOP_DEFAULT_ADDRESS = "Jl. Raya Pekayon No.25, RT.004/RW.001, Pekayon Jaya, Kec. Bekasi Selatan, Kota Bekasi, Jawa Barat 17148";
+
+// Reverse geocode koordinat GPS menjadi nama jalan dan wilayah detail (seperti watermark kamera HP)
+async function fetchRealLocationAddress(lat, lon, isInRadius) {
+    if (isInRadius) {
+        return WORKSHOP_DEFAULT_ADDRESS;
+    }
+    if (!lat || !lon) {
+        return "Lokasi tidak diketahui";
+    }
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4500);
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+            {
+                signal: controller.signal,
+                headers: { "Accept-Language": "id,en" }
+            }
+        );
+        clearTimeout(timeoutId);
+        if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            const road = addr.road || addr.street || addr.pedestrian || addr.path || "";
+            const houseNumber = addr.house_number ? `No.${addr.house_number}` : "";
+            const streetLine = [road, houseNumber].filter(Boolean).join(" ");
+            const village = addr.village || addr.suburb || addr.neighbourhood || addr.quarter || "";
+            const district = addr.city_district || addr.district || addr.subdistrict || "";
+            const city = addr.city || addr.town || addr.municipality || addr.county || "";
+            const state = addr.state || "";
+            const postcode = addr.postcode || "";
+
+            const parts = [
+                streetLine,
+                village,
+                district ? `Kec. ${district}` : "",
+                city,
+                state,
+                postcode
+            ].filter(Boolean);
+
+            if (parts.length > 0) {
+                return parts.join(", ");
+            }
+            if (data.display_name) {
+                return data.display_name;
+            }
+        }
+    } catch {
+        // Fallback jika koneksi lambat atau offline
+    }
+
+    return `Area Koordinat ${lat.toFixed(5)}, ${lon.toFixed(5)}, Bekasi, Jawa Barat`;
+}
+
 export default function AttendancePage() {
     const { user, isAdmin } = useAuth();
     const isPimpinanOrAdmin = isAdmin || user?.role === "pimpinan";
@@ -68,6 +125,7 @@ export default function AttendancePage() {
         accuracy: null,
         distance: null,
         isInRadius: true,
+        addressName: "Memuat alamat lokasi...",
         loading: true,
         error: null
     });
@@ -155,13 +213,14 @@ export default function AttendancePage() {
             setLocationData(prev => ({
                 ...prev,
                 loading: false,
+                addressName: WORKSHOP_DEFAULT_ADDRESS,
                 error: "Browser Anda tidak mendukung layanan Geolocation GPS."
             }));
             return;
         }
 
         navigator.geolocation.getCurrentPosition(
-            (position) => {
+            async (position) => {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 const acc = position.coords.accuracy;
@@ -174,15 +233,27 @@ export default function AttendancePage() {
                     inRadius = dist <= policy.radius_meter;
                 }
 
+                const preliminaryAddress = inRadius ? WORKSHOP_DEFAULT_ADDRESS : "Mencari alamat lokasi real...";
+
                 setLocationData({
                     latitude: lat,
                     longitude: lon,
                     accuracy: acc,
                     distance: dist,
                     isInRadius: inRadius,
+                    addressName: preliminaryAddress,
                     loading: false,
                     error: null
                 });
+
+                // Jika di luar radius, lakukan reverse geocoding asynchronous agar nama jalan & kecamatan detail
+                if (!inRadius) {
+                    const realAddress = await fetchRealLocationAddress(lat, lon, false);
+                    setLocationData(prev => ({
+                        ...prev,
+                        addressName: realAddress
+                    }));
+                }
             },
             (error) => {
                 let msg = "Gagal mendapatkan lokasi GPS.";
@@ -193,7 +264,12 @@ export default function AttendancePage() {
                 } else if (error.code === error.TIMEOUT) {
                     msg = "Waktu pencarian sinyal lokasi GPS habis (Timeout).";
                 }
-                setLocationData(prev => ({ ...prev, loading: false, error: msg }));
+                setLocationData(prev => ({
+                    ...prev,
+                    loading: false,
+                    addressName: WORKSHOP_DEFAULT_ADDRESS,
+                    error: msg
+                }));
             },
             { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
         );
@@ -360,6 +436,9 @@ export default function AttendancePage() {
         if (locationData.latitude !== null) formData.append("latitude", locationData.latitude);
         if (locationData.longitude !== null) formData.append("longitude", locationData.longitude);
         formData.append("device_info", navigator.userAgent);
+        if (locationData.addressName) {
+            formData.append("catatan", `Alamat Lokasi: ${locationData.addressName}`);
+        }
         if (extraData?.is_tugas_luar || cameraModalType === "tugas-luar") {
             formData.append("is_tugas_luar", "true");
             if (extraData?.alasan_tugas_luar) {
@@ -386,6 +465,10 @@ export default function AttendancePage() {
         formData.append("foto", fileBlob);
         if (locationData.latitude !== null) formData.append("latitude", locationData.latitude);
         if (locationData.longitude !== null) formData.append("longitude", locationData.longitude);
+        formData.append("device_info", navigator.userAgent);
+        if (locationData.addressName) {
+            formData.append("catatan", `Alamat Pulang: ${locationData.addressName}`);
+        }
         if (todayRecord?.is_tugas_luar) {
             formData.append("is_tugas_luar", "true");
         }
@@ -687,11 +770,20 @@ export default function AttendancePage() {
 
                         {/* Location Details Box */}
                         <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80 space-y-2.5">
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500 font-semibold">Titik Workshop:</span>
-                                <span className="font-bold text-slate-800">{policy?.nama_kantor || "Workshop Utama"}</span>
+                            <div className="flex items-start justify-between text-xs gap-2">
+                                <span className="text-slate-500 font-semibold shrink-0">Workshop:</span>
+                                <div className="text-right">
+                                    <span className="font-bold text-slate-800 block">{policy?.nama_kantor || "Workshop Utama"}</span>
+                                    <span className="text-3xs text-slate-500 block leading-tight mt-0.5">{WORKSHOP_DEFAULT_ADDRESS}</span>
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-start justify-between text-xs gap-2 pt-1 border-t border-slate-200/60">
+                                <span className="text-slate-500 font-semibold shrink-0">Lokasi Real Anda:</span>
+                                <span className="font-bold text-slate-800 text-right text-3xs sm:text-2xs max-w-[210px] leading-tight">
+                                    {locationData.loading ? "Mencari detail lokasi..." : (locationData.addressName || "-")}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200/60">
                                 <span className="text-slate-500 font-semibold">Batas Radius:</span>
                                 <span className="font-bold text-slate-800">{policy?.radius_meter || 100} Meter</span>
                             </div>
@@ -706,9 +798,11 @@ export default function AttendancePage() {
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500 font-semibold">Akurasi GPS:</span>
-                                <span className="font-medium text-slate-600">
-                                    {locationData.accuracy ? `±${Math.round(locationData.accuracy)}m` : "-"}
+                                <span className="text-slate-500 font-semibold">Koordinat & Akurasi:</span>
+                                <span className="font-medium text-slate-600 text-3xs">
+                                    {locationData.latitude 
+                                        ? `${locationData.latitude.toFixed(5)}, ${locationData.longitude.toFixed(5)} (±${Math.round(locationData.accuracy || 0)}m)` 
+                                        : "-"}
                                 </span>
                             </div>
                         </div>

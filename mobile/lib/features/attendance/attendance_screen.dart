@@ -504,19 +504,30 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Row(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.location_on_rounded, size: 13, color: Colors.white),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${policy?['nama_kantor'] ?? "Workshop Pekayon"} (Radius ${policy?['radius_meter'] ?? 100}m)',
-                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.location_on_rounded, size: 13, color: Colors.white),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${policy?['nama_kantor'] ?? "Workshop Pekayon"} (Radius ${policy?['radius_meter'] ?? 100}m)',
+                              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Jl. Raya Pekayon No.25, RT.004/RW.001, Pekayon Jaya, Bekasi Selatan',
+                          style: TextStyle(color: Color(0xFFE0E7FF), fontSize: 10),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),

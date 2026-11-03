@@ -2,6 +2,59 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Camera, RefreshCw, CheckCircle2, X, AlertTriangle, MapPin, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 
+// Helper: Draw rounded rectangle on Canvas
+function drawRoundedRect(ctx, x, y, width, height, radius, fillStyle) {
+    ctx.save();
+    ctx.fillStyle = fillStyle;
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+
+// Helper: Word wrap text on Canvas
+function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+    const words = text.split(" ");
+    let line = "";
+    let linesDrawn = 0;
+    let nextY = y;
+
+    for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + " ";
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+            ctx.fillText(line.trim(), x, nextY);
+            line = words[n] + " ";
+            nextY += lineHeight;
+            linesDrawn++;
+            if (linesDrawn >= maxLines - 1 && n < words.length - 1) {
+                // If last allowed line, add ellipsis if overflowing
+                const remaining = words.slice(n).join(" ");
+                let trunc = remaining;
+                while (ctx.measureText(trunc + "...").width > maxWidth && trunc.length > 0) {
+                    trunc = trunc.slice(0, -1);
+                }
+                ctx.fillText(trunc.trim() + "...", x, nextY);
+                return nextY + lineHeight;
+            }
+        } else {
+            line = testLine;
+        }
+    }
+    ctx.fillText(line.trim(), x, nextY);
+    return nextY + lineHeight;
+}
+
 export default function WebcamSelfieModal({
     isOpen,
     onClose,
@@ -87,14 +140,14 @@ export default function WebcamSelfieModal({
         };
     }, [isOpen, startCamera, stopCamera]);
 
-    // Capture & Watermark on HTML5 Canvas
+    // Capture & Watermark on HTML5 Canvas (Format Watermark Kamera HP)
     const handleSnap = () => {
         if (!videoRef.current) return;
         const video = videoRef.current;
         const canvas = canvasRef.current || document.createElement("canvas");
 
-        const width = video.videoWidth || 640;
-        const height = video.videoHeight || 640;
+        const width = video.videoWidth || 720;
+        const height = video.videoHeight || 720;
 
         canvas.width = width;
         canvas.height = height;
@@ -109,49 +162,111 @@ export default function WebcamSelfieModal({
         ctx.drawImage(video, 0, 0, width, height);
         ctx.restore();
 
-        // 2. Draw Anti-Fraud Watermark Bar at Bottom
-        const barHeight = Math.max(90, Math.round(height * 0.16));
-        ctx.fillStyle = "rgba(15, 23, 42, 0.85)"; // slate-900 with 85% opacity
-        ctx.fillRect(0, height - barHeight, width, barHeight);
+        // 2. Watermark Bar Geometry (Kamera HP Smartphone Style)
+        const barHeight = Math.max(138, Math.round(height * 0.23));
+        const barTop = height - barHeight;
 
-        // Watermark Accent Strip
-        ctx.fillStyle = isActualTugasLuar ? "#f59e0b" : type === "check-in" ? "#10b981" : "#f59e0b"; // emerald or amber
-        ctx.fillRect(0, height - barHeight, width, 4);
+        // Dark gradient glassmorphism overlay
+        const bgGrad = ctx.createLinearGradient(0, barTop, 0, height);
+        bgGrad.addColorStop(0, "rgba(15, 23, 42, 0.92)");
+        bgGrad.addColorStop(1, "rgba(2, 6, 23, 0.98)");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, barTop, width, barHeight);
 
-        // Text Info
+        // Watermark Accent Strip on top (3px)
+        ctx.fillStyle = isActualTugasLuar ? "#f59e0b" : type === "check-in" ? "#10b981" : "#f43f5e";
+        ctx.fillRect(0, barTop, width, 3);
+
+        const padX = Math.max(16, Math.round(width * 0.035));
+        const maxWidth = width - (padX * 2);
+
         const now = new Date();
-        const timeStr = now.toLocaleDateString("id-ID", {
-            weekday: "long",
-            day: "numeric",
-            month: "short",
-            year: "numeric"
-        }) + " • " + now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " WIB";
+        const timeOnly = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " WIB";
+        const dateOnly = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
 
-        const typeLabel = isActualTugasLuar
-            ? "CHECK-IN TUGAS LUAR"
-            : type === "check-in"
-                ? "CHECK-IN MASUK"
-                : "CHECK-OUT PULANG";
+        // Line 1: Header Brand Pill & Timestamp
+        const line1Y = barTop + 22;
 
-        const coordsStr = locationData?.latitude 
+        // Brand Pill
+        drawRoundedRect(ctx, padX, line1Y - 13, 56, 17, 4, "#2563eb");
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 10px Inter, sans-serif";
+        ctx.fillText("SERV.IO", padX + 8, line1Y - 1);
+
+        ctx.fillStyle = "#93c5fd";
+        ctx.font = "bold 10.5px Inter, sans-serif";
+        ctx.fillText("SMART ATTENDANCE CAMERA", padX + 64, line1Y - 1);
+
+        // Right side: Real-time clock & date
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 13px Inter, monospace";
+        ctx.fillText(timeOnly, width - padX, line1Y - 1);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "10px Inter, sans-serif";
+        ctx.fillText(dateOnly, width - padX, line1Y + 12);
+        ctx.textAlign = "left";
+
+        // Line 2: Petugas & Status Presensi
+        const line2Y = line1Y + 18;
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 12px Inter, sans-serif";
+        ctx.fillText(`Petugas: ${user?.nama || "Karyawan"}`, padX, line2Y);
+
+        const petugasWidth = ctx.measureText(`Petugas: ${user?.nama || "Karyawan"}`).width;
+        ctx.fillStyle = isActualTugasLuar ? "#fbbf24" : type === "check-in" ? "#34d399" : "#f87171";
+        ctx.font = "bold 11px Inter, sans-serif";
+        const typeLabel = isActualTugasLuar ? "• CHECK-IN TUGAS LUAR" : type === "check-in" ? "• CHECK-IN MASUK" : "• CHECK-OUT PULANG";
+        ctx.fillText(typeLabel, padX + petugasWidth + 6, line2Y);
+
+        // Divider
+        const sepY = line2Y + 7;
+        ctx.strokeStyle = "rgba(148, 163, 184, 0.25)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padX, sepY);
+        ctx.lineTo(width - padX, sepY);
+        ctx.stroke();
+
+        // Line 3: Real Location Name (Nama Lokasi Real Detail - Smartphone Camera Style)
+        let line3Y = sepY + 14;
+        ctx.fillStyle = "#38bdf8";
+        ctx.font = "bold 10px Inter, sans-serif";
+        ctx.fillText("LOKASI REAL:", padX, line3Y);
+
+        const lokasiLabelWidth = ctx.measureText("LOKASI REAL: ").width;
+        const realAddressText = locationData?.addressName || "Jl. Raya Pekayon No.25, RT.004/RW.001, Pekayon Jaya, Kec. Bekasi Selatan, Kota Bekasi 17148";
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 11px Inter, sans-serif";
+        const endY = drawWrappedText(ctx, realAddressText, padX + lokasiLabelWidth, line3Y, maxWidth - lokasiLabelWidth - 10, 14, 2);
+
+        // Line 4: GPS Coordinates, Akurasi, Jarak & Geofence Status
+        const line4Y = Math.max(endY + 2, line3Y + 18);
+        const coordsStr = locationData?.latitude
             ? `GPS: ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)} (±${Math.round(locationData.accuracy || 0)}m)`
             : "GPS: Menunggu sinyal";
 
         const distanceStr = locationData?.distance !== undefined
-            ? `Jarak: ${locationData.distance}m dari workshop`
+            ? `• Jarak: ${locationData.distance}m ke ${policy?.nama_kantor || "Workshop"}`
             : "";
 
-        ctx.fillStyle = "#ffffff";
-        ctx.font = `bold ${Math.max(16, Math.round(width * 0.032))}px Inter, sans-serif`;
-        ctx.fillText(`[${typeLabel}] ${user?.nama || "Karyawan"}`, 20, height - barHeight + 30);
+        const radiusStr = locationData?.isInRadius ? "[Dalam Radius]" : "[Luar Radius]";
 
-        ctx.fillStyle = "#94a3b8"; // slate-400
-        ctx.font = `${Math.max(12, Math.round(width * 0.024))}px Inter, sans-serif`;
-        ctx.fillText(`Waktu: ${timeStr}`, 20, height - barHeight + 54);
-        ctx.fillText(`GPS: ${coordsStr} ${distanceStr ? `• ${distanceStr}` : ""}`, 20, height - barHeight + 76);
+        ctx.fillStyle = "#cbd5e1";
+        ctx.font = "9.5px Inter, sans-serif";
+        ctx.fillText(`${coordsStr} ${distanceStr} ${radiusStr}`, padX, line4Y);
+
+        // Stamp verifikasi di pojok kanan bawah
+        ctx.textAlign = "right";
+        ctx.fillStyle = locationData?.isInRadius ? "#10b981" : "#f59e0b";
+        ctx.font = "bold 8.5px monospace";
+        ctx.fillText("GEOFENCE VERIFIED", width - padX, line4Y);
+        ctx.textAlign = "left";
 
         // Generate data URL for preview & Blob for upload
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.90);
         setPreviewImage(dataUrl);
 
         canvas.toBlob(
@@ -162,7 +277,7 @@ export default function WebcamSelfieModal({
                 }
             },
             "image/jpeg",
-            0.88
+            0.90
         );
 
         stopCamera();
@@ -279,39 +394,60 @@ export default function WebcamSelfieModal({
                                     Posisikan Wajah di Lingkaran
                                 </span>
                             </div>
+
+                            {/* Live Smartphone Camera Watermark Overlay Preview */}
+                            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950/95 via-slate-900/80 to-transparent p-3 pointer-events-none text-left border-t border-white/10">
+                                <div className="flex items-center justify-between text-3xs font-mono text-white/90 mb-0.5">
+                                    <span className="font-bold tracking-wider text-sky-400">SERV.IO GPS CAMERA</span>
+                                    <span className="text-slate-300 font-semibold">{new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })} WIB</span>
+                                </div>
+                                <p className="text-3xs font-bold text-white truncate leading-tight">
+                                    {locationData?.addressName || "Jl. Raya Pekayon No.25, RT.004/RW.001, Pekayon Jaya, Kec. Bekasi Selatan, Kota Bekasi 17148"}
+                                </p>
+                                <p className="text-3xs text-slate-300 font-mono mt-0.5 truncate">
+                                    {locationData?.latitude ? `GPS: ${locationData.latitude.toFixed(5)}, ${locationData.longitude.toFixed(5)} • Jarak: ${locationData.distance !== null ? `${locationData.distance}m` : "-"}` : "Mencari sinyal GPS..."}
+                                </p>
+                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* Location Badge Info */}
-                <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-2xs sm:text-xs">
-                    <div className="flex items-center gap-2 text-slate-600 truncate">
-                        <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                        <span className="truncate">
-                            {locationData?.distance !== undefined
-                                ? `Jarak ke ${policy?.nama_kantor || "Workshop"}: ${locationData.distance} m`
-                                : "Mendeteksi koordinat GPS..."}
-                        </span>
+                {/* Location Badge Info (Detail Watermark Kamera HP) */}
+                <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-100 space-y-2 text-2xs sm:text-xs">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2.5 text-slate-700 min-w-0">
+                            <MapPin className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                            <div className="min-w-0">
+                                <p className="font-bold text-slate-900 leading-tight">
+                                    {locationData?.addressName || "Jl. Raya Pekayon No.25, RT.004/RW.001, Pekayon Jaya, Kec. Bekasi Selatan, Kota Bekasi 17148"}
+                                </p>
+                                <p className="text-3xs text-slate-500 mt-1">
+                                    {locationData?.latitude 
+                                        ? `Koordinat: ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)} (Akurasi ±${Math.round(locationData.accuracy || 0)}m) • Jarak: ${locationData.distance !== null ? `${locationData.distance}m` : "-"} ke ${policy?.nama_kantor || "Workshop"}`
+                                        : "Mendeteksi sinyal GPS presisi..."}
+                                </p>
+                            </div>
+                        </div>
+                        {locationData?.isInRadius !== undefined && (
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md font-extrabold text-3xs uppercase shrink-0 ${
+                                locationData.isInRadius 
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
+                                    : "bg-amber-100 text-amber-800 border border-amber-200"
+                            }`}>
+                                {locationData.isInRadius ? (
+                                    <>
+                                        <CheckCircle2 className="w-3 h-3 stroke-[2.5]" />
+                                        <span>Dalam Radius</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <AlertTriangle className="w-3 h-3 stroke-[2.5]" />
+                                        <span>Luar Radius</span>
+                                    </>
+                                )}
+                            </span>
+                        )}
                     </div>
-                    {locationData?.isInRadius !== undefined && (
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-3xs shrink-0 ${
-                            locationData.isInRadius 
-                                ? "bg-emerald-100 text-emerald-800" 
-                                : "bg-rose-100 text-rose-800"
-                        }`}>
-                            {locationData.isInRadius ? (
-                                <>
-                                    <CheckCircle2 className="w-3 h-3 stroke-[2.5]" />
-                                    <span>Dalam Radius</span>
-                                </>
-                            ) : (
-                                <>
-                                    <AlertTriangle className="w-3 h-3 stroke-[2.5]" />
-                                    <span>Luar Radius</span>
-                                </>
-                            )}
-                        </span>
-                    )}
                 </div>
 
                 {/* External Duty Reason Input */}
