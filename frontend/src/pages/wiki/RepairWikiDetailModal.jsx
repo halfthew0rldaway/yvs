@@ -12,8 +12,11 @@ import {
     Edit3,
     Trash2
 } from "lucide-react";
+import ConfirmModal from "../../components/ConfirmModal";
 
 export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, onDelete, canModify = false }) {
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
     if (!isOpen || !wiki) return null;
 
     const difficultyColors = {
@@ -148,12 +151,8 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        if (confirm(`Yakin ingin menghapus panduan wiki "${wiki.judul}"?`)) {
-                                            onDelete(wiki.id);
-                                        }
-                                    }}
-                                    className="px-3 py-1.5 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="px-3 py-1.5 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                                 >
                                     <Trash2 className="w-3.5 h-3.5 text-rose-500" />
                                     <span>Hapus</span>
@@ -164,13 +163,28 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+                        className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                     >
                         Tutup
                     </button>
                 </div>
 
             </div>
+
+            {/* Modal Konfirmasi Hapus Panduan Wiki */}
+            <ConfirmModal
+                isOpen={showDeleteConfirm}
+                title="Hapus Panduan Wiki"
+                message={`Apakah Anda yakin ingin menghapus panduan wiki reparasi "${wiki.judul}"? Tindakan ini tidak dapat dibatalkan.`}
+                confirmText="Hapus Panduan"
+                cancelText="Batal"
+                isDanger={true}
+                onConfirm={() => {
+                    setShowDeleteConfirm(false);
+                    onDelete(wiki.id);
+                }}
+                onCancel={() => setShowDeleteConfirm(false)}
+            />
         </div>
     );
 }

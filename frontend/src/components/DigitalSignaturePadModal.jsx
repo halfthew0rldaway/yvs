@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { PenTool, Undo2, Trash2, Check, X, ShieldCheck, User, BookmarkPlus } from "lucide-react";
+import { PenTool, Undo2, Trash2, Check, X, ShieldCheck, User, BookmarkPlus, AlertCircle } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function DigitalSignaturePadModal({
     isOpen,
@@ -21,6 +22,7 @@ export default function DigitalSignaturePadModal({
     const [signerName, setSignerName] = useState(defaultName);
     const [phoneLast4, setPhoneLast4] = useState("");
     const [phoneError, setPhoneError] = useState("");
+    const [canvasError, setCanvasError] = useState("");
     const [strokeHistory, setStrokeHistory] = useState([]);
     const [saveProfile, setSaveProfile] = useState(defaultSaveProfile);
 
@@ -100,6 +102,7 @@ export default function DigitalSignaturePadModal({
         ctx.moveTo(x, y);
         setIsDrawing(true);
         setHasDrawn(true);
+        if (canvasError) setCanvasError("");
     }
 
     function draw(e) {
@@ -151,9 +154,11 @@ export default function DigitalSignaturePadModal({
 
     function handleConfirm() {
         if (!hasDrawn) {
-            alert("Harap bubuhkan tanda tangan di kanvas sebelum menyimpan.");
+            setCanvasError("Harap bubuhkan tanda tangan di kanvas sebelum menyimpan.");
+            toast.error("Harap bubuhkan tanda tangan di kanvas sebelum menyimpan.");
             return;
         }
+        setCanvasError("");
 
         if (requirePhoneVerify) {
             const clean = phoneLast4.replace(/\D/g, "");
@@ -266,7 +271,9 @@ export default function DigitalSignaturePadModal({
                         </div>
 
                         {/* Extra Large Canvas Container */}
-                        <div className="relative w-full h-64 sm:h-72 md:h-80 bg-slate-50/70 border-2 border-dashed border-slate-300 rounded-2xl overflow-hidden touch-none flex items-center justify-center shadow-inner">
+                        <div className={`relative w-full h-64 sm:h-72 md:h-80 bg-slate-50/70 border-2 border-dashed rounded-2xl overflow-hidden touch-none flex items-center justify-center shadow-inner transition-colors ${
+                            canvasError ? "border-rose-400 ring-2 ring-rose-400/20 bg-rose-50/20" : "border-slate-300"
+                        }`}>
                             <canvas
                                 ref={canvasRef}
                                 onMouseDown={startDrawing}
@@ -298,6 +305,13 @@ export default function DigitalSignaturePadModal({
                                 <span>Garis Dasar</span>
                             </div>
                         </div>
+
+                        {canvasError && (
+                            <div className="flex items-center gap-1.5 p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold animate-in fade-in">
+                                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                                <span>{canvasError}</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Checkbox: Save as reusable staff signature profile */}

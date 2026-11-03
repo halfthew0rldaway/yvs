@@ -1,55 +1,118 @@
 import React, { useEffect } from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, AlertCircle, HelpCircle, X, Loader2 } from "lucide-react";
 
-export default function ConfirmModal({ isOpen, title, message, onConfirm, onCancel, confirmText = "OK", cancelText = "Batal", isDanger = false }) {
+export default function ConfirmModal({
+    isOpen,
+    title,
+    message,
+    onConfirm,
+    onCancel,
+    confirmText = "Konfirmasi",
+    cancelText = "Batal",
+    isDanger = false,
+    variant = isDanger ? "danger" : "primary", // "danger" | "warning" | "primary"
+    icon: CustomIcon = null,
+    loading = false
+}) {
     useEffect(() => {
         if (!isOpen) return;
         function handleKeyDown(e) {
-            if (e.key === "Escape") onCancel?.();
+            if (e.key === "Escape" && !loading) {
+                onCancel?.();
+            }
         }
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isOpen, onCancel]);
+    }, [isOpen, onCancel, loading]);
 
     if (!isOpen) return null;
 
+    const actualVariant = isDanger ? "danger" : variant;
+
+    const getVariantStyles = () => {
+        switch (actualVariant) {
+            case "danger":
+                return {
+                    badge: "bg-rose-50 text-rose-600 border-rose-200",
+                    confirmBtn: "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20",
+                    defaultIcon: AlertTriangle
+                };
+            case "warning":
+                return {
+                    badge: "bg-amber-50 text-amber-600 border-amber-200",
+                    confirmBtn: "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/20",
+                    defaultIcon: AlertCircle
+                };
+            case "primary":
+            default:
+                return {
+                    badge: "bg-blue-50 text-blue-600 border-blue-200",
+                    confirmBtn: "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20",
+                    defaultIcon: HelpCircle
+                };
+        }
+    };
+
+    const variantStyles = getVariantStyles();
+    const IconToRender = CustomIcon || variantStyles.defaultIcon;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 sm:p-0">
+        <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
+            onClick={() => !loading && onCancel?.()}
+        >
             <div 
-                className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
-                onClick={onCancel}
-            ></div>
-            
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 overflow-hidden modal-surface border border-slate-100">
-                <button 
-                    onClick={onCancel}
-                    className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                >
-                    <X className="w-5 h-5" />
-                </button>
+                className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-6 overflow-hidden text-slate-900 animate-in zoom-in-95 duration-150"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Close Button */}
+                {!loading && (
+                    <button 
+                        type="button"
+                        onClick={onCancel}
+                        className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-slate-200"
+                        title="Tutup (Esc)"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
                 
-                <div className="flex flex-col items-center text-center mt-2">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${isDanger ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
-                        <AlertTriangle className="w-6 h-6" />
+                <div className="flex flex-col items-center text-center mt-1">
+                    {/* Icon Badge */}
+                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center mb-3.5 shadow-2xs ${variantStyles.badge}`}>
+                        <IconToRender className="w-6 h-6" />
                     </div>
                     
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{title}</h3>
-                    <p className="text-sm text-slate-500 mb-6">{message}</p>
+                    {/* Title */}
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                        {title}
+                    </h3>
+
+                    {/* Message (supports multiline) */}
+                    {message && (
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-2 whitespace-pre-line text-center">
+                            {message}
+                        </p>
+                    )}
                     
-                    <div className="flex items-center gap-3 w-full">
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-3 w-full mt-6">
                         <button
+                            type="button"
+                            disabled={loading}
                             onClick={onCancel}
-                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors"
+                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {cancelText}
                         </button>
                         <button
+                            type="button"
+                            disabled={loading}
                             onClick={onConfirm}
-                            className={`flex-1 px-4 py-2.5 text-white rounded-xl text-sm font-semibold transition-colors ${
-                                isDanger ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
-                            }`}
+                            className={`flex-1 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles.confirmBtn}`}
                         >
-                            {confirmText}
+                            {loading && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
+                            <span>{confirmText}</span>
                         </button>
                     </div>
                 </div>

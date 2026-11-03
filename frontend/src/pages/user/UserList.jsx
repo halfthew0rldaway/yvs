@@ -29,6 +29,7 @@ import TableLoadingState from "../../components/common/TableLoadingState";
 import UserAvatar from "../../components/common/UserAvatar";
 import ProfilePhotoAdjustModal from "../../components/common/ProfilePhotoAdjustModal";
 import TechnicianPerformanceModal from "../../components/TechnicianPerformanceModal";
+import ConfirmModal from "../../components/ConfirmModal";
 
 export default function UserList() {
     const [users, setUsers] = useState([]);
@@ -49,6 +50,8 @@ export default function UserList() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState("create"); // 'create' | 'edit'
     const [selectedUser, setSelectedUser] = useState(null);
+    const [userToDelete, setUserToDelete] = useState(null);
+    const [isDeletingUser, setIsDeletingUser] = useState(false);
     const [formData, setFormData] = useState({
         nama: "",
         email: "",
@@ -205,15 +208,22 @@ export default function UserList() {
         }
     }
 
-    async function handleDelete(id, nama) {
-        if (!window.confirm(`Apakah Anda yakin ingin menghapus user "${nama}"?`)) return;
+    function handleDelete(id, nama) {
+        setUserToDelete({ id, nama });
+    }
 
+    async function executeDeleteUser() {
+        if (!userToDelete) return;
+        setIsDeletingUser(true);
         try {
-            const res = await api.delete(`/users/${id}`);
+            const res = await api.delete(`/users/${userToDelete.id}`);
             toast.success(res.data.message || "User berhasil dihapus");
+            setUserToDelete(null);
             fetchData();
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal menghapus user");
+        } finally {
+            setIsDeletingUser(false);
         }
     }
 
@@ -801,6 +811,19 @@ export default function UserList() {
                     isSubmitting={uploadingUserPhoto}
                 />
             )}
+
+            {/* MODAL KONFIRMASI HAPUS USER */}
+            <ConfirmModal
+                isOpen={!!userToDelete}
+                title="Hapus Pengguna"
+                message={`Apakah Anda yakin ingin menghapus akun pengguna "${userToDelete?.nama}"? Akses login dan data riwayat pengguna ini akan dinonaktifkan.`}
+                confirmText="Hapus Pengguna"
+                cancelText="Batal"
+                isDanger={true}
+                loading={isDeletingUser}
+                onConfirm={executeDeleteUser}
+                onCancel={() => setUserToDelete(null)}
+            />
         </div>
     );
 }

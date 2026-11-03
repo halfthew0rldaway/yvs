@@ -138,6 +138,21 @@ export default function AttendancePage() {
     const [earlyCheckOutModalOpen, setEarlyCheckOutModalOpen] = useState(false);
     const [earlyCheckOutReason, setEarlyCheckOutReason] = useState("");
 
+    // Custom Action Review Prompt Modal State (Replaces native browser prompt)
+    const [actionPromptModal, setActionPromptModal] = useState({
+        isOpen: false,
+        title: "",
+        subtitle: "",
+        inputLabel: "",
+        inputValue: "",
+        placeholder: "",
+        confirmText: "Konfirmasi",
+        cancelText: "Batal",
+        variant: "primary",
+        isSubmitting: false,
+        onConfirm: null
+    });
+
     // Personal History State
     const [myHistory, setMyHistory] = useState([]);
     const [myStats, setMyStats] = useState({ totalHadir: 0, totalTerlambat: 0, totalMenitTerlambat: 0, totalJamKerja: 0 });
@@ -412,24 +427,65 @@ export default function AttendancePage() {
     }, [isPimpinanOrAdmin, loadPendingReviews]);
 
     // Handle Review Action (Valid / Tolak)
-    const handleReviewAttendance = async (id, statusReview) => {
-        let note = "";
+    const handleReviewAttendance = (id, statusReview) => {
         if (statusReview === "ditolak") {
-            const input = prompt("Masukkan alasan penolakan presensi tugas luar:", "Di luar jadwal/penugasan resmi");
-            if (input === null) return;
-            note = input;
-        }
-
-        try {
-            const res = await api.put(`/attendance/${id}/review`, {
-                status_review: statusReview,
-                catatan_review: note
+            setActionPromptModal({
+                isOpen: true,
+                title: "Tolak Presensi Tugas Luar",
+                subtitle: "Berikan alasan penolakan presensi tugas luar ini agar tercatat transparan di audit log sistem.",
+                inputLabel: "Alasan Penolakan",
+                placeholder: "Contoh: Di luar jadwal / penugasan resmi workshop...",
+                inputValue: "Di luar jadwal/penugasan resmi",
+                confirmText: "Tolak Presensi",
+                cancelText: "Batal",
+                variant: "danger",
+                isSubmitting: false,
+                onConfirm: async (note) => {
+                    setActionPromptModal(prev => ({ ...prev, isSubmitting: true }));
+                    try {
+                        const res = await api.put(`/attendance/${id}/review`, {
+                            status_review: "ditolak",
+                            catatan_review: note
+                        });
+                        toast.success(res.data.message || "Presensi berhasil ditolak");
+                        setActionPromptModal(prev => ({ ...prev, isOpen: false, isSubmitting: false }));
+                        loadPendingReviews();
+                        loadTodayStatus();
+                    } catch (err) {
+                        toast.error(err.response?.data?.message || "Gagal memproses review presensi");
+                        setActionPromptModal(prev => ({ ...prev, isSubmitting: false }));
+                    }
+                }
             });
-            toast.success(res.data.message || `Presensi berhasil ${statusReview === "valid" ? "disetujui" : "ditolak"}`);
-            loadPendingReviews();
-            loadTodayStatus();
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Gagal memproses review presensi");
+        } else {
+            setActionPromptModal({
+                isOpen: true,
+                title: "Setujui Presensi Tugas Luar",
+                subtitle: "Apakah Anda yakin ingin menyetujui presensi tugas luar ini sebagai presensi valid?",
+                inputLabel: "Catatan Verifikator (Opsional)",
+                placeholder: "Contoh: Sesuai surat penugasan resmi...",
+                inputValue: "Tugas luar terverifikasi valid",
+                confirmText: "Setujui (Valid)",
+                cancelText: "Batal",
+                variant: "emerald",
+                isSubmitting: false,
+                onConfirm: async (note) => {
+                    setActionPromptModal(prev => ({ ...prev, isSubmitting: true }));
+                    try {
+                        const res = await api.put(`/attendance/${id}/review`, {
+                            status_review: "valid",
+                            catatan_review: note
+                        });
+                        toast.success(res.data.message || "Presensi berhasil disetujui");
+                        setActionPromptModal(prev => ({ ...prev, isOpen: false, isSubmitting: false }));
+                        loadPendingReviews();
+                        loadTodayStatus();
+                    } catch (err) {
+                        toast.error(err.response?.data?.message || "Gagal memproses review presensi");
+                        setActionPromptModal(prev => ({ ...prev, isSubmitting: false }));
+                    }
+                }
+            });
         }
     };
 
@@ -543,20 +599,37 @@ export default function AttendancePage() {
     };
 
     // Review Leave (Admin)
-    const handleReviewLeave = async (id, status) => {
-        const note = prompt(`Catatan persetujuan (${status}):`, status === "disetujui" ? "Disetujui oleh admin" : "Tidak memenuhi syarat");
-        if (note === null) return;
-
-        try {
-            const res = await api.put(`/attendance/leaves/${id}/review`, {
-                status,
-                catatan_approver: note
-            });
-            toast.success(res.data.message);
-            loadLeaves();
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Gagal memproses persetujuan");
-        }
+    const handleReviewLeave = (id, status) => {
+        const isApprove = status === "disetujui";
+        setActionPromptModal({
+            isOpen: true,
+            title: isApprove ? "Setujui Permohonan Izin" : "Tolak Permohonan Izin",
+            subtitle: isApprove 
+                ? "Konfirmasi persetujuan permohonan izin karyawan ini." 
+                : "Berikan alasan penolakan permohonan izin karyawan ini.",
+            inputLabel: isApprove ? "Catatan Persetujuan (Opsional)" : "Alasan Penolakan",
+            placeholder: isApprove ? "Disetujui oleh admin" : "Tidak memenuhi syarat",
+            inputValue: isApprove ? "Disetujui oleh admin" : "Tidak memenuhi syarat",
+            confirmText: isApprove ? "Setujui Izin" : "Tolak Izin",
+            cancelText: "Batal",
+            variant: isApprove ? "emerald" : "danger",
+            isSubmitting: false,
+            onConfirm: async (note) => {
+                setActionPromptModal(prev => ({ ...prev, isSubmitting: true }));
+                try {
+                    const res = await api.put(`/attendance/leaves/${id}/review`, {
+                        status,
+                        catatan_approver: note
+                    });
+                    toast.success(res.data.message || "Permohonan izin berhasil diproses");
+                    setActionPromptModal(prev => ({ ...prev, isOpen: false, isSubmitting: false }));
+                    loadLeaves();
+                } catch (err) {
+                    toast.error(err.response?.data?.message || "Gagal memproses persetujuan");
+                    setActionPromptModal(prev => ({ ...prev, isSubmitting: false }));
+                }
+            }
+        });
     };
 
     // Submit Adjustment (Admin)
@@ -2475,6 +2548,80 @@ export default function AttendancePage() {
                         </div>
                         <div className="p-2 flex items-center justify-center bg-black">
                             <img src={previewPhotoUrl} alt="Bukti Selfie" className="max-h-[75vh] w-auto object-contain rounded-lg" />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL 5: CUSTOM ACTION REVIEW / PROMPT MODAL (REPLACES BROWSER PROMPTS) */}
+            {actionPromptModal.isOpen && (
+                <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in"
+                    onClick={() => !actionPromptModal.isSubmitting && setActionPromptModal(prev => ({ ...prev, isOpen: false }))}
+                >
+                    <div 
+                        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-6 text-slate-900 animate-in zoom-in-95 duration-150"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                            <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                                {actionPromptModal.title}
+                            </h3>
+                            {!actionPromptModal.isSubmitting && (
+                                <button
+                                    type="button"
+                                    onClick={() => setActionPromptModal(prev => ({ ...prev, isOpen: false }))}
+                                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+
+                        {actionPromptModal.subtitle && (
+                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                                {actionPromptModal.subtitle}
+                            </p>
+                        )}
+
+                        {actionPromptModal.inputLabel && (
+                            <div className="space-y-1.5 mb-5">
+                                <label className="block text-xs font-bold text-slate-700">
+                                    {actionPromptModal.inputLabel}
+                                </label>
+                                <textarea
+                                    value={actionPromptModal.inputValue}
+                                    onChange={(e) => setActionPromptModal(prev => ({ ...prev, inputValue: e.target.value }))}
+                                    placeholder={actionPromptModal.placeholder}
+                                    rows="3"
+                                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all"
+                                />
+                            </div>
+                        )}
+
+                        <div className="flex items-center gap-3 pt-2">
+                            <button
+                                type="button"
+                                disabled={actionPromptModal.isSubmitting}
+                                onClick={() => setActionPromptModal(prev => ({ ...prev, isOpen: false }))}
+                                className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer border border-slate-200 disabled:opacity-50"
+                            >
+                                {actionPromptModal.cancelText || "Batal"}
+                            </button>
+                            <button
+                                type="button"
+                                disabled={actionPromptModal.isSubmitting}
+                                onClick={() => actionPromptModal.onConfirm?.(actionPromptModal.inputValue)}
+                                className={`flex-1 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 ${
+                                    actionPromptModal.variant === "danger"
+                                        ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20"
+                                        : actionPromptModal.variant === "emerald"
+                                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
+                                        : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
+                                }`}
+                            >
+                                <span>{actionPromptModal.confirmText}</span>
+                            </button>
                         </div>
                     </div>
                 </div>

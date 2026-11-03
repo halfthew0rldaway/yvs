@@ -3,6 +3,7 @@ import { User, PenTool, Check, Trash2, Plus, X, ShieldCheck, Sparkles } from "lu
 import api from "../services/api";
 import toast from "react-hot-toast";
 import DigitalSignaturePadModal from "./DigitalSignaturePadModal";
+import ConfirmModal from "./ConfirmModal";
 
 // Default standard workshop signature dataUrl (Clean cursive signature)
 export const DEFAULT_WORKSHOP_SIGNATURE = "data:image/svg+xml;utf8," + encodeURIComponent(`
@@ -24,6 +25,8 @@ export default function AdminSignatureSelectorModal({
     const [loading, setLoading] = useState(false);
     const [isCanvasModalOpen, setIsCanvasModalOpen] = useState(false);
     const [savingSignature, setSavingSignature] = useState(false);
+    const [profileToDelete, setProfileToDelete] = useState(null);
+    const [deletingProfile, setDeletingProfile] = useState(false);
 
     // Load saved staff signatures from backend & localStorage
     const loadSignatures = async () => {
@@ -89,9 +92,15 @@ export default function AdminSignatureSelectorModal({
         onClose();
     };
 
-    const handleDeleteProfile = async (e, id) => {
+    const handleDeleteProfileClick = (e, item) => {
         e.stopPropagation();
-        if (!confirm("Hapus profil tanda tangan ini dari daftar?")) return;
+        setProfileToDelete(item);
+    };
+
+    const handleConfirmDeleteProfile = async () => {
+        if (!profileToDelete) return;
+        const id = profileToDelete.id;
+        setDeletingProfile(true);
 
         try {
             if (typeof id === "number") {
@@ -101,12 +110,15 @@ export default function AdminSignatureSelectorModal({
             setStaffList(updated);
             localStorage.setItem("yvs_saved_staff_signatures", JSON.stringify(updated));
             toast.success("Profil tanda tangan dihapus");
-        } catch (err) {
+        } catch {
             // Local deletion fallback
             const updated = staffList.filter(s => s.id !== id);
             setStaffList(updated);
             localStorage.setItem("yvs_saved_staff_signatures", JSON.stringify(updated));
             toast.success("Profil tanda tangan dihapus");
+        } finally {
+            setDeletingProfile(false);
+            setProfileToDelete(null);
         }
     };
 
@@ -240,7 +252,7 @@ export default function AdminSignatureSelectorModal({
                                             {!item.is_system_default && (
                                                 <button
                                                     type="button"
-                                                    onClick={(e) => handleDeleteProfile(e, item.id)}
+                                                    onClick={(e) => handleDeleteProfileClick(e, item)}
                                                     className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                                                     title="Hapus profil ini"
                                                 >
@@ -306,6 +318,19 @@ export default function AdminSignatureSelectorModal({
                 showSaveProfile={true}
                 defaultSaveProfile={true}
                 loading={savingSignature}
+            />
+
+            {/* Modal Konfirmasi Hapus Profil Tanda Tangan */}
+            <ConfirmModal
+                isOpen={!!profileToDelete}
+                title="Hapus Profil Tanda Tangan"
+                message={`Apakah Anda yakin ingin menghapus profil tanda tangan "${profileToDelete?.nama}" dari daftar pilihan?`}
+                confirmText="Hapus Profil"
+                cancelText="Batal"
+                isDanger={true}
+                loading={deletingProfile}
+                onConfirm={handleConfirmDeleteProfile}
+                onCancel={() => setProfileToDelete(null)}
             />
         </>
     );

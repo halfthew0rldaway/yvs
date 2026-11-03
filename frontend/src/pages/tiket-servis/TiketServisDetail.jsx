@@ -239,6 +239,12 @@ export default function TiketServisDetail() {
     const [accCustomTargetDate, setAccCustomTargetDate] = useState("");
     const [isSubmittingAcc, setIsSubmittingAcc] = useState(false);
 
+    // Custom Action Confirmation States
+    const [claimWarrantyConfirm, setClaimWarrantyConfirm] = useState(null);
+    const [sparepartUsageToDelete, setSparepartUsageToDelete] = useState(null);
+    const [isDeletingSparepartUsage, setIsDeletingSparepartUsage] = useState(false);
+    const [isSubmittingWarrantyClaim, setIsSubmittingWarrantyClaim] = useState(false);
+
     // Collapsible Drawers & Accordions State
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isSopOpen, setIsSopOpen] = useState(false);
@@ -680,20 +686,29 @@ export default function TiketServisDetail() {
         toast.success("Kredensial disalin ke clipboard!");
     }
 
-    async function handleCreateWarrantyClaim() {
+    function handleCreateWarrantyClaim() {
         const warranty = tiket?.warranty_status;
         const confirmMsg = warranty?.isExpired 
             ? `PERHATIAN: Masa garansi unit ini telah KEDALUWARSA (berakhir pada ${warranty.garansi_berakhir_at ? new Date(warranty.garansi_berakhir_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}).\n\nApakah Anda tetap ingin menerbitkan klaim garansi retur perbaikan sebagai kebijakan toko?`
             : `Masa garansi unit ini masih AKTIF (sisa ${warranty?.sisaHari || 0} hari).\n\nTerbitkan tiket klaim garansi retur perbaikan untuk tiket #${tiket?.nomor_tiket}?`;
             
-        if (!window.confirm(confirmMsg)) return;
+        setClaimWarrantyConfirm({
+            isExpired: !!warranty?.isExpired,
+            message: confirmMsg
+        });
+    }
 
+    async function executeCreateWarrantyClaim() {
+        setIsSubmittingWarrantyClaim(true);
         try {
             const res = await api.post(`/tiket-servis/${id}/claim-garansi`, { alasan: "Klaim garansi retur perbaikan." });
             toast.success(res.data.message || "Tiket klaim garansi berhasil diterbitkan!");
+            setClaimWarrantyConfirm(null);
             navigate(`/tiket-servis/${res.data.data.id}`);
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal menerbitkan klaim garansi");
+        } finally {
+            setIsSubmittingWarrantyClaim(false);
         }
     }
 
@@ -861,17 +876,25 @@ export default function TiketServisDetail() {
         }
     }
 
-    async function handleRemoveSparepartUsage(usageId) {
-        if (!window.confirm("Apakah Anda yakin ingin membatalkan penggunaan sparepart ini? Stok akan dikembalikan ke inventaris.")) return;
+    function handleRemoveSparepartUsage(usageId) {
+        setSparepartUsageToDelete(usageId);
+    }
+
+    async function executeRemoveSparepartUsage() {
+        if (!sparepartUsageToDelete) return;
+        setIsDeletingSparepartUsage(true);
         try {
-            await api.delete(`/sparepart/use/${usageId}`);
+            await api.delete(`/sparepart/use/${sparepartUsageToDelete}`);
             toast.success("Penggunaan sparepart berhasil dibatalkan dan stok dikembalikan!");
+            setSparepartUsageToDelete(null);
             fetchTiket();
             // Refresh sparepart list
             const res = await api.get("/sparepart");
             setSpareparts(res.data);
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal membatalkan penggunaan sparepart");
+        } finally {
+            setIsDeletingSparepartUsage(false);
         }
     }
 
@@ -3324,6 +3347,32 @@ export default function TiketServisDetail() {
                 confirmText="Ya, Ambil Alih"
                 confirmColor="amber"
                 icon={<Wrench className="w-6 h-6 text-amber-600" />}
+            />
+
+            {/* Modal Konfirmasi Klaim Garansi Retur Perbaikan */}
+            <ConfirmModal
+                isOpen={!!claimWarrantyConfirm}
+                title={claimWarrantyConfirm?.isExpired ? "Klaim Garansi Kedaluwarsa" : "Terbitkan Klaim Garansi"}
+                message={claimWarrantyConfirm?.message}
+                confirmText="Ya, Terbitkan Klaim"
+                cancelText="Batal"
+                variant={claimWarrantyConfirm?.isExpired ? "warning" : "primary"}
+                loading={isSubmittingWarrantyClaim}
+                onConfirm={executeCreateWarrantyClaim}
+                onCancel={() => setClaimWarrantyConfirm(null)}
+            />
+
+            {/* Modal Konfirmasi Pembatalan Penggunaan Sparepart */}
+            <ConfirmModal
+                isOpen={!!sparepartUsageToDelete}
+                title="Batalkan Penggunaan Sparepart"
+                message="Apakah Anda yakin ingin membatalkan penggunaan sparepart ini? Jumlah stok akan otomatis dikembalikan ke inventaris gudang."
+                confirmText="Ya, Batalkan Part"
+                cancelText="Batal"
+                isDanger={true}
+                loading={isDeletingSparepartUsage}
+                onConfirm={executeRemoveSparepartUsage}
+                onCancel={() => setSparepartUsageToDelete(null)}
             />
 
             {/* Media Preview Modal (Lightbox Foto & Video) */}

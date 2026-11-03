@@ -17,6 +17,7 @@ import {
 import toast from "react-hot-toast";
 import UserAvatar from "../components/common/UserAvatar";
 import ProfilePhotoAdjustModal from "../components/common/ProfilePhotoAdjustModal";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Profile() {
     const { user, updateUser, login } = useAuth();
@@ -33,6 +34,7 @@ export default function Profile() {
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [removingPhoto, setRemovingPhoto] = useState(false);
     const [adjustImageSrc, setAdjustImageSrc] = useState(null);
+    const [showDeletePhotoConfirm, setShowDeletePhotoConfirm] = useState(false);
     const [isDraggingOverAvatar, setIsDraggingOverAvatar] = useState(false);
 
     const handleChange = (e) => {
@@ -111,9 +113,11 @@ export default function Profile() {
         }
     };
 
-    const handleRemovePhoto = async () => {
-        if (!window.confirm("Apakah Anda yakin ingin menghapus foto profil dan kembali ke avatar inisial?")) return;
+    const handleRemovePhoto = () => {
+        setShowDeletePhotoConfirm(true);
+    };
 
+    const executeRemovePhoto = async () => {
         setRemovingPhoto(true);
         try {
             const res = await api.delete("/auth/profile/photo");
@@ -121,6 +125,7 @@ export default function Profile() {
                 updateUser(res.data.user);
             }
             toast.success("Foto profil berhasil dihapus.");
+            setShowDeletePhotoConfirm(false);
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal menghapus foto profil.");
         } finally {
@@ -412,6 +417,19 @@ export default function Profile() {
                     isSubmitting={uploadingPhoto}
                 />
             )}
+
+            {/* Modal Konfirmasi Hapus Foto Profil */}
+            <ConfirmModal
+                isOpen={showDeletePhotoConfirm}
+                title="Hapus Foto Profil"
+                message="Apakah Anda yakin ingin menghapus foto profil dan kembali menggunakan avatar inisial nama Anda?"
+                confirmText="Hapus Foto"
+                cancelText="Batal"
+                isDanger={true}
+                loading={removingPhoto}
+                onConfirm={executeRemovePhoto}
+                onCancel={() => setShowDeletePhotoConfirm(false)}
+            />
         </div>
     );
 }

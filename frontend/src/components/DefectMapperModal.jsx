@@ -10,6 +10,7 @@ import {
     Sparkles,
     RotateCcw
 } from "lucide-react";
+import ConfirmModal from "./ConfirmModal";
 
 export const DEFECT_TYPES = [
     { id: "baret", label: "Goresan / Scratch", color: "#f59e0b", bg: "bg-amber-500", text: "text-amber-700", ring: "ring-amber-400" },
@@ -36,6 +37,7 @@ export default function DefectMapperModal({
     const [currentView, setCurrentView] = useState("top_lid");
     const [selectedType, setSelectedType] = useState("baret");
     const [activePinId, setActivePinId] = useState(null);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
     const canvasRef = useRef(null);
 
     if (!isOpen) return null;
@@ -104,12 +106,16 @@ export default function DefectMapperModal({
 
     function handleClearView() {
         if (readOnly) return;
-        if (!confirm(`Hapus semua titik cacat pada tampilan ${VIEWS.find(v => v.id === currentView)?.label}?`)) return;
+        setShowClearConfirm(true);
+    }
+
+    function executeClearView() {
         const updated = {
             version: 1,
             items: items.filter(i => (i.view || "top_lid") !== currentView)
         };
         onChange(updated);
+        setShowClearConfirm(false);
     }
 
     const currentDefectMeta = DEFECT_TYPES.find(d => d.id === selectedType) || DEFECT_TYPES[0];
@@ -487,6 +493,18 @@ export default function DefectMapperModal({
                 </div>
 
             </div>
+
+            {/* Modal Konfirmasi Bersihkan Titik Cacat Tampilan */}
+            <ConfirmModal
+                isOpen={showClearConfirm}
+                title="Hapus Titik Cacat"
+                message={`Apakah Anda yakin ingin menghapus seluruh titik cacat pada tampilan "${VIEWS.find(v => v.id === currentView)?.label}"?`}
+                confirmText="Hapus Semua"
+                cancelText="Batal"
+                isDanger={true}
+                onConfirm={executeClearView}
+                onCancel={() => setShowClearConfirm(false)}
+            />
         </div>
     );
 }
