@@ -306,7 +306,7 @@ export default function DiagnosisForm() {
     function handleSuggestSolutions() {
         const issueKeys = Object.keys(checklistStatus).filter(k => checklistStatus[k]?.status === "issue");
         if (issueKeys.length === 0) {
-            toast("Tidak ada komponen yang ditandai bermasalah.", { icon: "ℹ️" });
+            toast("Tidak ada komponen yang ditandai bermasalah.");
             return;
         }
 

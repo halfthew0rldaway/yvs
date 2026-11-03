@@ -147,8 +147,8 @@ export default function WebcamSelfieModal({
 
         ctx.fillStyle = "#94a3b8"; // slate-400
         ctx.font = `${Math.max(12, Math.round(width * 0.024))}px Inter, sans-serif`;
-        ctx.fillText(`🕒 ${timeStr}`, 20, height - barHeight + 54);
-        ctx.fillText(`📍 ${coordsStr} ${distanceStr ? `• ${distanceStr}` : ""}`, 20, height - barHeight + 76);
+        ctx.fillText(`Waktu: ${timeStr}`, 20, height - barHeight + 54);
+        ctx.fillText(`GPS: ${coordsStr} ${distanceStr ? `• ${distanceStr}` : ""}`, 20, height - barHeight + 76);
 
         // Generate data URL for preview & Blob for upload
         const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
@@ -294,12 +294,22 @@ export default function WebcamSelfieModal({
                         </span>
                     </div>
                     {locationData?.isInRadius !== undefined && (
-                        <span className={`px-2 py-0.5 rounded-md font-bold text-3xs shrink-0 ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-3xs shrink-0 ${
                             locationData.isInRadius 
                                 ? "bg-emerald-100 text-emerald-800" 
                                 : "bg-rose-100 text-rose-800"
                         }`}>
-                            {locationData.isInRadius ? "✓ Dalam Radius" : "⚠️ Luar Radius"}
+                            {locationData.isInRadius ? (
+                                <>
+                                    <CheckCircle2 className="w-3 h-3 stroke-[2.5]" />
+                                    <span>Dalam Radius</span>
+                                </>
+                            ) : (
+                                <>
+                                    <AlertTriangle className="w-3 h-3 stroke-[2.5]" />
+                                    <span>Luar Radius</span>
+                                </>
+                            )}
                         </span>
                     )}
                 </div>

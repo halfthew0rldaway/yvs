@@ -36,7 +36,7 @@ export default function InvoiceForm() {
                     // Check if selected tiket already has invoice
                     const currentTiket = res.data.find(t => String(t.id) === String(queryTiketId));
                     if (currentTiket?.invoice) {
-                        toast("Tiket ini sudah memiliki invoice resmi.", { icon: "ℹ️" });
+                        toast("Tiket ini sudah memiliki invoice resmi.");
                     }
                 }
             })

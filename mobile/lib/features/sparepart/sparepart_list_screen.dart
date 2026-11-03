@@ -248,13 +248,24 @@ class _SparepartListScreenState extends ConsumerState<SparepartListScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  isOutOfStock ? '⚠️ Stok habis di gudang' : '⚠️ Stok kritis (${part.stok} unit)',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: isOutOfStock ? AppTheme.error : const Color(0xFFB45309),
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.warning_amber_rounded,
+                                      size: 13,
+                                      color: isOutOfStock ? AppTheme.error : const Color(0xFFB45309),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      isOutOfStock ? 'Stok habis di gudang' : 'Stok kritis (${part.stok} unit)',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: isOutOfStock ? AppTheme.error : const Color(0xFFB45309),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 InkWell(
                                   onTap: () => _handleReminderAdmin(part),

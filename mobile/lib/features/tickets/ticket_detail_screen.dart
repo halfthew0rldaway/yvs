@@ -341,7 +341,18 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isExpired ? '⚠️ Garansi Kedaluwarsa' : '🛡️ Klaim Garansi Retur'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isExpired ? Icons.warning_amber_rounded : Icons.shield_outlined,
+              color: isExpired ? AppTheme.warning : AppTheme.accent,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(isExpired ? 'Garansi Kedaluwarsa' : 'Klaim Garansi Retur'),
+          ],
+        ),
         content: Text(
           isExpired
               ? 'Masa garansi tiket ini telah berakhir. Terbitkan klaim garansi retur sebagai kebijakan bengkel?'
@@ -1522,9 +1533,16 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(color: AppTheme.successBorder),
                             ),
-                            child: const Text(
-                              '✓ LULUS QC',
-                              style: TextStyle(color: AppTheme.successText, fontWeight: FontWeight.bold, fontSize: 10),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.check_circle_rounded, size: 12, color: AppTheme.successText),
+                                SizedBox(width: 4),
+                                Text(
+                                  'LULUS QC',
+                                  style: TextStyle(color: AppTheme.successText, fontWeight: FontWeight.bold, fontSize: 10),
+                                ),
+                              ],
                             ),
                           ),
                       ],

@@ -525,9 +525,19 @@ export default function AttendancePage() {
     const getStatusBadge = (status) => {
         switch (status) {
             case "hadir":
-                return <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">✓ Tepat Waktu</span>;
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Tepat Waktu</span>
+                    </span>
+                );
             case "terlambat":
-                return <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">⚠️ Terlambat</span>;
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                        <AlertCircle className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Terlambat</span>
+                    </span>
+                );
             case "pulang_cepat":
                 return <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">Pulang Cepat</span>;
             case "cuti":
@@ -909,14 +919,29 @@ export default function AttendancePage() {
                                             )}
                                         </div>
                                     </div>
-                                    <span className={`px-2.5 py-0.5 rounded-full text-3xs font-extrabold uppercase shrink-0 self-start sm:self-auto ${
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-3xs font-extrabold uppercase shrink-0 self-start sm:self-auto ${
                                         todayRecord.status_review === "valid"
                                             ? "bg-emerald-200 text-emerald-800"
                                             : todayRecord.status_review === "ditolak"
                                                 ? "bg-rose-200 text-rose-800"
                                                 : "bg-amber-200 text-amber-800 animate-pulse"
                                     }`}>
-                                        {todayRecord.status_review === "valid" ? "✓ Disetujui" : todayRecord.status_review === "ditolak" ? "✕ Ditolak" : "🕒 Menunggu"}
+                                        {todayRecord.status_review === "valid" ? (
+                                            <>
+                                                <Check className="w-3 h-3 stroke-[3]" />
+                                                <span>Disetujui</span>
+                                            </>
+                                        ) : todayRecord.status_review === "ditolak" ? (
+                                            <>
+                                                <X className="w-3 h-3 stroke-[3]" />
+                                                <span>Ditolak</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Clock className="w-3 h-3 stroke-[2.5]" />
+                                                <span>Menunggu</span>
+                                            </>
+                                        )}
                                     </span>
                                 </div>
                             )}

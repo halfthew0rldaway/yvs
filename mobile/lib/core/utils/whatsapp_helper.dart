@@ -72,10 +72,10 @@ class WhatsAppHelper {
           : '';
 
       text = 'Halo kak ${customer.nama},\n\n'
-          'Kabar gembira! Perbaikan perangkat *$deviceName* milik kakak dengan nomor tiket *${tiket.nomorTiket}* telah selesai dikerjakan oleh teknisi kami. 🎉\n'
+          'Kabar gembira! Perbaikan perangkat *$deviceName* milik kakak dengan nomor tiket *${tiket.nomorTiket}* telah selesai dikerjakan oleh teknisi kami.\n'
           '$totalBiaya'
           'Perangkat sudah bisa diambil di toko pada jam operasional kami. Mohon tunjukkan nomor tiket ini saat pengambilan.\n\n'
-          'Terima kasih telah mempercayakan perbaikan perangkat Anda kepada kami! 🙏';
+          'Terima kasih telah mempercayakan perbaikan perangkat Anda kepada kami!';
     }
 
     if (text.isEmpty) return null;
@@ -97,17 +97,17 @@ class WhatsAppHelper {
     String expiredInfo = '';
     if (tiket.warrantyStatus?.garansiBerakhirAt != null) {
       final expFormatted = CurrencyFormatter.formatDateOnly(tiket.warrantyStatus!.garansiBerakhirAt);
-      expiredInfo = '\n📅 Garansi Berlaku Hingga: *$expFormatted*';
+      expiredInfo = '\n- Garansi Berlaku Hingga: *$expFormatted*';
     }
 
     final text = 'Halo kak ${customer.nama},\n\n'
-        'Terima kasih telah melakukan perbaikan perangkat *$deviceName* (No. Tiket: *${tiket.nomorTiket}*) di Serv.io Workshop. 🎉\n\n'
+        'Terima kasih telah melakukan perbaikan perangkat *$deviceName* (No. Tiket: *${tiket.nomorTiket}*) di Serv.io Workshop.\n\n'
         '*Info Garansi Perbaikan:*\n'
-        '🛡️ Durasi Garansi: *$durasi*$expiredInfo\n'
+        '- Durasi Garansi: *$durasi*$expiredInfo\n'
         '*(Garansi berlaku untuk perbaikan / sparepart yang diganti)*\n\n'
-        '💡 *Tips Perawatan Perangkat ($kategori):*\n'
+        '*Tips Perawatan Perangkat ($kategori):*\n'
         '$tipsText\n\n'
-        'Jika ada kendala selama masa garansi, jangan ragu untuk menghubungi kami atau membawa kembali unit ke toko. Semoga perangkatnya awet dan lancar selalu ya kak! 🙏';
+        'Jika ada kendala selama masa garansi, jangan ragu untuk menghubungi kami atau membawa kembali unit ke toko. Semoga perangkatnya awet dan lancar selalu ya kak!';
 
     return 'https://wa.me/$phone?text=${Uri.encodeComponent(text)}';
   }
@@ -123,7 +123,7 @@ class WhatsAppHelper {
     final text = 'Halo kak ${customer.nama},\n\n'
         'Kami dari Serv.io Workshop ingin mengingatkan kembali terkait perangkat *$deviceName* milik kakak dengan nomor tiket *${tiket.nomorTiket}*.\n\n'
         'Perangkat kakak telah selesai diperbaiki sejak $months bulan yang lalu dan saat ini masih berada di workshop kami. Mohon kesediaannya untuk segera mengambil perangkat tersebut pada jam operasional kami.\n\n'
-        'Apabila ada kendala dalam pengambilan, mohon konfirmasikan kepada kami. Terima kasih! 🙏';
+        'Apabila ada kendala dalam pengambilan, mohon konfirmasikan kepada kami. Terima kasih!';
 
     return 'https://wa.me/$phone?text=${Uri.encodeComponent(text)}';
   }
