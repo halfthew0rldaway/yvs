@@ -434,7 +434,7 @@ export default function PhotoUploadSection({
                                         <video 
                                             src={mediaUrl} 
                                             className="w-full h-full object-cover opacity-80"
-                                            preload="metadata"
+                                            preload="none"
                                         />
                                         <div className="absolute inset-0 flex items-center justify-center">
                                             <div className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-xs flex items-center justify-center text-white border border-white/20">
@@ -449,6 +449,8 @@ export default function PhotoUploadSection({
                                     <img 
                                         src={mediaUrl} 
                                         alt={`Dokumentasi ${idx + 1}`} 
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-200"
                                     />
                                 )}

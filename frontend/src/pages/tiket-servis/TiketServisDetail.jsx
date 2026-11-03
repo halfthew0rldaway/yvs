@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
@@ -1765,7 +1765,7 @@ export default function TiketServisDetail() {
                                                 >
                                                     {isVideo(imageUrl) ? (
                                                         <div className="w-16 h-16 bg-slate-900 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex items-center justify-center">
-                                                            <video src={imageUrl} className="w-full h-full object-cover opacity-75" preload="metadata" />
+                                                            <video src={imageUrl} className="w-full h-full object-cover opacity-75" preload="none" />
                                                             <div className="absolute inset-0 flex items-center justify-center">
                                                                 <Play className="w-5 h-5 text-white fill-white drop-shadow" />
                                                             </div>
@@ -1775,6 +1775,8 @@ export default function TiketServisDetail() {
                                                         <img 
                                                             src={imageUrl} 
                                                             alt={`Kondisi ${idx+1}`} 
+                                                            loading="lazy"
+                                                            decoding="async"
                                                             className="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm transition-transform group-hover:scale-105"
                                                         />
                                                     )}
@@ -1815,7 +1817,7 @@ export default function TiketServisDetail() {
                                                         >
                                                             {isVideo(imageUrl) ? (
                                                                 <div className="w-16 h-16 bg-slate-900 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden flex items-center justify-center">
-                                                                    <video src={imageUrl} className="w-full h-full object-cover opacity-75" preload="metadata" />
+                                                                    <video src={imageUrl} className="w-full h-full object-cover opacity-75" preload="none" />
                                                                     <div className="absolute inset-0 flex items-center justify-center">
                                                                         <Play className="w-5 h-5 text-white fill-white drop-shadow" />
                                                                     </div>
@@ -1825,6 +1827,8 @@ export default function TiketServisDetail() {
                                                                 <img 
                                                                     src={imageUrl} 
                                                                     alt={`Selesai Servis ${idx+1}`} 
+                                                                    loading="lazy"
+                                                                    decoding="async"
                                                                     className="w-16 h-16 object-cover rounded-xl border border-emerald-200 shadow-sm transition-transform group-hover:scale-105"
                                                                 />
                                                             )}
@@ -1960,7 +1964,7 @@ export default function TiketServisDetail() {
                                             >
                                                 {isVideo(imageUrl) ? (
                                                     <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900 rounded-xl border border-slate-200 shadow-2xs relative overflow-hidden flex items-center justify-center">
-                                                        <video src={imageUrl} className="w-full h-full object-cover opacity-75" preload="metadata" />
+                                                        <video src={imageUrl} className="w-full h-full object-cover opacity-75" preload="none" />
                                                         <div className="absolute inset-0 flex items-center justify-center">
                                                             <Play className="w-6 h-6 text-white fill-white drop-shadow" />
                                                         </div>
@@ -1970,6 +1974,8 @@ export default function TiketServisDetail() {
                                                     <img 
                                                         src={imageUrl} 
                                                         alt={`Bukti Diagnosis ${idx + 1}`} 
+                                                        loading="lazy"
+                                                        decoding="async"
                                                         className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-slate-200 shadow-2xs group-hover:scale-105 transition-transform"
                                                     />
                                                 )}
@@ -2067,6 +2073,8 @@ export default function TiketServisDetail() {
                                                         <img 
                                                             src={log.foto_url} 
                                                             alt="Dokumentasi Perbaikan" 
+                                                            loading="lazy"
+                                                            decoding="async"
                                                             className="h-20 object-cover group-hover:scale-105 transition-transform"
                                                         />
                                                     </button>

@@ -406,7 +406,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                     >
                                         {isVid ? (
                                             <div className="w-full h-full bg-slate-900 text-purple-400 flex items-center justify-center relative">
-                                                <video src={url} className="w-full h-full object-cover opacity-70" preload="metadata" muted />
+                                                <video src={url} className="w-full h-full object-cover opacity-70" preload="none" muted />
                                                 <Play className="w-3.5 h-3.5 fill-current absolute drop-shadow-sm" />
                                             </div>
                                         ) : hasError ? (
@@ -417,6 +417,8 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                             <img 
                                                 src={url} 
                                                 alt={p.label || ""} 
+                                                loading="lazy"
+                                                decoding="async"
                                                 onError={() => setImgErrors(prev => ({ ...prev, [p.url]: true }))}
                                                 className="w-full h-full object-cover" 
                                             />
@@ -516,7 +518,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                         >
                                             {isVid ? (
                                                 <div className="w-full h-full relative flex items-center justify-center">
-                                                    <video src={url} className="w-full h-full object-cover opacity-80" preload="metadata" muted />
+                                                    <video src={url} className="w-full h-full object-cover opacity-80" preload="none" muted />
                                                     <div className="absolute inset-0 flex items-center justify-center">
                                                         <div className="w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center shadow-lg border border-white/20">
                                                             <Play className="w-4 h-4 fill-white ml-0.5" />
@@ -535,6 +537,8 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                                 <img 
                                                     src={url} 
                                                     alt={photo.label} 
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     onError={() => setImgErrors(prev => ({ ...prev, [photo.url]: true }))}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
                                                 />
@@ -639,7 +643,7 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                         >
                                             {isVid ? (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <video src={getMediaUrl(photoUrl)} className="w-full h-full object-cover opacity-60" preload="metadata" muted />
+                                                    <video src={getMediaUrl(photoUrl)} className="w-full h-full object-cover opacity-60" preload="none" muted />
                                                     <Play className="w-3.5 h-3.5 text-white fill-white absolute" />
                                                 </div>
                                             ) : hasError ? (
@@ -650,6 +654,8 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                                 <img 
                                                     src={getMediaUrl(photoUrl)} 
                                                     alt="" 
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     onError={() => setImgErrors(prev => ({ ...prev, [photoUrl]: true }))}
                                                     className="w-full h-full object-cover" 
                                                 />
@@ -1227,6 +1233,8 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                                     : t.nomor_tiket
                                             )}`} 
                                             alt={`QR ${t.nomor_tiket}`} 
+                                            loading="lazy"
+                                            decoding="async"
                                             className="w-20 h-20 sm:w-24 sm:h-24 mix-blend-multiply block" 
                                         />
                                     </div>
@@ -1708,6 +1716,8 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                                         <img 
                                                             src={getMediaUrl(log.foto_url)} 
                                                             alt="Dokumentasi Perbaikan" 
+                                                            loading="lazy"
+                                                            decoding="async"
                                                             className="h-24 sm:h-28 object-cover rounded-xl group-hover:scale-105 transition-transform" 
                                                         />
                                                         <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
