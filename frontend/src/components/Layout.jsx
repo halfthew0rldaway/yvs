@@ -28,7 +28,9 @@ import {
     ChevronRight,
     QrCode,
     ShieldAlert,
-    Clock
+    Clock,
+    HelpCircle,
+    Layers
 } from "lucide-react";
 import toast from "react-hot-toast";
 import SopModal from "./SopModal";
@@ -38,6 +40,7 @@ import MaintenanceRecallModal from "./MaintenanceRecallModal";
 import NotificationBell from "./NotificationBell";
 import CameraScannerModal from "./CameraScannerModal";
 import UserAvatar from "./common/UserAvatar";
+import BusinessProcessFlowModal from "./common/BusinessProcessFlowModal";
 import ReloginModal from "./ReloginModal";
 import SessionWarningModal from "./SessionWarningModal";
 import { useIdleTimer } from "../hooks/useIdleTimer";
@@ -204,6 +207,7 @@ export default function Layout({ children }) {
         return true;
     });
     const [isSopModalOpen, setIsSopModalOpen] = useState(false);
+    const [isProcessFlowModalOpen, setIsProcessFlowModalOpen] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [maintenanceDueData, setMaintenanceDueData] = useState({ items: [], total_due: 0, urgent_count: 0 });
     const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
@@ -494,19 +498,33 @@ export default function Layout({ children }) {
                     })}
                 </nav>
 
-                {/* Quick SOP / Guidance pocket book */}
-                <div className="px-4 py-2 border-t border-slate-100 shrink-0">
+                {/* Quick SOP & Process Flow Pocket Guides */}
+                <div className="px-4 py-2 border-t border-slate-100 shrink-0 space-y-1.5">
+                    <button
+                        type="button"
+                        onClick={() => setIsProcessFlowModalOpen(true)}
+                        className="w-full flex items-center justify-between px-3 py-2 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 hover:from-blue-100 hover:to-indigo-100 border border-blue-200/80 rounded-xl text-blue-900 transition-colors shadow-2xs group cursor-pointer"
+                    >
+                        <div className="flex items-center gap-2.5">
+                            <Layers className="w-4 h-4 text-blue-600" />
+                            <span className="text-xs font-semibold text-blue-950">Alur Proses Servis</span>
+                        </div>
+                        <span className="text-3xs font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                            FLOW
+                        </span>
+                    </button>
+
                     <button
                         type="button"
                         onClick={() => setIsSopModalOpen(true)}
-                        className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-800 transition-colors shadow-2xs group"
+                        className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-800 transition-colors shadow-2xs group cursor-pointer"
                     >
                         <div className="flex items-center gap-2.5">
-                            <BookOpen className="w-4 h-4 text-blue-600" />
+                            <BookOpen className="w-4 h-4 text-slate-600" />
                             <span className="text-xs font-semibold text-slate-800">Panduan Standar Layanan</span>
                         </div>
-                        <span className="text-3xs font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
-                            WOW
+                        <span className="text-3xs font-bold bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                            SOP
                         </span>
                     </button>
                 </div>
@@ -621,6 +639,17 @@ export default function Layout({ children }) {
 
                     {/* Right: Quick Action Button & Notification Bell */}
                     <div className="flex items-center justify-end gap-2 shrink-0">
+                        {/* Interactive Business Flow / SOP Guide Help Button */}
+                        <button
+                            type="button"
+                            onClick={() => setIsProcessFlowModalOpen(true)}
+                            className="inline-flex items-center justify-center gap-1.5 h-9 px-2.5 sm:px-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
+                            title="Panduan Interaktif Alur Proses Bisnis & SOP Serv.io"
+                        >
+                            <HelpCircle className="w-4 h-4 text-blue-600 shrink-0" />
+                            <span className="hidden sm:inline whitespace-nowrap">Alur Proses</span>
+                        </button>
+
                         {/* Quick Camera QR / Barcode Scanner */}
                         <button
                             type="button"
@@ -744,6 +773,12 @@ export default function Layout({ children }) {
 
             {/* In-App SOP Pocket Book Modal */}
             <SopModal isOpen={isSopModalOpen} onClose={() => setIsSopModalOpen(false)} />
+
+            {/* Interactive Business Flow / SOP Guide Modal */}
+            <BusinessProcessFlowModal 
+                isOpen={isProcessFlowModalOpen} 
+                onClose={() => setIsProcessFlowModalOpen(false)} 
+            />
 
             {/* In-Browser Camera QR & Barcode Scanner Modal */}
             <CameraScannerModal
