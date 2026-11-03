@@ -1,7 +1,12 @@
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/providers/auth_provider.dart';
+import 'widgets/photo_adjust_dialog.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -29,6 +34,121 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAndAdjustPhoto(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 90,
+      );
+      if (picked == null || !mounted) return;
+
+      final file = File(picked.path);
+      await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => PhotoAdjustDialog(
+          imageFile: file,
+          onConfirm: (bytes) async {
+            final error = await ref.read(authProvider.notifier).uploadProfilePhotoBytes(bytes);
+            if (!mounted) return;
+            if (error == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Foto profil berhasil diperbarui'),
+                  backgroundColor: AppTheme.success,
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(error),
+                  backgroundColor: AppTheme.error,
+                ),
+              );
+            }
+          },
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memilih foto: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    }
+  }
+
+  void _showPhotoOptions() {
+    final user = ref.read(authProvider).user;
+    final hasPhoto = user?.fotoProfile != null && user!.fotoProfile!.isNotEmpty;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text('Ubah Foto Profil', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: AppTheme.primary),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndAdjustPhoto(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: AppTheme.primary),
+                title: const Text('Ambil dari Kamera'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndAdjustPhoto(ImageSource.camera);
+                },
+              ),
+              if (hasPhoto)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: AppTheme.error),
+                  title: const Text('Hapus Foto Profil', style: TextStyle(color: AppTheme.error)),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final err = await ref.read(authProvider.notifier).removeProfilePhoto();
+                    if (!mounted) return;
+                    if (err == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Foto profil berhasil dihapus'), backgroundColor: AppTheme.success),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(err), backgroundColor: AppTheme.error),
+                      );
+                    }
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _handleSave() async {
@@ -63,6 +183,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
+    final hasPhoto = user?.fotoProfile != null && user!.fotoProfile!.isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -72,11 +193,93 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          // Avatar Uploader Card
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.border),
+            ),
+            child: Column(
+              children: [
+                Center(
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x140F172A),
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: hasPhoto
+                              ? CachedNetworkImage(
+                                  imageUrl: ApiConstants.resolveImageUrl(user.fotoProfile!),
+                                  fit: BoxFit.cover,
+                                  placeholder: (_, __) => Container(
+                                    color: const Color(0xFFF1F5F9),
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget: (_, __, ___) => _buildInitialAvatar(user),
+                                )
+                              : _buildInitialAvatar(user),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Material(
+                          color: AppTheme.primary,
+                          shape: const CircleBorder(),
+                          elevation: 2,
+                          child: InkWell(
+                            onTap: _showPhotoOptions,
+                            customBorder: const CircleBorder(),
+                            child: const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: _showPhotoOptions,
+                  icon: const Icon(Icons.photo_camera_outlined, size: 16),
+                  label: const Text('Sesuaikan Foto Profil', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // User Info Form Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppTheme.border),
             ),
             child: Form(
@@ -204,5 +407,26 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ),
     );
   }
-}
 
+  Widget _buildInitialAvatar(user) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primary, Color(0xFF1D4ED8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          user?.nama.isNotEmpty == true ? user!.nama[0].toUpperCase() : 'T',
+          style: const TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}

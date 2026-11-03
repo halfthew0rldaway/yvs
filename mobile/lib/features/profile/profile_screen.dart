@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/providers/auth_provider.dart';
 import '../../data/providers/notification_provider.dart';
@@ -147,29 +149,34 @@ class ProfileScreen extends ConsumerWidget {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppTheme.primary, Color(0xFF1D4ED8)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.3),
+                          color: AppTheme.primary.withValues(alpha: 0.2),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
                       ],
                     ),
-                    child: Center(
-                      child: Text(
-                        user?.nama.isNotEmpty == true ? user!.nama[0].toUpperCase() : 'T',
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: (user?.fotoProfile != null && user!.fotoProfile!.isNotEmpty)
+                          ? CachedNetworkImage(
+                              imageUrl: ApiConstants.resolveImageUrl(user.fotoProfile!),
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Container(
+                                color: const Color(0xFFF1F5F9),
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (_, __, ___) => _buildDefaultAvatar(user),
+                            )
+                          : _buildDefaultAvatar(user),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -619,6 +626,27 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+  Widget _buildDefaultAvatar(dynamic user) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primary, Color(0xFF1D4ED8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          user?.nama.isNotEmpty == true ? user!.nama[0].toUpperCase() : 'T',
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
         ),
       ),
     );

@@ -158,6 +158,69 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<String?> uploadProfilePhotoBytes(List<int> bytes) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final formData = FormData.fromMap({
+        'foto_profile': MultipartFile.fromBytes(
+          bytes,
+          filename: 'avatar_${DateTime.now().millisecondsSinceEpoch}.png',
+        ),
+      });
+
+      final res = await _apiClient.dio.post(
+        ApiConstants.uploadProfilePhoto,
+        data: formData,
+      );
+
+      final data = res.data;
+      if (data != null && data['user'] != null) {
+        final freshUser = UserModel.fromJson(data['user']);
+        await _storage.write(key: 'user_data', value: jsonEncode(freshUser.toJson()));
+        state = state.copyWith(user: freshUser, isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+      return null;
+    } on DioException catch (e) {
+      String msg = 'Gagal mengunggah foto profil.';
+      if (e.response?.data is Map && e.response?.data['message'] != null) {
+        msg = e.response!.data['message'].toString();
+      }
+      state = state.copyWith(isLoading: false, errorMessage: msg);
+      return msg;
+    } catch (_) {
+      state = state.copyWith(isLoading: false, errorMessage: 'Terjadi kesalahan sistem.');
+      return 'Terjadi kesalahan sistem.';
+    }
+  }
+
+  Future<String?> removeProfilePhoto() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final res = await _apiClient.dio.delete(ApiConstants.deleteProfilePhoto);
+      final data = res.data;
+      if (data != null && data['user'] != null) {
+        final freshUser = UserModel.fromJson(data['user']);
+        await _storage.write(key: 'user_data', value: jsonEncode(freshUser.toJson()));
+        state = state.copyWith(user: freshUser, isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+      return null;
+    } on DioException catch (e) {
+      String msg = 'Gagal menghapus foto profil.';
+      if (e.response?.data is Map && e.response?.data['message'] != null) {
+        msg = e.response!.data['message'].toString();
+      }
+      state = state.copyWith(isLoading: false, errorMessage: msg);
+      return msg;
+    } catch (_) {
+      state = state.copyWith(isLoading: false, errorMessage: 'Terjadi kesalahan sistem.');
+      return 'Terjadi kesalahan sistem.';
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _apiClient.dio.post(ApiConstants.logout);

@@ -27,6 +27,7 @@ import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
 import UserAvatar from "../../components/common/UserAvatar";
+import ProfilePhotoAdjustModal from "../../components/common/ProfilePhotoAdjustModal";
 import TechnicianPerformanceModal from "../../components/TechnicianPerformanceModal";
 
 export default function UserList() {
@@ -59,6 +60,10 @@ export default function UserList() {
     // Reset Password Modal
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const [newPassword, setNewPassword] = useState("");
+
+    // Photo Adjuster Modal
+    const [adjustPhotoSrc, setAdjustPhotoSrc] = useState(null);
+    const [uploadingUserPhoto, setUploadingUserPhoto] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -177,6 +182,26 @@ export default function UserList() {
             toast.error(err.response?.data?.message || "Gagal mereset password");
         } finally {
             setSubmitting(false);
+        }
+    }
+
+    async function handleConfirmUserAdjustedPhoto(croppedFile) {
+        if (!selectedUser) return;
+        const fd = new FormData();
+        fd.append("foto_profile", croppedFile);
+        setUploadingUserPhoto(true);
+        try {
+            const res = await api.put(`/users/${selectedUser.id}/photo`, fd, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            toast.success("Foto profil user berhasil diperbarui!");
+            setSelectedUser(res.data.data);
+            fetchData();
+            setAdjustPhotoSrc(null);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal mengunggah foto profil user");
+        } finally {
+            setUploadingUserPhoto(false);
         }
     }
 
@@ -621,24 +646,18 @@ export default function UserList() {
                                                 type="file"
                                                 accept="image/jpeg,image/png,image/webp"
                                                 className="hidden"
-                                                onChange={async (e) => {
+                                                onChange={(e) => {
                                                     const file = e.target.files?.[0];
                                                     if (!file) return;
-                                                    if (file.size > 5 * 1024 * 1024) {
-                                                        return toast.error("Ukuran foto maksimal 5 MB");
+                                                    if (file.size > 10 * 1024 * 1024) {
+                                                        return toast.error("Ukuran foto maksimal 10 MB");
                                                     }
-                                                    const fd = new FormData();
-                                                    fd.append("foto_profile", file);
-                                                    try {
-                                                        const res = await api.put(`/users/${selectedUser.id}/photo`, fd, {
-                                                            headers: { "Content-Type": "multipart/form-data" }
-                                                        });
-                                                        toast.success("Foto profil berhasil diperbarui!");
-                                                        setSelectedUser(res.data.data);
-                                                        fetchData();
-                                                    } catch (err) {
-                                                        toast.error("Gagal mengunggah foto profil user");
-                                                    }
+                                                    const reader = new FileReader();
+                                                    reader.onload = () => {
+                                                        setAdjustPhotoSrc(reader.result);
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                    e.target.value = "";
                                                 }}
                                             />
                                         </label>
@@ -772,6 +791,16 @@ export default function UserList() {
                 onClose={() => setSelectedTechnicianPerfId(null)}
                 technicianId={selectedTechnicianPerfId}
             />
+
+            {/* PROFILE PHOTO ADJUSTER MODAL */}
+            {adjustPhotoSrc && (
+                <ProfilePhotoAdjustModal
+                    imageSrc={adjustPhotoSrc}
+                    onClose={() => setAdjustPhotoSrc(null)}
+                    onConfirm={handleConfirmUserAdjustedPhoto}
+                    isSubmitting={uploadingUserPhoto}
+                />
+            )}
         </div>
     );
 }

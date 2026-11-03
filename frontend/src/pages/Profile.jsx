@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import UserAvatar from "../components/common/UserAvatar";
+import ProfilePhotoAdjustModal from "../components/common/ProfilePhotoAdjustModal";
 
 export default function Profile() {
     const { user, updateUser, login } = useAuth();
@@ -31,12 +32,13 @@ export default function Profile() {
     const [loading, setLoading] = useState(false);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [removingPhoto, setRemovingPhoto] = useState(false);
+    const [adjustImageSrc, setAdjustImageSrc] = useState(null);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handlePhotoSelect = async (e) => {
+    const handlePhotoSelect = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -47,13 +49,21 @@ export default function Profile() {
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error("Ukuran foto maksimal adalah 5 MB.");
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("Ukuran file maksimal sebelum penyesuaian adalah 10 MB.");
             return;
         }
 
+        const reader = new FileReader();
+        reader.onload = () => {
+            setAdjustImageSrc(reader.result);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleConfirmAdjustedPhoto = async (croppedFile) => {
         const data = new FormData();
-        data.append("foto_profile", file);
+        data.append("foto_profile", croppedFile);
 
         setUploadingPhoto(true);
         try {
@@ -64,7 +74,8 @@ export default function Profile() {
             if (res.data?.user) {
                 updateUser(res.data.user);
             }
-            toast.success("Foto profil berhasil diperbarui!");
+            toast.success("Foto profil berhasil disesuaikan & diperbarui!");
+            setAdjustImageSrc(null);
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal mengunggah foto profil.");
         } finally {
@@ -351,6 +362,19 @@ export default function Profile() {
 
                 </div>
             </div>
+
+            {/* Profile Photo Adjuster Modal */}
+            {adjustImageSrc && (
+                <ProfilePhotoAdjustModal
+                    imageSrc={adjustImageSrc}
+                    onClose={() => {
+                        setAdjustImageSrc(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    onConfirm={handleConfirmAdjustedPhoto}
+                    isSubmitting={uploadingPhoto}
+                />
+            )}
         </div>
     );
 }

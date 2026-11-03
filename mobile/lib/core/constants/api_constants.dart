@@ -11,6 +11,8 @@ class ApiConstants {
   static const String logout = '/auth/logout';
   static const String profile = '/auth/me';
   static const String updateProfile = '/auth/profile';
+  static const String uploadProfilePhoto = '/auth/profile/photo';
+  static const String deleteProfilePhoto = '/auth/profile/photo';
 
   // Dashboard
   static const String teknisiDashboard = '/dashboard/teknisi';
