@@ -1794,17 +1794,17 @@ export default function AttendancePage() {
                                             setSelectedUserIds(dailyData.list.map(r => r.user.id));
                                         }
                                     }}
-                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs ${
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
                                         selectedUserIds.length > 0
-                                            ? "bg-slate-900 text-white hover:bg-slate-800 border border-slate-800"
-                                            : "bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
+                                            ? "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                                            : "bg-white hover:bg-slate-50 text-slate-700 border border-slate-200"
                                     }`}
                                     title="Pilih seluruh staf operasional untuk aksi bulk koreksi status sekaligus"
                                 >
-                                    <Zap className="w-3.5 h-3.5 fill-current" />
+                                    <CheckCircle2 className={`w-3.5 h-3.5 ${selectedUserIds.length > 0 ? "text-blue-600" : "text-slate-500"}`} />
                                     <span>
                                         {selectedUserIds.length > 0
-                                            ? `${selectedUserIds.length} Terpilih (Klik Batalkan)`
+                                            ? `${selectedUserIds.length} Terpilih (Batalkan)`
                                             : "Pilih Semua (Bulk Koreksi)"}
                                     </span>
                                 </button>
@@ -1857,20 +1857,20 @@ export default function AttendancePage() {
 
                     {/* Bulk Selection Quick Action Floating Toolbar */}
                     {selectedUserIds.length > 0 && (
-                        <div className="bg-slate-900 text-white rounded-2xl p-3 sm:p-4 shadow-xl border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+                        <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 flex flex-col md:flex-row items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 font-extrabold text-sm shrink-0">
+                                <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 font-extrabold text-xs shrink-0 shadow-2xs">
                                     {selectedUserIds.length}
                                 </div>
                                 <div>
-                                    <p className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                                    <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
                                         <span>{selectedUserIds.length} Karyawan Terpilih</span>
-                                        <span className="text-3xs font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                                        <span className="text-3xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
                                             {filterDailyDate}
                                         </span>
                                     </p>
-                                    <p className="text-3xs sm:text-xs text-slate-400">
-                                        Pilih quick action di samping. Data tetap dapat Anda tinjau & edit sebelum double konfirmasi.
+                                    <p className="text-3xs sm:text-xs text-slate-500 mt-0.5">
+                                        Pilih status untuk koreksi massal hari ini, atau buka formulir koreksi rinci.
                                     </p>
                                 </div>
                             </div>
@@ -1879,52 +1879,52 @@ export default function AttendancePage() {
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("hadir")}
-                                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
-                                    title="Bulk Auto Hadir (09:00 - 18:00)"
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center gap-1.5"
+                                    title="Koreksi Massal Hadir (09:00 - 18:00)"
                                 >
-                                    <Zap className="w-3.5 h-3.5" />
-                                    <span>Bulk Hadir</span>
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Set Hadir</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("izin")}
-                                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
-                                    title="Bulk Auto Izin Resmi"
+                                    className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center gap-1.5"
+                                    title="Koreksi Massal Izin Resmi"
                                 >
-                                    <Zap className="w-3.5 h-3.5" />
-                                    <span>Bulk Izin</span>
+                                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>Set Izin</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("sakit")}
-                                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
-                                    title="Bulk Auto Sakit"
+                                    className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center gap-1.5"
+                                    title="Koreksi Massal Sakit"
                                 >
-                                    <Zap className="w-3.5 h-3.5" />
-                                    <span>Bulk Sakit</span>
+                                    <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                                    <span>Set Sakit</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("alfa")}
-                                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
-                                    title="Bulk Auto Alfa"
+                                    className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center gap-1.5"
+                                    title="Koreksi Massal Alfa"
                                 >
-                                    <Zap className="w-3.5 h-3.5" />
-                                    <span>Bulk Alfa</span>
+                                    <X className="w-3.5 h-3.5 text-rose-600" />
+                                    <span>Set Alfa</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("hadir")}
-                                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
-                                    title="Formulir Koreksi Kustom Massal (Editable)"
+                                    className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+                                    title="Formulir Koreksi Rinci Massal"
                                 >
-                                    <Sliders className="w-3.5 h-3.5 text-slate-400" />
-                                    <span>Koreksi Kustom...</span>
+                                    <Sliders className="w-3.5 h-3.5 text-slate-300" />
+                                    <span>Koreksi Rinci...</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleClearSelection}
-                                    className="px-2.5 py-1.5 rounded-xl bg-transparent hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-semibold transition-all cursor-pointer"
+                                    className="px-2.5 py-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 text-xs font-medium transition-all cursor-pointer border border-transparent hover:border-slate-200"
                                 >
                                     Batal
                                 </button>
