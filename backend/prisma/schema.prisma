@@ -10,6 +10,7 @@ datasource db {
 model User {
   id         Int      @id @default(autoincrement())
   nama       String
+  username   String?  @unique @db.VarChar(50)
   email      String   @unique
   password   String
   role                   String    @default("teknisi") // admin | teknisi | pimpinan

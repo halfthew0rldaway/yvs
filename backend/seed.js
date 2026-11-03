@@ -74,22 +74,22 @@ async function main() {
     // 2. Buat Staf, Admin, Pimpinan, dan Teknisi Berpengalaman
     console.log("[SEED] 2. Membuat Akun Staf, Service Advisor, Pimpinan & Teknisi...");
     const admin = await prisma.user.create({
-        data: { nama: "Admin Utama", email: "admin@workshop.com", password: defaultPassword, role: "admin" }
+        data: { nama: "Admin Utama", username: "admin", email: "admin@workshop.com", password: defaultPassword, role: "admin" }
     });
     const admin2 = await prisma.user.create({
-        data: { nama: "Siti Rahmawati (Service Advisor)", email: "siti.admin@workshop.com", password: defaultPassword, role: "admin" }
+        data: { nama: "Siti Rahmawati (Service Advisor)", username: "siti", email: "siti.admin@workshop.com", password: defaultPassword, role: "admin" }
     });
     const pimpinan = await prisma.user.create({
-        data: { nama: "H. Bambang Yangversa (Pimpinan)", email: "pimpinan@workshop.com", password: defaultPassword, role: "pimpinan" }
+        data: { nama: "H. Bambang Yangversa (Pimpinan)", username: "owner", email: "pimpinan@workshop.com", password: defaultPassword, role: "pimpinan" }
     });
 
     const teknisis = await Promise.all([
-        prisma.user.create({ data: { nama: "Budi Santoso (Senior Specialist)", email: "teknisi1@workshop.com", password: defaultPassword, role: "teknisi" } }),
-        prisma.user.create({ data: { nama: "Andi Wijaya (PC Gaming)", email: "teknisi2@workshop.com", password: defaultPassword, role: "teknisi" } }),
-        prisma.user.create({ data: { nama: "Reza Rahadian (MacBook Specialist)", email: "teknisi3@workshop.com", password: defaultPassword, role: "teknisi" } }),
-        prisma.user.create({ data: { nama: "Dedi Kurniawan (Hardware & Display)", email: "teknisi4@workshop.com", password: defaultPassword, role: "teknisi" } }),
-        prisma.user.create({ data: { nama: "Fikri Ardiansyah (Software & OS)", email: "teknisi5@workshop.com", password: defaultPassword, role: "teknisi" } }),
-        prisma.user.create({ data: { nama: "Maya Putri (Motherboard Tech)", email: "teknisi6@workshop.com", password: defaultPassword, role: "teknisi" } }),
+        prisma.user.create({ data: { nama: "Budi Santoso (Senior Specialist)", username: "teknisi1", email: "teknisi1@workshop.com", password: defaultPassword, role: "teknisi" } }),
+        prisma.user.create({ data: { nama: "Andi Wijaya (PC Gaming)", username: "teknisi2", email: "teknisi2@workshop.com", password: defaultPassword, role: "teknisi" } }),
+        prisma.user.create({ data: { nama: "Reza Rahadian (MacBook Specialist)", username: "teknisi3", email: "teknisi3@workshop.com", password: defaultPassword, role: "teknisi" } }),
+        prisma.user.create({ data: { nama: "Dedi Kurniawan (Hardware & Display)", username: "teknisi4", email: "teknisi4@workshop.com", password: defaultPassword, role: "teknisi" } }),
+        prisma.user.create({ data: { nama: "Fikri Ardiansyah (Software & OS)", username: "teknisi5", email: "teknisi5@workshop.com", password: defaultPassword, role: "teknisi" } }),
+        prisma.user.create({ data: { nama: "Maya Putri (Motherboard Tech)", username: "teknisi6", email: "teknisi6@workshop.com", password: defaultPassword, role: "teknisi" } }),
     ]);
 
     // 3. Master Brand Perangkat & Komponen

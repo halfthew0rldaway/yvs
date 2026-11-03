@@ -12,39 +12,39 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _handleLogin() async {
-    final email = _emailController.text.trim();
+    final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
+    if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Email dan password wajib diisi'),
+          content: Text('Username dan password wajib diisi'),
           backgroundColor: AppTheme.warning,
         ),
       );
       return;
     }
 
-    final success = await ref.read(authProvider.notifier).login(email, password);
+    final success = await ref.read(authProvider.notifier).login(username, password);
 
     if (success && mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
       );
     } else if (mounted) {
-      final errorMsg = ref.read(authProvider).errorMessage ?? 'Gagal masuk. Periksa email atau password.';
+      final errorMsg = ref.read(authProvider).errorMessage ?? 'Gagal masuk. Periksa username atau password.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMsg),
@@ -124,14 +124,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      const Text('Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      const Text('Username', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 6),
                       TextField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
+                        controller: _usernameController,
+                        keyboardType: TextInputType.text,
+                        autocorrect: false,
+                        enableSuggestions: false,
                         decoration: const InputDecoration(
-                          hintText: 'nama@workshop.com',
-                          prefixIcon: Icon(Icons.email_outlined, size: 20),
+                          hintText: 'admin, owner, atau teknisi1',
+                          prefixIcon: Icon(Icons.person_outline, size: 20),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -186,14 +188,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _emailController.text = 'teknisi1@workshop.com';
+                                  _usernameController.text = 'teknisi1';
                                   _passwordController.text = 'password123';
                                 });
                               },
                               child: const Column(
                                 children: [
                                   Text('Teknisi', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary)),
-                                  Text('Budi', style: TextStyle(fontSize: 9.5, color: AppTheme.textSecondary)),
+                                  Text('teknisi1', style: TextStyle(fontSize: 9.5, color: AppTheme.textSecondary)),
                                 ],
                               ),
                             ),
@@ -208,14 +210,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _emailController.text = 'siti.admin@workshop.com';
+                                  _usernameController.text = 'siti';
                                   _passwordController.text = 'password123';
                                 });
                               },
                               child: const Column(
                                 children: [
                                   Text('Frontman', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFD97706))),
-                                  Text('Siti R.', style: TextStyle(fontSize: 9.5, color: AppTheme.textSecondary)),
+                                  Text('siti', style: TextStyle(fontSize: 9.5, color: AppTheme.textSecondary)),
                                 ],
                               ),
                             ),
@@ -230,14 +232,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _emailController.text = 'admin@workshop.com';
+                                  _usernameController.text = 'admin';
                                   _passwordController.text = 'password123';
                                 });
                               },
                               child: const Column(
                                 children: [
                                   Text('Admin', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
-                                  Text('Utama', style: TextStyle(fontSize: 9.5, color: AppTheme.textSecondary)),
+                                  Text('admin', style: TextStyle(fontSize: 9.5, color: AppTheme.textSecondary)),
                                 ],
                               ),
                             ),

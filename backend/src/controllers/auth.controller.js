@@ -7,27 +7,41 @@ const prisma = require("../config/database");
 const { recordActivity } = require("../services/activityLog.service");
 const { normalizeEmail, normalizeName } = require("../utils/normalize");
 
-// Login
+// Login (Utama: Username, tetap mendukung Email sebagai alternatif)
 async function login(req, res) {
     try {
-        const { email, password, rememberMe } = req.body;
-        const cleanEmail = normalizeEmail(email);
+        const { username, email, password, rememberMe } = req.body;
+        const identifier = (username || email || "").trim();
 
-        const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+        if (!identifier || !password) {
+            return res.status(400).json({ message: "Username dan password wajib diisi" });
+        }
+
+        // Cari berdasarkan username ATAU email
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { username: identifier.toLowerCase() },
+                    { email: identifier.toLowerCase() }
+                ]
+            }
+        });
+
         if (!user) {
-            return res.status(401).json({ message: "Email atau password salah" });
+            return res.status(401).json({ message: "Username atau password salah" });
         }
 
         const valid = await bcrypt.compare(password, user.password);
         if (!valid) {
-            return res.status(401).json({ message: "Email atau password salah" });
+            return res.status(401).json({ message: "Username atau password salah" });
         }
 
         // Ingat Saya: 30 hari vs 1 hari (atau JWT_EXPIRES_IN)
         const expiresIn = rememberMe ? "30d" : (process.env.JWT_EXPIRES_IN || "1d");
+        const resolvedUsername = user.username || (user.email ? user.email.split("@")[0] : `user${user.id}`);
 
         const token = jwt.sign(
-            { id: user.id, nama: user.nama, email: user.email, role: user.role },
+            { id: user.id, nama: user.nama, username: resolvedUsername, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn }
         );
@@ -36,7 +50,7 @@ async function login(req, res) {
         await recordActivity({
             userId: user.id,
             userNama: user.nama,
-            action: `Masuk ke dalam sistem (Login)${rememberMe ? " [Ingat Saya: Aktif]" : ""}`,
+            action: `Masuk ke dalam sistem (Login: ${resolvedUsername})${rememberMe ? " [Ingat Saya: Aktif]" : ""}`,
             entity: "user"
         });
 
@@ -48,6 +62,7 @@ async function login(req, res) {
             user: {
                 id: user.id,
                 nama: user.nama,
+                username: resolvedUsername,
                 email: user.email,
                 role: user.role,
                 foto_profile: user.foto_profile || null
@@ -63,7 +78,7 @@ async function refreshSession(req, res) {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            select: { id: true, nama: true, email: true, role: true, foto_profile: true },
+            select: { id: true, nama: true, username: true, email: true, role: true, foto_profile: true },
         });
 
         if (!user) {
@@ -72,9 +87,10 @@ async function refreshSession(req, res) {
 
         const rememberMe = req.body?.rememberMe ?? false;
         const expiresIn = rememberMe ? "30d" : (process.env.JWT_EXPIRES_IN || "1d");
+        const resolvedUsername = user.username || (user.email ? user.email.split("@")[0] : `user${user.id}`);
 
         const token = jwt.sign(
-            { id: user.id, nama: user.nama, email: user.email, role: user.role },
+            { id: user.id, nama: user.nama, username: resolvedUsername, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn }
         );
@@ -84,7 +100,10 @@ async function refreshSession(req, res) {
             token,
             rememberMe: Boolean(rememberMe),
             expiresIn,
-            user,
+            user: {
+                ...user,
+                username: resolvedUsername
+            },
         });
     } catch (error) {
         return res.status(500).json({ message: "Gagal memperbarui sesi", error: error.message });
@@ -109,14 +128,17 @@ async function me(req, res) {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            select: { id: true, nama: true, email: true, role: true, foto_profile: true },
+            select: { id: true, nama: true, username: true, email: true, role: true, foto_profile: true },
         });
 
         if (!user) {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
-        return res.json(user);
+        return res.json({
+            ...user,
+            username: user.username || (user.email ? user.email.split("@")[0] : `user${user.id}`)
+        });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
     }
@@ -125,13 +147,21 @@ async function me(req, res) {
 // Update Profil (Nama, Email, Password, Foto Profile)
 async function updateProfile(req, res) {
     try {
-        const { nama, email, currentPassword, newPassword, foto_profile } = req.body;
+        const { nama, username, email, currentPassword, newPassword, foto_profile } = req.body;
         const userId = req.user.id;
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
 
         const dataToUpdate = {};
+
+        // Validasi dan update username jika diubah
+        if (username && username.trim().toLowerCase() !== (user.username || "").toLowerCase()) {
+            const cleanUsername = username.trim().toLowerCase();
+            const existingUser = await prisma.user.findFirst({ where: { username: cleanUsername } });
+            if (existingUser) return res.status(400).json({ message: "Username sudah digunakan oleh akun lain" });
+            dataToUpdate.username = cleanUsername;
+        }
 
         // Validasi dan update email jika diubah
         const cleanEmail = email ? normalizeEmail(email) : undefined;
@@ -162,7 +192,7 @@ async function updateProfile(req, res) {
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: dataToUpdate,
-            select: { id: true, nama: true, email: true, role: true, foto_profile: true }
+            select: { id: true, nama: true, username: true, email: true, role: true, foto_profile: true }
         });
 
         await recordActivity({

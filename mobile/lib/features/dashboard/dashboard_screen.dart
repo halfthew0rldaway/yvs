@@ -25,7 +25,7 @@ import '../wiki/wiki_list_screen.dart';
 import '../attendance/attendance_screen.dart';
 import '../handover/handover_screen.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerWidget { 
   const DashboardScreen({super.key});
 
   @override

@@ -54,6 +54,7 @@ export default function UserList() {
     const [isDeletingUser, setIsDeletingUser] = useState(false);
     const [formData, setFormData] = useState({
         nama: "",
+        username: "",
         email: "",
         password: "",
         role: "teknisi"
@@ -117,7 +118,7 @@ export default function UserList() {
     function handleOpenCreateModal() {
         setModalMode("create");
         setSelectedUser(null);
-        setFormData({ nama: "", email: "", password: "", role: "teknisi" });
+        setFormData({ nama: "", username: "", email: "", password: "", role: "teknisi" });
         setIsModalOpen(true);
     }
 
@@ -126,6 +127,7 @@ export default function UserList() {
         setSelectedUser(user);
         setFormData({
             nama: user.nama,
+            username: user.username || "",
             email: user.email,
             password: "",
             role: user.role
@@ -141,8 +143,8 @@ export default function UserList() {
 
     async function handleSubmit(e) {
         e.preventDefault();
-        if (!formData.nama || !formData.email) {
-            toast.error("Nama dan email wajib diisi");
+        if (!formData.nama || (!formData.username && !formData.email)) {
+            toast.error("Nama dan Username wajib diisi");
             return;
         }
 
@@ -442,7 +444,10 @@ export default function UserList() {
                                             <td className="px-6 py-4 font-medium text-slate-900">
                                                 <div className="flex items-center gap-3">
                                                     <UserAvatar user={u} size="w-9 h-9" textSize="text-xs" rounded="rounded-full" />
-                                                    <span className="font-semibold text-slate-900">{u.nama}</span>
+                                                    <div>
+                                                        <span className="font-semibold text-slate-900 block">{u.nama}</span>
+                                                        <span className="font-mono text-3xs text-blue-600 block">@{u.username || (u.email ? u.email.split("@")[0] : `user${u.id}`)}</span>
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 font-mono text-xs">{u.email}</td>
@@ -683,6 +688,20 @@ export default function UserList() {
                                     placeholder="Contoh: Budi Santoso"
                                     value={formData.nama}
                                     onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                    Username <span className="text-blue-600 font-bold">(Kredensial Login Utama)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Contoh: budi, teknisi1"
+                                    value={formData.username}
+                                    onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s+/g, "") })}
                                     className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                 />
                             </div>

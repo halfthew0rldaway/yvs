@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import api from "../services/api";
-import { getRememberedEmail, setRememberedEmail } from "../utils/authStorage";
+import { getRememberedUsername, setRememberedUsername } from "../utils/authStorage";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
-import { Eye, EyeOff, Lock, Mail, Wrench, Shield, CheckCircle2, ArrowRight, ShieldCheck, Clock, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Wrench, Shield, CheckCircle2, ArrowRight, ShieldCheck, Clock, AlertCircle } from "lucide-react";
 
 export default function Login() {
     const { user, login } = useAuth();
@@ -17,7 +17,7 @@ export default function Login() {
     const expireReason = searchParams.get("reason");
     const redirectUrl = searchParams.get("redirect") || "/dashboard";
 
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
@@ -25,11 +25,11 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [lottieData, setLottieData] = useState(null);
 
-    // Load saved email on mount
+    // Load saved username on mount
     useEffect(() => {
-        const savedEmail = getRememberedEmail();
-        if (savedEmail) {
-            setEmail(savedEmail);
+        const savedUsername = getRememberedUsername();
+        if (savedUsername) {
+            setUsername(savedUsername);
             setRememberMe(true);
         }
     }, []);
@@ -53,16 +53,16 @@ export default function Login() {
 
         try {
             const res = await api.post("/auth/login", { 
-                email, 
+                username: username.trim(), 
                 password, 
                 rememberMe 
             });
 
-            // Simpan / perbarui preferensi remembered email
+            // Simpan / perbarui preferensi remembered username
             if (rememberMe) {
-                setRememberedEmail(email);
+                setRememberedUsername(username.trim());
             } else {
-                setRememberedEmail("");
+                setRememberedUsername("");
             }
 
             // Simpan sesi autentikasi dengan preferensi "Ingat Saya"
@@ -76,8 +76,8 @@ export default function Login() {
     }
 
     // Fungsi bantu cepat isi akun demo
-    function handleSelectDemoAccount(demoEmail) {
-        setEmail(demoEmail);
+    function handleSelectDemoAccount(demoUsername) {
+        setUsername(demoUsername);
         setPassword("password123");
         setError("");
     }
@@ -165,22 +165,23 @@ export default function Login() {
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <motion.div variants={itemVariants}>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="email">
-                                Alamat Email
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="username">
+                                Username
                             </label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
-                                    <Mail className="h-4 w-4" />
+                                    <User className="h-4 w-4" />
                                 </div>
                                 <input
-                                    id="email"
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    id="username"
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
-                                    placeholder="admin@workshop.com"
+                                    placeholder="admin, owner, atau nama teknisi"
                                     required
-                                    autoComplete="email"
+                                    autoComplete="username"
+                                    autoCapitalize="none"
                                 />
                             </div>
                         </motion.div>
@@ -268,35 +269,35 @@ export default function Login() {
                         <div className="grid grid-cols-2 gap-1.5">
                             <button
                                 type="button"
-                                onClick={() => handleSelectDemoAccount("admin@workshop.com")}
-                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group"
+                                onClick={() => handleSelectDemoAccount("admin")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Admin</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">admin@workshop.com</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Admin Utama</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">admin</span>
                             </button>
                             <button
                                 type="button"
-                                onClick={() => handleSelectDemoAccount("teknisi1@workshop.com")}
-                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group"
+                                onClick={() => handleSelectDemoAccount("owner")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner / Pimpinan</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">owner</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleSelectDemoAccount("teknisi1")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
                                 <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi 1</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">teknisi1@workshop.com</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">teknisi1</span>
                             </button>
                             <button
                                 type="button"
-                                onClick={() => handleSelectDemoAccount("teknisi2@workshop.com")}
-                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group"
+                                onClick={() => handleSelectDemoAccount("siti")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi 2</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">teknisi2@workshop.com</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleSelectDemoAccount("teknisi3@workshop.com")}
-                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group"
-                            >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi 3</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">teknisi3@workshop.com</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Service Advisor</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">siti</span>
                             </button>
                         </div>
                         <div className="mt-2 pt-2 border-t border-slate-200/70 text-3xs text-slate-400">

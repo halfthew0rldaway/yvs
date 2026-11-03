@@ -78,12 +78,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String usernameOrEmail, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
+      final identifier = usernameOrEmail.trim();
       final response = await _apiClient.dio.post(
         ApiConstants.login,
-        data: {'email': email.trim(), 'password': password},
+        data: {
+          'username': identifier,
+          'email': identifier,
+          'password': password
+        },
       );
 
       final data = response.data;

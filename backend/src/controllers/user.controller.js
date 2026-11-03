@@ -60,6 +60,7 @@ async function getAllUsers(req, res) {
         if (search) {
             where.OR = [
                 { nama: { contains: search } },
+                { username: { contains: search } },
                 { email: { contains: search } },
             ];
         }
@@ -67,6 +68,7 @@ async function getAllUsers(req, res) {
         const select = {
             id: true,
             nama: true,
+            username: true,
             email: true,
             role: true,
             foto_profile: true,
@@ -344,25 +346,36 @@ async function getSingleTechnicianPerformanceDetail(req, res) {
 // Menambah user baru (Admin)
 async function createUser(req, res) {
     try {
-        const { nama, email, password, role } = req.body;
+        const { nama, username, email, password, role } = req.body;
 
-        if (!nama || !email || !password) {
-            return res.status(400).json({ message: "Nama, email, dan password wajib diisi" });
+        if (!nama || !password) {
+            return res.status(400).json({ message: "Nama dan password wajib diisi" });
         }
 
-        const cleanEmail = normalizeEmail(email);
+        const cleanEmail = email ? normalizeEmail(email) : `${(username || nama).toLowerCase().replace(/\s+/g, "")}@workshop.local`;
         const cleanNama = normalizeName(nama);
         const cleanRole = role ? role.trim().toLowerCase() : "teknisi";
+        const cleanUsername = username 
+            ? username.trim().toLowerCase() 
+            : (cleanEmail.includes("@") ? cleanEmail.split("@")[0].toLowerCase() : cleanNama.toLowerCase().replace(/\s+/g, ""));
 
-        const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
+        const existing = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: cleanEmail },
+                    { username: cleanUsername }
+                ]
+            }
+        });
         if (existing) {
-            return res.status(400).json({ message: "Email sudah terdaftar" });
+            return res.status(400).json({ message: "Username atau Email sudah terdaftar" });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({
             data: {
                 nama: cleanNama,
+                username: cleanUsername,
                 email: cleanEmail,
                 password: hashedPassword,
                 role: cleanRole,
@@ -371,6 +384,7 @@ async function createUser(req, res) {
             select: {
                 id: true,
                 nama: true,
+                username: true,
                 email: true,
                 role: true,
                 foto_profile: true,
@@ -388,7 +402,7 @@ async function createUser(req, res) {
 async function updateUser(req, res) {
     try {
         const id = Number(req.params.id);
-        const { nama, email, password, role, foto_profile } = req.body;
+        const { nama, username, email, password, role, foto_profile } = req.body;
 
         const user = await prisma.user.findUnique({ where: { id } });
         if (!user) {
@@ -396,8 +410,16 @@ async function updateUser(req, res) {
         }
 
         const cleanEmail = email ? normalizeEmail(email) : undefined;
+        const cleanUsername = username ? username.trim().toLowerCase() : undefined;
         const cleanNama = nama ? normalizeName(nama) : undefined;
         const cleanRole = role ? role.trim().toLowerCase() : undefined;
+
+        if (cleanUsername && cleanUsername !== user.username) {
+            const existingUsername = await prisma.user.findFirst({ where: { username: cleanUsername } });
+            if (existingUsername) {
+                return res.status(400).json({ message: "Username sudah digunakan oleh user lain" });
+            }
+        }
 
         if (cleanEmail && cleanEmail !== user.email) {
             const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
@@ -412,6 +434,7 @@ async function updateUser(req, res) {
 
         const updateData = {
             nama: cleanNama || user.nama,
+            username: cleanUsername || user.username,
             email: cleanEmail || user.email,
             role: cleanRole || user.role,
             ...(foto_profile !== undefined && { foto_profile })
@@ -427,6 +450,7 @@ async function updateUser(req, res) {
             select: {
                 id: true,
                 nama: true,
+                username: true,
                 email: true,
                 role: true,
                 foto_profile: true,

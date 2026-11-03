@@ -52,23 +52,24 @@ export function isRememberMeActive() {
 }
 
 /**
- * Ambil email yang diingat untuk autofill form login
+ * Ambil username/email yang diingat untuk autofill form login
  */
-export function getRememberedEmail() {
+export function getRememberedUsername() {
     try {
         return localStorage.getItem(REMEMBERED_EMAIL_KEY) || "";
     } catch {
         return "";
     }
 }
+export const getRememberedEmail = getRememberedUsername;
 
 /**
- * Simpan atau hapus email yang diingat
+ * Simpan atau hapus username/email yang diingat
  */
-export function setRememberedEmail(email) {
+export function setRememberedUsername(username) {
     try {
-        if (email && email.trim()) {
-            localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
+        if (username && username.trim()) {
+            localStorage.setItem(REMEMBERED_EMAIL_KEY, username.trim());
         } else {
             localStorage.removeItem(REMEMBERED_EMAIL_KEY);
         }
@@ -76,6 +77,7 @@ export function setRememberedEmail(email) {
         // Abaikan error kuota/privasi storage
     }
 }
+export const setRememberedEmail = setRememberedUsername;
 
 /**
  * Menyimpan sesi login baru
