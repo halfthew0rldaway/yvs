@@ -1782,7 +1782,34 @@ export default function AttendancePage() {
                             <Users className="w-4 h-4 text-blue-600" />
                             <h2 className="text-sm font-bold text-slate-800">Monitoring Presensi Harian Seluruh Tim</h2>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            {/* Tombol Cepat Pemicu Bulk Action Massal */}
+                            {dailyData.list?.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (selectedUserIds.length === dailyData.list.length) {
+                                            setSelectedUserIds([]);
+                                        } else {
+                                            setSelectedUserIds(dailyData.list.map(r => r.user.id));
+                                        }
+                                    }}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs ${
+                                        selectedUserIds.length > 0
+                                            ? "bg-slate-900 text-white hover:bg-slate-800 border border-slate-800"
+                                            : "bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
+                                    }`}
+                                    title="Pilih seluruh staf operasional untuk aksi bulk koreksi status sekaligus"
+                                >
+                                    <Zap className="w-3.5 h-3.5 fill-current" />
+                                    <span>
+                                        {selectedUserIds.length > 0
+                                            ? `${selectedUserIds.length} Terpilih (Klik Batalkan)`
+                                            : "Pilih Semua (Bulk Koreksi)"}
+                                    </span>
+                                </button>
+                            )}
+
                             <input
                                 type="date"
                                 value={filterDailyDate}
@@ -1907,9 +1934,16 @@ export default function AttendancePage() {
 
                     {/* Table of Employees Today */}
                     <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs">
-                        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="font-bold text-slate-800 text-xs">Daftar Status Presensi Hari Terpilih</h3>
-                            <span className="text-3xs text-slate-400 font-semibold">Metode: Web Live Selfie + GPS</span>
+                        <div className="px-4 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-slate-800 text-xs">Daftar Status Presensi Hari Terpilih</h3>
+                                <span className="text-3xs px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold border border-blue-200">
+                                    Mendukung Bulk & Quick Action
+                                </span>
+                            </div>
+                            <span className="text-3xs text-slate-500 font-semibold">
+                                Centang kotak di samping nama staf untuk memunculkan toolbar aksi massal
+                            </span>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
@@ -2087,7 +2121,9 @@ export default function AttendancePage() {
                                     <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
                                     <span>Rekapitulasi Bulanan Tim (Ekspor Payroll)</span>
                                 </h3>
-                                <p className="text-2xs text-slate-500">Akumulasi jam kerja, potongan keterlambatan, dan hari izin seluruh staf</p>
+                                <p className="text-2xs text-slate-500">
+                                    Akumulasi jam kerja, potongan keterlambatan, dan hari izin seluruh staf. Koreksi kehadiran per tanggal (satuan maupun massal) dilakukan pada tabel harian di atas.
+                                </p>
                             </div>
 
                             <div className="flex items-center gap-2">
