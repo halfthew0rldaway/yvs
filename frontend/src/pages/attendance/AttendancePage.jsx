@@ -132,7 +132,11 @@ export default function AttendancePage() {
 
     // Webcam Modal State
     const [cameraModalOpen, setCameraModalOpen] = useState(false);
-    const [cameraModalType, setCameraModalType] = useState("check-in"); // "check-in" | "check-out"
+    const [cameraModalType, setCameraModalType] = useState("check-in"); // "check-in" | "check-out" | "tugas-luar"
+
+    // Early Check-Out Modal State (Wajib Review Owner)
+    const [earlyCheckOutModalOpen, setEarlyCheckOutModalOpen] = useState(false);
+    const [earlyCheckOutReason, setEarlyCheckOutReason] = useState("");
 
     // Personal History State
     const [myHistory, setMyHistory] = useState([]);
@@ -459,6 +463,27 @@ export default function AttendancePage() {
         }
     };
 
+    // Deteksi apakah saat ini lebih awal dari jam pulang workshop
+    const checkIsEarly = useCallback(() => {
+        if (!policy?.jam_pulang) return false;
+        const [targetHour, targetMinute] = policy.jam_pulang.split(":").map(Number);
+        const targetMinutes = targetHour * 60 + targetMinute;
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        return currentMinutes < targetMinutes;
+    }, [policy]);
+
+    const handleTriggerCheckOut = () => {
+        if (checkIsEarly()) {
+            setEarlyCheckOutReason("");
+            setEarlyCheckOutModalOpen(true);
+        } else {
+            setEarlyCheckOutReason("");
+            setCameraModalType("check-out");
+            setCameraModalOpen(true);
+        }
+    };
+
     // Check-Out Submit via Webcam
     const handleCheckOutCapture = async (fileBlob) => {
         const formData = new FormData();
@@ -466,6 +491,9 @@ export default function AttendancePage() {
         if (locationData.latitude !== null) formData.append("latitude", locationData.latitude);
         if (locationData.longitude !== null) formData.append("longitude", locationData.longitude);
         formData.append("device_info", navigator.userAgent);
+        if (earlyCheckOutReason.trim()) {
+            formData.append("alasan_pulang_cepat", earlyCheckOutReason.trim());
+        }
         if (locationData.addressName) {
             formData.append("catatan", `Alamat Pulang: ${locationData.addressName}`);
         }
@@ -477,6 +505,10 @@ export default function AttendancePage() {
             const res = await api.post("/attendance/check-out", formData);
             toast.success(res.data.message || "Check-Out berhasil!");
             loadTodayStatus();
+            setEarlyCheckOutReason("");
+            if (isPimpinanOrAdmin) {
+                loadPendingReviews();
+            }
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal melakukan Check-Out");
             throw err;
@@ -980,8 +1012,8 @@ export default function AttendancePage() {
                                     )}
                                 </div>
                             </div>
-                            {/* External Duty / Tugas Luar Review Status Banner */}
-                            {todayRecord?.is_tugas_luar && (
+                            {/* Review Status Banner (Tugas Luar & Pulang Lebih Awal) */}
+                            {(todayRecord?.is_tugas_luar || todayRecord?.status === "pulang_cepat" || todayRecord?.status_review === "menunggu_review") && (
                                 <div className={`mt-3.5 p-3 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
                                     todayRecord.status_review === "valid"
                                         ? "bg-emerald-50 border-emerald-200 text-emerald-900"
@@ -999,14 +1031,23 @@ export default function AttendancePage() {
                                         }`} />
                                         <div>
                                             <span className="font-bold">
-                                                {todayRecord.status_review === "valid"
-                                                    ? "Presensi Tugas Luar Disetujui Superadmin/Owner"
-                                                    : todayRecord.status_review === "ditolak"
-                                                        ? "Presensi Tugas Luar Ditolak"
-                                                        : "Kategori Tugas Luar (Menunggu Verifikasi Owner)"}
+                                                {todayRecord.status === "pulang_cepat"
+                                                    ? todayRecord.status_review === "valid"
+                                                        ? "Izin Pulang Lebih Awal Disetujui Superadmin/Owner"
+                                                        : todayRecord.status_review === "ditolak"
+                                                            ? "Kepulangan Lebih Awal Ditolak"
+                                                            : `Pulang Lebih Awal Sebelum ${policy?.jam_pulang || "17:00"} WIB (Menunggu Verifikasi Owner)`
+                                                    : todayRecord.status_review === "valid"
+                                                        ? "Presensi Tugas Luar Disetujui Superadmin/Owner"
+                                                        : todayRecord.status_review === "ditolak"
+                                                            ? "Presensi Tugas Luar Ditolak"
+                                                            : "Kategori Tugas Luar (Menunggu Verifikasi Owner)"}
                                             </span>
                                             {todayRecord.alasan_tugas_luar && (
                                                 <p className="text-2xs opacity-90 mt-0.5">Alasan: {todayRecord.alasan_tugas_luar}</p>
+                                            )}
+                                            {todayRecord.catatan && todayRecord.status === "pulang_cepat" && (
+                                                <p className="text-2xs opacity-90 mt-0.5">{todayRecord.catatan}</p>
                                             )}
                                             {todayRecord.catatan_review && (
                                                 <p className="text-2xs opacity-90 mt-0.5">Catatan Review: {todayRecord.catatan_review}</p>
@@ -1069,10 +1110,7 @@ export default function AttendancePage() {
                                 )
                             ) : !todayRecord?.jam_pulang ? (
                                 <button
-                                    onClick={() => {
-                                        setCameraModalType("check-out");
-                                        setCameraModalOpen(true);
-                                    }}
+                                    onClick={handleTriggerCheckOut}
                                     className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20"
                                 >
                                     <LogOut className="w-4 h-4 stroke-[2.5]" />
@@ -1943,6 +1981,15 @@ export default function AttendancePage() {
                                                     <span className="px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase bg-slate-100 text-slate-700 border border-slate-200">
                                                         {item.user?.role || "Staff"}
                                                     </span>
+                                                    {item.status === "pulang_cepat" ? (
+                                                        <span className="px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase bg-amber-100 text-amber-800 border border-amber-200">
+                                                            Pulang Lebih Awal
+                                                        </span>
+                                                    ) : item.is_tugas_luar ? (
+                                                        <span className="px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase bg-blue-100 text-blue-800 border border-blue-200">
+                                                            Tugas Luar
+                                                        </span>
+                                                    ) : null}
                                                 </div>
                                                 <p className="text-2xs text-slate-500 mt-0.5">
                                                     {item.user?.email || "-"} •{" "}
@@ -1952,13 +1999,19 @@ export default function AttendancePage() {
                                                         month: "short",
                                                         year: "numeric"
                                                     })}{" "}
-                                                    (Check-In:{" "}
+                                                    (Masuk:{" "}
                                                     {item.jam_masuk
                                                         ? new Date(item.jam_masuk).toLocaleTimeString("id-ID", {
                                                               hour: "2-digit",
                                                               minute: "2-digit"
                                                           }) + " WIB"
-                                                        : "-"}
+                                                        : "-"}{" "}
+                                                    {item.jam_pulang
+                                                        ? `• Pulang: ${new Date(item.jam_pulang).toLocaleTimeString("id-ID", {
+                                                              hour: "2-digit",
+                                                              minute: "2-digit"
+                                                          })} WIB`
+                                                        : ""}
                                                     )
                                                 </p>
                                             </div>
@@ -1992,10 +2045,12 @@ export default function AttendancePage() {
                                             {/* Reason Box */}
                                             <div className="p-3 bg-amber-50/70 border border-amber-200/90 rounded-xl space-y-1">
                                                 <span className="text-3xs font-extrabold text-amber-900 uppercase tracking-wider">
-                                                    Alasan / Penugasan Luar Karyawan:
+                                                    {item.status === "pulang_cepat"
+                                                        ? "Alasan Kepulangan Lebih Awal:"
+                                                        : "Alasan / Penugasan Luar Karyawan:"}
                                                 </span>
                                                 <p className="text-xs font-medium text-slate-800 leading-relaxed italic">
-                                                    "{item.alasan_tugas_luar || "Tidak ada keterangan tertulis"}"
+                                                    "{item.catatan || item.alasan_tugas_luar || "Tidak ada keterangan tertulis"}"
                                                 </p>
                                             </div>
 
@@ -2007,9 +2062,11 @@ export default function AttendancePage() {
                                                         <span>Jarak dari Workshop Pekayon:</span>
                                                     </span>
                                                     <span className="font-bold text-slate-800">
-                                                        {item.jarak_meter_masuk !== null
-                                                            ? `${item.jarak_meter_masuk} meter`
-                                                            : "Tidak terdeteksi"}
+                                                        {item.jarak_meter_pulang !== null && item.jarak_meter_pulang !== undefined
+                                                            ? `${item.jarak_meter_pulang} meter`
+                                                            : item.jarak_meter_masuk !== null && item.jarak_meter_masuk !== undefined
+                                                                ? `${item.jarak_meter_masuk} meter`
+                                                                : "Tidak terdeteksi"}
                                                     </span>
                                                 </div>
 
@@ -2057,14 +2114,14 @@ export default function AttendancePage() {
                                             <span className="text-3xs font-extrabold text-slate-500 uppercase tracking-wider">
                                                 Foto Selfie Fisik:
                                             </span>
-                                            {item.foto_masuk ? (
+                                            {item.foto_pulang || item.foto_masuk ? (
                                                 <div
-                                                    onClick={() => setPreviewPhotoUrl(item.foto_masuk)}
+                                                    onClick={() => setPreviewPhotoUrl(item.foto_pulang || item.foto_masuk)}
                                                     className="relative aspect-4/3 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 group cursor-pointer shadow-2xs hover:ring-2 hover:ring-blue-500/30 transition-all"
                                                 >
                                                     <img
-                                                        src={item.foto_masuk}
-                                                        alt="Selfie Bukti Tugas Luar"
+                                                        src={item.foto_pulang || item.foto_masuk}
+                                                        alt="Selfie Bukti Presensi"
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                                     />
                                                     <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1.5 backdrop-blur-2xs">
@@ -2108,6 +2165,110 @@ export default function AttendancePage() {
                 </div>
             )}
 
+            {/* MODAL 0: EARLY CHECK-OUT CONFIRMATION (PULANG LEBIH AWAL - WAJIB REVIEW) */}
+            {earlyCheckOutModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 flex flex-col">
+                        <div className="px-5 py-4 border-b border-amber-200/80 bg-amber-50/80 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 rounded-xl bg-amber-600 text-white">
+                                    <AlertCircle className="w-5 h-5 stroke-[2.5]" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-800 text-sm sm:text-base">
+                                        Konfirmasi Pulang Lebih Awal
+                                    </h3>
+                                    <p className="text-2xs text-amber-900 font-medium">
+                                        Terdeteksi Check-Out sebelum pukul {policy?.jam_pulang || "17:00"} WIB
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setEarlyCheckOutModalOpen(false)}
+                                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-5 space-y-4">
+                            <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 space-y-1">
+                                <p className="font-bold flex items-center gap-1.5">
+                                    <Clock className="w-3.5 h-3.5 text-amber-700" />
+                                    <span>Jam Pulang Normal: {policy?.jam_pulang || "17:00"} WIB</span>
+                                </p>
+                                <p className="text-2xs leading-relaxed text-amber-800">
+                                    Anda sedang melakukan presensi pulang sebelum jam operasional berakhir. Sesuai SOP workshop, kepulangan lebih awal wajib menyertakan alasan yang jelas dan masuk ke daftar <strong>Wajib Review Superadmin / Owner</strong>.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                                    Alasan Kepulangan Lebih Awal <span className="text-rose-500">* (Wajib Diisi)</span>
+                                </label>
+                                <textarea
+                                    value={earlyCheckOutReason}
+                                    onChange={(e) => setEarlyCheckOutReason(e.target.value)}
+                                    rows={3}
+                                    placeholder="Contoh: Keperluan keluarga mendadak / Kondisi badan kurang sehat / Mengantar unit servis mendesak..."
+                                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <span className="block text-3xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                                    Pilihan Cepat Alasan:
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {[
+                                        "Urusan Keluarga Mendadak",
+                                        "Kondisi Kesehatan / Sakit",
+                                        "Tugas Luar / Antar Unit Pelanggan",
+                                        "Izin Khusus Pimpinan / Owner"
+                                    ].map((preset) => (
+                                        <button
+                                            key={preset}
+                                            type="button"
+                                            onClick={() => setEarlyCheckOutReason(preset)}
+                                            className="px-2.5 py-1 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 rounded-lg text-3xs font-semibold transition-colors cursor-pointer"
+                                        >
+                                            {preset}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 border-t border-slate-100 flex items-center justify-end gap-2.5 bg-slate-50/50">
+                            <button
+                                type="button"
+                                onClick={() => setEarlyCheckOutModalOpen(false)}
+                                className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!earlyCheckOutReason.trim()) {
+                                        toast.error("Alasan pulang lebih awal wajib diisi!");
+                                        return;
+                                    }
+                                    setEarlyCheckOutModalOpen(false);
+                                    setCameraModalType("check-out");
+                                    setCameraModalOpen(true);
+                                }}
+                                className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 ring-2 ring-amber-500/20"
+                            >
+                                <Camera className="w-3.5 h-3.5 stroke-[2.5]" />
+                                <span>Lanjut Ambil Selfie Pulang</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* MODAL 1: LIVE WEBCAM SELFIE */}
             <WebcamSelfieModal
                 isOpen={cameraModalOpen}
@@ -2118,6 +2279,7 @@ export default function AttendancePage() {
                 user={user}
                 locationData={locationData}
                 policy={policy}
+                isEarlyCheckOut={Boolean(earlyCheckOutReason)}
             />
 
             {/* MODAL 2: AJUKAN IZIN / CUTI */}

@@ -63,7 +63,8 @@ export default function WebcamSelfieModal({
     user,
     locationData,
     policy,
-    isTugasLuar = false
+    isTugasLuar = false,
+    isEarlyCheckOut = false
 }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
@@ -174,7 +175,7 @@ export default function WebcamSelfieModal({
         ctx.fillRect(0, barTop, width, barHeight);
 
         // Watermark Accent Strip on top (3px)
-        ctx.fillStyle = isActualTugasLuar ? "#f59e0b" : type === "check-in" ? "#10b981" : "#f43f5e";
+        ctx.fillStyle = isActualTugasLuar || isEarlyCheckOut ? "#f59e0b" : type === "check-in" ? "#10b981" : "#f43f5e";
         ctx.fillRect(0, barTop, width, 3);
 
         const padX = Math.max(16, Math.round(width * 0.035));
@@ -215,9 +216,15 @@ export default function WebcamSelfieModal({
         ctx.fillText(`Petugas: ${user?.nama || "Karyawan"}`, padX, line2Y);
 
         const petugasWidth = ctx.measureText(`Petugas: ${user?.nama || "Karyawan"}`).width;
-        ctx.fillStyle = isActualTugasLuar ? "#fbbf24" : type === "check-in" ? "#34d399" : "#f87171";
+        ctx.fillStyle = isActualTugasLuar || isEarlyCheckOut ? "#fbbf24" : type === "check-in" ? "#34d399" : "#f87171";
         ctx.font = "bold 11px Inter, sans-serif";
-        const typeLabel = isActualTugasLuar ? "• CHECK-IN TUGAS LUAR" : type === "check-in" ? "• CHECK-IN MASUK" : "• CHECK-OUT PULANG";
+        const typeLabel = isActualTugasLuar
+            ? "• CHECK-IN TUGAS LUAR"
+            : isEarlyCheckOut
+                ? "• CHECK-OUT (PULANG LEBIH AWAL)"
+                : type === "check-in"
+                    ? "• CHECK-IN MASUK"
+                    : "• CHECK-OUT PULANG";
         ctx.fillText(typeLabel, padX + petugasWidth + 6, line2Y);
 
         // Divider
@@ -322,21 +329,25 @@ export default function WebcamSelfieModal({
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
                     <div className="flex items-center gap-2.5">
-                        <div className={`p-2 rounded-xl text-white ${isActualTugasLuar ? "bg-amber-600" : type === "check-in" ? "bg-emerald-600" : "bg-blue-600"}`}>
+                        <div className={`p-2 rounded-xl text-white ${isActualTugasLuar || isEarlyCheckOut ? "bg-amber-600" : type === "check-in" ? "bg-emerald-600" : "bg-blue-600"}`}>
                             {isActualTugasLuar ? <MapPin className="w-5 h-5 stroke-[2.5]" /> : <Camera className="w-5 h-5 stroke-[2.5]" />}
                         </div>
                         <div>
                             <h3 className="font-bold text-slate-800 text-sm sm:text-base">
                                 {isActualTugasLuar
                                     ? "Check-In Tugas Luar (Di Luar Kantor)"
-                                    : type === "check-in"
-                                        ? "Verifikasi Wajah: Check-In Masuk"
-                                        : "Verifikasi Wajah: Check-Out Pulang"}
+                                    : isEarlyCheckOut
+                                        ? "Verifikasi Wajah: Check-Out Pulang Lebih Awal"
+                                        : type === "check-in"
+                                            ? "Verifikasi Wajah: Check-In Masuk"
+                                            : "Verifikasi Wajah: Check-Out Pulang"}
                             </h3>
                             <p className="text-2xs sm:text-xs text-slate-500 font-medium">
                                 {isActualTugasLuar
                                     ? "Presensi di luar radius workshop dengan stempel GPS & review Owner"
-                                    : "Ambil foto selfie langsung dengan stempel lokasi & waktu"}
+                                    : isEarlyCheckOut
+                                        ? `Kepulangan sebelum pukul ${policy?.jam_pulang || "17:00"} WIB • Wajib Review Owner`
+                                        : "Ambil foto selfie langsung dengan stempel lokasi & waktu"}
                             </p>
                         </div>
                     </div>

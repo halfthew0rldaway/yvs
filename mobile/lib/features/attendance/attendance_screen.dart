@@ -309,7 +309,20 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   Future<void> _handleCheckOut() async {
     HapticFeedback.mediumImpact();
 
-    // Konfirmasi check-out
+    // 1. Cek apakah check-out lebih awal dari jam pulang operasional workshop
+    final policy = _todayStatus?['policy'] as Map<String, dynamic>?;
+    final jamPulangStr = policy?['jam_pulang']?.toString() ?? '17:00';
+    final parts = jamPulangStr.split(':');
+    final targetPulangMinutes = (int.tryParse(parts[0]) ?? 17) * 60 + (parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0);
+    final currentMinutes = _currentTime.hour * 60 + _currentTime.minute;
+    final isEarly = currentMinutes < targetPulangMinutes;
+
+    if (isEarly) {
+      _promptEarlyCheckOutModal(jamPulangStr);
+      return;
+    }
+
+    // Konfirmasi check-out normal
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -337,7 +350,156 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     );
 
     if (confirm != true) return;
+    _executeCheckOut();
+  }
 
+  void _promptEarlyCheckOutModal(String jamPulangStr) {
+    final TextEditingController reasonController = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.access_time_filled_rounded, color: Color(0xFFD97706), size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Konfirmasi Pulang Lebih Awal',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      ),
+                      Text(
+                        'Sebelum jam operasional workshop ($jamPulangStr WIB)',
+                        style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: Text(
+                'Anda melakukan Check-Out sebelum jam operasional workshop berakhir ($jamPulangStr WIB). Sesuai SOP, kepulangan lebih awal wajib menyertakan alasan yang jelas dan wajib diverifikasi oleh Superadmin / Owner.',
+                style: const TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF92400E)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Alasan Pulang Lebih Awal *',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: reasonController,
+              maxLines: 3,
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Contoh: Keperluan keluarga mendadak / Kondisi kurang sehat / Antar unit ke luar kota...',
+                hintStyle: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppTheme.border),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  'Urusan Keluarga',
+                  'Kurang Sehat / Sakit',
+                  'Tugas Luar / Dinas',
+                  'Izin Pimpinan',
+                ].map((chip) => Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ActionChip(
+                    label: Text(chip, style: const TextStyle(fontSize: 11)),
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    onPressed: () {
+                      reasonController.text = chip;
+                    },
+                  ),
+                )).toList(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD97706),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.camera_alt_rounded, size: 16),
+                    label: const Text('Selfie & Ajukan Pulang', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    onPressed: () {
+                      final text = reasonController.text.trim();
+                      if (text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Alasan pulang lebih awal wajib diisi!'),
+                            backgroundColor: AppTheme.error,
+                          ),
+                        );
+                        return;
+                      }
+                      Navigator.pop(ctx);
+                      _executeCheckOut(alasanPulangCepat: text);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _executeCheckOut({String? alasanPulangCepat}) async {
     // Ambil foto selfie check-out
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.camera,
@@ -351,24 +513,31 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     setState(() => _isActionLoading = true);
     try {
       final client = ApiClient();
-      final formData = FormData.fromMap({
+      final map = <String, dynamic>{
         'foto': await MultipartFile.fromFile(photo.path, filename: 'selfie_pulang_${DateTime.now().millisecondsSinceEpoch}.jpg'),
-      });
+      };
+      if (alasanPulangCepat != null && alasanPulangCepat.isNotEmpty) {
+        map['alasan_pulang_cepat'] = alasanPulangCepat;
+      }
+      final formData = FormData.fromMap(map);
 
       await client.dio.post(ApiConstants.attendanceCheckOut, data: formData);
 
       HapticFeedback.heavyImpact();
       if (mounted) {
+        final successMsg = alasanPulangCepat != null
+            ? 'Check-Out Pulang Lebih Awal diajukan dan menunggu verifikasi Owner.'
+            : 'Check-Out selesai. Selamat beristirahat!';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Text('Check-Out selesai. Selamat beristirahat!'),
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text(successMsg)),
               ],
             ),
-            backgroundColor: Color(0xFF10B981),
+            backgroundColor: const Color(0xFF10B981),
           ),
         );
         _loadAttendanceData(forceRefresh: true);
@@ -603,8 +772,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Banner Status Tugas Luar jika relevan
-                    if (record != null && (record['is_tugas_luar'] == true || record['is_tugas_luar'] == 1)) ...[
+                    // Banner Status Review (Tugas Luar / Pulang Lebih Awal)
+                    if (record != null && (record['is_tugas_luar'] == true || record['is_tugas_luar'] == 1 || record['status'] == 'pulang_cepat' || record['status_review'] == 'menunggu_review')) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
                         margin: const EdgeInsets.only(bottom: 12),
@@ -645,11 +814,17 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    record['status_review'] == 'valid'
-                                        ? 'Tugas Luar Disetujui Owner'
-                                        : record['status_review'] == 'ditolak'
-                                            ? 'Presensi Tugas Luar Ditolak'
-                                            : 'Tugas Luar • Menunggu Review Owner',
+                                    record['status'] == 'pulang_cepat'
+                                        ? (record['status_review'] == 'valid'
+                                            ? 'Pulang Lebih Awal Disetujui Owner'
+                                            : record['status_review'] == 'ditolak'
+                                                ? 'Izin Pulang Lebih Awal Ditolak'
+                                                : 'Pulang Lebih Awal • Menunggu Review Owner')
+                                        : (record['status_review'] == 'valid'
+                                            ? 'Tugas Luar Disetujui Owner'
+                                            : record['status_review'] == 'ditolak'
+                                                ? 'Presensi Tugas Luar Ditolak'
+                                                : 'Tugas Luar • Menunggu Review Owner'),
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -673,6 +848,14 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                                   ? const Color(0xFFBE123C)
                                                   : const Color(0xFFB45309),
                                         ),
+                                      ),
+                                    ),
+                                  if (record['catatan'] != null && record['status'] == 'pulang_cepat')
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        '${record['catatan']}',
+                                        style: const TextStyle(fontSize: 11, color: Color(0xFF92400E)),
                                       ),
                                     ),
                                   if (record['catatan_review'] != null)

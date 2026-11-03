@@ -357,7 +357,7 @@ async function checkOut(req, res) {
         }
 
         // 2. Validasi Geolocation & Geofencing
-        const { latitude, longitude, catatan, is_tugas_luar } = req.body;
+        const { latitude, longitude, catatan, is_tugas_luar, alasan_pulang_cepat } = req.body;
         const userLat = latitude !== undefined && latitude !== null && latitude !== "" ? parseFloat(latitude) : null;
         const userLon = longitude !== undefined && longitude !== null && longitude !== "" ? parseFloat(longitude) : null;
         const isTugasLuar = existing.is_tugas_luar || is_tugas_luar === "true" || is_tugas_luar === true;
@@ -386,16 +386,40 @@ async function checkOut(req, res) {
             fotoPulangUrl = `/uploads/attendance/${req.file.filename}`;
         }
 
-        // 4. Kalkulasi Durasi Kerja & Pulang Cepat
+        // 4. Kalkulasi Durasi Kerja & Pulang Lebih Awal (Wajib Review)
         const durationMinutes = Math.max(0, Math.round((now.getTime() - new Date(existing.jam_masuk).getTime()) / (1000 * 60)));
 
         const [pulangHour, pulangMinute] = policy.jam_pulang.split(":").map(Number);
         const targetPulangMinutes = pulangHour * 60 + pulangMinute;
         const currentMinutesFromMidnight = getWibMinutesFromMidnight(now);
 
+        const isEarly = currentMinutesFromMidnight < targetPulangMinutes;
+        const cleanAlasanEarly = alasan_pulang_cepat ? String(alasan_pulang_cepat).trim() : null;
+
+        if (isEarly && !cleanAlasanEarly) {
+            return res.status(400).json({
+                message: `Anda melakukan Check-Out lebih awal sebelum jam operasional workshop berakhir (${policy.jam_pulang} WIB). Harap masukkan alasan pulang lebih awal untuk verifikasi Superadmin / Owner.`,
+                is_early_checkout: true,
+                target_jam_pulang: policy.jam_pulang
+            });
+        }
+
         let updatedStatus = existing.status;
-        if (currentMinutesFromMidnight < targetPulangMinutes && existing.status === "hadir") {
+        let updatedStatusReview = existing.status_review;
+
+        if (isEarly) {
             updatedStatus = "pulang_cepat";
+            updatedStatusReview = "menunggu_review"; // Wajib review Superadmin / Owner
+        }
+
+        // Format catatan pulang
+        let finalCatatan = existing.catatan || "";
+        if (cleanAlasanEarly) {
+            const earlyNote = `[PULANG LEBIH AWAL • Jam Normal: ${policy.jam_pulang} WIB] Alasan: ${cleanAlasanEarly}`;
+            finalCatatan = finalCatatan ? `${finalCatatan} | ${earlyNote}` : earlyNote;
+        }
+        if (catatan) {
+            finalCatatan = finalCatatan ? `${finalCatatan} | ${catatan}` : catatan;
         }
 
         // 5. Update Record Presensi
@@ -405,27 +429,34 @@ async function checkOut(req, res) {
                 jam_pulang: now,
                 durasi_kerja_menit: durationMinutes,
                 status: updatedStatus,
+                status_review: updatedStatusReview,
                 foto_pulang: fotoPulangUrl,
                 latitude_pulang: userLat,
                 longitude_pulang: userLon,
                 jarak_meter_pulang: distanceMeters,
                 is_in_radius_pulang: isInRadius,
-                catatan: catatan ? (existing.catatan ? `${existing.catatan} | Pulang: ${catatan}` : catatan) : existing.catatan
+                catatan: finalCatatan || null
             }
         });
 
         const hours = Math.floor(durationMinutes / 60);
         const mins = durationMinutes % 60;
 
+        const earlyNoteAudit = isEarly ? ` [PULANG LEBIH AWAL: Menunggu Review Owner, Alasan: ${cleanAlasanEarly}]` : "";
         await recordActivity({
             userId,
             userNama: req.user.nama,
-            action: `Check-Out Presensi [Durasi: ${hours}j ${mins}m, Status: ${updatedStatus}]`,
+            action: `Check-Out Presensi [Durasi: ${hours}j ${mins}m, Status: ${updatedStatus}]${earlyNoteAudit}`,
             entity: "presensi"
         });
 
+        let successMsg = `Check-Out berhasil! Total jam kerja: ${hours} jam ${mins} menit.`;
+        if (isEarly) {
+            successMsg += " (Kategori Pulang Lebih Awal: Menunggu verifikasi Superadmin / Owner)";
+        }
+
         return res.json({
-            message: `Check-Out berhasil! Total jam kerja: ${hours} jam ${mins} menit.`,
+            message: successMsg,
             record: updatedRecord
         });
     } catch (error) {
@@ -848,18 +879,36 @@ async function reviewLeave(req, res) {
     }
 }
 
-// 11. GET /api/attendance/pending-reviews (Admin & Pimpinan / Owner: Review Presensi Tugas Luar)
+// 11. GET /api/attendance/pending-reviews (Admin & Pimpinan / Owner: Review Presensi Tugas Luar & Pulang Lebih Awal)
 async function getPendingReviews(req, res) {
     try {
         const { status_filter } = req.query; // 'menunggu_review' | 'all' | 'valid' | 'ditolak'
-        const where = {
-            is_tugas_luar: true
+        
+        // Entitas yang memerlukan peninjauan: Kategori Tugas Luar ATAU Pulang Cepat ATAU status_review menunggu_review
+        const baseReviewCondition = {
+            OR: [
+                { is_tugas_luar: true },
+                { status: "pulang_cepat" },
+                { status_review: "menunggu_review" }
+            ]
         };
 
+        let where = { ...baseReviewCondition };
+
         if (status_filter && status_filter !== "all") {
-            where.status_review = status_filter;
+            where = {
+                AND: [
+                    baseReviewCondition,
+                    { status_review: status_filter }
+                ]
+            };
         } else if (!status_filter) {
-            where.status_review = "menunggu_review";
+            where = {
+                AND: [
+                    baseReviewCondition,
+                    { status_review: "menunggu_review" }
+                ]
+            };
         }
 
         const list = await prisma.attendanceRecord.findMany({
@@ -889,8 +938,10 @@ async function getPendingReviews(req, res) {
 
         const pendingCount = await prisma.attendanceRecord.count({
             where: {
-                is_tugas_luar: true,
-                status_review: "menunggu_review"
+                AND: [
+                    baseReviewCondition,
+                    { status_review: "menunggu_review" }
+                ]
             }
         });
 
@@ -899,7 +950,7 @@ async function getPendingReviews(req, res) {
             list
         });
     } catch (error) {
-        return res.status(500).json({ message: "Gagal memuat daftar review presensi tugas luar", error: error.message });
+        return res.status(500).json({ message: "Gagal memuat daftar review presensi", error: error.message });
     }
 }
 
