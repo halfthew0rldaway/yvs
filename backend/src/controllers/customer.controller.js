@@ -54,18 +54,13 @@ async function getAll(req, res) {
         // Filter status arsip:
         // status === "archived": hanya tampilkan pelanggan yang diarsipkan (is_active === false)
         // status === "all": tampilkan semua (aktif + diarsipkan)
-        // default / status === "active": hanya tampilkan pelanggan aktif (is_active === true atau null)
+        // default / status === "active": hanya tampilkan pelanggan aktif (is_active === true)
         if (status === "archived") {
             andList.push({ is_active: false });
         } else if (status === "all") {
             // Tampilkan seluruh pelanggan tanpa filter is_active
         } else {
-            andList.push({
-                OR: [
-                    { is_active: true },
-                    { is_active: null }
-                ]
-            });
+            andList.push({ is_active: true });
         }
 
         if (search) {
@@ -139,7 +134,7 @@ async function getAll(req, res) {
                 skip,
                 take: limit,
             }),
-            prisma.customer.count({ where: { OR: [{ is_active: true }, { is_active: null }] } }).catch(() => 0),
+            prisma.customer.count({ where: { is_active: true } }).catch(() => 0),
             prisma.customer.count({ where: { is_active: false } }).catch(() => 0),
         ]);
 
