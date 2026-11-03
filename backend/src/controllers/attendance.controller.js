@@ -796,6 +796,120 @@ async function adjustAttendance(req, res) {
     }
 }
 
+// 9b. POST /api/attendance/adjust-bulk (Admin only: Koreksi Presensi Massal / Bulk dengan Catatan Audit Anti-Fraud)
+async function adjustAttendanceBulk(req, res) {
+    try {
+        const { user_ids, tanggal, jam_masuk, jam_pulang, status, alasan_adjustment, items } = req.body;
+
+        if (!alasan_adjustment || !alasan_adjustment.trim()) {
+            return res.status(400).json({ message: "Alasan koreksi absensi massal wajib diisi sebagai rekam jejak audit!" });
+        }
+
+        const cleanAlasan = alasan_adjustment.trim();
+        const targetDate = tanggal ? getTodayDate(new Date(tanggal)) : getTodayDate();
+
+        const parseTimeOrDateTime = (val, baseDate) => {
+            if (val === null || val === "") return null;
+            if (typeof val === "string" && val.length <= 8 && val.includes(":")) {
+                const d = new Date(baseDate);
+                const parts = val.split(":");
+                const h = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10);
+                const s = parts[2] ? parseInt(parts[2], 10) : 0;
+                d.setHours(h, m, s, 0);
+                return d;
+            }
+            const parsed = new Date(val);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        };
+
+        let targetUserIds = [];
+        if (Array.isArray(user_ids) && user_ids.length > 0) {
+            targetUserIds = user_ids.map(id => parseInt(id));
+        } else if (Array.isArray(items) && items.length > 0) {
+            targetUserIds = items.map(i => parseInt(i.user_id));
+        }
+
+        if (targetUserIds.length === 0) {
+            return res.status(400).json({ message: "Pilih minimal 1 karyawan untuk melakukan koreksi massal!" });
+        }
+
+        const parsedMasukDefault = jam_masuk !== undefined ? parseTimeOrDateTime(jam_masuk, targetDate) : undefined;
+        const parsedPulangDefault = jam_pulang !== undefined ? parseTimeOrDateTime(jam_pulang, targetDate) : undefined;
+
+        let durasiMenitDefault = undefined;
+        if (parsedMasukDefault && parsedPulangDefault && parsedPulangDefault > parsedMasukDefault) {
+            durasiMenitDefault = Math.round((parsedPulangDefault.getTime() - parsedMasukDefault.getTime()) / (1000 * 60));
+        } else if (status === "izin" || status === "sakit" || status === "alfa") {
+            durasiMenitDefault = 0;
+        }
+
+        const updatedRecords = [];
+        for (const uid of targetUserIds) {
+            const itemOverride = Array.isArray(items) ? items.find(i => parseInt(i.user_id) === uid) : null;
+            const itemStatus = itemOverride?.status || status || "hadir";
+            const itemMasuk = itemOverride?.jam_masuk !== undefined ? parseTimeOrDateTime(itemOverride.jam_masuk, targetDate) : parsedMasukDefault;
+            const itemPulang = itemOverride?.jam_pulang !== undefined ? parseTimeOrDateTime(itemOverride.jam_pulang, targetDate) : parsedPulangDefault;
+
+            let durasi = durasiMenitDefault;
+            if (itemMasuk && itemPulang && itemPulang > itemMasuk) {
+                durasi = Math.round((itemPulang.getTime() - itemMasuk.getTime()) / (1000 * 60));
+            } else if (itemStatus === "izin" || itemStatus === "sakit" || itemStatus === "alfa") {
+                durasi = 0;
+            }
+
+            const rec = await prisma.attendanceRecord.upsert({
+                where: {
+                    user_id_tanggal: {
+                        user_id: uid,
+                        tanggal: targetDate
+                    }
+                },
+                create: {
+                    user_id: uid,
+                    tanggal: targetDate,
+                    jam_masuk: itemMasuk !== undefined ? itemMasuk : (itemStatus === "hadir" ? targetDate : null),
+                    jam_pulang: itemPulang !== undefined ? itemPulang : null,
+                    status: itemStatus,
+                    method: "manual_adjustment_bulk",
+                    durasi_kerja_menit: durasi || 0,
+                    is_adjusted: true,
+                    adjusted_by_id: req.user.id,
+                    alasan_adjustment: cleanAlasan
+                },
+                update: {
+                    ...(itemMasuk !== undefined && { jam_masuk: itemMasuk }),
+                    ...(itemPulang !== undefined && { jam_pulang: itemPulang }),
+                    ...(itemStatus && { status: itemStatus }),
+                    ...(durasi !== undefined && { durasi_kerja_menit: durasi }),
+                    is_adjusted: true,
+                    adjusted_by_id: req.user.id,
+                    alasan_adjustment: cleanAlasan
+                },
+                include: { user: { select: { id: true, nama: true, role: true } } }
+            });
+
+            updatedRecords.push(rec);
+        }
+
+        await recordActivity({
+            userId: req.user.id,
+            userNama: req.user.nama,
+            action: `Koreksi Presensi Massal (${updatedRecords.length} karyawan) [Status: ${status || "campuran"}, Alasan: ${cleanAlasan}]`,
+            entity: "presensi"
+        });
+
+        return res.json({
+            message: `Berhasil mengoreksi presensi ${updatedRecords.length} karyawan secara massal!`,
+            count: updatedRecords.length,
+            records: updatedRecords
+        });
+    } catch (error) {
+        console.error("Gagal koreksi presensi massal:", error);
+        return res.status(500).json({ message: "Gagal mengoreksi presensi massal", error: error.message });
+    }
+}
+
 // 10. LEAVE / PERMISSION CONTROLLERS
 // GET /api/attendance/leaves
 async function getLeaves(req, res) {
@@ -1054,6 +1168,7 @@ module.exports = {
     getDailyAll,
     getMonthlyRecap,
     adjustAttendance,
+    adjustAttendanceBulk,
     getLeaves,
     createLeave,
     reviewLeave,

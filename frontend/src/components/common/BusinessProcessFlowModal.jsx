@@ -27,10 +27,14 @@ import {
     ClipboardCheck,
     Shield,
     Target,
-    HelpCircle
+    HelpCircle,
+    Columns,
+    GitCommit,
+    FileText
 } from "lucide-react";
 
-// Standardized 6 Stages of the Serv.io Workshop ERP Lifecycle with Balanced Data Architecture
+// Standardized 6 Stages of the Serv.io Workshop ERP Lifecycle
+// Symmetrical architecture: every stage has 3 left cards and 3 right cards for perfect balance
 const FLOW_STAGES = [
     {
         id: "intake",
@@ -43,43 +47,44 @@ const FLOW_STAGES = [
         description: "Frontman menyambut pelanggan di meja depan dengan ramah, mendengarkan kendala secara spesifik, serta melakukan inspeksi fisik visual kilat di hadapan pelanggan.",
         erpActionText: "Buka Form Input Tiket",
         erpActionLink: "/tiket-servis/tambah",
-        keyTasks: [
-            "Mendengarkan gejala kerusakan (mati total, tidak tampil gambar, blue screen, panas berlebih, engsel patah).",
-            "Mencatat seluruh kelengkapan bawaan pelanggan (Adaptor/Charger, Kabel Power, Tas Laptop, Box/Kardus).",
-            "Inspeksi fisik eksternal (baut hilang, lecet, casing retak) guna mencegah komplain fisik saat pengambilan.",
-            "Konfirmasi kata sandi Windows/PIN serta persetujuan pencadangan data penting pelanggan."
+        sopInstructions: [
+            "Sambut pelanggan di meja depan dengan ramah dan dengarkan gejala kerusakan spesifik (mati total, blank, panas).",
+            "Lakukan inspeksi visual bodi unit (baut, lecet, casing retak) serta catat seluruh kelengkapan (adaptor, tas, box).",
+            "Tentukan jenis pengerjaan: Quick Service (bisa ditunggu) atau Tiket Inap (masuk antrian pengerjaan mendalam)."
         ],
-        hasBranching: true,
-        branchQuestion: "Apakah pengerjaan unit perlu ditinggal di bengkel?",
-        branches: [
+        decisionRules: [
             {
                 type: "quick",
-                label: "Quick Service (Bisa Ditunggu)",
+                label: "Jalur A: Quick Service (Bisa Ditunggu)",
                 badge: "Durasi 15-45 Menit",
                 badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                condition: "Kerusakan ringan seperti ganti pasta thermal, pasang RAM/SSD baru, bersihkan debu kipas, atau aktivasi OS.",
-                outcome: "Unit langsung diserahkan ke teknisi di meja belakang untuk dieksekusi saat itu juga. Pelanggan dapat menunggu di lounge bengkel.",
-                icon: Clock
+                condition: "Kerusakan ringan seperti ganti pasta thermal, pasang RAM/SSD, bersihkan debu kipas, atau aktivasi software.",
+                outcome: "Unit langsung diserahkan ke teknisi di meja belakang untuk dieksekusi saat itu juga. Pelanggan dapat menunggu di lounge bengkel."
             },
             {
                 type: "inbound",
-                label: "Tiket Servis Resmi (Unit Ditinggal)",
+                label: "Jalur B: Tiket Servis Resmi (Unit Ditinggal)",
                 badge: "Masuk Antrian Tiket",
                 badgeClass: "bg-blue-50 text-blue-700 border-blue-200",
-                condition: "Kerusakan berat, motherboard mati, reballing chip, perbaikan jalur IC, part inden, atau butuh running test berjam-jam.",
-                outcome: "Wajib diinput ke sistem ERP: Data Pelanggan, Data Perangkat, SN, Keluhan, dan Foto Kelengkapan. Tiket resmi terbit dan label barcode QR ditempel pada casing unit.",
-                icon: QrCode
+                condition: "Kerusakan berat seperti mati total, reballing IC, jalur sirkuit putus, part inden, atau running test lama.",
+                outcome: "Wajib diinput ke sistem ERP: Data Pelanggan, Perangkat, SN, Keluhan, dan Foto Kelengkapan. Tiket resmi terbit dan label barcode QR ditempel."
             }
         ],
+        keyTasks: [
+            "Mendengarkan gejala kerusakan (mati total, tidak tampil gambar, blue screen, panas berlebih).",
+            "Mencatat seluruh kelengkapan bawaan pelanggan (Adaptor/Charger, Kabel Power, Tas Laptop, Box).",
+            "Inspeksi fisik eksternal (baut hilang, lecet, retak) guna mencegah komplain fisik saat pengambilan.",
+            "Konfirmasi kata sandi Windows/PIN serta persetujuan pencadangan data penting pelanggan."
+        ],
         deliverables: [
-            "Tiket servis terbit lengkap dengan nomor tiket dan kode QR barcode tercetak.",
-            "Label stiker barcode QR tertempel rapi di bodi perangkat pelanggan.",
+            "Tiket servis resmi terbit dengan nomor tiket dan kode QR barcode tercetak.",
+            "Label stiker barcode QR tertempel rapi pada bodi perangkat pelanggan.",
             "Foto kelengkapan (adaptor, tas, kondisi fisik) tersimpan di modul ERP."
         ],
         slaAndPic: {
-            pic: "Frontman / Customer Service Meja Depan",
-            sla: "5 - 10 Menit per pelanggan di meja depan",
-            checkpoint: "Formulir fisik / digital telah ditandatangani pelanggan"
+            pic: "Frontman / Meja Depan",
+            sla: "5 - 10 Menit di Meja Depan",
+            checkpoint: "Formulir digital ditandatangani pelanggan"
         },
         proTip: "Selalu foto kelengkapan adaptor dan fisik unit sebelum pelanggan meninggalkan meja depan untuk bukti otentik."
     },
@@ -94,22 +99,44 @@ const FLOW_STAGES = [
         description: "Teknisi mengklaim tiket dari antrian servis. Menggunakan panduan SOP bengkel, unit dibongkar secara hati-hati untuk pengukuran tegangan rail dan pemeriksaan menyeluruh.",
         erpActionText: "Lihat Daftar Tiket Servis",
         erpActionLink: "/tiket-servis",
+        sopInstructions: [
+            "Klaim tiket servis dari rak antrian dan lakukan verifikasi fisik sesuai catatan meja depan.",
+            "Bongkar unit secara hati-hati, ukur tegangan rail utama (19V, 3.3V, 5V) dan lakukan cek arus pendek (short circuit).",
+            "Lakukan pengujian 21-titik checklist standar dan dokumentasikan titik kerusakan fisik pada Defect Mapper."
+        ],
+        decisionRules: [
+            {
+                type: "reparable",
+                label: "Kondisi A: Kerusakan Jalur / Komponen Eksisting",
+                badge: "Jasa Reparasi Murni",
+                badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200",
+                condition: "Kerusakan dapat diatasi melalui soldering jalur, flashing BIOS, reballing chip, atau pembersihan korosi.",
+                outcome: "Teknisi menghitung estimasi biaya berdasarkan tingkat kesulitan pengerjaan tanpa perlu menambahkan beban biaya suku cadang baru."
+            },
+            {
+                type: "part_needed",
+                label: "Kondisi B: Komponen Rusak Wajib Diganti",
+                badge: "Butuh Suku Cadang",
+                badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+                condition: "Komponen fisik rusak permanen (LCD pecah, baterai kembung, keyboard short, IC berlubang, kipas macet).",
+                outcome: "Teknisi memeriksa ketersediaan suku cadang di modul gudang ERP Serv.io dan mencantumkan rincian part pada estimasi biaya."
+            }
+        ],
         keyTasks: [
-            "Melakukan verifikasi 21-titik checklist: Port USB, Keyboard, Layar LCD, Speaker, WiFi, Charger, Webcam, Baterai, dan Suhu Thermal.",
+            "Melakukan verifikasi 21-titik checklist: Port USB, Keyboard, Layar LCD, Speaker, WiFi, Charger, Webcam, dan Baterai.",
             "Dokumentasi foto kerusakan fisik (Defect Mapping) dan kondisi awal motherboard sebelum disolder.",
             "Menghitung estimasi biaya pengerjaan: estimasi durasi, jasa teknisi, dan suku cadang yang wajib diganti.",
             "Mengisi formulir estimasi pada tiket servis agar Admin dapat meneruskan rincian biaya ke pelanggan."
         ],
-        hasBranching: false,
         deliverables: [
             "Formulir 21-titik checklist terisi lengkap dengan status pass/fail per komponen.",
             "Peta titik cacat fisik (2D Defect Map) tersimpan di catatan tiket.",
             "Rincian kalkulasi estimasi jasa dan daftar suku cadang yang dibutuhkan siap diajukan."
         ],
         slaAndPic: {
-            pic: "Teknisi Spesialis Hardware / Diagnostik",
-            sla: "1 - 3 Jam (tergantung antrian dan kompleksitas kerusakan)",
-            checkpoint: "Hasil ukur tegangan rail dan defect mapping terinput di ERP"
+            pic: "Teknisi Hardware / Diagnostik",
+            sla: "1 - 3 Jam Pengerjaan Diagnosa",
+            checkpoint: "Hasil ukur rail & defect map terinput di ERP"
         },
         proTip: "Jangan pernah langsung memvonis kerusakan termahal sebelum melakukan pengukuran dasar (Short circuit check dan voltage drop)."
     },
@@ -124,32 +151,34 @@ const FLOW_STAGES = [
         description: "Setelah teknisi selesai melakukan diagnosa dan mencatat kebutuhan part, Admin bengkel menghubungi pelanggan secara resmi untuk menyampaikan estimasi biaya dan durasi garansi.",
         erpActionText: "Kirim Pesan WhatsApp Penawaran",
         erpActionLink: "/tiket-servis",
-        keyTasks: [
-            "Menjelaskan penyebab kerusakan dan solusi teknis dengan bahasa yang sopan dan mudah dipahami.",
-            "Menyampaikan rincian biaya: Jasa Servis + Harga Suku Cadang + Durasi Garansi yang diberikan.",
-            "Mendokumentasikan keputusan pelanggan ke sistem: Mengubah status tiket sesuai persetujuan pelanggan."
+        sopInstructions: [
+            "Buka estimasi teknisi di sistem ERP, verifikasi rincian jasa dan harga part sebelum menghubungi pelanggan.",
+            "Kirim pesan WhatsApp resmi yang mencantumkan rincian biaya transparan, durasi pengerjaan, dan jaminan garansi.",
+            "Catat keputusan pelanggan secara digital di tiket servis: ACC untuk lanjut, atau BATAL jika tidak disetujui."
         ],
-        hasBranching: true,
-        branchQuestion: "Bagaimana keputusan pelanggan terkait penawaran biaya?",
-        branches: [
+        decisionRules: [
             {
                 type: "reject",
-                label: "Pelanggan Membatalkan (CANCEL)",
+                label: "Keputusan A: Pelanggan Membatalkan (CANCEL)",
                 badge: "Batal Servis",
                 badgeClass: "bg-rose-50 text-rose-700 border-rose-200",
-                condition: "Biaya servis dirasa terlalu tinggi atau perangkat sudah tidak ekonomis lagi untuk diperbaiki.",
-                outcome: "Teknisi WAJIB merakit kembali unit ke kondisi semula secara rapi (seluruh baut terpasang, tanpa cacat tambahan). Biaya diagnosa disesuaikan kebijakan toko.",
-                icon: XCircle
+                condition: "Biaya servis dirasa terlalu tinggi atau perangkat dinilai pelanggan sudah tidak ekonomis lagi untuk diperbaiki.",
+                outcome: "Teknisi WAJIB merakit kembali unit ke kondisi semula secara rapi (seluruh baut terpasang, tanpa cacat tambahan). Biaya diagnosa disesuaikan kebijakan toko."
             },
             {
                 type: "accept",
-                label: "Pelanggan Menyetujui (ACC / LANJUT)",
+                label: "Keputusan B: Pelanggan Menyetujui (ACC / LANJUT)",
                 badge: "Disetujui Pelanggan",
                 badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                condition: "Pelanggan menyetujui rincian total biaya, masa garansi, dan perkiraan waktu pengerjaan.",
-                outcome: "Status tiket diperbarui menjadi 'Dalam Pengerjaan'. Teknisi langsung menjadwalkan eksekusi reparasi dan mereservasi stok sparepart.",
-                icon: CheckCircle2
+                condition: "Pelanggan menyetujui rincian total biaya, masa garansi yang diberikan, dan perkiraan waktu pengerjaan.",
+                outcome: "Status tiket diperbarui menjadi 'Dalam Pengerjaan'. Teknisi langsung menjadwalkan eksekusi reparasi dan mereservasi stok sparepart."
             }
+        ],
+        keyTasks: [
+            "Menjelaskan penyebab kerusakan dan solusi teknis dengan bahasa yang sopan dan mudah dipahami.",
+            "Menyampaikan rincian biaya: Jasa Servis + Harga Suku Cadang + Durasi Garansi yang diberikan.",
+            "Mendokumentasikan keputusan pelanggan ke sistem: Mengubah status tiket sesuai persetujuan pelanggan.",
+            "Memberikan kepastian estimasi waktu pengerjaan kepada pelanggan setelah disetujui."
         ],
         deliverables: [
             "Log pengiriman pesan WhatsApp penawaran resmi tercatat pada riwayat tiket.",
@@ -157,9 +186,9 @@ const FLOW_STAGES = [
             "Status tiket bertransisi ke 'Dalam Pengerjaan' atau 'Dibatalkan'."
         ],
         slaAndPic: {
-            pic: "Admin Bengkel / Customer Relationship Officer",
-            sla: "Maksimal 30 Menit setelah diagnosa teknisi selesai",
-            checkpoint: "Konfirmasi tertulis dari nomor WhatsApp resmi pelanggan"
+            pic: "Admin Bengkel / Customer Service",
+            sla: "Maksimal 30 Menit Pasca Diagnosa",
+            checkpoint: "Konfirmasi tertulis resmi nomor WhatsApp pelanggan"
         },
         proTip: "DILARANG KERAS melakukan tindakan servis berbayar sebelum pelanggan resmi menyatakan persetujuan (ACC)."
     },
@@ -174,22 +203,44 @@ const FLOW_STAGES = [
         description: "Teknisi mengeksekusi perbaikan sesuai estimasi yang disetujui. Setiap perkembangan dicatat ke dalam log perbaikan sistem ERP Serv.io secara real-time.",
         erpActionText: "Kelola Stok Sparepart",
         erpActionLink: "/sparepart",
+        sopInstructions: [
+            "Ambil suku cadang dari gudang sesuai estimasi yang telah di-ACC dan periksa kecocokan nomor part.",
+            "Lakukan tindakan perbaikan teknis (soldering IC, pergantian LCD, repaste thermal) sesuai SOP keselamatan kerja.",
+            "Jalankan stress test hardware minimal 30-60 menit (suhu thermal, tes beban kerja YouTube/benchmark)."
+        ],
+        decisionRules: [
+            {
+                type: "part_used",
+                label: "Skenario A: Menggunakan Suku Cadang Gudang",
+                badge: "Potong Stok Otomatis",
+                badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200",
+                condition: "Perbaikan memerlukan part baru seperti SSD, RAM, LCD Panel, Baterai, Keyboard, atau Kipas Pendingin.",
+                outcome: "Stok suku cadang gudang terpotong otomatis dari inventaris ERP Serv.io dan tercatat dalam rincian nota servis unit."
+            },
+            {
+                type: "component_level",
+                label: "Skenario B: Reparasi Tanpa Suku Cadang Baru",
+                badge: "Jasa Komponen Murni",
+                badgeClass: "bg-blue-50 text-blue-700 border-blue-200",
+                condition: "Perbaikan berupa restorasi jalur tembaga putus, solder ulang kaki IC korosi, atau perbaikan engsel mekanik.",
+                outcome: "Teknisi mengisi tahapan progres pada 'Log Perbaikan' tanpa mencantumkan konsumsi stok fisik inventaris."
+            }
+        ],
         keyTasks: [
             "Eksekusi perbaikan teknis (soldering IC, reballing chip, flashing BIOS, ganti LCD, pasang engsel).",
             "Pemotongan stok suku cadang dari katalog gudang ERP secara otomatis saat part dipasang ke unit.",
             "Pengisian bertahap 'Log Perbaikan' setiap tahapan pengerjaan terselesaikan.",
             "Uji Kualitas (QC Verification): Menjalankan stress test hardware minimal 30-60 menit hingga suhu dan daya stabil."
         ],
-        hasBranching: false,
         deliverables: [
-            "Komponen rusak berhasil diganti atau jalur sirkuit berhasil direparasi.",
+            "Komponen rusak berhasil diganti atau jalur sirkuit berhasil direparasi sempurna.",
             "Stok suku cadang gudang terpotong otomatis di sistem inventaris ERP.",
             "Hasil running stress test hardware (suhu dan kestabilan daya) lolos parameter."
         ],
         slaAndPic: {
             pic: "Teknisi Eksekutor & Kepala Teknisi",
-            sla: "Sesuai paket SLA pengerjaan (Reguler / Prioritas Kilat)",
-            checkpoint: "Log perbaikan terisi dan suku cadang tercatat resmi"
+            sla: "Sesuai Paket SLA Servis",
+            checkpoint: "Log perbaikan terisi & part tercatat resmi"
         },
         proTip: "Simpan part rusak yang diganti ke dalam plastik wadah unit sebagai bukti otentik transparansi kepada pelanggan."
     },
@@ -204,22 +255,44 @@ const FLOW_STAGES = [
         description: "Teknisi menandai tiket 'Selesai' setelah lolos uji kelayakan QC. Sistem secara otomatis memberi tahu Admin untuk mengirimkan notifikasi penjemputan unit.",
         erpActionText: "Pantau Tiket Siap Diambil",
         erpActionLink: "/tiket-servis",
+        sopInstructions: [
+            "Verifikasi bahwa unit telah lolos 100% running test dan bersihkan bodi dari bekas debu atau pasta thermal.",
+            "Pasang stiker segel garansi workshop Serv.io dan unggah foto dokumentasi fisik pasca-servis ke sistem.",
+            "Kirim pesan WhatsApp resmi otomatis memberitahukan unit telah siap diambil lengkap dengan rincian biaya."
+        ],
+        decisionRules: [
+            {
+                type: "pass_qc",
+                label: "Kriteria A: Lolos Uji Kelayakan QC",
+                badge: "Siap Diserahkan",
+                badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                condition: "Seluruh fungsi normal, suhu stabil, tidak ada bluescreen saat stress test, dan segel garansi terpasang rapi.",
+                outcome: "Status tiket diubah menjadi 'Siap Diambil' dan sistem mengantarkan notifikasi WhatsApp penjemputan ke nomor pelanggan."
+            },
+            {
+                type: "fail_qc",
+                label: "Kriteria B: Masih Ditemukan Gejala Kerusakan",
+                badge: "Kembali ke Meja Teknisi",
+                badgeClass: "bg-rose-50 text-rose-700 border-rose-200",
+                condition: "Ditemukan suhu berlebih, perangkat restart mendadak, atau salah satu port belum berfungsi normal saat QC.",
+                outcome: "Unit WAJIB dikembalikan ke meja teknisi untuk investigasi ulang. Pelanggan BELUM BOLEH dikabari sebelum unit 100% sempurna."
+            }
+        ],
         keyTasks: [
             "Mengunggah foto dokumentasi unit setelah selesai servis (kondisi rapi dan segel garansi terpasang).",
             "Menyatukan kelengkapan pelanggan (charger, tas) dan komponen lama ke dalam tas serah terima.",
             "Admin mengirim pesan WhatsApp resmi otomatis: 'Unit Anda telah selesai diperbaiki dan siap diambil di workshop'.",
             "Menyertakan rincian total tagihan serta tautan tracking online resmi Serv.io."
         ],
-        hasBranching: false,
         deliverables: [
             "Foto kondisi fisik pasca-servis dan segel garansi terunggah di modul tiket.",
             "Unit terkemas rapi bersama seluruh kelengkapan bawaan pelanggan.",
             "Pesan WhatsApp notifikasi penjemputan unit terkirim ke kontak pelanggan."
         ],
         slaAndPic: {
-            pic: "Admin Notifikasi & Tim Quality Assurance",
-            sla: "Maksimal 15 Menit setelah teknisi menandai tiket lolos QC",
-            checkpoint: "Pesan WhatsApp terkirim dan link pelacakan online aktif"
+            pic: "Admin Notifikasi & Quality Assurance",
+            sla: "Maksimal 15 Menit Pasca Lolos QC",
+            checkpoint: "Pesan WhatsApp terkirim & tracking aktif"
         },
         proTip: "Pastikan unit dalam kondisi bersih tanpa sisa sidik jari atau pasta thermal di bodi luar sebelum diserahkan."
     },
@@ -234,23 +307,44 @@ const FLOW_STAGES = [
         description: "Pelanggan tiba di bengkel membawa nomor tiket servis. Petugas mendemonstrasikan unit di meja depan bahwa seluruh keluhan telah terselesaikan dengan baik.",
         erpActionText: "Buka Menu Invoice & Kas",
         erpActionLink: "/invoice",
+        sopInstructions: [
+            "Sambut pelanggan, lakukan demonstrasi live test bersama (keyboard, display, audio, charger) di hadapan pelanggan.",
+            "Terbitkan invoice resmi melalui modul ERP dan proses pembayaran (QRIS, Tunai, atau Transfer Bank).",
+            "Minta tanda tangan digital serah terima di layar HP/tablet, serahkan kartu garansi resmi, dan ubah status menjadi CLOSED."
+        ],
+        decisionRules: [
+            {
+                type: "handover_success",
+                label: "Prosedur A: Pembayaran Lunas & Live Test Sukses",
+                badge: "Garansi SLA Aktif",
+                badgeClass: "bg-purple-50 text-purple-700 border-purple-200",
+                condition: "Pelanggan puas dengan hasil pengetesan, pembayaran invoice terverifikasi, dan tanda tangan digital telah terekam.",
+                outcome: "Cetak invoice lunas, kartu garansi 30-90 hari resmi diterbitkan, dan tiket ditutup ('CLOSED') dalam laporan keuangan."
+            },
+            {
+                type: "handover_issue",
+                label: "Prosedur B: Pelanggan Menemukan Kendala Tambahan",
+                badge: "Garansi / Retur Instan",
+                badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+                condition: "Pelanggan menemukan hal yang belum sesuai dengan ekspektasi saat pengetesan langsung di meja serah terima.",
+                outcome: "Unit langsung ditangani oleh Kepala Teknisi tanpa biaya tambahan sebagai bentuk perlindungan kepuasan konsumen Serv.io."
+            }
+        ],
         keyTasks: [
             "Live Testing: Pelanggan menguji fungsi keyboard, layar, audio, port USB, dan pengisian daya baterai bersama staf.",
             "Penerbitan Invoice Resmi dari modul ERP Serv.io (pencatatan metode bayar Tunai, QRIS, atau Transfer Bank).",
             "Tanda Tangan Digital Serah Terima di layar tablet/HP sebagai bukti penerimaan unit tanpa cacat baru.",
-            "Penerbitan Kartu Garansi Servis (SLA Garansi 30 - 90 Hari) yang tersimpan di sistem pelacakan online.",
-            "Tiket resmi ditutup ('CLOSED') dan otomatis tercatat ke dalam laporan keuangan dan performa teknisi."
+            "Penerbitan Kartu Garansi Servis (SLA Garansi 30 - 90 Hari) yang tersimpan di sistem pelacakan online."
         ],
-        hasBranching: false,
         deliverables: [
             "Lembar berita acara live test fisik ditandatangani digital oleh pelanggan.",
             "Invoice pembayaran lunas tercetak (Tunai, QRIS, atau Transfer).",
             "Sertifikat kartu garansi resmi SLA aktif dan tiket resmi ditutup ('CLOSED')."
         ],
         slaAndPic: {
-            pic: "Admin Kasir / Frontman Meja Serah Terima",
-            sla: "10 - 15 Menit saat pelanggan tiba mengambil perangkat",
-            checkpoint: "Tanda tangan digital tersimpan dan pembayaran terverifikasi lunas"
+            pic: "Admin Kasir / Meja Serah Terima",
+            sla: "10 - 15 Menit saat Pengambilan",
+            checkpoint: "Tanda tangan digital tersimpan & lunas"
         },
         proTip: "Tanda tangan digital melindungi bengkel secara hukum dari klaim kehilangan kelengkapan di masa mendatang."
     }
@@ -305,6 +399,7 @@ const CASE_STUDIES = [
 export default function BusinessProcessFlowModal({ isOpen, onClose }) {
     // 3 Dedicated Distinct Sections
     const [activeTab, setActiveTab] = useState("pipeline"); // 'pipeline' | 'detail' | 'cases'
+    const [diagramView, setDiagramView] = useState("swimlane"); // 'swimlane' | 'flowchart'
     const [selectedStageId, setSelectedStageId] = useState("intake");
     const [selectedCaseId, setSelectedCaseId] = useState("case-water-damage");
 
@@ -354,7 +449,7 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                 </span>
                             </div>
                             <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                                Panduan terstandarisasi untuk pemula: dari penerimaan unit, diagnosa, penawaran, pengerjaan, hingga serah terima & garansi.
+                                Panduan terstandarisasi untuk pemula: diagram alur minimalis, SOP checklist seimbang, dan simulasi kasus nyata.
                             </p>
                         </div>
                     </div>
@@ -363,7 +458,7 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                     <div className="flex items-center gap-2 self-end md:self-auto">
                         <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
                             {[
-                                { id: "pipeline", label: "1. Diagram Alur Sederhana", icon: GitFork },
+                                { id: "pipeline", label: "1. Diagram Alur Proses", icon: GitFork },
                                 { id: "detail", label: "2. Langkah Detail & Checklist", icon: Layers },
                                 { id: "cases", label: "3. Simulasi Kasus Nyata", icon: Laptop }
                             ].map((tab) => {
@@ -405,305 +500,478 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                         SECTION 1: TRUE BUSINESS PROCESS FLOW DIAGRAM (MINIMUM TEXT / BPMN STYLE)
                         ========================================================================= */}
                     {activeTab === "pipeline" && (
-                        <div className="w-full max-w-full space-y-6">
+                        <div className="w-full max-w-full space-y-5">
                             
-                            {/* Diagram Header & Legend */}
+                            {/* Diagram Header, Shape Legend & View Mode Toggle */}
                             <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
                                         <GitFork className="w-5 h-5 text-blue-600" />
                                         <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                                            Diagram Alur Proses Bisnis Bengkel (Business Process Flowchart)
+                                            Diagram Alur Proses Bisnis (Business Process Flowchart)
                                         </h3>
                                     </div>
                                     <p className="text-xs sm:text-sm text-slate-500">
-                                        Diagram visual ringkas dengan teks minimal. Klik pada setiap kotak proses untuk melihat detail SOP & checklist di Halaman 2.
+                                        Format standar BPMN dengan teks minimalis. Klik kotak tahapan manapun untuk langsung membuka SOP & Checklist detail di Halaman 2.
                                     </p>
                                 </div>
 
-                                {/* Flowchart Shape Legend */}
-                                <div className="flex flex-wrap items-center gap-3 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 text-xs">
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="w-6 h-3.5 rounded-full bg-slate-900 inline-block"></span>
-                                        <span className="text-slate-600 font-medium">Terminal (Mulai / Selesai)</span>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    {/* Flowchart Shape Legend */}
+                                    <div className="flex items-center gap-2.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-600">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-5 h-3 rounded-full bg-slate-900 inline-block"></span>
+                                            <span className="font-semibold text-3xs uppercase">Terminal</span>
+                                        </div>
+                                        <span className="text-slate-300">•</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-3.5 h-3.5 rounded-sm bg-white border border-slate-400 inline-block"></span>
+                                            <span className="font-semibold text-3xs uppercase">Aktivitas</span>
+                                        </div>
+                                        <span className="text-slate-300">•</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-3 h-3 rotate-45 bg-amber-400 inline-block"></span>
+                                            <span className="font-semibold text-3xs uppercase">Keputusan</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="w-4 h-3.5 rounded-md bg-white border border-slate-400 inline-block"></span>
-                                        <span className="text-slate-600 font-medium">Aktivitas / Proses</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="w-3.5 h-3.5 rotate-45 bg-amber-400 inline-block"></span>
-                                        <span className="text-slate-600 font-medium">Keputusan / Percabangan</span>
+
+                                    {/* View Toggle */}
+                                    <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => setDiagramView("swimlane")}
+                                            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                                diagramView === "swimlane"
+                                                    ? "bg-white text-blue-600 shadow-2xs border border-slate-200"
+                                                    : "text-slate-600 hover:text-slate-900"
+                                            }`}
+                                        >
+                                            <Columns className="w-3.5 h-3.5" />
+                                            <span>Swimlane Departemen</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDiagramView("flowchart")}
+                                            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                                diagramView === "flowchart"
+                                                    ? "bg-white text-blue-600 shadow-2xs border border-slate-200"
+                                                    : "text-slate-600 hover:text-slate-900"
+                                            }`}
+                                        >
+                                            <GitCommit className="w-3.5 h-3.5" />
+                                            <span>BPMN Flow Vertikal</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* SWIMLANES FLOWCHART CANVAS */}
-                            <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-5 sm:p-6 space-y-6 overflow-x-auto">
-                                
-                                {/* ROW 1: INTAKE & PENENTUAN KELAYAKAN (Frontman & Teknisi Meja Belakang) */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                                            Jalur 1: Penerimaan Unit & Keputusan Intake
-                                        </h4>
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 py-2">
-                                        {/* Start Terminal */}
-                                        <div className="px-4 py-2.5 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center gap-2 shadow-xs shrink-0">
-                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                                            <span>Mulai: Pelanggan Tiba</span>
-                                        </div>
-
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
-
-                                        {/* Process Node 01 */}
-                                        <button
-                                            type="button"
-                                            onClick={() => jumpToStageDetail("intake")}
-                                            className="px-4 py-2.5 rounded-xl bg-blue-50/80 hover:bg-blue-100 border border-blue-200 text-blue-900 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 text-left"
-                                            title="Klik untuk lihat SOP Intake"
-                                        >
-                                            <User className="w-4 h-4 text-blue-600 shrink-0" />
-                                            <div>
-                                                <p className="font-bold">01. Konsultasi & Cek Fisik</p>
-                                                <span className="text-3xs font-semibold text-blue-600">Frontman Meja Depan</span>
+                            {/* VIEW A: AUTHENTIC BPMN SWIMLANE DIAGRAM (Role Lanes: Frontman, Teknisi, Admin / Kasir) */}
+                            {diagramView === "swimlane" && (
+                                <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-4 sm:p-6 overflow-x-auto custom-scrollbar">
+                                    <div className="min-w-[1020px] space-y-4">
+                                        
+                                        {/* SWIMLANE 1: FRONTMAN (Customer Service / Meja Depan) */}
+                                        <div className="border border-blue-200 bg-blue-50/20 rounded-2xl overflow-hidden flex items-stretch">
+                                            {/* Lane Header */}
+                                            <div className="w-36 sm:w-44 bg-blue-600 text-white p-4 flex flex-col justify-center items-center text-center shrink-0 border-r border-blue-700">
+                                                <User className="w-6 h-6 mb-1 text-blue-100" />
+                                                <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wide">
+                                                    FRONTMAN
+                                                </h4>
+                                                <span className="text-3xs text-blue-200 font-semibold mt-0.5">Meja Depan & Intake</span>
                                             </div>
-                                        </button>
 
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                                            {/* Lane Content Track */}
+                                            <div className="p-4 sm:p-5 flex-1 flex flex-wrap items-center gap-3">
+                                                {/* Terminal Start */}
+                                                <div className="px-3.5 py-2 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center gap-2 shadow-2xs shrink-0">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                    <span>Pelanggan Tiba</span>
+                                                </div>
 
-                                        {/* Decision Diamond: Perlu Ditinggal? */}
-                                        <div className="px-4 py-2.5 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs font-bold flex items-center gap-2 shadow-xs shrink-0">
-                                            <GitFork className="w-4 h-4 text-amber-600 shrink-0" />
-                                            <span>Perlu Ditinggal?</span>
+                                                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+
+                                                {/* Node 01: Intake */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => jumpToStageDetail("intake")}
+                                                    className="px-3.5 py-2 rounded-xl bg-white hover:bg-blue-50 border border-blue-200 text-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 flex items-center gap-2 text-left"
+                                                    title="Lihat SOP 01. Intake"
+                                                >
+                                                    <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0"></span>
+                                                    <div>
+                                                        <p className="leading-tight">01. Penerimaan & Cek Fisik</p>
+                                                        <span className="text-3xs text-slate-400 font-normal">Inspeksi visual & kelengkapan</span>
+                                                    </div>
+                                                </button>
+
+                                                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+
+                                                {/* Decision: Ditinggal? */}
+                                                <div className="px-3 py-2 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs font-bold flex items-center gap-1.5 shadow-2xs shrink-0">
+                                                    <GitFork className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                                    <span>Perlu Ditinggal?</span>
+                                                </div>
+
+                                                <div className="flex flex-col gap-2 shrink-0">
+                                                    {/* Branch: TIDAK (Quick Service ke Meja Belakang) */}
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-3xs font-black uppercase px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                                                            TIDAK
+                                                        </span>
+                                                        <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />
+                                                        <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                                                            Arahkan Langsung ke Teknisi (Quick Fix)
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Branch: YA (Input Tiket ERP) */}
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-3xs font-black uppercase px-1.5 py-0.5 rounded bg-blue-600 text-white">
+                                                            YA
+                                                        </span>
+                                                        <ArrowRight className="w-3.5 h-3.5 text-blue-600" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => jumpToStageDetail("intake")}
+                                                            className="px-3 py-1 rounded-lg bg-white border border-blue-200 text-blue-900 text-xs font-bold hover:bg-blue-50 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                                                        >
+                                                            <QrCode className="w-3 h-3 text-blue-600" />
+                                                            <span>Input Tiket Servis & Tempel Barcode QR</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Return Section if Cancelled */}
+                                                <div className="ml-auto pl-4 border-l border-blue-200 flex items-center gap-2 shrink-0">
+                                                    <div className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold flex items-center gap-1.5">
+                                                        <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                                        <span>Pengembalian Unit Batal</span>
+                                                    </div>
+                                                    <ArrowRight className="w-3.5 h-3.5 text-rose-400" />
+                                                    <div className="px-3 py-1.5 rounded-full bg-rose-700 text-white text-xs font-bold">
+                                                        <span>Dibatalkan</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                                        {/* SWIMLANE CONNECTOR 1 -> 2 */}
+                                        <div className="flex items-center justify-center gap-2 text-slate-400 text-xs font-semibold py-0.5">
+                                            <ArrowDown className="w-4 h-4 text-blue-500 animate-bounce" />
+                                            <span>Unit diserahkan ke Meja Belakang Teknisi</span>
+                                        </div>
 
-                                        {/* Branch A: Quick Service */}
-                                        <div className="flex items-center gap-2 bg-emerald-50/60 p-1.5 rounded-xl border border-emerald-200 shrink-0">
-                                            <span className="text-3xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-600 text-white">
-                                                TIDAK
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                <div className="px-3 py-1.5 rounded-lg bg-white border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-1.5">
+                                        {/* SWIMLANE 2: TEKNISI (Workshop Belakang / Reparasi Hardware) */}
+                                        <div className="border border-indigo-200 bg-indigo-50/20 rounded-2xl overflow-hidden flex items-stretch">
+                                            {/* Lane Header */}
+                                            <div className="w-36 sm:w-44 bg-indigo-600 text-white p-4 flex flex-col justify-center items-center text-center shrink-0 border-r border-indigo-700">
+                                                <Wrench className="w-6 h-6 mb-1 text-indigo-100" />
+                                                <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wide">
+                                                    TEKNISI
+                                                </h4>
+                                                <span className="text-3xs text-indigo-200 font-semibold mt-0.5">Workshop Meja Servis</span>
+                                            </div>
+
+                                            {/* Lane Content Track */}
+                                            <div className="p-4 sm:p-5 flex-1 flex flex-wrap items-center gap-3">
+                                                {/* Quick Fix Path */}
+                                                <div className="flex items-center gap-2 bg-emerald-50/70 p-1.5 rounded-xl border border-emerald-200 shrink-0">
                                                     <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                                                    <span>Quick Service (15-45m)</span>
+                                                    <span className="text-xs font-bold text-emerald-900">
+                                                        Quick Service (15-45m)
+                                                    </span>
+                                                    <ArrowRight className="w-3.5 h-3.5 text-emerald-500" />
+                                                    <span className="text-xs font-semibold text-slate-600 bg-white px-2 py-0.5 rounded border border-emerald-200">
+                                                        Eksekusi di Tempat
+                                                    </span>
                                                 </div>
-                                                <ArrowRight className="w-3.5 h-3.5 text-emerald-500" />
-                                                <div className="px-3 py-1.5 rounded-lg bg-white border border-emerald-200 text-emerald-900 text-xs font-bold">
-                                                    <span>Eksekusi Meja Belakang</span>
+
+                                                <span className="text-slate-300 font-bold">|</span>
+
+                                                {/* Inbound Ticket Path */}
+                                                {/* Node 02: Diagnosa */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => jumpToStageDetail("diagnosis")}
+                                                    className="px-3.5 py-2 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-200 text-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 flex items-center gap-2 text-left"
+                                                    title="Lihat SOP 02. Diagnosa"
+                                                >
+                                                    <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0"></span>
+                                                    <div>
+                                                        <p className="leading-tight">02. Diagnosa 21-Titik</p>
+                                                        <span className="text-3xs text-slate-400 font-normal">Ukur tegangan & defect map</span>
+                                                    </div>
+                                                </button>
+
+                                                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+
+                                                {/* Estimasi Biaya */}
+                                                <div className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 shadow-2xs shrink-0">
+                                                    <Package className="w-3.5 h-3.5 text-slate-500" />
+                                                    <span>Kalkulasi Part & Jasa</span>
                                                 </div>
-                                                <ArrowRight className="w-3.5 h-3.5 text-emerald-500" />
-                                                <div className="px-3 py-1.5 rounded-full bg-emerald-700 text-white text-xs font-bold">
-                                                    <span>Selesai di Tempat</span>
+
+                                                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+
+                                                {/* Branch Cancel (Reassembly) */}
+                                                <div className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold flex items-center gap-1.5 shrink-0">
+                                                    <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                                    <span>Rakit ke Kondisi Semula</span>
+                                                </div>
+
+                                                <span className="text-slate-300 font-bold">|</span>
+
+                                                {/* Node 04: Pengerjaan */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => jumpToStageDetail("execution")}
+                                                    className="px-3.5 py-2 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-200 text-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 flex items-center gap-2 text-left"
+                                                    title="Lihat SOP 04. Pengerjaan"
+                                                >
+                                                    <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0"></span>
+                                                    <div>
+                                                        <p className="leading-tight">04. Reparasi & Pasang Part</p>
+                                                        <span className="text-3xs text-slate-400 font-normal">Soldering IC & potong stok</span>
+                                                    </div>
+                                                </button>
+
+                                                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+
+                                                {/* QC Verification */}
+                                                <div className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-bold flex items-center gap-1.5 shadow-2xs shrink-0">
+                                                    <ClipboardCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                                    <span>Running Test QC 30-60m</span>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Sub-branch: YA (Tiket Servis Resmi Inap) */}
-                                    <div className="pl-4 sm:pl-10 flex items-center gap-3">
-                                        <span className="text-3xs font-black uppercase px-2 py-0.5 rounded-md bg-blue-600 text-white shrink-0">
-                                            YA (INAP)
-                                        </span>
-                                        <div className="h-6 border-l-2 border-dashed border-blue-400 shrink-0"></div>
-                                        <button
-                                            type="button"
-                                            onClick={() => jumpToStageDetail("intake")}
-                                            className="px-3.5 py-1.5 rounded-lg bg-white border border-blue-200 text-blue-900 text-xs font-bold flex items-center gap-2 shadow-2xs hover:bg-blue-50 transition-colors cursor-pointer"
-                                        >
-                                            <QrCode className="w-3.5 h-3.5 text-blue-600" />
-                                            <span>Input Tiket Servis di ERP & Tempel Barcode QR pada Unit</span>
-                                        </button>
-                                        <ArrowRight className="w-4 h-4 text-blue-400 shrink-0" />
-                                        <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
-                                            Masuk Rak Antrian Diagnosa
-                                        </span>
+                                        {/* SWIMLANE CONNECTOR 2 -> 3 */}
+                                        <div className="flex items-center justify-center gap-2 text-slate-400 text-xs font-semibold py-0.5">
+                                            <ArrowDown className="w-4 h-4 text-purple-500 animate-bounce" />
+                                            <span>Notifikasi diteruskan ke Admin & Meja Kasir</span>
+                                        </div>
+
+                                        {/* SWIMLANE 3: ADMIN & KASIR (Komunikasi, Invoice & Serah Terima) */}
+                                        <div className="border border-purple-200 bg-purple-50/20 rounded-2xl overflow-hidden flex items-stretch">
+                                            {/* Lane Header */}
+                                            <div className="w-36 sm:w-44 bg-purple-600 text-white p-4 flex flex-col justify-center items-center text-center shrink-0 border-r border-purple-700">
+                                                <Receipt className="w-6 h-6 mb-1 text-purple-100" />
+                                                <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wide">
+                                                    ADMIN & KASIR
+                                                </h4>
+                                                <span className="text-3xs text-purple-200 font-semibold mt-0.5">Komunikasi & Kasir</span>
+                                            </div>
+
+                                            {/* Lane Content Track */}
+                                            <div className="p-4 sm:p-5 flex-1 flex flex-wrap items-center gap-3">
+                                                {/* Node 03: Penawaran WhatsApp */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => jumpToStageDetail("quotation")}
+                                                    className="px-3.5 py-2 rounded-xl bg-white hover:bg-amber-50 border border-amber-200 text-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 flex items-center gap-2 text-left"
+                                                    title="Lihat SOP 03. Penawaran"
+                                                >
+                                                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                                                    <div>
+                                                        <p className="leading-tight">03. Penawaran Biaya WhatsApp</p>
+                                                        <span className="text-3xs text-slate-400 font-normal">Kirim estimasi resmi ke pelanggan</span>
+                                                    </div>
+                                                </button>
+
+                                                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+
+                                                {/* Decision: ACC? */}
+                                                <div className="px-3 py-2 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs font-bold flex items-center gap-1.5 shadow-2xs shrink-0">
+                                                    <GitFork className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                                    <span>Pelanggan ACC?</span>
+                                                </div>
+
+                                                <div className="flex flex-col gap-1.5 shrink-0">
+                                                    <span className="text-3xs font-black uppercase px-2 py-0.5 rounded bg-rose-600 text-white text-center">
+                                                        BATAL → Rakit Ulang
+                                                    </span>
+                                                    <span className="text-3xs font-black uppercase px-2 py-0.5 rounded bg-emerald-600 text-white text-center">
+                                                        ACC → Lanjut Servis
+                                                    </span>
+                                                </div>
+
+                                                <span className="text-slate-300 font-bold">|</span>
+
+                                                {/* Node 05: Notifikasi */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => jumpToStageDetail("completion")}
+                                                    className="px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-200 text-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 flex items-center gap-2 text-left"
+                                                    title="Lihat SOP 05. Notifikasi"
+                                                >
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0"></span>
+                                                    <div>
+                                                        <p className="leading-tight">05. Foto Selesai & WA Siap</p>
+                                                        <span className="text-3xs text-slate-400 font-normal">Segel garansi & notifikasi ambil</span>
+                                                    </div>
+                                                </button>
+
+                                                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+
+                                                {/* Node 06: Handover */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => jumpToStageDetail("handover")}
+                                                    className="px-3.5 py-2 rounded-xl bg-white hover:bg-purple-50 border border-purple-200 text-slate-800 text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 flex items-center gap-2 text-left"
+                                                    title="Lihat SOP 06. Serah Terima"
+                                                >
+                                                    <span className="w-2 h-2 rounded-full bg-purple-600 shrink-0"></span>
+                                                    <div>
+                                                        <p className="leading-tight">06. Live Test, Bayar & TTD</p>
+                                                        <span className="text-3xs text-slate-400 font-normal">Invoice QRIS & tanda tangan digital</span>
+                                                    </div>
+                                                </button>
+
+                                                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+
+                                                {/* Terminal End */}
+                                                <div className="px-4 py-2 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs shrink-0">
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    <span>Selesai (Garansi Aktif)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
+                            )}
 
-                                {/* CONNECTOR DOWN */}
-                                <div className="flex items-center justify-center pl-6 sm:pl-12">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
-                                        <ArrowDown className="w-4 h-4" />
-                                    </div>
-                                </div>
-
-                                {/* ROW 2: DIAGNOSA, PENAWARAN & PERSETUJUAN BIAYA (Teknisi & Admin) */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                                            Jalur 2: Diagnosa Menyeluruh & Penawaran WhatsApp
+                            {/* VIEW B: VERTICAL BPMN DECISION FLOW (Linear Pipeline Tree with Minimum Text) */}
+                            {diagramView === "flowchart" && (
+                                <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-5 sm:p-7 max-w-3xl mx-auto space-y-4">
+                                    <div className="text-center pb-2 border-b border-slate-100">
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                            BPMN Decision Tree: Alur Keputusan Vertikal
                                         </h4>
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 py-2">
-                                        {/* Process Node 02: Diagnosa */}
+                                    <div className="flex flex-col items-center space-y-3">
+                                        {/* Start Terminal */}
+                                        <div className="px-5 py-2 rounded-full bg-slate-900 text-white text-xs font-bold shadow-xs">
+                                            Mulai: Pelanggan Tiba Membawa Perangkat
+                                        </div>
+
+                                        <ArrowDown className="w-4 h-4 text-slate-400" />
+
+                                        {/* Step 1 */}
+                                        <button
+                                            type="button"
+                                            onClick={() => jumpToStageDetail("intake")}
+                                            className="px-5 py-2.5 rounded-xl bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-900 text-xs font-bold shadow-2xs transition-all cursor-pointer w-64 text-center"
+                                        >
+                                            01. Konsultasi & Cek Fisik Awal (Frontman)
+                                        </button>
+
+                                        <ArrowDown className="w-4 h-4 text-slate-400" />
+
+                                        {/* Decision 1 */}
+                                        <div className="px-5 py-2.5 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs font-bold shadow-xs flex items-center gap-2">
+                                            <GitFork className="w-4 h-4 text-amber-600" />
+                                            <span>Perlu Ditinggal di Workshop?</span>
+                                        </div>
+
+                                        <div className="w-full grid grid-cols-2 gap-4 pt-1">
+                                            <div className="flex flex-col items-center space-y-2 p-3 rounded-xl bg-emerald-50/60 border border-emerald-200">
+                                                <span className="text-3xs font-black uppercase px-2 py-0.5 rounded bg-emerald-600 text-white">TIDAK</span>
+                                                <p className="text-xs font-bold text-emerald-900 text-center">Quick Service Meja Belakang (15-45m)</p>
+                                                <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />
+                                                <span className="text-xs font-bold text-slate-700">Pelunasan Kasir di Tempat</span>
+                                                <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />
+                                                <span className="px-3 py-1 rounded-full bg-emerald-600 text-white text-3xs font-bold">Selesai (Langsung Bawa Pulang)</span>
+                                            </div>
+
+                                            <div className="flex flex-col items-center space-y-2 p-3 rounded-xl bg-blue-50/60 border border-blue-200">
+                                                <span className="text-3xs font-black uppercase px-2 py-0.5 rounded bg-blue-600 text-white">YA (INAP)</span>
+                                                <p className="text-xs font-bold text-blue-900 text-center">Input Tiket Servis di ERP & Barcode QR</p>
+                                                <ArrowDown className="w-3.5 h-3.5 text-blue-600" />
+                                                <span className="text-xs font-bold text-slate-700">Unit Masuk Rak Antrian Servis</span>
+                                            </div>
+                                        </div>
+
+                                        <ArrowDown className="w-4 h-4 text-slate-400" />
+
+                                        {/* Step 2 */}
                                         <button
                                             type="button"
                                             onClick={() => jumpToStageDetail("diagnosis")}
-                                            className="px-4 py-2.5 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 text-left"
-                                            title="Klik untuk lihat SOP Diagnosa"
+                                            className="px-5 py-2.5 rounded-xl bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-900 text-xs font-bold shadow-2xs transition-all cursor-pointer w-64 text-center"
                                         >
-                                            <Wrench className="w-4 h-4 text-indigo-600 shrink-0" />
-                                            <div>
-                                                <p className="font-bold">02. Diagnosa & 21-Titik Checklist</p>
-                                                <span className="text-3xs font-semibold text-indigo-600">Teknisi (Take Over)</span>
-                                            </div>
+                                            02. Diagnosa 21-Titik Checklist (Teknisi)
                                         </button>
 
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <ArrowDown className="w-4 h-4 text-slate-400" />
 
-                                        {/* Input Estimasi Part & Jasa */}
-                                        <div className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs font-bold flex items-center gap-2 shadow-2xs shrink-0">
-                                            <Package className="w-4 h-4 text-slate-500" />
-                                            <span>Kalkulasi Part & Estimasi Jasa</span>
-                                        </div>
-
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
-
-                                        {/* Process Node 03: Penawaran */}
+                                        {/* Step 3 */}
                                         <button
                                             type="button"
                                             onClick={() => jumpToStageDetail("quotation")}
-                                            className="px-4 py-2.5 rounded-xl bg-amber-50/80 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 text-left"
-                                            title="Klik untuk lihat SOP Penawaran"
+                                            className="px-5 py-2.5 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-900 text-xs font-bold shadow-2xs transition-all cursor-pointer w-64 text-center"
                                         >
-                                            <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                                            <div>
-                                                <p className="font-bold">03. Penawaran Biaya WhatsApp</p>
-                                                <span className="text-3xs font-semibold text-amber-600">Admin Bengkel</span>
-                                            </div>
+                                            03. Penawaran Biaya WhatsApp (Admin)
                                         </button>
 
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <ArrowDown className="w-4 h-4 text-slate-400" />
 
-                                        {/* Decision Diamond: ACC Pelanggan? */}
-                                        <div className="px-4 py-2.5 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs font-bold flex items-center gap-2 shadow-xs shrink-0">
-                                            <GitFork className="w-4 h-4 text-amber-600 shrink-0" />
-                                            <span>Pelanggan ACC?</span>
+                                        {/* Decision 2 */}
+                                        <div className="px-5 py-2.5 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs font-bold shadow-xs flex items-center gap-2">
+                                            <GitFork className="w-4 h-4 text-amber-600" />
+                                            <span>Pelanggan Menyetujui Biaya (ACC)?</span>
                                         </div>
 
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <div className="w-full grid grid-cols-2 gap-4 pt-1">
+                                            <div className="flex flex-col items-center space-y-2 p-3 rounded-xl bg-rose-50/60 border border-rose-200">
+                                                <span className="text-3xs font-black uppercase px-2 py-0.5 rounded bg-rose-600 text-white">BATAL / CANCEL</span>
+                                                <p className="text-xs font-bold text-rose-900 text-center">Teknisi Rakit Kembali ke Kondisi Semula</p>
+                                                <ArrowDown className="w-3.5 h-3.5 text-rose-600" />
+                                                <span className="px-3 py-1 rounded-full bg-rose-700 text-white text-3xs font-bold">Unit Dikembalikan (Dibatalkan)</span>
+                                            </div>
 
-                                        {/* Branch Batal: Rakit Kembali */}
-                                        <div className="flex items-center gap-2 bg-rose-50/60 p-1.5 rounded-xl border border-rose-200 shrink-0">
-                                            <span className="text-3xs font-black uppercase px-2 py-0.5 rounded-md bg-rose-600 text-white">
-                                                BATAL
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                <div className="px-3 py-1.5 rounded-lg bg-white border border-rose-200 text-rose-900 text-xs font-bold flex items-center gap-1.5">
-                                                    <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                                                    <span>Rakit Ulang ke Kondisi Semula</span>
-                                                </div>
-                                                <ArrowRight className="w-3.5 h-3.5 text-rose-500" />
-                                                <div className="px-3 py-1.5 rounded-full bg-rose-700 text-white text-xs font-bold">
-                                                    <span>Unit Dikembalikan</span>
-                                                </div>
+                                            <div className="flex flex-col items-center space-y-2 p-3 rounded-xl bg-emerald-50/60 border border-emerald-200">
+                                                <span className="text-3xs font-black uppercase px-2 py-0.5 rounded bg-emerald-600 text-white">SETUJU / ACC</span>
+                                                <p className="text-xs font-bold text-emerald-900 text-center">04. Eksekusi Reparasi & Pasang Sparepart</p>
+                                                <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />
+                                                <span className="text-xs font-bold text-slate-700">Running Stress Test QC (30-60m)</span>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Branch ACC: Lanjut ke Pengerjaan */}
-                                    <div className="pl-4 sm:pl-10 flex items-center gap-3">
-                                        <span className="text-3xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-600 text-white shrink-0">
-                                            SETUJU (ACC)
-                                        </span>
-                                        <div className="h-6 border-l-2 border-dashed border-emerald-400 shrink-0"></div>
-                                        <div className="px-3.5 py-1.5 rounded-lg bg-white border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-2xs">
-                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                            <span>Status Tiket Diperbarui: 'Dalam Pengerjaan' (Reservasi Stok Part)</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                        <ArrowDown className="w-4 h-4 text-slate-400" />
 
-                                {/* CONNECTOR DOWN */}
-                                <div className="flex items-center justify-center pl-6 sm:pl-12">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-500 shadow-2xs">
-                                        <ArrowDown className="w-4 h-4" />
-                                    </div>
-                                </div>
-
-                                {/* ROW 3: EKSEKUSI, QC, NOTIFIKASI & SERAH TERIMA */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                                            Jalur 3: Eksekusi Pengerjaan, Uji Kelayakan QC & Serah Terima
-                                        </h4>
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 py-2">
-                                        {/* Process Node 04: Eksekusi */}
-                                        <button
-                                            type="button"
-                                            onClick={() => jumpToStageDetail("execution")}
-                                            className="px-4 py-2.5 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 text-left"
-                                            title="Klik untuk lihat SOP Eksekusi"
-                                        >
-                                            <Cpu className="w-4 h-4 text-indigo-600 shrink-0" />
-                                            <div>
-                                                <p className="font-bold">04. Reparasi & Pasang Part</p>
-                                                <span className="text-3xs font-semibold text-indigo-600">Teknisi Meja Servis</span>
-                                            </div>
-                                        </button>
-
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
-
-                                        {/* QC Verification Step */}
-                                        <div className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs font-bold flex items-center gap-2 shadow-2xs shrink-0">
-                                            <ClipboardCheck className="w-4 h-4 text-emerald-600" />
-                                            <span>Stress Test QC (30-60 Mnt)</span>
-                                        </div>
-
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
-
-                                        {/* Process Node 05: Notifikasi */}
+                                        {/* Step 5 */}
                                         <button
                                             type="button"
                                             onClick={() => jumpToStageDetail("completion")}
-                                            className="px-4 py-2.5 rounded-xl bg-emerald-50/80 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 text-left"
-                                            title="Klik untuk lihat SOP Notifikasi"
+                                            className="px-5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-900 text-xs font-bold shadow-2xs transition-all cursor-pointer w-64 text-center"
                                         >
-                                            <Send className="w-4 h-4 text-emerald-600 shrink-0" />
-                                            <div>
-                                                <p className="font-bold">05. Foto Selesai & WA Siap</p>
-                                                <span className="text-3xs font-semibold text-emerald-600">Admin Bengkel</span>
-                                            </div>
+                                            05. Foto Selesai, Segel & WA Siap (Admin)
                                         </button>
 
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <ArrowDown className="w-4 h-4 text-slate-400" />
 
-                                        {/* Process Node 06: Handover */}
+                                        {/* Step 6 */}
                                         <button
                                             type="button"
                                             onClick={() => jumpToStageDetail("handover")}
-                                            className="px-4 py-2.5 rounded-xl bg-purple-50/80 hover:bg-purple-100 border border-purple-200 text-purple-900 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-2xs hover:scale-102 shrink-0 text-left"
-                                            title="Klik untuk lihat SOP Serah Terima"
+                                            className="px-5 py-2.5 rounded-xl bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-900 text-xs font-bold shadow-2xs transition-all cursor-pointer w-64 text-center"
                                         >
-                                            <Receipt className="w-4 h-4 text-purple-600 shrink-0" />
-                                            <div>
-                                                <p className="font-bold">06. Live Test, Kasir & TTD</p>
-                                                <span className="text-3xs font-semibold text-purple-600">Admin Kasir</span>
-                                            </div>
+                                            06. Live Test, Kasir & TTD Digital (Kasir)
                                         </button>
 
-                                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <ArrowDown className="w-4 h-4 text-slate-400" />
 
                                         {/* End Terminal */}
-                                        <div className="px-4 py-2.5 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center gap-2 shadow-xs shrink-0">
-                                            <CheckCircle2 className="w-4 h-4 text-white" />
-                                            <span>Selesai: Garansi Aktif (CLOSED)</span>
+                                        <div className="px-5 py-2 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs">
+                                            Selesai: Garansi Resmi SLA Aktif (CLOSED)
                                         </div>
                                     </div>
                                 </div>
+                            )}
 
-                            </div>
                         </div>
                     )}
 
@@ -747,7 +1015,7 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                                         </p>
                                                         <div className="flex items-center gap-1 mt-0.5">
                                                             <RoleIcon className="w-3 h-3 text-slate-400 shrink-0" />
-                                                            <span className="text-xs font-medium text-slate-500 truncate whitespace-nowrap">
+                                                            <span className="text-3xs font-medium text-slate-500 truncate whitespace-nowrap">
                                                                 {stage.role}
                                                             </span>
                                                         </div>
@@ -796,101 +1064,96 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                 )}
                             </div>
 
-                            {/* BALANCED 2-COLUMN GRID (50% / 50% SYMMETRICAL SPLIT) */}
+                            {/* SYMMETRICAL 50% / 50% DUAL-COLUMN GRID: IDENTICAL 3-CARD RHYTHM PER SIDE */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
                                 
-                                {/* ================= KOLOM KIRI: PROSEDUR & STANDAR OPERASIONAL ================= */}
-                                <div className="space-y-4 flex flex-col justify-between">
+                                {/* ================= KOLOM KIRI: ALUR PROSEDUR & ATURAN KEPUTUSAN ================= */}
+                                <div className="space-y-4 flex flex-col justify-between h-full">
                                     
-                                    {/* Card 1: Percabangan Keputusan / Prosedur Khusus */}
-                                    {currentStage.hasBranching && currentStage.branches ? (
-                                        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
-                                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
-                                                <GitFork className="w-4 h-4 text-amber-500" />
-                                                <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                                                    {currentStage.branchQuestion}
-                                                </h4>
-                                            </div>
-
-                                            <div className="space-y-3 pt-1">
-                                                {currentStage.branches.map((branch, bIdx) => {
-                                                    const BranchIcon = branch.icon;
-                                                    return (
-                                                        <div 
-                                                            key={bIdx}
-                                                            className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2"
-                                                        >
-                                                            <div className="flex items-center justify-between gap-2">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <BranchIcon className="w-4 h-4 text-slate-700" />
-                                                                    <span className="text-xs font-bold text-slate-900">
-                                                                        {branch.label}
-                                                                    </span>
-                                                                </div>
-                                                                <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${branch.badgeClass}`}>
-                                                                    {branch.badge}
-                                                                </span>
-                                                            </div>
-
-                                                            <div className="text-xs text-slate-600 bg-white p-2 rounded-lg border border-slate-200">
-                                                                <strong className="text-slate-800">Kondisi: </strong>
-                                                                {branch.condition}
-                                                            </div>
-
-                                                            <p className="text-xs text-slate-700 text-justify leading-relaxed">
-                                                                {branch.outcome}
-                                                            </p>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
+                                    {/* Card 1: 3-Langkah Prosedur Operasional Standar (SOP) */}
+                                    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                                            <FileText className="w-4 h-4 text-blue-600" />
+                                            <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                                                Instruksi Kerja & Prosedur Operasional (SOP)
+                                            </h4>
                                         </div>
-                                    ) : (
-                                        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
-                                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
-                                                <Target className="w-4 h-4 text-blue-600" />
-                                                <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                                                    Standar Kualitas & Kriteria Kelayakan Tahap Ini
-                                                </h4>
-                                            </div>
-                                            <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed">
-                                                Pada tahap <strong className="text-slate-900">{currentStage.title}</strong>, seluruh tindakan wajib mengikuti instruksi kerja resmi Serv.io ERP. Pastikan tidak ada tahapan yang dilompati agar riwayat pengerjaan terlacak penuh dalam sistem audit.
+
+                                        <div className="space-y-2.5 pt-1">
+                                            {currentStage.sopInstructions?.map((inst, iIdx) => (
+                                                <div key={iIdx} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                    <span className="w-5 h-5 rounded-md bg-blue-100 text-blue-700 font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                                        {iIdx + 1}
+                                                    </span>
+                                                    <p className="text-xs sm:text-sm text-slate-700 text-justify leading-relaxed font-medium">
+                                                        {inst}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Card 2: Logika Keputusan & Skenario Percabangan */}
+                                    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                                            <GitFork className="w-4 h-4 text-amber-500" />
+                                            <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                                                Logika Keputusan & Aturan Percabangan
+                                            </h4>
+                                        </div>
+
+                                        <div className="space-y-3 pt-1">
+                                            {currentStage.decisionRules?.map((rule, rIdx) => (
+                                                <div 
+                                                    key={rIdx}
+                                                    className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2"
+                                                >
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-xs font-bold text-slate-900">
+                                                            {rule.label}
+                                                        </span>
+                                                        <span className={`text-3xs font-bold px-2 py-0.5 rounded-md border ${rule.badgeClass}`}>
+                                                            {rule.badge}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="text-xs text-slate-600 bg-white p-2 rounded-lg border border-slate-200">
+                                                        <strong className="text-slate-800">Kondisi: </strong>
+                                                        {rule.condition}
+                                                    </div>
+
+                                                    <p className="text-xs text-slate-700 text-justify leading-relaxed">
+                                                        {rule.outcome}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Card 3: Kebijakan Keamanan & Anti-Fraud */}
+                                    <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 text-amber-900 shadow-2xs">
+                                        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                        <div>
+                                            <h5 className="text-xs font-bold text-amber-950 uppercase tracking-wider mb-0.5">
+                                                Kebijakan Keamanan & Proteksi Audit
+                                            </h5>
+                                            <p className="text-xs sm:text-sm text-amber-900 text-justify leading-relaxed">
+                                                {currentStage.proTip}
                                             </p>
-                                            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                                                <span className="text-xs font-bold text-slate-800">Ringkasan Prosedur:</span>
-                                                <p className="text-xs text-slate-600 leading-relaxed">
-                                                    {currentStage.summary}
-                                                </p>
-                                            </div>
                                         </div>
-                                    )}
-
-                                    {/* Card 2: Standar Keamanan & Anti-Fraud (Always Sits at Left Bottom) */}
-                                    {currentStage.proTip && (
-                                        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 text-amber-900 shadow-2xs">
-                                            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                                            <div>
-                                                <h5 className="text-xs font-bold text-amber-950 uppercase tracking-wider mb-0.5">
-                                                    Standar Keamanan & Kebijakan Anti-Fraud
-                                                </h5>
-                                                <p className="text-xs sm:text-sm text-amber-900 text-justify leading-relaxed">
-                                                    {currentStage.proTip}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
+                                    </div>
 
                                 </div>
 
-                                {/* ================= KOLOM KANAN: CHECKLIST TUGAS & OUTPUT DELIVERABLE ================= */}
-                                <div className="space-y-4 flex flex-col justify-between">
+                                {/* ================= KOLOM KANAN: CHECKLIST VERIFIKASI & DELIVERABLE AUDIT ================= */}
+                                <div className="space-y-4 flex flex-col justify-between h-full">
                                     
-                                    {/* Card 1: Checklist Tugas Wajib */}
+                                    {/* Card 1: Checklist Tugas Wajib (4 Poin) */}
                                     <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
                                         <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                                             <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
                                                 <ClipboardCheck className="w-4 h-4 text-blue-600" />
-                                                <span>Checklist Tugas Wajib Pada Tahap Ini</span>
+                                                <span>Checklist Tugas Wajib Tahap Ini</span>
                                             </h4>
                                             <span className="text-xs font-bold text-slate-400 font-mono">
                                                 {currentStage.keyTasks.length} Poin Verifikasi
@@ -914,19 +1177,51 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                         </div>
                                     </div>
 
-                                    {/* Card 2: Target Deliverable & SLA Checkpoint */}
+                                    {/* Card 2: Bukti Fisik & Output Audit Deliverable */}
+                                    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                                                <Shield className="w-4 h-4 text-indigo-600" />
+                                                <span>Bukti Fisik & Output Deliverable Audit</span>
+                                            </h4>
+                                            <span className="text-3xs font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
+                                                Rekam Jejak ERP
+                                            </span>
+                                        </div>
+
+                                        <ul className="space-y-2 pt-1">
+                                            {currentStage.deliverables?.map((d, dIdx) => (
+                                                <li key={dIdx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700 leading-relaxed text-justify">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-2"></span>
+                                                    <span>{d}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Card 3: Target SLA & Aksi Cepat Modul ERP */}
                                     <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
                                         <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                                             <span className="flex items-center gap-1.5">
-                                                <Shield className="w-4 h-4 text-indigo-600" /> Target Output Tahap Ini:
+                                                <Clock className="w-4 h-4 text-blue-600" /> Target SLA Penanganan:
                                             </span>
-                                            <span className="text-indigo-700 font-medium">SLA: {currentStage.slaAndPic?.sla}</span>
+                                            <span className="text-blue-700 font-mono font-bold bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                                                {currentStage.slaAndPic?.sla}
+                                            </span>
                                         </div>
-                                        <ul className="space-y-1 text-xs text-slate-600 list-disc list-inside">
-                                            {currentStage.deliverables?.map((d, dIdx) => (
-                                                <li key={dIdx} className="leading-relaxed">{d}</li>
-                                            ))}
-                                        </ul>
+                                        <div className="flex items-center justify-between text-xs text-slate-600 pt-1 border-t border-slate-200/80">
+                                            <span>Petugas: <strong className="text-slate-800">{currentStage.slaAndPic?.pic}</strong></span>
+                                            {currentStage.erpActionLink && (
+                                                <Link
+                                                    to={currentStage.erpActionLink}
+                                                    onClick={onClose}
+                                                    className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                                                >
+                                                    <span>{currentStage.erpActionText}</span>
+                                                    <ArrowRight className="w-3.5 h-3.5" />
+                                                </Link>
+                                            )}
+                                        </div>
                                     </div>
 
                                 </div>
@@ -952,10 +1247,9 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                                     <button
                                         type="button"
                                         onClick={() => setSelectedStageId(FLOW_STAGES[currentIndex + 1].id)}
-                                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm font-bold text-white shadow-2xs transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+                                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm font-bold text-white shadow-2xs transition-all cursor-pointer whitespace-nowrap"
                                     >
-                                        <span>Tahap Berikutnya</span>
-                                        <ArrowRight className="w-3.5 h-3.5" />
+                                        Tahap Berikutnya →
                                     </button>
                                 ) : (
                                     <button

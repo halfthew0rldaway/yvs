@@ -217,6 +217,20 @@ export default function AttendancePage() {
         isSubmitting: false
     });
 
+    // Bulk Attendance Selection & Quick Action State
+    const [selectedUserIds, setSelectedUserIds] = useState([]);
+    const [bulkAdjustModal, setBulkAdjustModal] = useState({
+        isOpen: false,
+        step: 1, // 1: edit & review, 2: double confirmation anti-fraud
+        tanggal: "",
+        status: "hadir", // "hadir" | "izin" | "sakit" | "alfa"
+        jam_masuk: "08:30",
+        jam_pulang: "17:00",
+        reason: "",
+        selectedUsers: [],
+        isSubmitting: false
+    });
+
     // Policy Settings Form State
     const [policyForm, setPolicyForm] = useState({
         nama_kantor: "Workshop Utama Pekayon",
@@ -803,6 +817,112 @@ export default function AttendancePage() {
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal memproses quick action");
             setQuickActionModal(prev => ({ ...prev, isSubmitting: false }));
+        }
+    };
+
+    // Bulk Select Handlers & Quick Action Execution
+    const handleToggleSelectUser = (userId) => {
+        setSelectedUserIds(prev => 
+            prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+        );
+    };
+
+    const handleToggleSelectAll = () => {
+        const allUserIds = dailyData.list?.map(row => row.user.id) || [];
+        if (selectedUserIds.length === allUserIds.length && allUserIds.length > 0) {
+            setSelectedUserIds([]);
+        } else {
+            setSelectedUserIds(allUserIds);
+        }
+    };
+
+    const handleClearSelection = () => {
+        setSelectedUserIds([]);
+    };
+
+    const startBulkAction = (targetStatus = "hadir") => {
+        if (!dailyData.list || dailyData.list.length === 0) return;
+        const selectedUsers = dailyData.list
+            .filter(row => selectedUserIds.includes(row.user.id))
+            .map(row => ({
+                id: row.user.id,
+                nama: row.user.nama,
+                role: row.user.role,
+                email: row.user.email,
+                currentStatus: row.statusDisplay
+            }));
+
+        if (selectedUsers.length === 0) {
+            toast.error("Pilih minimal satu karyawan untuk koreksi massal");
+            return;
+        }
+
+        let defaultMasuk = "08:30";
+        let defaultPulang = "17:00";
+        if (targetStatus === "izin" || targetStatus === "sakit" || targetStatus === "alfa") {
+            defaultMasuk = "";
+            defaultPulang = "";
+        }
+
+        setBulkAdjustModal({
+            isOpen: true,
+            step: 1,
+            tanggal: filterDailyDate,
+            status: targetStatus,
+            jam_masuk: defaultMasuk,
+            jam_pulang: defaultPulang,
+            reason: `Koreksi massal status ${targetStatus.toUpperCase()} (${selectedUsers.length} karyawan)`,
+            selectedUsers,
+            isSubmitting: false
+        });
+    };
+
+    const handleRemoveUserFromBulk = (userId) => {
+        setBulkAdjustModal(prev => {
+            const nextUsers = prev.selectedUsers.filter(u => u.id !== userId);
+            if (nextUsers.length === 0) {
+                return { ...prev, isOpen: false, selectedUsers: [] };
+            }
+            return {
+                ...prev,
+                selectedUsers: nextUsers,
+                reason: `Koreksi massal status ${prev.status.toUpperCase()} (${nextUsers.length} karyawan)`
+            };
+        });
+        setSelectedUserIds(prev => prev.filter(id => id !== userId));
+    };
+
+    const handleExecuteBulkAdjust = async () => {
+        if (!bulkAdjustModal.reason.trim()) {
+            toast.error("Alasan koreksi presensi massal wajib diisi!");
+            return;
+        }
+        if (bulkAdjustModal.selectedUsers.length === 0) {
+            toast.error("Daftar karyawan terpilih kosong!");
+            return;
+        }
+
+        setBulkAdjustModal(prev => ({ ...prev, isSubmitting: true }));
+        try {
+            const user_ids = bulkAdjustModal.selectedUsers.map(u => u.id);
+            const payload = {
+                user_ids,
+                tanggal: bulkAdjustModal.tanggal,
+                jam_masuk: bulkAdjustModal.jam_masuk ? `${bulkAdjustModal.tanggal}T${bulkAdjustModal.jam_masuk}:00` : null,
+                jam_pulang: bulkAdjustModal.jam_pulang ? `${bulkAdjustModal.tanggal}T${bulkAdjustModal.jam_pulang}:00` : null,
+                status: bulkAdjustModal.status,
+                alasan_adjustment: bulkAdjustModal.reason.trim()
+            };
+
+            const res = await api.post("/attendance/adjust-bulk", payload);
+            toast.success(res.data.message || `Berhasil mengoreksi presensi ${user_ids.length} karyawan secara massal!`);
+            setBulkAdjustModal(prev => ({ ...prev, isOpen: false, isSubmitting: false }));
+            setSelectedUserIds([]);
+            loadDailyAll();
+            if (activeTab === "recap") loadMonthlyRecap();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal melakukan koreksi presensi massal");
+            setBulkAdjustModal(prev => ({ ...prev, isSubmitting: false }));
         }
     };
 
@@ -1639,7 +1759,10 @@ export default function AttendancePage() {
                             <input
                                 type="date"
                                 value={filterDailyDate}
-                                onChange={(e) => setFilterDailyDate(e.target.value)}
+                                onChange={(e) => {
+                                    setFilterDailyDate(e.target.value);
+                                    setSelectedUserIds([]);
+                                }}
                                 className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none"
                             />
                             <button
@@ -1678,6 +1801,83 @@ export default function AttendancePage() {
                         </div>
                     </div>
 
+                    {/* Bulk Selection Quick Action Floating Toolbar */}
+                    {selectedUserIds.length > 0 && (
+                        <div className="bg-slate-900 text-white rounded-2xl p-3 sm:p-4 shadow-xl border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 font-extrabold text-sm shrink-0">
+                                    {selectedUserIds.length}
+                                </div>
+                                <div>
+                                    <p className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                                        <span>{selectedUserIds.length} Karyawan Terpilih</span>
+                                        <span className="text-3xs font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                                            {filterDailyDate}
+                                        </span>
+                                    </p>
+                                    <p className="text-3xs sm:text-xs text-slate-400">
+                                        Pilih quick action di samping. Data tetap dapat Anda tinjau & edit sebelum double konfirmasi.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 self-stretch md:self-auto justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => startBulkAction("hadir")}
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+                                    title="Bulk Auto Hadir (08:30 - 17:00)"
+                                >
+                                    <Zap className="w-3.5 h-3.5" />
+                                    <span>Bulk Hadir</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => startBulkAction("izin")}
+                                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+                                    title="Bulk Auto Izin Resmi"
+                                >
+                                    <Zap className="w-3.5 h-3.5" />
+                                    <span>Bulk Izin</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => startBulkAction("sakit")}
+                                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+                                    title="Bulk Auto Sakit"
+                                >
+                                    <Zap className="w-3.5 h-3.5" />
+                                    <span>Bulk Sakit</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => startBulkAction("alfa")}
+                                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+                                    title="Bulk Auto Alfa"
+                                >
+                                    <Zap className="w-3.5 h-3.5" />
+                                    <span>Bulk Alfa</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => startBulkAction("hadir")}
+                                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                                    title="Formulir Koreksi Kustom Massal (Editable)"
+                                >
+                                    <Sliders className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>Koreksi Kustom...</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleClearSelection}
+                                    className="px-2.5 py-1.5 rounded-xl bg-transparent hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-semibold transition-all cursor-pointer"
+                                >
+                                    Batal
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Table of Employees Today */}
                     <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs">
                         <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
@@ -1688,6 +1888,15 @@ export default function AttendancePage() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 border-b border-slate-200 text-3xs font-extrabold uppercase tracking-wider text-slate-500">
+                                        <th className="py-3 px-3 w-10 text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={dailyData.list?.length > 0 && selectedUserIds.length === dailyData.list?.length}
+                                                onChange={handleToggleSelectAll}
+                                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                title="Pilih / Batal Pilih Semua Karyawan"
+                                            />
+                                        </th>
                                         <th className="py-3 px-4">Karyawan</th>
                                         <th className="py-3 px-4">Jabatan</th>
                                         <th className="py-3 px-4">Jam Masuk</th>
@@ -1701,19 +1910,27 @@ export default function AttendancePage() {
                                 <tbody className="divide-y divide-slate-100 text-xs">
                                     {loadingDaily ? (
                                         <tr>
-                                            <td colSpan="8" className="py-8 text-center text-slate-400 font-semibold">
+                                            <td colSpan="9" className="py-8 text-center text-slate-400 font-semibold">
                                                 Memuat status kehadiran harian...
                                             </td>
                                         </tr>
                                     ) : dailyData.list?.length === 0 ? (
                                         <tr>
-                                            <td colSpan="8" className="py-8 text-center text-slate-400 font-semibold">
+                                            <td colSpan="9" className="py-8 text-center text-slate-400 font-semibold">
                                                 Tidak ada data karyawan ditemukan.
                                             </td>
                                         </tr>
                                     ) : (
                                         dailyData.list?.map(row => (
-                                            <tr key={row.user.id} className="hover:bg-slate-50/70 transition-colors">
+                                            <tr key={row.user.id} className={`hover:bg-slate-50/70 transition-colors ${selectedUserIds.includes(row.user.id) ? "bg-blue-50/30" : ""}`}>
+                                                <td className="py-3 px-3 text-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedUserIds.includes(row.user.id)}
+                                                        onChange={() => handleToggleSelectUser(row.user.id)}
+                                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    />
+                                                </td>
                                                 <td className="py-3 px-4 font-bold text-slate-800">
                                                     {row.user.nama}
                                                     <span className="block text-3xs font-normal text-slate-400">{row.user.email}</span>
@@ -2982,6 +3199,271 @@ export default function AttendancePage() {
                                     >
                                         {quickActionModal.isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                                         <span>Terapkan Koreksi (Final)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL 3C: BULK ADJUSTMENT DENGAN PRESET, EDITABLE INPUT, & DOUBLE KONFIRMASI */}
+            {bulkAdjustModal.isOpen && (
+                <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in"
+                    onClick={() => !bulkAdjustModal.isSubmitting && setBulkAdjustModal(prev => ({ ...prev, isOpen: false }))}
+                >
+                    <div 
+                        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-lg w-full p-5 sm:p-6 border border-slate-200 text-slate-900 animate-in zoom-in-95 duration-150"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* STEP 1: EDIT & REVIEW BULK ADJUSTMENT */}
+                        {bulkAdjustModal.step === 1 && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-2xs shrink-0">
+                                            <Zap className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-bold text-slate-900 text-base">Koreksi Presensi Massal (Bulk)</h3>
+                                                <span className="px-2 py-0.5 rounded-full text-3xs font-extrabold bg-blue-100 text-blue-700">
+                                                    Editable
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-slate-500">
+                                                Langkah 1 dari 2: Sesuaikan status, jam & catatan audit
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {!bulkAdjustModal.isSubmitting && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => setBulkAdjustModal(prev => ({ ...prev, isOpen: false }))} 
+                                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Selected Employees Chips with Remove Feature */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                            <Users className="w-3.5 h-3.5 text-slate-500" />
+                                            <span>Karyawan Terpilih ({bulkAdjustModal.selectedUsers.length})</span>
+                                        </label>
+                                        <span className="text-3xs text-slate-400">Klik tanda silang (x) untuk batal memilih</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200/80 custom-scrollbar">
+                                        {bulkAdjustModal.selectedUsers.map(u => (
+                                            <span 
+                                                key={u.id}
+                                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-800 shadow-2xs"
+                                            >
+                                                <span>{u.nama}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveUserFromBulk(u.id)}
+                                                    className="w-3.5 h-3.5 rounded-full hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-slate-400 transition-colors cursor-pointer"
+                                                    title={`Keluarkan ${u.nama} dari koreksi massal`}
+                                                >
+                                                    <X className="w-2.5 h-2.5" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Target Status Selector Buttons */}
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-bold text-slate-700">Pilih Status Presensi Massal</label>
+                                    <div className="grid grid-cols-4 gap-1.5">
+                                        {[
+                                            { id: "hadir", label: "Hadir", desc: "08:30 - 17:00", color: "emerald" },
+                                            { id: "izin", label: "Izin", desc: "Resmi", color: "blue" },
+                                            { id: "sakit", label: "Sakit", desc: "Surat Dokter", color: "amber" },
+                                            { id: "alfa", label: "Alfa", desc: "Tanpa Ket.", color: "rose" }
+                                        ].map(item => {
+                                            const isSelected = bulkAdjustModal.status === item.id;
+                                            return (
+                                                <button
+                                                    key={item.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const defaultMasuk = item.id === "hadir" ? "08:30" : "";
+                                                        const defaultPulang = item.id === "hadir" ? "17:00" : "";
+                                                        setBulkAdjustModal(prev => ({
+                                                            ...prev,
+                                                            status: item.id,
+                                                            jam_masuk: defaultMasuk,
+                                                            jam_pulang: defaultPulang,
+                                                            reason: `Koreksi massal status ${item.label.toUpperCase()} (${prev.selectedUsers.length} karyawan)`
+                                                        }));
+                                                    }}
+                                                    className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
+                                                        isSelected
+                                                            ? item.color === "emerald"
+                                                                ? "bg-emerald-50 border-emerald-500 text-emerald-800 ring-2 ring-emerald-500/20"
+                                                                : item.color === "blue"
+                                                                ? "bg-blue-50 border-blue-500 text-blue-800 ring-2 ring-blue-500/20"
+                                                                : item.color === "amber"
+                                                                ? "bg-amber-50 border-amber-500 text-amber-800 ring-2 ring-amber-500/20"
+                                                                : "bg-rose-50 border-rose-500 text-rose-800 ring-2 ring-rose-500/20"
+                                                            : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
+                                                    }`}
+                                                >
+                                                    <p className="text-xs font-bold leading-none">{item.label}</p>
+                                                    <span className="text-3xs text-slate-500 mt-1 block truncate">{item.desc}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Editable Hours (Disabled if Izin/Sakit/Alfa, but custom editable for Hadir/Custom) */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                                            Jam Masuk Massal
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={bulkAdjustModal.jam_masuk}
+                                            disabled={bulkAdjustModal.status === "izin" || bulkAdjustModal.status === "sakit" || bulkAdjustModal.status === "alfa"}
+                                            onChange={(e) => setBulkAdjustModal(prev => ({ ...prev, jam_masuk: e.target.value }))}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 disabled:bg-slate-100 disabled:text-slate-400 outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                                            Jam Pulang Massal
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={bulkAdjustModal.jam_pulang}
+                                            disabled={bulkAdjustModal.status === "izin" || bulkAdjustModal.status === "sakit" || bulkAdjustModal.status === "alfa"}
+                                            onChange={(e) => setBulkAdjustModal(prev => ({ ...prev, jam_pulang: e.target.value }))}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 disabled:bg-slate-100 disabled:text-slate-400 outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Editable Audit Reason */}
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-bold text-slate-700">
+                                        Alasan Koreksi Massal <span className="text-rose-500">* (Audit Log Anti-Fraud)</span>
+                                    </label>
+                                    <textarea
+                                        value={bulkAdjustModal.reason}
+                                        onChange={(e) => setBulkAdjustModal(prev => ({ ...prev, reason: e.target.value }))}
+                                        rows="2"
+                                        placeholder="Contoh: Koreksi massal kehadiran workshop hari libur nasional / event khusus..."
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-blue-500"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setBulkAdjustModal(prev => ({ ...prev, isOpen: false }))}
+                                        className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={!bulkAdjustModal.reason.trim() || bulkAdjustModal.selectedUsers.length === 0}
+                                        onClick={() => setBulkAdjustModal(prev => ({ ...prev, step: 2 }))}
+                                        className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+                                    >
+                                        Lanjut ke Double Konfirmasi →
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* STEP 2: FINAL DOUBLE CONFIRMATION ANTI-FRAUD */}
+                        {bulkAdjustModal.step === 2 && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+                                            <ShieldAlert className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900 text-sm">Konfirmasi Final Koreksi Massal</h3>
+                                            <p className="text-3xs font-semibold text-rose-600">Langkah 2 dari 2: Verifikasi & Otorisasi</p>
+                                        </div>
+                                    </div>
+                                    {!bulkAdjustModal.isSubmitting && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => setBulkAdjustModal(prev => ({ ...prev, isOpen: false }))} 
+                                            className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Prominent Anti-Fraud Warning Box */}
+                                <div className="p-4 bg-rose-50/70 border border-rose-200 rounded-2xl text-rose-950 space-y-2">
+                                    <div className="flex items-center gap-2 text-rose-800 text-xs font-bold">
+                                        <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+                                        <span>PERINGATAN AUDIT: Aksi Massal Permanen</span>
+                                    </div>
+                                    <p className="text-xs text-rose-900 leading-relaxed text-justify">
+                                        Anda akan mengubah status presensi <strong>{bulkAdjustModal.selectedUsers.length} karyawan sekaligus</strong> menjadi status <strong className="uppercase">{bulkAdjustModal.status}</strong> pada tanggal <strong>{bulkAdjustModal.tanggal}</strong>. Tindakan ini akan tercatat dalam log audit resmi bengkel.
+                                    </p>
+                                </div>
+
+                                {/* Review Summary */}
+                                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-2xs space-y-1.5">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">Jumlah Karyawan:</span>
+                                        <span className="font-bold text-slate-800">{bulkAdjustModal.selectedUsers.length} Orang</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">Status Baru:</span>
+                                        <span className="font-bold text-slate-800 uppercase">{bulkAdjustModal.status}</span>
+                                    </div>
+                                    {bulkAdjustModal.status === "hadir" && (
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-500">Jam Masuk / Pulang:</span>
+                                            <span className="font-mono font-bold text-slate-800">{bulkAdjustModal.jam_masuk || "-"} s/d {bulkAdjustModal.jam_pulang || "-"}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">Alasan Audit:</span>
+                                        <span className="font-medium text-slate-700 italic truncate max-w-[200px]">{bulkAdjustModal.reason}</span>
+                                    </div>
+                                    <div className="pt-1 border-t border-slate-200 text-slate-600">
+                                        <span className="font-semibold text-slate-700">Daftar Karyawan: </span>
+                                        {bulkAdjustModal.selectedUsers.map(u => u.nama).join(", ")}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                                    <button
+                                        type="button"
+                                        disabled={bulkAdjustModal.isSubmitting}
+                                        onClick={() => setBulkAdjustModal(prev => ({ ...prev, step: 1 }))}
+                                        className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                                    >
+                                        ← Kembali Edit
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={bulkAdjustModal.isSubmitting}
+                                        onClick={handleExecuteBulkAdjust}
+                                        className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                    >
+                                        {bulkAdjustModal.isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                        <span>Ya, Terapkan ({bulkAdjustModal.selectedUsers.length})</span>
                                     </button>
                                 </div>
                             </div>

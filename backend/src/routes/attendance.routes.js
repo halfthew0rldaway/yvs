@@ -21,6 +21,7 @@ router.get("/my-history", attendanceController.getMyHistory);
 router.get("/daily-all", authorize("admin", "pimpinan"), attendanceController.getDailyAll);
 router.get("/recap", authorize("admin", "pimpinan"), attendanceController.getMonthlyRecap);
 router.post("/adjust", authorize("admin"), attendanceController.adjustAttendance);
+router.post("/adjust-bulk", authorize("admin"), attendanceController.adjustAttendanceBulk);
 router.get("/pending-reviews", authorize("admin", "pimpinan"), attendanceController.getPendingReviews);
 router.put("/:id/review", authorize("admin", "pimpinan"), attendanceController.reviewAttendance);
 
