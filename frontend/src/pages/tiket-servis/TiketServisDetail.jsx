@@ -1879,7 +1879,7 @@ export default function TiketServisDetail() {
                                 </div>
 
                                 {isIntakeChecklistOpen && (
-                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-1.5 bg-slate-50/70 p-3 rounded-xl border border-slate-200 text-xs mt-2 transition-all accordion-surface">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 bg-slate-50/70 p-3 rounded-xl border border-slate-200 text-xs mt-2 transition-all accordion-surface">
                                         {activeIntakeItems.map(item => {
                                             const val = getChecklistValue(tiket.checklist_intake, item.key, item.legacyKey);
                                             const ItemIcon = item.Icon || item.icon;

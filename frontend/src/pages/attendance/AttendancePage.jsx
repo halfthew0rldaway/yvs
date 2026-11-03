@@ -1899,13 +1899,13 @@ export default function AttendancePage() {
 
                     {/* Bulk Selection Quick Action Floating Toolbar */}
                     {selectedUserIds.length > 0 && (
-                        <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 flex flex-col md:flex-row items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+                        <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 font-extrabold text-xs shrink-0 shadow-2xs">
                                     {selectedUserIds.length}
                                 </div>
-                                <div>
-                                    <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <div className="min-w-0">
+                                    <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2 flex-wrap">
                                         <span>{selectedUserIds.length} Karyawan Terpilih</span>
                                         <span className="text-3xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
                                             {filterDailyDate}
@@ -1917,11 +1917,11 @@ export default function AttendancePage() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 self-stretch md:self-auto justify-end">
+                            <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-end">
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("hadir")}
-                                    className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center gap-1.5"
+                                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-2xs sm:text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center justify-center gap-1.5"
                                     title="Koreksi Massal Hadir (09:00 - 18:00)"
                                 >
                                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -1930,7 +1930,7 @@ export default function AttendancePage() {
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("izin")}
-                                    className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center gap-1.5"
+                                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-2xs sm:text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center justify-center gap-1.5"
                                     title="Koreksi Massal Izin Resmi"
                                 >
                                     <FileText className="w-3.5 h-3.5 text-blue-600" />
@@ -1939,7 +1939,7 @@ export default function AttendancePage() {
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("sakit")}
-                                    className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center gap-1.5"
+                                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-2xs sm:text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center justify-center gap-1.5"
                                     title="Koreksi Massal Sakit"
                                 >
                                     <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
@@ -1948,7 +1948,7 @@ export default function AttendancePage() {
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("alfa")}
-                                    className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center gap-1.5"
+                                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 text-2xs sm:text-xs font-semibold transition-all cursor-pointer shadow-3xs flex items-center justify-center gap-1.5"
                                     title="Koreksi Massal Alfa"
                                 >
                                     <X className="w-3.5 h-3.5 text-rose-600" />
@@ -1957,16 +1957,16 @@ export default function AttendancePage() {
                                 <button
                                     type="button"
                                     onClick={() => startBulkAction("hadir")}
-                                    className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+                                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-2xs sm:text-xs font-semibold transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
                                     title="Formulir Koreksi Rinci Massal"
                                 >
                                     <Sliders className="w-3.5 h-3.5 text-slate-300" />
-                                    <span>Koreksi Rinci...</span>
+                                    <span>Koreksi Rinci</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleClearSelection}
-                                    className="px-2.5 py-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 text-xs font-medium transition-all cursor-pointer border border-transparent hover:border-slate-200"
+                                    className="px-2.5 py-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 text-2xs sm:text-xs font-medium transition-all cursor-pointer border border-transparent hover:border-slate-200 text-center"
                                 >
                                     Batal
                                 </button>
