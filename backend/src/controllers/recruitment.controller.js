@@ -437,7 +437,7 @@ async function evaluateApplicant(req, res) {
 async function hireApplicant(req, res) {
     try {
         const id = parseInt(req.params.id);
-        const { email, password, role } = req.body;
+        const { email, password, role, username } = req.body;
 
         const applicant = await prisma.applicant.findUnique({
             where: { id },
@@ -453,19 +453,36 @@ async function hireApplicant(req, res) {
             return res.status(400).json({ success: false, message: "Email staf wajib diisi untuk pembuatan akun" });
         }
 
+        // Clean & prepare username
+        let targetUsername = (username || targetEmail.split("@")[0] || applicant.nama_lengkap.replace(/\s+/g, "").toLowerCase())
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9._-]/g, "");
+
         const targetPassword = password || "ServioStaff2026!";
         const targetRole = role || (applicant.job_posting?.departemen === "Frontliner" ? "admin" : "teknisi");
 
-        // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
+        // Check if user already exists with email
+        const existingEmail = await prisma.user.findUnique({
             where: { email: targetEmail }
         });
 
-        if (existingUser) {
+        if (existingEmail) {
             return res.status(400).json({
                 success: false,
                 message: `Akun dengan email ${targetEmail} sudah ada di sistem. Gunakan email lain.`
             });
+        }
+
+        // Check if username already exists
+        if (targetUsername) {
+            const existingUsername = await prisma.user.findFirst({
+                where: { username: targetUsername }
+            });
+            if (existingUsername) {
+                // If collision, append random 2 digits or applicant id
+                targetUsername = `${targetUsername}${applicant.id}`;
+            }
         }
 
         // Hash password
@@ -476,6 +493,7 @@ async function hireApplicant(req, res) {
             const newUser = await tx.user.create({
                 data: {
                     nama: applicant.nama_lengkap,
+                    username: targetUsername || null,
                     email: targetEmail,
                     password: hashedPassword,
                     role: targetRole
@@ -491,7 +509,7 @@ async function hireApplicant(req, res) {
                 include: {
                     job_posting: true,
                     user_hired: {
-                        select: { id: true, nama: true, email: true, role: true }
+                        select: { id: true, nama: true, username: true, email: true, role: true }
                     }
                 }
             });
@@ -501,12 +519,13 @@ async function hireApplicant(req, res) {
 
         res.status(201).json({
             success: true,
-            message: `Selamat! ${applicant.nama_lengkap} resmi diterima & akun staf (${targetRole.toUpperCase()}) telah berhasil dibuat.`,
+            message: `Selamat! ${applicant.nama_lengkap} resmi diterima & akun staf (@${result.newUser.username || result.newUser.email}) telah berhasil dibuat.`,
             data: {
                 applicant: result.updatedApplicant,
                 staff_user: {
                     id: result.newUser.id,
                     nama: result.newUser.nama,
+                    username: result.newUser.username,
                     email: result.newUser.email,
                     role: result.newUser.role
                 }

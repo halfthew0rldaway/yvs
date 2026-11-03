@@ -97,7 +97,7 @@ export default function ReloginModal({ isOpen, reason = "idle", onSuccess, onLog
                                     {user.role}
                                 </span>
                             </div>
-                            <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                            <p className="text-xs text-slate-500 font-mono truncate">@{user.username || (user.email ? user.email.split("@")[0] : "user")}</p>
                         </div>
                     </div>
 

@@ -174,6 +174,7 @@ export default function Login() {
                                 </div>
                                 <input
                                     id="username"
+                                    name="username"
                                     type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
@@ -182,6 +183,7 @@ export default function Login() {
                                     required
                                     autoComplete="username"
                                     autoCapitalize="none"
+                                    spellCheck="false"
                                 />
                             </div>
                         </motion.div>
@@ -196,6 +198,7 @@ export default function Login() {
                                 </div>
                                 <input
                                     id="password"
+                                    name="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}

@@ -10,6 +10,7 @@
 const TOKEN_KEY = "token";
 const USER_KEY = "user";
 const REMEMBER_ME_KEY = "yvs_remember_me";
+const REMEMBERED_USERNAME_KEY = "yvs_remembered_username";
 const REMEMBERED_EMAIL_KEY = "yvs_remembered_email";
 const LAST_ACTIVE_KEY = "yvs_last_active";
 
@@ -52,11 +53,21 @@ export function isRememberMeActive() {
 }
 
 /**
- * Ambil username/email yang diingat untuk autofill form login
+ * Ambil username yang diingat untuk autofill form login
+ * (Secara otomatis mengonversi email lama di browser user menjadi username murni)
  */
 export function getRememberedUsername() {
     try {
-        return localStorage.getItem(REMEMBERED_EMAIL_KEY) || "";
+        const stored = localStorage.getItem(REMEMBERED_USERNAME_KEY) || localStorage.getItem(REMEMBERED_EMAIL_KEY) || "";
+        if (!stored) return "";
+        // Jika masih format email lama (cth: admin@workshop.com), otomatis migrasi ke username (admin)
+        if (stored.includes("@")) {
+            const converted = stored.split("@")[0].trim().toLowerCase();
+            localStorage.setItem(REMEMBERED_USERNAME_KEY, converted);
+            localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+            return converted;
+        }
+        return stored;
     } catch {
         return "";
     }
@@ -64,13 +75,19 @@ export function getRememberedUsername() {
 export const getRememberedEmail = getRememberedUsername;
 
 /**
- * Simpan atau hapus username/email yang diingat
+ * Simpan atau hapus username yang diingat
  */
 export function setRememberedUsername(username) {
     try {
         if (username && username.trim()) {
-            localStorage.setItem(REMEMBERED_EMAIL_KEY, username.trim());
+            let clean = username.trim().toLowerCase();
+            if (clean.includes("@")) {
+                clean = clean.split("@")[0];
+            }
+            localStorage.setItem(REMEMBERED_USERNAME_KEY, clean);
+            localStorage.removeItem(REMEMBERED_EMAIL_KEY);
         } else {
+            localStorage.removeItem(REMEMBERED_USERNAME_KEY);
             localStorage.removeItem(REMEMBERED_EMAIL_KEY);
         }
     } catch {
