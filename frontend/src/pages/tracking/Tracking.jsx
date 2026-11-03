@@ -5,7 +5,14 @@ import toast from "react-hot-toast";
 import api from "../../services/api";
 import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, ImageOff, Clock, AlertTriangle, Check, CheckCircle2, Play, Video, ZoomIn, Share2, RefreshCw, Copy, Printer, FileText } from "lucide-react";
 import { isVideo, getMediaUrl } from "../../utils/mediaUtils";
-import { CHECKLIST_ITEMS, QC_CHECKLIST_ITEMS, getChecklistValue } from "../../utils/checklistItems";
+import { 
+    CHECKLIST_ITEMS, 
+    QC_CHECKLIST_ITEMS, 
+    getChecklistValue, 
+    getHardwareChecklistForCategory, 
+    getQcChecklistForCategory, 
+    getDeviceCategory 
+} from "../../utils/checklistItems";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
 import InvoiceModal from "../../components/InvoiceModal";
 import CameraScannerModal from "../../components/CameraScannerModal";
@@ -1441,16 +1448,21 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                     const intakeObj = typeof t.checklist_intake === "string"
                         ? (function() { try { return JSON.parse(t.checklist_intake); } catch(_) { return {}; } })()
                         : (t.checklist_intake || {});
+                    const devCat = getDeviceCategory(t?.jenis_perangkat || t?.perangkat?.jenis_perangkat);
+                    const intakeItems = getHardwareChecklistForCategory(devCat);
                     return (
                         <div className="mb-8 pt-6 border-t border-slate-100">
                             <div className="flex items-center gap-2.5 mb-4">
                                 <ClipboardCheck className="w-5 h-5 text-blue-600" />
                                 <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Kondisi Awal Perangkat (Sebelum Perbaikan)</h5>
+                                <span className="text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                    {devCat}
+                                </span>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 text-xs">
-                                {(CHECKLIST_ITEMS || []).map(item => {
+                                {(intakeItems || []).map(item => {
                                     const val = getChecklistValue(intakeObj, item.key, item.legacyKey);
-                                    const ItemIcon = item.Icon || ClipboardCheck;
+                                    const ItemIcon = item.Icon || item.icon || ClipboardCheck;
                                     return (
                                         <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
                                             val ? "bg-emerald-50/60 border-emerald-200 text-emerald-800" : "bg-rose-50/60 border-rose-200 text-rose-800"
@@ -1731,6 +1743,8 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                     const qcObj = typeof t.checklist_qc === "string"
                         ? (function() { try { return JSON.parse(t.checklist_qc); } catch(_) { return {}; } })()
                         : (t.checklist_qc || {});
+                    const devCat = getDeviceCategory(t?.jenis_perangkat || t?.perangkat?.jenis_perangkat);
+                    const qcItems = getQcChecklistForCategory(devCat);
                     return (
                         <div className="pt-6 border-t border-slate-100">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -1741,7 +1755,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                     </div>
                                     <p className="text-xs text-slate-500 mt-0.5">
                                         {qcObj.passed_qc
-                                            ? `Perangkat telah lulus uji kelayakan ${QC_CHECKLIST_ITEMS.length} poin kendali mutu fungsional & pembersihan menyeluruh standar workshop.`
+                                            ? `Perangkat telah lulus uji kelayakan ${qcItems.length} poin kendali mutu fungsional & pembersihan menyeluruh standar workshop (${devCat.toUpperCase()}).`
                                             : "Pemeriksaan fungsi perangkat sedang berlangsung pada tahap akhir perbaikan."}
                                     </p>
                                 </div>
@@ -1765,9 +1779,9 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                             )}
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                                {(QC_CHECKLIST_ITEMS || []).map(item => {
+                                {(qcItems || []).map(item => {
                                     const val = getChecklistValue(qcObj, item.key, item.legacyKey);
-                                    const ItemIcon = item.Icon || Award;
+                                    const ItemIcon = item.Icon || item.icon || Award;
                                     return (
                                         <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
                                             val ? "bg-emerald-50/60 border-emerald-200 text-emerald-950" : "bg-slate-50 border-slate-200 text-slate-400"

@@ -25,25 +25,19 @@ import {
     UserPlus,
     CheckCircle2,
     ShieldAlert,
-    AlertTriangle
+    AlertTriangle,
+    Smartphone,
+    Gamepad2
 } from "lucide-react";
 
 const DEVICE_TYPES = [
     {
         id: "Laptop",
         label: "Laptop",
-        sub: "Notebook, Ultrabook, MacBook",
+        sub: "Notebook, MacBook, Chromebook",
         icon: Laptop,
         activeColor: "border-blue-600 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500/20",
         iconColor: "text-blue-600"
-    },
-    {
-        id: "Desktop PC",
-        label: "Desktop PC",
-        sub: "Tower, Mini PC, All-in-One",
-        icon: Monitor,
-        activeColor: "border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500/20",
-        iconColor: "text-indigo-600"
     },
     {
         id: "Printer",
@@ -54,25 +48,41 @@ const DEVICE_TYPES = [
         iconColor: "text-emerald-600"
     },
     {
+        id: "Desktop PC",
+        label: "Desktop PC",
+        sub: "Tower, Mini PC, All-in-One, Rakitan",
+        icon: Monitor,
+        activeColor: "border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500/20",
+        iconColor: "text-indigo-600"
+    },
+    {
+        id: "Smartphone",
+        label: "Smartphone / Tab",
+        sub: "Android, iPhone, iPad, Tablet",
+        icon: Smartphone,
+        activeColor: "border-cyan-600 bg-cyan-50/70 text-cyan-900 ring-2 ring-cyan-500/20",
+        iconColor: "text-cyan-600"
+    },
+    {
         id: "Penyimpanan (HDD/SSD)",
-        label: "Penyimpanan",
-        sub: "Internal/Ext HDD, SSD, Flashdisk",
+        label: "Penyimpanan & Periferal",
+        sub: "HDD Eksternal, SSD, Flashdisk, Aksesoris",
         icon: HardDrive,
         activeColor: "border-amber-600 bg-amber-50/70 text-amber-900 ring-2 ring-amber-500/20",
         iconColor: "text-amber-600"
     },
     {
-        id: "Aksesoris (Mouse/Keyboard)",
-        label: "Aksesoris",
-        sub: "Keyboard, Mouse, Headset",
-        icon: Keyboard,
+        id: "Konsol Game",
+        label: "Konsol Game",
+        sub: "PlayStation, Nintendo Switch, Xbox",
+        icon: Gamepad2,
         activeColor: "border-purple-600 bg-purple-50/70 text-purple-900 ring-2 ring-purple-500/20",
         iconColor: "text-purple-600"
     },
     {
         id: "Lainnya",
         label: "Lainnya",
-        sub: "Gadget, Konsol, IoT & lainnya",
+        sub: "Gadget, IoT, Audio & lainnya",
         icon: Boxes,
         activeColor: "border-slate-800 bg-slate-100/80 text-slate-900 ring-2 ring-slate-400/20",
         iconColor: "text-slate-700"
@@ -80,7 +90,7 @@ const DEVICE_TYPES = [
 ];
 
 const POPULAR_BRANDS = [
-    "ASUS", "Lenovo", "HP", "Acer", "Dell", "Apple", "MSI", "Samsung", "Canon", "Epson", "Toshiba", "Brother"
+    "ASUS", "Lenovo", "HP", "Acer", "Dell", "Apple", "Canon", "Epson", "Brother", "Samsung", "MSI", "Sony", "Xiaomi", "Logitech", "Seagate", "Western Digital", "Toshiba"
 ];
 
 export default function PerangkatForm() {

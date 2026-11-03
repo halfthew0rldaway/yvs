@@ -9,9 +9,126 @@ import {
 } from "lucide-react";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
 import MediaProcessingModal from "../../components/MediaProcessingModal";
-import { HARDWARE_CHECKLIST_ITEMS as HARDWARE_ITEMS } from "../../utils/checklistItems";
+import { 
+    DEVICE_CATEGORIES, 
+    getDeviceCategory, 
+    getHardwareChecklistForCategory,
+    HARDWARE_CHECKLIST_ITEMS as DEFAULT_HARDWARE_ITEMS 
+} from "../../utils/checklistItems";
 
 const MAX_TEXT_LIMIT = 5000;
+
+const CATEGORY_PRESETS = {
+    printer: [
+        {
+            title: "Mekanik Error & Inkpad Penuh",
+            desc: "Contoh: Mekanik satu set error, inkpad penuh, hasil print normal",
+            values: {
+                mekanik_roller: { status: "issue", note: "mekanik satu set error, tidak narik kertas" },
+                inkpad_waste: { status: "issue", note: "penuh / butuh kuras & reset" },
+                print_result: { status: "ok", note: "hasil print normal" },
+                printhead: { status: "ok", note: "nozzle normal" },
+                body_cleanliness: { status: "ok", note: "bebas benda asing" }
+            },
+            solusi: "1. Servis rekondisi mekanik satu set & penggantian karet pickup roller\n2. Kuras/ganti busa inkpad waste & reset counter EEPROM\n3. Uji cetak 10 lembar berturut-turut untuk memastikan printer siap pakai"
+        },
+        {
+            title: "Printhead Buntu / Cetak Bergaris",
+            desc: "Hasil cetak putus-putus, warna hilang atau tidak solid",
+            values: {
+                print_result: { status: "issue", note: "bergaris & warna tidak rata" },
+                printhead: { status: "issue", note: "nozzle buntu sebagian" },
+                cartridge: { status: "ok", note: "terdeteksi normal" },
+                tinta_ciss: { status: "ok", note: "tinta tabung ada" }
+            },
+            solusi: "Deep cleaning & flushing head cleaner ultrasonic pada printhead buntu, lalu nozzle check ulang hingga solid sempurna."
+        },
+        {
+            title: "Paper Jam / Karet Roller Aus",
+            desc: "Kertas sering macet atau selip tidak tertarik",
+            values: {
+                mekanik_roller: { status: "issue", note: "karet roller aus, sering paper jam" },
+                body_cleanliness: { status: "ok", note: "tidak ada potongan kertas tersangkut" }
+            },
+            solusi: "Penggantian karet roller ASF pickup baru dan pelumasan gear mekanik printer."
+        }
+    ],
+    pc: [
+        {
+            title: "Bracket Fan Patah & Overheat",
+            desc: "Contoh: Bracket fan processor bawah patah, fan tidak menempel rapat",
+            values: {
+                motherboard_socket: { status: "issue", note: "bracket fan processor bawah patah, fan tidak menempel rapat" },
+                cpu_fan: { status: "issue", note: "suhu panas karena heatsink tidak menempel sempurna" },
+                front_panel: { status: "ok", note: "port frontpanel ok" },
+                back_panel: { status: "ok", note: "port backpanel ok" },
+                wifi_lan: { status: "ok", note: "USB wifi ok" }
+            },
+            solusi: "Penggantian bracket fan socket CPU baru, aplikasi ulang thermal paste premium, dan running benchmark stabilitas 1 jam."
+        },
+        {
+            title: "SSD Health Rendah & Freeze",
+            desc: "Contoh: SSD health drop drastis, bad sector, sering freeze/not responding sesaat",
+            values: {
+                storage_ssd: { status: "issue", note: "health 9%, ada 7500++ bad sector, sering freeze sesaat" },
+                ram: { status: "ok", note: "terbaca penuh & stabil" },
+                os_benchmark: { status: "issue", note: "sering not responding sesaat" }
+            },
+            solusi: "Backup data mendesak sebelum drive corrupt total, ganti SSD baru bergaransi, instalasi fresh OS & Office, serta restore data."
+        },
+        {
+            title: "No Display / Indikasi RAM & VGA",
+            desc: "PC hidup kipas berputar tetapi layar monitor tidak menampilkan gambar",
+            values: {
+                vga_gpu: { status: "issue", note: "no display / layar tidak tampil" },
+                ram: { status: "issue", note: "pin kotor / error deteksi" },
+                psu: { status: "ok", note: "daya menyala stabil" }
+            },
+            solusi: "Pembersihan slot & pin RAM dengan contact cleaner, tes re-seat VGA card discrete, dan reset CMOS."
+        }
+    ],
+    laptop: [
+        {
+            title: "Thermal Overheat & Deep Cleaning",
+            desc: "Kipas berisik / meraung kencang, bodi bawah panas, drop performa",
+            values: {
+                fan_thermal: { status: "issue", note: "kipas kotor berdebu, thermal paste kering" },
+                keyboard: { status: "ok", note: "semua tombol fungsi" },
+                layar: { status: "ok", note: "layar jernih" }
+            },
+            solusi: "Deep cleaning fan & heatsink dari debu tebal, pergantian pasta termal compound berkinerja tinggi, dan stress test suhu kerja."
+        },
+        {
+            title: "Keyboard Rusak / Sebagian Tombol Mati",
+            desc: "Beberapa tuts tidak merespons atau mengetik sendiri (ghost click)",
+            values: {
+                keyboard: { status: "issue", note: "beberapa tombol tidak merespons" },
+                touchpad: { status: "ok", note: "klik & gesture normal" }
+            },
+            solusi: "Penggantian satu modul keyboard baru original / OEM bergaransi resmi."
+        }
+    ],
+    smartphone: [
+        {
+            title: "LCD Retak / Touchscreen Ghosting",
+            desc: "Kaca retak, bercak tompel, atau sentuhan gerak sendiri",
+            values: {
+                touchscreen_lcd: { status: "issue", note: "retak / touchscreen loncat" },
+                baterai_charging: { status: "ok", note: "baterai & charging normal" }
+            },
+            solusi: "Penggantian modul LCD Touchscreen Fullset baru dan uji coba presisi multi-touch."
+        },
+        {
+            title: "Baterai Drop & Kembung",
+            desc: "Baterai cepat habis, persentase drop tiba-tiba, atau bodi belakang renggang",
+            values: {
+                baterai_charging: { status: "issue", note: "kembung & kesehatan baterai drop" },
+                fisik_casing: { status: "issue", note: "backdoor terangkat karena baterai" }
+            },
+            solusi: "Penggantian baterai baru original bersertifikasi aman dan pengeleman ulang backdoor rapat."
+        }
+    ]
+};
 
 function getStats(text = "") {
     const chars = text.length;
@@ -20,7 +137,7 @@ function getStats(text = "") {
 }
 
 // Generate teks laporan pengecekan: natural, simpel & unpretentious
-function buildChecklistText(statusMap, formatMode = "paragraph") {
+function buildChecklistText(statusMap, formatMode = "paragraph", itemsList = DEFAULT_HARDWARE_ITEMS) {
     const checkedKeys = Object.keys(statusMap).filter(
         k => statusMap[k]?.status === "ok" || statusMap[k]?.status === "issue"
     );
@@ -30,17 +147,17 @@ function buildChecklistText(statusMap, formatMode = "paragraph") {
     const issueItems = [];
 
     checkedKeys.forEach(k => {
-        const itemDef = HARDWARE_ITEMS.find(i => i.key === k);
+        const itemDef = itemsList.find(i => i.key === k) || DEFAULT_HARDWARE_ITEMS.find(i => i.key === k);
         const data = statusMap[k];
         const qty = itemDef?.hasQty ? (data.qty || itemDef.defaultQty) : null;
         const qtyStr = qty && qty > 1 ? ` (${qty} ${itemDef.unit})` : "";
-        const name = `${itemDef?.shortName || k}${qtyStr}`;
+        const name = `${itemDef?.shortName || itemDef?.label || k}${qtyStr}`;
         const note = (data.note || "").trim();
 
         if (data.status === "ok") {
-            okItems.push({ name, note });
+            okItems.push({ name, note, label: itemDef?.label || k });
         } else if (data.status === "issue") {
-            issueItems.push({ name, note });
+            issueItems.push({ name, note, label: itemDef?.label || k });
         }
     });
 
@@ -64,13 +181,15 @@ function buildChecklistText(statusMap, formatMode = "paragraph") {
                         lower.startsWith("mati") || 
                         lower.startsWith("ada") || 
                         lower.startsWith("kurang") ||
-                        lower.startsWith("belum")
+                        lower.startsWith("belum") ||
+                        lower.startsWith("sering") ||
+                        lower.startsWith("penuh")
                     ) {
                         return `${item.name} ${item.note}.`;
                     }
                     return `${item.name} bermasalah (${item.note}).`;
                 }
-                return `${item.name} tidak fungsi.`;
+                return `${item.name} tidak fungsi / bermasalah.`;
             });
             parts.push(...issueSentences);
         }
@@ -79,21 +198,28 @@ function buildChecklistText(statusMap, formatMode = "paragraph") {
     } else {
         // Bullet mode (Poin per baris bersih tanpa dekorasi berlebihan)
         const lines = [];
-        okItems.forEach(item => {
-            lines.push(item.note ? `• ${item.name} ok (${item.note})` : `• ${item.name} ok`);
-        });
-        issueItems.forEach(item => {
-            if (item.note) {
-                const lower = item.note.toLowerCase();
-                if (lower.startsWith("tidak") || lower.startsWith("rusak") || lower.startsWith("mati") || lower.startsWith("ada")) {
-                    lines.push(`• ${item.name} ${item.note}`);
+        if (issueItems.length > 0) {
+            lines.push("Hasil Pengecekan / Kendala Ditemukan:");
+            issueItems.forEach(item => {
+                if (item.note) {
+                    const lower = item.note.toLowerCase();
+                    if (lower.startsWith("tidak") || lower.startsWith("rusak") || lower.startsWith("mati") || lower.startsWith("ada") || lower.startsWith("penuh")) {
+                        lines.push(`• ${item.label}: ${item.note}`);
+                    } else {
+                        lines.push(`• ${item.label}: Bermasalah (${item.note})`);
+                    }
                 } else {
-                    lines.push(`• ${item.name} bermasalah (${item.note})`);
+                    lines.push(`• ${item.label}: Tidak berfungsi / bermasalah`);
                 }
-            } else {
-                lines.push(`• ${item.name} tidak fungsi`);
-            }
-        });
+            });
+        }
+        if (okItems.length > 0) {
+            if (issueItems.length > 0) lines.push("");
+            lines.push("Komponen Berfungsi Normal:");
+            okItems.forEach(item => {
+                lines.push(item.note ? `• ${item.label}: Normal (${item.note})` : `• ${item.label}: Normal`);
+            });
+        }
         return lines.join("\n");
     }
 }
@@ -119,8 +245,14 @@ export default function DiagnosisForm() {
 
     // Checklist state: { [key]: { status: "ok"|"issue"|null, qty: number, note: string } }
     const [checklistStatus, setChecklistStatus] = useState({});
+    const [selectedCategory, setSelectedCategory] = useState("laptop");
     const [autoSync, setAutoSync] = useState(true);
     const [formatMode, setFormatMode] = useState("paragraph"); // "paragraph" | "bullet"
+
+    // Resolusi daftar komponen sesuai kategori perangkat aktif
+    const currentCategoryItems = useMemo(() => {
+        return getHardwareChecklistForCategory(selectedCategory);
+    }, [selectedCategory]);
 
     // Ref untuk melacak string kalimat terakhir yang di-generate agar penggantiannya mulus
     const lastGeneratedRef = useRef("");
@@ -130,6 +262,11 @@ export default function DiagnosisForm() {
             try {
                 const res = await api.get(`/tiket-servis/${id}`);
                 setTiket(res.data);
+                
+                // Deteksi otomatis kategori perangkat tiket
+                const detectedCat = getDeviceCategory(res.data?.perangkat?.jenis_perangkat || res.data?.jenis_perangkat);
+                setSelectedCategory(detectedCat);
+
                 if (res.data?.diagnosis) {
                     const loadedMasalah = res.data.diagnosis.masalah || "";
                     setForm({
@@ -158,7 +295,8 @@ export default function DiagnosisForm() {
                             ? JSON.parse(res.data.checklist_intake) 
                             : res.data.checklist_intake;
                         const initialStatus = {};
-                        HARDWARE_ITEMS.forEach(item => {
+                        const catItems = getHardwareChecklistForCategory(detectedCat);
+                        catItems.forEach(item => {
                             const val = intake[item.key] !== undefined ? intake[item.key] : (item.legacyKey ? intake[item.legacyKey] : undefined);
                             if (val === true) {
                                 initialStatus[item.key] = { status: "ok", qty: item.defaultQty || 1, note: "" };
@@ -166,6 +304,13 @@ export default function DiagnosisForm() {
                                 initialStatus[item.key] = { status: "issue", qty: item.defaultQty || 1, note: "" };
                             }
                         });
+                        // Also restore any additional keys if present in intake
+                        Object.keys(intake).forEach(k => {
+                            if (initialStatus[k] === undefined && (intake[k] === true || intake[k] === false)) {
+                                initialStatus[k] = { status: intake[k] ? "ok" : "issue", qty: 1, note: "" };
+                            }
+                        });
+
                         if (Object.keys(initialStatus).length > 0) {
                             setChecklistStatus(initialStatus);
                         }
@@ -179,6 +324,38 @@ export default function DiagnosisForm() {
         }
         fetchExisting();
     }, [id]);
+
+    // Ganti kategori checklist secara manual oleh teknisi
+    function handleCategoryChange(catId) {
+        setSelectedCategory(catId);
+        const newItems = getHardwareChecklistForCategory(catId);
+        if (autoSync && Object.keys(checklistStatus).length > 0) {
+            const newGenerated = buildChecklistText(checklistStatus, formatMode, newItems);
+            setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
+        }
+    }
+
+    // Terapkan preset kasus diagnosis cepat
+    function handleApplyPreset(preset) {
+        setChecklistStatus(prev => {
+            const updated = { ...prev, ...preset.values };
+            if (autoSync) {
+                const newGenerated = buildChecklistText(updated, formatMode, currentCategoryItems);
+                setForm(f => ({
+                    ...f,
+                    masalah: applySyncToMasalah(newGenerated, f.masalah),
+                    solusi: preset.solusi ? (f.solusi ? `${f.solusi}\n\n${preset.solusi}` : preset.solusi) : f.solusi
+                }));
+            } else if (preset.solusi) {
+                setForm(f => ({
+                    ...f,
+                    solusi: f.solusi ? `${f.solusi}\n\n${preset.solusi}` : preset.solusi
+                }));
+            }
+            return updated;
+        });
+        toast.success(`Preset "${preset.title}" diterapkan!`);
+    }
 
     // Sinkronisasi teks hasil generate ke kotak form.masalah tanpa menghapus catatan teknisi lainnya
     function applySyncToMasalah(newText, currentMasalah) {
@@ -206,7 +383,7 @@ export default function DiagnosisForm() {
     // Toggle status OK / Bermasalah pada komponen
     function handleToggleStatus(key, targetStatus) {
         setChecklistStatus(prev => {
-            const itemDef = HARDWARE_ITEMS.find(i => i.key === key);
+            const itemDef = currentCategoryItems.find(i => i.key === key) || DEFAULT_HARDWARE_ITEMS.find(i => i.key === key);
             const currentData = prev[key] || { status: null, qty: itemDef?.defaultQty || 1, note: "" };
             
             const nextStatus = currentData.status === targetStatus ? null : targetStatus;
@@ -216,7 +393,7 @@ export default function DiagnosisForm() {
             };
 
             if (autoSync) {
-                const newGenerated = buildChecklistText(updated, formatMode);
+                const newGenerated = buildChecklistText(updated, formatMode, currentCategoryItems);
                 setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
             }
 
@@ -227,7 +404,7 @@ export default function DiagnosisForm() {
     // Ubah jumlah slot/port (misal: 2 port, 3 port)
     function handleQtyChange(key, delta) {
         setChecklistStatus(prev => {
-            const itemDef = HARDWARE_ITEMS.find(i => i.key === key);
+            const itemDef = currentCategoryItems.find(i => i.key === key) || DEFAULT_HARDWARE_ITEMS.find(i => i.key === key);
             const currentData = prev[key] || { status: null, qty: itemDef?.defaultQty || 1, note: "" };
             const currentQty = currentData.qty || itemDef?.defaultQty || 1;
             const newQty = Math.max(1, Math.min(8, currentQty + delta));
@@ -238,7 +415,7 @@ export default function DiagnosisForm() {
             };
 
             if (autoSync && currentData.status) {
-                const newGenerated = buildChecklistText(updated, formatMode);
+                const newGenerated = buildChecklistText(updated, formatMode, currentCategoryItems);
                 setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
             }
 
@@ -249,7 +426,7 @@ export default function DiagnosisForm() {
     // Ubah catatan spesifik komponen (misal: "ada 2 garis vertikal", "klik bawah macet")
     function handleNoteChange(key, noteText) {
         setChecklistStatus(prev => {
-            const itemDef = HARDWARE_ITEMS.find(i => i.key === key);
+            const itemDef = currentCategoryItems.find(i => i.key === key) || DEFAULT_HARDWARE_ITEMS.find(i => i.key === key);
             const currentData = prev[key] || { status: "ok", qty: itemDef?.defaultQty || 1, note: "" };
             const updated = {
                 ...prev,
@@ -257,7 +434,7 @@ export default function DiagnosisForm() {
             };
 
             if (autoSync && currentData.status) {
-                const newGenerated = buildChecklistText(updated, formatMode);
+                const newGenerated = buildChecklistText(updated, formatMode, currentCategoryItems);
                 setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
             }
 
@@ -269,15 +446,15 @@ export default function DiagnosisForm() {
     function handleFormatModeChange(newMode) {
         setFormatMode(newMode);
         if (autoSync) {
-            const newGenerated = buildChecklistText(checklistStatus, newMode);
+            const newGenerated = buildChecklistText(checklistStatus, newMode, currentCategoryItems);
             setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
         }
     }
 
-    // 1-Klik: Set semua komponen menjadi OK
+    // 1-Klik: Set semua komponen kategori aktif menjadi OK
     function handleSetAllOk() {
-        const updated = {};
-        HARDWARE_ITEMS.forEach(item => {
+        const updated = { ...checklistStatus };
+        currentCategoryItems.forEach(item => {
             const existing = checklistStatus[item.key] || {};
             updated[item.key] = {
                 status: "ok",
@@ -287,10 +464,10 @@ export default function DiagnosisForm() {
         });
         setChecklistStatus(updated);
         if (autoSync) {
-            const newGenerated = buildChecklistText(updated, formatMode);
+            const newGenerated = buildChecklistText(updated, formatMode, currentCategoryItems);
             setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
         }
-        toast.success("Semua komponen ditandai OK!");
+        toast.success(`Semua komponen ${selectedCategory.toUpperCase()} ditandai OK!`);
     }
 
     // Reset Checklist
@@ -311,9 +488,9 @@ export default function DiagnosisForm() {
         }
 
         const solutionLines = issueKeys.map(k => {
-            const item = HARDWARE_ITEMS.find(i => i.key === k);
+            const item = currentCategoryItems.find(i => i.key === k) || DEFAULT_HARDWARE_ITEMS.find(i => i.key === k);
             const note = checklistStatus[k]?.note ? ` (${checklistStatus[k].note})` : "";
-            return `• ${item?.label}${note}: ${item?.defaultSolusi || "Pengecekan dan perbaikan teknis"}`;
+            return `• ${item?.label || k}${note}: ${item?.defaultSolusi || "Pengecekan dan perbaikan teknis"}`;
         });
 
         const newBlock = `Rekomendasi Tindakan:\n${solutionLines.join("\n")}`;
@@ -329,7 +506,7 @@ export default function DiagnosisForm() {
 
     // Manual Sync jika autoSync dimatikan
     function handleManualSync() {
-        const newGenerated = buildChecklistText(checklistStatus, formatMode);
+        const newGenerated = buildChecklistText(checklistStatus, formatMode, currentCategoryItems);
         setForm(f => ({ ...f, masalah: applySyncToMasalah(newGenerated, f.masalah) }));
         toast.success("Hasil checklist berhasil disinkronkan ke kotak deskripsi!");
     }
@@ -416,13 +593,18 @@ export default function DiagnosisForm() {
 
             // Synchronize hardware checklist directly into ticket's checklist_intake
             const intakeData = {};
-            HARDWARE_ITEMS.forEach(item => {
+            currentCategoryItems.forEach(item => {
                 const st = checklistStatus[item.key]?.status;
                 if (st === "ok") {
                     intakeData[item.key] = true;
                 } else if (st === "issue") {
                     intakeData[item.key] = false;
                 }
+            });
+            Object.keys(checklistStatus).forEach(k => {
+                const st = checklistStatus[k]?.status;
+                if (st === "ok") intakeData[k] = true;
+                else if (st === "issue") intakeData[k] = false;
             });
 
             const ticketPayload = {};
@@ -453,11 +635,11 @@ export default function DiagnosisForm() {
     const masalahStats = useMemo(() => getStats(form.masalah), [form.masalah]);
     const solusiStats = useMemo(() => getStats(form.solusi), [form.solusi]);
 
-    const checkedCount = Object.keys(checklistStatus).filter(
-        k => checklistStatus[k]?.status === "ok" || checklistStatus[k]?.status === "issue"
+    const checkedCount = currentCategoryItems.filter(
+        item => checklistStatus[item.key]?.status === "ok" || checklistStatus[item.key]?.status === "issue"
     ).length;
-    const issueCount = Object.keys(checklistStatus).filter(
-        k => checklistStatus[k]?.status === "issue"
+    const issueCount = currentCategoryItems.filter(
+        item => checklistStatus[item.key]?.status === "issue"
     ).length;
 
     if (fetching) {
@@ -503,8 +685,8 @@ export default function DiagnosisForm() {
             <form onSubmit={(e) => { e.preventDefault(); handleSave(false); }} className="space-y-6">
                 
                 {/* 1. Checklist Cek Fungsi Komponen & Auto-Type */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 transition-all">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 transition-all space-y-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                         <div>
                             <div className="flex items-center gap-2">
                                 <ListChecks className="w-5 h-5 text-blue-600" />
@@ -512,7 +694,7 @@ export default function DiagnosisForm() {
                                     Cek Fungsi Komponen (Auto-Type Laporan)
                                 </h2>
                                 <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap shrink-0 w-fit max-w-max">
-                                    {checkedCount}/{HARDWARE_ITEMS.length} Dicek
+                                    {checkedCount}/{currentCategoryItems.length} Dicek
                                 </span>
                                 {issueCount > 0 && (
                                     <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap shrink-0 w-fit max-w-max">
@@ -521,7 +703,7 @@ export default function DiagnosisForm() {
                                 )}
                             </div>
                             <p className="text-xs text-slate-500 mt-1">
-                                Klik OK / Bermasalah pada komponen. Format teks laporan otomatis tersusun di kotak temuan masalah secara natural.
+                                Checklist otomatis disesuaikan dengan kategori barang. Klik OK / Bermasalah untuk menyusun laporan diagnosa.
                             </p>
                         </div>
 
@@ -613,9 +795,68 @@ export default function DiagnosisForm() {
                         </div>
                     </div>
 
+                    {/* Baris Kategori Checklist & Preset Cepat */}
+                    <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 space-y-2">
+                        {/* Selector Kategori Perangkat */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-3xs font-bold text-slate-400 uppercase tracking-wider shrink-0">
+                                Kategori Unit:
+                            </span>
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar flex-1">
+                                {DEVICE_CATEGORIES.map(cat => {
+                                    const CatIcon = cat.icon;
+                                    const isActive = selectedCategory === cat.id;
+                                    return (
+                                        <button
+                                            key={cat.id}
+                                            type="button"
+                                            onClick={() => handleCategoryChange(cat.id)}
+                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-2xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                                                isActive
+                                                    ? "bg-blue-600 text-white shadow-2xs"
+                                                    : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
+                                            }`}
+                                        >
+                                            <CatIcon className={`w-3.5 h-3.5 ${isActive ? "text-white" : "text-slate-400"}`} />
+                                            <span>{cat.label}</span>
+                                            {selectedCategory === cat.id && (
+                                                <span className="text-4xs bg-blue-500/80 text-white px-1 py-0.2 rounded-full font-bold">
+                                                    Aktif
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Presets Kasus Cepat (Jika tersedia untuk kategori ini) */}
+                        {CATEGORY_PRESETS[selectedCategory]?.length > 0 && (
+                            <div className="flex items-center gap-2 pt-1 border-t border-slate-200/60">
+                                <span className="text-3xs font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3 text-amber-500" />
+                                    Preset Kasus Cepat:
+                                </span>
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar flex-1">
+                                    {CATEGORY_PRESETS[selectedCategory].map((preset, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => handleApplyPreset(preset)}
+                                            className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 rounded-md text-3xs font-semibold transition-all shrink-0 cursor-pointer shadow-3xs"
+                                            title={preset.desc}
+                                        >
+                                            <span>{preset.title}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Grid Hardware Items */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-                        {HARDWARE_ITEMS.map((item) => {
+                        {currentCategoryItems.map((item) => {
                             const ItemIcon = item.icon;
                             const itemData = checklistStatus[item.key] || {};
                             const isOk = itemData.status === "ok";

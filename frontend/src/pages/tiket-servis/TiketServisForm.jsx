@@ -13,9 +13,11 @@ import DefectMapperModal from "../../components/DefectMapperModal";
 import { SLA_PENGECEKAN_PACKAGES } from "../../components/SlaBadge";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
 import MediaProcessingModal from "../../components/MediaProcessingModal";
+import { getDeviceIcon, getDeviceCategory } from "../../utils/checklistItems";
 
-const POPULAR_BRANDS = ["ASUS", "Lenovo", "HP", "Acer", "Dell", "Apple", "MSI", "Toshiba", "Samsung", "Canon", "Epson"];
-const DEVICE_CATEGORIES = ["Laptop", "Desktop PC", "Printer", "Penyimpanan (HDD/SSD)", "Aksesoris (Mouse/Keyboard)", "Lainnya"];
+const POPULAR_BRANDS = ["ASUS", "Lenovo", "HP", "Acer", "Dell", "Apple", "Canon", "Epson", "Brother", "Samsung", "MSI", "Sony", "Toshiba"];
+const DEVICE_CATEGORIES = ["Laptop", "Printer", "Desktop PC", "Smartphone", "Penyimpanan (HDD/SSD)", "Konsol Game", "Lainnya"];
+const CATEGORY_TABS = ["Semua", "Laptop", "Printer", "Desktop PC", "Smartphone", "Penyimpanan", "Konsol Game", "Lainnya"];
 const ACTIVE_STATUSES = ["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui", "dalam_perbaikan", "selesai"];
 
 function HighlightText({ text, query }) {
@@ -58,15 +60,6 @@ function HighlightText({ text, query }) {
     }
 
     return <>{text}</>;
-}
-
-function getDeviceIcon(jenis) {
-    const j = (jenis || "").toLowerCase();
-    if (j.includes("laptop")) return Laptop;
-    if (j.includes("desktop") || j.includes("pc")) return MonitorSmartphone;
-    if (j.includes("printer")) return Printer;
-    if (j.includes("hdd") || j.includes("ssd") || j.includes("penyimpanan")) return HardDrive;
-    return Laptop;
 }
 
 export default function TiketServisForm() {
@@ -376,36 +369,42 @@ export default function TiketServisForm() {
         });
     }, [perangkats]);
 
-    const categoryCounts = useMemo(() => ({
-        Semua: availablePerangkats.length,
-        Laptop: availablePerangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("laptop")).length,
-        "Desktop PC": availablePerangkats.filter(p => {
-            const j = (p.jenis_perangkat || "").toLowerCase();
-            return j.includes("desktop") || j.includes("pc");
-        }).length,
-        Printer: availablePerangkats.filter(p => (p.jenis_perangkat || "").toLowerCase().includes("printer")).length,
-        Penyimpanan: availablePerangkats.filter(p => {
-            const j = (p.jenis_perangkat || "").toLowerCase();
-            return j.includes("hdd") || j.includes("ssd") || j.includes("penyimpanan");
-        }).length,
-        Lainnya: availablePerangkats.filter(p => {
-            const j = (p.jenis_perangkat || "").toLowerCase();
-            return !j.includes("laptop") && !j.includes("desktop") && !j.includes("pc") && !j.includes("printer") && !j.includes("hdd") && !j.includes("ssd");
-        }).length,
-    }), [availablePerangkats]);
+    const categoryCounts = useMemo(() => {
+        const counts = {
+            Semua: availablePerangkats.length,
+            Laptop: 0,
+            Printer: 0,
+            "Desktop PC": 0,
+            Smartphone: 0,
+            Penyimpanan: 0,
+            "Konsol Game": 0,
+            Lainnya: 0
+        };
+        availablePerangkats.forEach(p => {
+            const cat = getDeviceCategory(p.jenis_perangkat);
+            if (cat === "laptop") counts.Laptop++;
+            else if (cat === "printer") counts.Printer++;
+            else if (cat === "pc") counts["Desktop PC"]++;
+            else if (cat === "smartphone") counts.Smartphone++;
+            else if (cat === "storage_peripheral") counts.Penyimpanan++;
+            else if (cat === "console") counts["Konsol Game"]++;
+            else counts.Lainnya++;
+        });
+        return counts;
+    }, [availablePerangkats]);
 
     // 1. Filter perangkat berdasarkan kategori aktif (hanya unit yang bebas dari tiket ongoing)
     const categoryDevices = useMemo(() => {
         if (categoryFilter === "Semua") return availablePerangkats;
         return availablePerangkats.filter(p => {
-            const j = (p.jenis_perangkat || "").toLowerCase();
-            if (categoryFilter === "Laptop") return j.includes("laptop");
-            if (categoryFilter === "Desktop PC") return j.includes("desktop") || j.includes("pc");
-            if (categoryFilter === "Printer") return j.includes("printer");
-            if (categoryFilter === "Penyimpanan") return j.includes("hdd") || j.includes("ssd") || j.includes("penyimpanan");
-            if (categoryFilter === "Lainnya") {
-                return !j.includes("laptop") && !j.includes("desktop") && !j.includes("pc") && !j.includes("printer") && !j.includes("hdd") && !j.includes("ssd");
-            }
+            const cat = getDeviceCategory(p.jenis_perangkat);
+            if (categoryFilter === "Laptop") return cat === "laptop";
+            if (categoryFilter === "Printer") return cat === "printer";
+            if (categoryFilter === "Desktop PC") return cat === "pc";
+            if (categoryFilter === "Smartphone") return cat === "smartphone";
+            if (categoryFilter === "Penyimpanan") return cat === "storage_peripheral";
+            if (categoryFilter === "Konsol Game") return cat === "console";
+            if (categoryFilter === "Lainnya") return cat === "other";
             return true;
         });
     }, [availablePerangkats, categoryFilter]);
@@ -690,7 +689,7 @@ export default function TiketServisForm() {
                                         <span>Tipe</span>
                                     </div>
                                     <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar flex-1">
-                                        {["Semua", "Laptop", "Desktop PC", "Printer", "Penyimpanan", "Lainnya"].map(cat => {
+                                        {CATEGORY_TABS.map(cat => {
                                             const count = categoryCounts[cat] || 0;
                                             const isActive = categoryFilter === cat;
                                             const isEmpty = count === 0 && cat !== "Semua";
