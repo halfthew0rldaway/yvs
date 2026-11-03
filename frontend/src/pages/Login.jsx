@@ -269,35 +269,35 @@ export default function Login() {
                         <div className="grid grid-cols-2 gap-1.5">
                             <button
                                 type="button"
-                                onClick={() => handleSelectDemoAccount("admin")}
-                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
-                            >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Admin Utama</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">admin</span>
-                            </button>
-                            <button
-                                type="button"
                                 onClick={() => handleSelectDemoAccount("owner")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner / Pimpinan</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">owner</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Utama (H. Bambang)</span>
+                                <span className="block font-mono text-3xs text-blue-600 truncate">owner</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleSelectDemoAccount("manajer")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Manajerial / Co-Owner (Hj. Maryam)</span>
+                                <span className="block font-mono text-3xs text-blue-600 truncate">manajer</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleSelectDemoAccount("admin")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Admin Operasional</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">admin</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleSelectDemoAccount("teknisi1")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi 1</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi 1 (Budi)</span>
                                 <span className="block font-mono text-3xs text-slate-400 truncate">teknisi1</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleSelectDemoAccount("siti")}
-                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
-                            >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Service Advisor</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">siti</span>
                             </button>
                         </div>
                         <div className="mt-2 pt-2 border-t border-slate-200/70 text-3xs text-slate-400">

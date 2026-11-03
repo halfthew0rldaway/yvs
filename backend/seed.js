@@ -80,7 +80,10 @@ async function main() {
         data: { nama: "Siti Rahmawati (Service Advisor)", username: "siti", email: "siti.admin@workshop.com", password: defaultPassword, role: "admin" }
     });
     const pimpinan = await prisma.user.create({
-        data: { nama: "H. Bambang Yangversa (Pimpinan)", username: "owner", email: "pimpinan@workshop.com", password: defaultPassword, role: "pimpinan" }
+        data: { nama: "H. Bambang Yangversa (Owner Utama)", username: "owner", email: "owner@workshop.com", password: defaultPassword, role: "pimpinan" }
+    });
+    const pimpinan2 = await prisma.user.create({
+        data: { nama: "Ibu Hj. Maryam Yangversa (General Manager / Manajerial)", username: "manajer", email: "manajer@workshop.com", password: defaultPassword, role: "pimpinan" }
     });
 
     const teknisis = await Promise.all([

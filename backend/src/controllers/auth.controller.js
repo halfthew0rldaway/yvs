@@ -17,12 +17,15 @@ async function login(req, res) {
             return res.status(400).json({ message: "Username dan password wajib diisi" });
         }
 
-        // Cari berdasarkan username ATAU email
+        const cleanId = identifier.toLowerCase();
+
+        // Cari berdasarkan username ATAU email (mendukung alias praktis owner/pimpinan/superadmin)
         const user = await prisma.user.findFirst({
             where: {
                 OR: [
-                    { username: identifier.toLowerCase() },
-                    { email: identifier.toLowerCase() }
+                    { username: cleanId },
+                    { email: cleanId },
+                    ...(cleanId === "pimpinan" || cleanId === "superadmin" ? [{ username: "owner" }] : [])
                 ]
             }
         });
