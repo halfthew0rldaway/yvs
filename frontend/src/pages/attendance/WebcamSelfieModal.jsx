@@ -346,7 +346,7 @@ export default function WebcamSelfieModal({
                                 {isActualTugasLuar
                                     ? "Presensi di luar radius workshop dengan stempel GPS & review Owner"
                                     : isEarlyCheckOut
-                                        ? `Kepulangan sebelum pukul ${policy?.jam_pulang || "17:00"} WIB • Wajib Review Owner`
+                                        ? `Kepulangan sebelum pukul ${policy?.jam_pulang || "18:00"} WIB • Wajib Review Owner`
                                         : "Ambil foto selfie langsung dengan stempel lokasi & waktu"}
                             </p>
                         </div>

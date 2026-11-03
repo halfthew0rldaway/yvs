@@ -25,9 +25,10 @@ function authenticate(req, res, next) {
     }
 }
 
-// Memastikan role sesuai dengan konsep hierarki superset:
-// - Pimpinan memiliki hak akses supervisi penuh (admin, frontman, teknisi)
-// - Admin memiliki hak operasional penuh setingkat frontman (admin is superset of frontman)
+// Memastikan role sesuai dengan pembagian kewenangan yang jelas:
+// - Pimpinan (Manajerial / Owner): Supervisi strategis, rekapitulasi, review permohonan izin/tugas luar & audit
+// - Admin: Operasional penuh sistem workshop & administrasi teknis
+// - Keduanya mewarisi akses frontman (meja depan / kasir)
 function authorize(...roles) {
     return (req, res, next) => {
         if (!req.user) {
@@ -36,8 +37,7 @@ function authorize(...roles) {
 
         const userRole = req.user.role;
         const hasAccess = roles.includes(userRole)
-            || ((userRole === "admin" || userRole === "pimpinan") && roles.includes("frontman"))
-            || (userRole === "pimpinan" && roles.includes("admin"));
+            || ((userRole === "admin" || userRole === "pimpinan") && roles.includes("frontman"));
 
         if (!hasAccess) {
             return res.status(403).json({ message: "Tidak memiliki akses" });

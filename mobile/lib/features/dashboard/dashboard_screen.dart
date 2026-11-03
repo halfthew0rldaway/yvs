@@ -1265,6 +1265,13 @@ class DashboardScreen extends ConsumerWidget {
     WidgetRef ref,
     AttendanceStatus? status,
   ) {
+    // Role manajerial/owner (pimpinan) tidak wajib absen
+    final authState = ref.watch(authProvider);
+    final role = authState.user?['role']?.toString().toLowerCase();
+    if (role == 'pimpinan') {
+      return const SizedBox.shrink();
+    }
+
     final now = DateTime.now();
     final hour = now.hour;
     final minute = now.minute;
@@ -1274,8 +1281,8 @@ class DashboardScreen extends ConsumerWidget {
     final hasCheckedOut = status?.hasCheckedOut ?? false;
 
     // 1. Pengingat Check-In Pagi:
-    // Aktif jika jam >= 08:30 (atau jam 09:00 pagi) dan belum check-in
-    final isMorningWindow = totalMinutes >= (8 * 60 + 30);
+    // Aktif jika jam >= 09:00 pagi dan belum check-in
+    final isMorningWindow = totalMinutes >= (9 * 60);
     if (!hasCheckedIn && isMorningWindow) {
       return Container(
         margin: const EdgeInsets.only(bottom: 14),

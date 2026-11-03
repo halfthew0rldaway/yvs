@@ -95,10 +95,11 @@ export function AuthProvider({ children }) {
         lockReason,
         lockSession,
         unlockSession,
-        isAdmin: user?.role === "admin" || user?.role === "pimpinan",
+        isAdmin: user?.role === "admin",
+        isPimpinan: user?.role === "pimpinan",
+        isPimpinanOrAdmin: user?.role === "admin" || user?.role === "pimpinan",
         isFrontman: user?.role === "frontman",
         isTeknisi: user?.role === "teknisi",
-        isPimpinan: user?.role === "pimpinan",
         canHandleFrontdesk: user?.role === "admin" || user?.role === "pimpinan" || user?.role === "frontman"
     };
 
@@ -123,10 +124,11 @@ export function useAuth() {
             lockReason: "idle",
             lockSession: () => {},
             unlockSession: () => {},
-            isAdmin: storedUser?.role === "admin" || storedUser?.role === "pimpinan",
+            isAdmin: storedUser?.role === "admin",
+            isPimpinan: storedUser?.role === "pimpinan",
+            isPimpinanOrAdmin: storedUser?.role === "admin" || storedUser?.role === "pimpinan",
             isFrontman: storedUser?.role === "frontman",
             isTeknisi: storedUser?.role === "teknisi",
-            isPimpinan: storedUser?.role === "pimpinan",
             canHandleFrontdesk: storedUser?.role === "admin" || storedUser?.role === "pimpinan" || storedUser?.role === "frontman"
         };
     }

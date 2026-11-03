@@ -6,10 +6,10 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.get("/admin", authorize("admin"), adminDashboard);
+router.get("/admin", authorize("admin", "pimpinan"), adminDashboard);
 router.get("/teknisi", authorize("teknisi"), teknisiDashboard);
-router.get("/teknisi-list", authorize("admin"), teknisiList);
-router.get("/activities/export", authorize("admin"), exportActivities);
+router.get("/teknisi-list", authorize("admin", "pimpinan"), teknisiList);
+router.get("/activities/export", authorize("admin", "pimpinan"), exportActivities);
 router.get("/database/export", authorize("admin"), exportDatabase);
 
 module.exports = router;

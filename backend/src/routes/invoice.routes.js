@@ -13,7 +13,7 @@ const invoiceValidation = [
     body("biaya_jasa").isNumeric().withMessage("Biaya jasa harus berupa angka"),
 ];
 
-router.get("/report", authorize("admin"), getReport);
+router.get("/report", authorize("admin", "pimpinan"), getReport);
 router.get("/", authorize("admin", "frontman", "teknisi"), getAll);
 router.get("/:id", authorize("admin", "frontman", "teknisi"), getById);
 router.post("/", authorize("admin", "frontman"), invoiceValidation, validate, create);

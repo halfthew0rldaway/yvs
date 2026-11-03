@@ -311,7 +311,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
     // 1. Cek apakah check-out lebih awal dari jam pulang operasional workshop
     final policy = _todayStatus?['policy'] as Map<String, dynamic>?;
-    final jamPulangStr = policy?['jam_pulang']?.toString() ?? '17:00';
+    final jamPulangStr = policy?['jam_pulang']?.toString() ?? '18:00';
     final parts = jamPulangStr.split(':');
     final targetPulangMinutes = (int.tryParse(parts[0]) ?? 17) * 60 + (parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0);
     final currentMinutes = _currentTime.hour * 60 + _currentTime.minute;

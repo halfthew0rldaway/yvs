@@ -46,6 +46,66 @@ import SessionWarningModal from "./SessionWarningModal";
 import { useIdleTimer } from "../hooks/useIdleTimer";
 import { isRememberMeActive } from "../utils/authStorage";
 
+// Menu Groups untuk Pimpinan / Owner / Manajerial (Pengawasan Bisnis, Keuangan, HR & Audit)
+const pimpinanNavGroups = [
+    {
+        id: "overview",
+        label: "Ringkasan Eksekutif",
+        items: [
+            { path: "/dashboard", label: "Dashboard Bisnis", icon: LayoutDashboard }
+        ]
+    },
+    {
+        id: "operasional",
+        label: "Operasional Servis",
+        icon: Ticket,
+        items: [
+            { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
+            { path: "/perangkat", label: "Perangkat Pelanggan", icon: MonitorSmartphone },
+            { path: "/customer", label: "Data Pelanggan", icon: Users },
+            { path: "/loaner", label: "Unit Pinjaman (Loaner)", icon: Laptop },
+        ]
+    },
+    {
+        id: "logistik",
+        label: "Suku Cadang & Logistik",
+        icon: Wrench,
+        items: [
+            { path: "/sparepart", label: "Katalog Sparepart", icon: Wrench },
+            { path: "/rma", label: "Klaim RMA Supplier", icon: RotateCcw },
+            { path: "/supplier", label: "Direktori Supplier", icon: Building2 },
+        ]
+    },
+    {
+        id: "transaksi",
+        label: "Keuangan & CRM",
+        icon: FileText,
+        items: [
+            { path: "/invoice", label: "Invoice & Keuangan", icon: FileText },
+            { path: "/retensi", label: "Retensi & CRM Pelanggan", icon: HeartHandshake },
+        ]
+    },
+    {
+        id: "knowledge",
+        label: "SDM & Karyawan",
+        icon: BookOpen,
+        items: [
+            { path: "/attendance", label: "Monitoring Presensi", icon: Clock },
+            { path: "/wiki", label: "Pusat SOP & Solusi", icon: BookOpen },
+            { path: "/recruitment", label: "Rekrutmen Tim (HR)", icon: UserPlus },
+        ]
+    },
+    {
+        id: "sistem",
+        label: "Supervisi & Audit",
+        icon: Settings,
+        items: [
+            { path: "/users", label: "User & Performa Tim", icon: UserCheck },
+            { path: "/audit-log", label: "Log Audit Aktivitas", icon: ShieldAlert },
+        ]
+    }
+];
+
 // Menu Groups untuk Admin (Struktur Navigasi Collapsible Terorganisir)
 const adminNavGroups = [
     {
@@ -342,7 +402,9 @@ export default function Layout({ children }) {
         return () => window.removeEventListener("resize", handleResize);
     }, [isSidebarOpen]);
 
-    const navGroups = isAdmin ? adminNavGroups : (user?.role === "frontman" ? frontmanNavGroups : teknisiNavGroups);
+    const navGroups = user?.role === "pimpinan"
+        ? pimpinanNavGroups
+        : (isAdmin ? adminNavGroups : (user?.role === "frontman" ? frontmanNavGroups : teknisiNavGroups));
 
     // Collapsible Groups state: open by default for core daily groups
     const [openGroups, setOpenGroups] = useState({
@@ -536,7 +598,9 @@ export default function Layout({ children }) {
                             <UserAvatar user={user} size="w-9 h-9" textSize="text-xs" rounded="rounded-xl" />
                             <div className="flex-1 min-w-0">
                                 <p className="font-bold text-slate-900 text-xs truncate">{user?.nama}</p>
-                                <p className="text-2xs text-slate-500 capitalize truncate">{user?.role}</p>
+                                <p className="text-2xs text-slate-500 capitalize truncate">
+                                    {user?.role === "pimpinan" ? "Owner / Manajerial" : user?.role}
+                                </p>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">

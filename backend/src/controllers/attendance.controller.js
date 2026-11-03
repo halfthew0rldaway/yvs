@@ -60,9 +60,9 @@ async function getOrCreatePolicy() {
                 latitude: -6.274323,
                 longitude: 106.977425,
                 radius_meter: 100,
-                jam_masuk: "08:30",
+                jam_masuk: "09:00",
                 toleransi_menit: 15,
-                jam_pulang: "17:00",
+                jam_pulang: "18:00",
                 is_geofence_active: true,
                 is_selfie_required: true
             }
@@ -242,7 +242,7 @@ async function checkIn(req, res) {
         }
 
         // 4. Kalkulasi Keterlambatan
-        // Policy: jam_masuk "08:30", toleransi 15 menit -> Max on-time: 08:45
+        // Policy: jam_masuk "09:00", toleransi 15 menit -> Max on-time: 09:15
         const [targetHour, targetMinute] = policy.jam_masuk.split(":").map(Number);
         const targetMinutesFromMidnight = targetHour * 60 + targetMinute;
         const maxOnTimeMinutes = targetMinutesFromMidnight + (policy.toleransi_menit || 0);
@@ -525,8 +525,11 @@ async function getDailyAll(req, res) {
         const targetDate = tanggal ? getTodayDate(new Date(tanggal)) : getTodayDate();
         const policy = await getOrCreatePolicy();
 
-        // Ambil semua karyawan aktif (admin & teknisi)
+        // Ambil semua staf operasional aktif (admin & teknisi, exclude pimpinan/owner)
         const users = await prisma.user.findMany({
+            where: {
+                role: { not: "pimpinan" }
+            },
             select: {
                 id: true,
                 nama: true,
@@ -616,6 +619,9 @@ async function getMonthlyRecap(req, res) {
         const endDate = new Date(currentYear, currentMonth, 0, 23, 59, 59);
 
         const users = await prisma.user.findMany({
+            where: {
+                role: { not: "pimpinan" }
+            },
             select: { id: true, nama: true, email: true, role: true, foto_profile: true },
             orderBy: [{ role: "asc" }, { nama: "asc" }]
         });

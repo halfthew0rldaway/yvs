@@ -5,7 +5,7 @@ const { getAll, getStats } = require("../controllers/activity-log.controller");
 const router = express.Router();
 
 router.use(authenticate);
-router.use(authorize("admin"));
+router.use(authorize("admin", "pimpinan"));
 
 router.get("/stats", getStats);
 router.get("/", getAll);

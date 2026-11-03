@@ -512,7 +512,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           final isAssignedToMe = currentUser != null && ticket.teknisiId == currentUser.id;
           final isUnassigned = ticket.teknisiId == null;
           final attendance = ref.watch(attendanceStatusProvider).valueOrNull;
-          final hasCheckedIn = attendance?.hasCheckedIn ?? false;
+          final isPimpinan = currentUser?.role?.toLowerCase() == 'pimpinan';
+          final hasCheckedIn = isPimpinan || (attendance?.hasCheckedIn ?? false);
           final qcMap = ticket.checklistQc ?? {};
           final intakeMap = ticket.checklistIntake ?? {};
           final reminderDue = _getReminderDue(ticket);

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../features/attendance/attendance_screen.dart';
+import 'auth_provider.dart';
 
 /// Model representing user's today attendance status.
 class AttendanceStatus {
@@ -89,6 +90,13 @@ class AttendanceGuard {
     WidgetRef ref, {
     String actionName = 'melakukan tindakan ini',
   }) {
+    // Role manajerial/owner (pimpinan) tidak wajib absen
+    final user = ref.read(authProvider).user;
+    final role = user?['role']?.toString().toLowerCase();
+    if (role == 'pimpinan') {
+      return true;
+    }
+
     final attendance = ref.read(attendanceStatusProvider).valueOrNull;
     final hasCheckedIn = attendance?.hasCheckedIn ?? false;
 

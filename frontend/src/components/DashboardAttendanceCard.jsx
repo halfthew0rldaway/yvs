@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 import {
     Camera,
     CheckCircle2,
@@ -14,6 +15,8 @@ import {
 } from "lucide-react";
 
 export default function DashboardAttendanceCard() {
+    const { user } = useAuth();
+    const isPimpinan = user?.role === "pimpinan";
     const [statusData, setStatusData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -37,6 +40,39 @@ export default function DashboardAttendanceCard() {
             isMounted = false;
         };
     }, []);
+
+    // Role Manajerial / Owner (Pimpinan) tidak wajib absen operasional
+    if (isPimpinan) {
+        return (
+            <div className="bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50 border border-blue-200/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shrink-0">
+                        <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+                                Akses Manajerial & Owner
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                Bebas Presensi
+                            </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-0.5 truncate">
+                            Pantau kehadiran dan verifikasi izin tim di Monitoring Presensi.
+                        </p>
+                    </div>
+                </div>
+                <Link
+                    to="/attendance"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0"
+                >
+                    <span>Monitoring Tim</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+            </div>
+        );
+    }
 
     if (loading) {
         return (
@@ -160,7 +196,7 @@ export default function DashboardAttendanceCard() {
                         </div>
                         <p className="text-xs text-slate-600 mt-0.5 truncate flex items-center gap-1">
                             <MapPin className="w-3 h-3 text-blue-600 shrink-0" />
-                            <span>Lokasi tervalidasi ({Math.round(record.jarak_meter_masuk || 0)}m dari kantor) • Jangan lupa Check-Out saat jam pulang ({policy?.jam_pulang || "17:00"} WIB)</span>
+                            <span>Lokasi tervalidasi ({Math.round(record.jarak_meter_masuk || 0)}m dari kantor) • Jangan lupa Check-Out saat jam pulang ({policy?.jam_pulang || "18:00"} WIB)</span>
                         </p>
                     </div>
                 </div>
@@ -194,7 +230,7 @@ export default function DashboardAttendanceCard() {
                     </div>
                     <p className="text-xs text-amber-800 mt-0.5 truncate flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
-                        <span>Jam masuk {policy?.jam_masuk || "08:30"} WIB (Toleransi {policy?.toleransi_menit || 15} mnt) • Workshop {policy?.nama_kantor || "Utama"}</span>
+                        <span>Jam masuk {policy?.jam_masuk || "09:00"} WIB (Toleransi {policy?.toleransi_menit || 15} mnt) • Workshop {policy?.nama_kantor || "Utama"}</span>
                     </p>
                 </div>
             </div>

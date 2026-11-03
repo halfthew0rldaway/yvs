@@ -108,11 +108,10 @@ async function fetchRealLocationAddress(lat, lon, isInRadius) {
 }
 
 export default function AttendancePage() {
-    const { user, isAdmin } = useAuth();
-    const isPimpinanOrAdmin = isAdmin || user?.role === "pimpinan";
+    const { user, isAdmin, isPimpinan, isPimpinanOrAdmin } = useAuth();
 
     // Active View Tab: 'today' | 'history' | 'leaves' | 'monitoring' | 'policy'
-    const [activeTab, setActiveTab] = useState("today");
+    const [activeTab, setActiveTab] = useState(user?.role === "pimpinan" ? "monitoring" : "today");
 
     // Live Clock State
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -211,8 +210,8 @@ export default function AttendancePage() {
         attendanceId: null,
         tanggal: "",
         targetStatus: "hadir", // "hadir" | "izin" | "sakit" | "alfa"
-        jam_masuk: "08:30",
-        jam_pulang: "17:00",
+        jam_masuk: "09:00",
+        jam_pulang: "18:00",
         reason: "",
         isSubmitting: false
     });
@@ -224,8 +223,8 @@ export default function AttendancePage() {
         step: 1, // 1: edit & review, 2: double confirmation anti-fraud
         tanggal: "",
         status: "hadir", // "hadir" | "izin" | "sakit" | "alfa"
-        jam_masuk: "08:30",
-        jam_pulang: "17:00",
+        jam_masuk: "09:00",
+        jam_pulang: "18:00",
         reason: "",
         selectedUsers: [],
         isSubmitting: false
@@ -237,9 +236,9 @@ export default function AttendancePage() {
         latitude: -6.274323,
         longitude: 106.977425,
         radius_meter: 100,
-        jam_masuk: "08:30",
+        jam_masuk: "09:00",
         toleransi_menit: 15,
-        jam_pulang: "17:00",
+        jam_pulang: "18:00",
         is_geofence_active: true,
         is_selfie_required: true
     });
@@ -674,17 +673,17 @@ export default function AttendancePage() {
                 setAdjustForm(prev => ({
                     ...prev,
                     status: "hadir",
-                    jam_masuk: "08:30",
-                    jam_pulang: "17:00",
-                    alasan_adjustment: "Koreksi kehadiran penuh tepat waktu (08:30 - 17:00) oleh admin"
+                    jam_masuk: "09:00",
+                    jam_pulang: "18:00",
+                    alasan_adjustment: "Koreksi kehadiran penuh tepat waktu (09:00 - 18:00) oleh admin"
                 }));
                 break;
             case "terlambat":
                 setAdjustForm(prev => ({
                     ...prev,
                     status: "terlambat",
-                    jam_masuk: "09:15",
-                    jam_pulang: "17:00",
+                    jam_masuk: "09:30",
+                    jam_pulang: "18:00",
                     alasan_adjustment: "Koreksi presensi keterlambatan oleh admin"
                 }));
                 break;
@@ -692,7 +691,7 @@ export default function AttendancePage() {
                 setAdjustForm(prev => ({
                     ...prev,
                     status: "pulang_cepat",
-                    jam_masuk: "08:30",
+                    jam_masuk: "09:00",
                     jam_pulang: "14:00",
                     alasan_adjustment: "Koreksi izin pulang lebih awal oleh admin"
                 }));
@@ -757,8 +756,8 @@ export default function AttendancePage() {
 
     // Quick Action Trigger (Membuka Dialog Double Konfirmasi)
     const startQuickAction = (row, targetStatus) => {
-        let defaultMasuk = "08:30";
-        let defaultPulang = "17:00";
+        let defaultMasuk = "09:00";
+        let defaultPulang = "18:00";
         let defaultReason = "";
 
         if (targetStatus === "hadir") {
@@ -857,8 +856,8 @@ export default function AttendancePage() {
             return;
         }
 
-        let defaultMasuk = "08:30";
-        let defaultPulang = "17:00";
+        let defaultMasuk = "09:00";
+        let defaultPulang = "18:00";
         if (targetStatus === "izin" || targetStatus === "sakit" || targetStatus === "alfa") {
             defaultMasuk = "";
             defaultPulang = "";
@@ -1137,6 +1136,34 @@ export default function AttendancePage() {
             {/* TAB 1: PRESENSI HARI INI */}
             {activeTab === "today" && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
+                    {/* Role Manajerial / Owner Exemption Banner */}
+                    {isPimpinan && (
+                        <div className="lg:col-span-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 border border-blue-200/90 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shrink-0">
+                                    <ShieldCheck className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="text-sm font-bold text-slate-900">Akses Manajerial & Owner (Bebas Presensi)</h4>
+                                        <span className="px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                            Fleksibel
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mt-0.5">
+                                        Sebagai pimpinan/owner, kehadiran Anda tidak dipantau dalam daftar alfa atau potongan payroll.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab("monitoring")}
+                                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
+                            >
+                                Pantau Presensi Tim &rarr;
+                            </button>
+                        </div>
+                    )}
                     {/* Left: GPS Geofence Status Card */}
                     <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1247,11 +1274,11 @@ export default function AttendancePage() {
                         <div className="text-xs text-slate-500 space-y-1.5 pt-1">
                             <div className="flex justify-between">
                                 <span>Jam Masuk:</span>
-                                <strong className="text-slate-800">{policy?.jam_masuk || "08:30"} WIB (Toleransi {policy?.toleransi_menit || 15}m)</strong>
+                                <strong className="text-slate-800">{policy?.jam_masuk || "09:00"} WIB (Toleransi {policy?.toleransi_menit || 15}m)</strong>
                             </div>
                             <div className="flex justify-between">
                                 <span>Jam Pulang:</span>
-                                <strong className="text-slate-800">{policy?.jam_pulang || "17:00"} WIB</strong>
+                                <strong className="text-slate-800">{policy?.jam_pulang || "18:00"} WIB</strong>
                             </div>
                         </div>
                     </div>
@@ -1317,7 +1344,7 @@ export default function AttendancePage() {
                                     ) : (
                                         <div className="py-3 text-center sm:text-left">
                                             <p className="text-xs text-slate-400 font-medium">Belum Check-In</p>
-                                            <p className="text-3xs text-slate-400 mt-0.5">Batas waktu {policy?.jam_masuk || "08:30"} WIB</p>
+                                            <p className="text-3xs text-slate-400 mt-0.5">Batas waktu {policy?.jam_masuk || "09:00"} WIB</p>
                                         </div>
                                     )}
                                 </div>
@@ -1361,7 +1388,7 @@ export default function AttendancePage() {
                                     ) : (
                                         <div className="py-3 text-center sm:text-left">
                                             <p className="text-xs text-slate-400 font-medium">Belum Check-Out</p>
-                                            <p className="text-3xs text-slate-400 mt-0.5">Selesai jam {policy?.jam_pulang || "17:00"} WIB</p>
+                                            <p className="text-3xs text-slate-400 mt-0.5">Selesai jam {policy?.jam_pulang || "18:00"} WIB</p>
                                         </div>
                                     )}
                                 </div>
@@ -1390,7 +1417,7 @@ export default function AttendancePage() {
                                                         ? "Izin Pulang Lebih Awal Disetujui Superadmin/Owner"
                                                         : todayRecord.status_review === "ditolak"
                                                             ? "Kepulangan Lebih Awal Ditolak"
-                                                            : `Pulang Lebih Awal Sebelum ${policy?.jam_pulang || "17:00"} WIB (Menunggu Verifikasi Owner)`
+                                                            : `Pulang Lebih Awal Sebelum ${policy?.jam_pulang || "18:00"} WIB (Menunggu Verifikasi Owner)`
                                                     : todayRecord.status_review === "valid"
                                                         ? "Presensi Tugas Luar Disetujui Superadmin/Owner"
                                                         : todayRecord.status_review === "ditolak"
@@ -1826,7 +1853,7 @@ export default function AttendancePage() {
                                     type="button"
                                     onClick={() => startBulkAction("hadir")}
                                     className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
-                                    title="Bulk Auto Hadir (08:30 - 17:00)"
+                                    title="Bulk Auto Hadir (09:00 - 18:00)"
                                 >
                                     <Zap className="w-3.5 h-3.5" />
                                     <span>Bulk Hadir</span>
@@ -1985,7 +2012,7 @@ export default function AttendancePage() {
                                                             type="button"
                                                             onClick={() => startQuickAction(row, "hadir")}
                                                             className="px-2 py-1 text-3xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all cursor-pointer whitespace-nowrap shadow-2xs"
-                                                            title="Quick Action: Auto Hadir (08:30 - 17:00)"
+                                                            title="Quick Action: Auto Hadir (09:00 - 18:00)"
                                                         >
                                                             + Hadir
                                                         </button>
@@ -2030,8 +2057,8 @@ export default function AttendancePage() {
                                                                     userName: row.user.nama,
                                                                     userRole: row.user.role,
                                                                     tanggal: filterDailyDate,
-                                                                    jam_masuk: row.attendance?.jam_masuk ? new Date(row.attendance.jam_masuk).toISOString().slice(11, 16) : "08:30",
-                                                                    jam_pulang: row.attendance?.jam_pulang ? new Date(row.attendance.jam_pulang).toISOString().slice(11, 16) : "17:00",
+                                                                    jam_masuk: row.attendance?.jam_masuk ? new Date(row.attendance.jam_masuk).toISOString().slice(11, 16) : "09:00",
+                                                                    jam_pulang: row.attendance?.jam_pulang ? new Date(row.attendance.jam_pulang).toISOString().slice(11, 16) : "18:00",
                                                                     status: row.attendance?.status || "hadir",
                                                                     alasan_adjustment: ""
                                                                 });
@@ -2676,7 +2703,7 @@ export default function AttendancePage() {
                                         Konfirmasi Pulang Lebih Awal
                                     </h3>
                                     <p className="text-2xs text-amber-900 font-medium">
-                                        Terdeteksi Check-Out sebelum pukul {policy?.jam_pulang || "17:00"} WIB
+                                        Terdeteksi Check-Out sebelum pukul {policy?.jam_pulang || "18:00"} WIB
                                     </p>
                                 </div>
                             </div>
@@ -2692,7 +2719,7 @@ export default function AttendancePage() {
                             <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 space-y-1">
                                 <p className="font-bold flex items-center gap-1.5">
                                     <Clock className="w-3.5 h-3.5 text-amber-700" />
-                                    <span>Jam Pulang Normal: {policy?.jam_pulang || "17:00"} WIB</span>
+                                    <span>Jam Pulang Normal: {policy?.jam_pulang || "18:00"} WIB</span>
                                 </p>
                                 <p className="text-2xs leading-relaxed text-amber-800">
                                     Anda sedang melakukan presensi pulang sebelum jam operasional berakhir. Sesuai SOP workshop, kepulangan lebih awal wajib menyertakan alasan yang jelas dan masuk ke daftar <strong>Wajib Review Superadmin / Owner</strong>.
@@ -2916,14 +2943,14 @@ export default function AttendancePage() {
                                     onClick={() => applyAdjustPreset("hadir_normal")}
                                     className="px-2 py-1.5 rounded-lg border text-2xs font-bold transition-all cursor-pointer bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200"
                                 >
-                                    Hadir Normal (08:30)
+                                    Hadir Normal (09:00)
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => applyAdjustPreset("terlambat")}
                                     className="px-2 py-1.5 rounded-lg border text-2xs font-bold transition-all cursor-pointer bg-white hover:bg-amber-50 text-amber-800 border-amber-200"
                                 >
-                                    Terlambat (09:15)
+                                    Terlambat (09:30)
                                 </button>
                                 <button
                                     type="button"
@@ -3091,7 +3118,7 @@ export default function AttendancePage() {
                                                 ? "bg-amber-50 text-amber-700 border-amber-200"
                                                 : "bg-rose-50 text-rose-700 border-rose-200"
                                         }`}>
-                                            {quickActionModal.targetStatus === "hadir" ? "HADIR (08:30 - 17:00)" : quickActionModal.targetStatus}
+                                            {quickActionModal.targetStatus === "hadir" ? "HADIR (09:00 - 18:00)" : quickActionModal.targetStatus}
                                         </span>
                                     </div>
                                 </div>
@@ -3282,7 +3309,7 @@ export default function AttendancePage() {
                                     <label className="block text-xs font-bold text-slate-700">Pilih Status Presensi Massal</label>
                                     <div className="grid grid-cols-4 gap-1.5">
                                         {[
-                                            { id: "hadir", label: "Hadir", desc: "08:30 - 17:00", color: "emerald" },
+                                            { id: "hadir", label: "Hadir", desc: "09:00 - 18:00", color: "emerald" },
                                             { id: "izin", label: "Izin", desc: "Resmi", color: "blue" },
                                             { id: "sakit", label: "Sakit", desc: "Surat Dokter", color: "amber" },
                                             { id: "alfa", label: "Alfa", desc: "Tanpa Ket.", color: "rose" }
@@ -3293,8 +3320,8 @@ export default function AttendancePage() {
                                                     key={item.id}
                                                     type="button"
                                                     onClick={() => {
-                                                        const defaultMasuk = item.id === "hadir" ? "08:30" : "";
-                                                        const defaultPulang = item.id === "hadir" ? "17:00" : "";
+                                                        const defaultMasuk = item.id === "hadir" ? "09:00" : "";
+                                                        const defaultPulang = item.id === "hadir" ? "18:00" : "";
                                                         setBulkAdjustModal(prev => ({
                                                             ...prev,
                                                             status: item.id,

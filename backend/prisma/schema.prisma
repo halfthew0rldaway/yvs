@@ -556,9 +556,9 @@ model AttendancePolicy {
   latitude           Float    @default(-6.274323)
   longitude          Float    @default(106.977425)
   radius_meter       Int      @default(100)
-  jam_masuk          String   @default("08:30") @db.VarChar(10)
+  jam_masuk          String   @default("09:00") @db.VarChar(10)
   toleransi_menit    Int      @default(15)
-  jam_pulang         String   @default("17:00") @db.VarChar(10)
+  jam_pulang         String   @default("18:00") @db.VarChar(10)
   is_geofence_active Boolean  @default(true)
   is_selfie_required Boolean  @default(true)
   updated_at         DateTime @updatedAt

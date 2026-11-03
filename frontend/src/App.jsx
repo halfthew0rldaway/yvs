@@ -54,11 +54,9 @@ function hasRoleAccess(userRole, allowedRoles) {
     if (!allowedRoles || allowedRoles.length === 0) return true;
     if (!userRole) return false;
     if (allowedRoles.includes(userRole)) return true;
-    // Hierarki superset:
-    // Pimpinan mewarisi semua akses admin & frontman
-    if (userRole === "pimpinan" && (allowedRoles.includes("admin") || allowedRoles.includes("frontman"))) return true;
-    // Admin mewarisi semua akses frontman meja depan
-    if (userRole === "admin" && allowedRoles.includes("frontman")) return true;
+    // Pembagian wewenang yang terpisah:
+    // Admin dan Pimpinan keduanya memiliki akses pelayanan frontman (meja depan / kasir)
+    if ((userRole === "admin" || userRole === "pimpinan") && allowedRoles.includes("frontman")) return true;
     return false;
 }
 
@@ -109,7 +107,7 @@ export default function App() {
                     <Route path="/tiket-servis/:id" element={<ProtectedRoute><TiketServisDetail /></ProtectedRoute>} />
                     <Route path="/tiket-servis/:id/diagnosis" element={<ProtectedRoute><DiagnosisForm /></ProtectedRoute>} />
                     <Route path="/tiket-servis/:id/log" element={<ProtectedRoute><LogPerbaikanList /></ProtectedRoute>} />
-                    <Route path="/retensi" element={<ProtectedRoute roles={["admin"]}><RetensiCrm /></ProtectedRoute>} />
+                    <Route path="/retensi" element={<ProtectedRoute roles={["admin", "pimpinan"]}><RetensiCrm /></ProtectedRoute>} />
                     <Route path="/loaner" element={<ProtectedRoute><LoanerList /></ProtectedRoute>} />
                     <Route path="/sparepart" element={<ProtectedRoute><SparepartList /></ProtectedRoute>} />
                     <Route path="/sparepart/tambah" element={<ProtectedRoute roles={["admin"]}><SparepartForm /></ProtectedRoute>} />
@@ -118,19 +116,19 @@ export default function App() {
                     <Route path="/rma/tambah" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
                     <Route path="/rma/create" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
                     <Route path="/rma/new" element={<ProtectedRoute><RmaForm /></ProtectedRoute>} />
-                    <Route path="/supplier" element={<ProtectedRoute roles={["admin"]}><SupplierList /></ProtectedRoute>} />
-                    <Route path="/suppliers" element={<ProtectedRoute roles={["admin"]}><SupplierList /></ProtectedRoute>} />
+                    <Route path="/supplier" element={<ProtectedRoute roles={["admin", "pimpinan"]}><SupplierList /></ProtectedRoute>} />
+                    <Route path="/suppliers" element={<ProtectedRoute roles={["admin", "pimpinan"]}><SupplierList /></ProtectedRoute>} />
                     <Route path="/invoice" element={<ProtectedRoute roles={["frontman", "admin"]}><InvoiceList /></ProtectedRoute>} />
                     <Route path="/invoice/tambah" element={<ProtectedRoute roles={["frontman", "admin"]}><InvoiceForm /></ProtectedRoute>} />
                     <Route path="/invoice/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />
-                    <Route path="/users" element={<ProtectedRoute roles={["admin"]}><UserList /></ProtectedRoute>} />
+                    <Route path="/users" element={<ProtectedRoute roles={["admin", "pimpinan"]}><UserList /></ProtectedRoute>} />
                     <Route path="/database" element={<ProtectedRoute roles={["admin"]}><DatabaseManagement /></ProtectedRoute>} />
-                    <Route path="/audit-log" element={<ProtectedRoute roles={["admin"]}><AuditLogList /></ProtectedRoute>} />
+                    <Route path="/audit-log" element={<ProtectedRoute roles={["admin", "pimpinan"]}><AuditLogList /></ProtectedRoute>} />
                     <Route path="/wiki" element={<ProtectedRoute><RepairWikiList /></ProtectedRoute>} />
                     <Route path="/attendance" element={<ProtectedRoute><AttendancePage /></ProtectedRoute>} />
-                    <Route path="/recruitment" element={<ProtectedRoute roles={["admin"]}><RecruitmentDashboard /></ProtectedRoute>} />
-                    <Route path="/recruitment/jobs/tambah" element={<ProtectedRoute roles={["admin"]}><JobPostingForm /></ProtectedRoute>} />
-                    <Route path="/recruitment/jobs/edit/:id" element={<ProtectedRoute roles={["admin"]}><JobPostingForm /></ProtectedRoute>} />
+                    <Route path="/recruitment" element={<ProtectedRoute roles={["admin", "pimpinan"]}><RecruitmentDashboard /></ProtectedRoute>} />
+                    <Route path="/recruitment/jobs/tambah" element={<ProtectedRoute roles={["admin", "pimpinan"]}><JobPostingForm /></ProtectedRoute>} />
+                    <Route path="/recruitment/jobs/edit/:id" element={<ProtectedRoute roles={["admin", "pimpinan"]}><JobPostingForm /></ProtectedRoute>} />
 
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
