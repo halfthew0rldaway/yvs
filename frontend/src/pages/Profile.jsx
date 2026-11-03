@@ -33,9 +33,34 @@ export default function Profile() {
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [removingPhoto, setRemovingPhoto] = useState(false);
     const [adjustImageSrc, setAdjustImageSrc] = useState(null);
+    const [isDraggingOverAvatar, setIsDraggingOverAvatar] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleAvatarDrop = (e) => {
+        e.preventDefault();
+        setIsDraggingOverAvatar(false);
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Format file harus berupa gambar JPG, PNG, atau WEBP.");
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("Ukuran file maksimal sebelum penyesuaian adalah 10 MB.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            setAdjustImageSrc(reader.result);
+        };
+        reader.readAsDataURL(file);
     };
 
     const handlePhotoSelect = (e) => {
@@ -148,13 +173,25 @@ export default function Profile() {
                     {/* Sidebar Profile Card & Avatar Uploader */}
                     <div className="md:w-80 bg-slate-50/80 p-6 sm:p-8 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col items-center justify-center text-center">
                         
-                        {/* Interactive Avatar Wrapper */}
-                        <div className="relative group mb-4">
-                            <div className="relative w-28 h-28 rounded-full overflow-hidden ring-4 ring-white shadow-md bg-white flex items-center justify-center">
+                        {/* Interactive Avatar Wrapper with Drag & Drop */}
+                        <div 
+                            className="relative group mb-4"
+                            onDragOver={(e) => { e.preventDefault(); setIsDraggingOverAvatar(true); }}
+                            onDragLeave={() => setIsDraggingOverAvatar(false)}
+                            onDrop={handleAvatarDrop}
+                        >
+                            <div className={`relative w-28 h-28 rounded-full overflow-hidden ring-4 ${
+                                isDraggingOverAvatar ? "ring-blue-500 scale-105" : "ring-white"
+                            } shadow-md bg-white flex items-center justify-center transition-all`}>
                                 {uploadingPhoto ? (
                                     <div className="w-full h-full bg-slate-900/60 flex flex-col items-center justify-center text-white gap-1.5">
                                         <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                         <span className="text-3xs font-semibold">Mengunggah...</span>
+                                    </div>
+                                ) : isDraggingOverAvatar ? (
+                                    <div className="w-full h-full bg-blue-600/90 flex flex-col items-center justify-center text-white gap-1 p-2">
+                                        <Upload className="w-6 h-6 animate-bounce" />
+                                        <span className="text-3xs font-bold leading-tight">Lepas Di Sini</span>
                                     </div>
                                 ) : (
                                     <UserAvatar 

@@ -39,9 +39,21 @@ export default function ProfilePhotoAdjustModal({
     const panStartRef = useRef({ x: 0, y: 0 });
     const pinchStartDistRef = useRef(null);
     const zoomStartRef = useRef(1);
+    const viewportRef = useRef(null);
 
     // Live preview canvas ref
     const miniPreviewCanvasRef = useRef(null);
+
+    // Keyboard navigation (Escape to close)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape" && !isSubmitting) {
+                onClose?.();
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [onClose, isSubmitting]);
 
     // 1. Load image and compute initial scale
     useEffect(() => {
@@ -113,15 +125,25 @@ export default function ProfilePhotoAdjustModal({
         setIsDragging(false);
     };
 
-    // Wheel to Zoom
-    const handleWheel = (e) => {
-        e.preventDefault();
-        if (!imageObj) return;
-        const zoomDelta = -e.deltaY * 0.0015;
-        const nextZoom = Math.max(1, Math.min(3, zoom + zoomDelta));
-        setZoom(nextZoom);
-        setPan(prev => clampPan(prev, nextZoom, rotation, imageObj));
-    };
+    // Non-passive wheel event listener to avoid browser warnings
+    useEffect(() => {
+        const vp = viewportRef.current;
+        if (!vp) return;
+
+        const onWheelEvent = (e) => {
+            e.preventDefault();
+            if (!imageObj) return;
+            const zoomDelta = -e.deltaY * 0.0015;
+            setZoom((prev) => {
+                const nextZoom = Math.max(1, Math.min(3, prev + zoomDelta));
+                setPan((p) => clampPan(p, nextZoom, rotation, imageObj));
+                return nextZoom;
+            });
+        };
+
+        vp.addEventListener("wheel", onWheelEvent, { passive: false });
+        return () => vp.removeEventListener("wheel", onWheelEvent);
+    }, [imageObj, rotation, clampPan]);
 
     // Touch handlers for mobile/trackpad pinch
     const handleTouchStart = (e) => {
@@ -302,11 +324,11 @@ export default function ProfilePhotoAdjustModal({
                 {/* Interactive Crop Viewport */}
                 <div className="p-5 flex flex-col items-center bg-slate-900/5">
                     <div
+                        ref={viewportRef}
                         className="relative overflow-hidden rounded-2xl bg-slate-950 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none shadow-inner"
                         style={{ width: VIEWPORT_SIZE, height: VIEWPORT_SIZE }}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
-                        onWheel={handleWheel}
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
                     >
@@ -477,3 +499,4 @@ export default function ProfilePhotoAdjustModal({
         </div>
     );
 }
+
