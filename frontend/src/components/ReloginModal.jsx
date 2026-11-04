@@ -37,7 +37,8 @@ export default function ReloginModal({ isOpen, reason = "idle", onSuccess, onLog
         try {
             const rememberMe = isRememberMeActive();
             const res = await api.post("/auth/login", {
-                email: user.email,
+                username: user.username || user.email,
+                email: user.email || user.username,
                 password,
                 rememberMe
             });

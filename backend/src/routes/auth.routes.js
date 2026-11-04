@@ -12,7 +12,13 @@ router.post(
     "/login",
     authLimiter,
     [
-        body("email").notEmpty().withMessage("Email wajib diisi"),
+        body().custom((_, { req }) => {
+            const identifier = req.body?.username || req.body?.email;
+            if (!identifier || !String(identifier).trim()) {
+                throw new Error("Username atau email wajib diisi");
+            }
+            return true;
+        }),
         body("password").notEmpty().withMessage("Password wajib diisi"),
     ],
     validate,
