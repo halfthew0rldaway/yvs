@@ -133,6 +133,122 @@ const CustomerRow = memo(function CustomerRow({
         </tr>
     );
 });
+/**
+ * Mobile Card view for Customer list (< sm breakpoint).
+ * Table columns flatten into a stacked, tappable card so nothing overflows.
+ */
+const CustomerCard = memo(function CustomerCard({
+    customer,
+    rowNumber,
+    onSelect,
+    onDelete,
+    onRestore,
+    onCustomerUpdated
+}) {
+    const personality = PERSONALITY_TYPES[customer.tipe_kepribadian] || PERSONALITY_TYPES["Netral"];
+    const isArchived = customer.is_active === false;
+
+    return (
+        <div
+            onClick={(e) => {
+                if (!e.currentTarget.contains(e.target)) return;
+                if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                onSelect(customer.id);
+            }}
+            className={`p-3.5 border-b border-slate-100 last:border-b-0 active:bg-blue-50/60 transition-colors cursor-pointer ${
+                isArchived ? "bg-slate-50/60" : ""
+            }`}
+        >
+            {/* Title row */}
+            <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-3xs font-mono text-slate-400 shrink-0">#{rowNumber}</span>
+                        <button
+                            type="button"
+                            onClick={() => onSelect(customer.id)}
+                            className={`font-bold text-sm text-left truncate cursor-pointer ${
+                                isArchived ? "text-slate-600 line-through decoration-slate-400" : "text-slate-900"
+                            }`}
+                        >
+                            {customer.nama}
+                        </button>
+                        {isArchived && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-4xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                <Archive className="w-2.5 h-2.5" />
+                                Arsip
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-2xs text-slate-500 font-mono mt-0.5">{customer.nomor_telepon || "-"}</p>
+                </div>
+                <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <CustomerBadges
+                        customer={customer}
+                        variant="icon-only"
+                        size="normal"
+                        onCustomerUpdated={onCustomerUpdated}
+                    />
+                </div>
+            </div>
+
+            {/* Meta row */}
+            <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-semibold border ${personality.badge}`}>
+                    {personality.label}
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-3xs">
+                    <MonitorSmartphone className="w-3 h-3 shrink-0" />
+                    {customer.perangkat?.length || 0} Unit
+                </span>
+            </div>
+
+            {customer.alamat && (
+                <p className="text-3xs text-slate-500 mt-1.5 line-clamp-2">{customer.alamat}</p>
+            )}
+
+            {/* Action row */}
+            <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-slate-100/80">
+                <button
+                    type="button"
+                    onClick={() => onSelect(customer.id)}
+                    className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                    title="Lihat Detail Customer & Perangkat"
+                >
+                    <Eye className="w-4 h-4" />
+                </button>
+                <Link
+                    to={`/customer/edit/${customer.id}`}
+                    className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                    title="Edit"
+                >
+                    <Edit2 className="w-4 h-4" />
+                </Link>
+                {isArchived ? (
+                    <button
+                        type="button"
+                        onClick={() => onRestore(customer)}
+                        className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                        title="Aktifkan Kembali Pelanggan (Restore)"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() => onDelete(customer)}
+                        className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        title="Arsipkan / Hapus"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+});
+
+
 
 export default function CustomerList() {
     const navigate = useNavigate();
@@ -564,22 +680,11 @@ export default function CustomerList() {
                         onAction={hasActiveFilters ? handleResetAllFilters : () => navigate("/customer/tambah")}
                     />
                 ) : (
-                    <table className="w-full text-sm text-left whitespace-nowrap">
-                        <thead className="table-header">
-                            <tr>
-                                <th className="px-6 py-3.5 w-16">No</th>
-                                <th className="px-6 py-3.5">Nama Pelanggan</th>
-                                <th className="px-6 py-3.5">Reputasi & Badge</th>
-                                <th className="px-6 py-3.5">Tipologi Karakter</th>
-                                <th className="px-6 py-3.5">Nomor Telepon</th>
-                                <th className="px-6 py-3.5">Alamat</th>
-                                <th className="px-6 py-3.5 text-center">Unit Perangkat</th>
-                                <th className="px-6 py-3.5 text-right w-28">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
+                    <>
+                        {/* Mobile Card View (< sm) */}
+                        <div className="sm:hidden">
                             {customers.map((c, i) => (
-                                <CustomerRow
+                                <CustomerCard
                                     key={c.id}
                                     customer={c}
                                     rowNumber={(currentPage - 1) * pageSize + i + 1}
@@ -589,8 +694,37 @@ export default function CustomerList() {
                                     onCustomerUpdated={handleCustomerUpdated}
                                 />
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+
+                        {/* Desktop Table View (>= sm) */}
+                        <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
+                            <thead className="table-header">
+                                <tr>
+                                    <th className="px-6 py-3.5 w-16">No</th>
+                                    <th className="px-6 py-3.5">Nama Pelanggan</th>
+                                    <th className="px-6 py-3.5">Reputasi & Badge</th>
+                                    <th className="px-6 py-3.5">Tipologi Karakter</th>
+                                    <th className="px-6 py-3.5">Nomor Telepon</th>
+                                    <th className="px-6 py-3.5">Alamat</th>
+                                    <th className="px-6 py-3.5 text-center">Unit Perangkat</th>
+                                    <th className="px-6 py-3.5 text-right w-28">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {customers.map((c, i) => (
+                                    <CustomerRow
+                                        key={c.id}
+                                        customer={c}
+                                        rowNumber={(currentPage - 1) * pageSize + i + 1}
+                                        onSelect={handleSelectCustomer}
+                                        onDelete={handleDeleteClick}
+                                        onRestore={handleRestoreClick}
+                                        onCustomerUpdated={handleCustomerUpdated}
+                                    />
+                                ))}
+                            </tbody>
+                        </table>
+                    </>
                 )}
             </TableContainer>
 

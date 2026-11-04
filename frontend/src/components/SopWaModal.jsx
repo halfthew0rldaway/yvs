@@ -368,16 +368,17 @@ Terima kasih atas kepercayaan Anda kepada YVS.
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="modal-shell">
             {/* 60fps Hardware-Accelerated Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
                 onClick={onClose} 
             />
 
-            <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full flex flex-col max-h-[92vh] overflow-hidden modal-surface z-10">
+            <div className="modal-panel max-w-2xl z-10">
+                <div className="modal-grabber" />
                 {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/50 gap-2">
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
                             <MessageSquare className="w-5 h-5" />
@@ -398,7 +399,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                 </div>
 
                 {/* Content */}
-                <div className="p-5 overflow-y-auto space-y-4 custom-scrollbar">
+                <div className="modal-body-tight space-y-3.5 sm:space-y-4">
                     {/* Scenario Tabs */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">

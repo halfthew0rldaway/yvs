@@ -7,16 +7,17 @@ export default function SopModal({ isOpen, onClose }) {
     const [activeTab, setActiveTab] = useState("motto");
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="modal-shell">
             {/* 60fps Hardware-Accelerated Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
                 onClick={onClose} 
             />
 
-            <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200 max-w-3xl w-full flex flex-col max-h-[92vh] overflow-hidden modal-surface z-10">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-3xl z-10">
+                <div className="modal-grabber" />
                 {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/70">
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/70 gap-2">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
                             <BookOpen className="w-5 h-5" />
@@ -101,7 +102,7 @@ export default function SopModal({ isOpen, onClose }) {
                 </div>
 
                 {/* Tab Content */}
-                <div className="p-6 overflow-y-auto space-y-5 custom-scrollbar text-xs leading-relaxed text-slate-700">
+                <div className="modal-body space-y-4 sm:space-y-5 text-xs leading-relaxed text-slate-700">
                     {/* Tab 1: Motto & Sikap Dasar */}
                     {activeTab === "motto" && (
                         <div className="space-y-4">

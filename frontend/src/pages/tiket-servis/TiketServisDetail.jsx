@@ -3408,7 +3408,7 @@ export default function TiketServisDetail() {
 
             {/* Media Preview Modal (Lightbox Foto & Video) */}
             {selectedImage && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 animate-in fade-in" onClick={() => setSelectedImage(null)}>
+                <div className="modal-shell z-[100] bg-slate-950/90 backdrop-blur-md animate-in fade-in" onClick={() => setSelectedImage(null)}>
                     <button 
                         className="absolute top-6 right-6 p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-md cursor-pointer shadow-lg"
                         onClick={() => setSelectedImage(null)}
@@ -3438,8 +3438,9 @@ export default function TiketServisDetail() {
 
             {/* Feature 2.1: Handover QC Inspection Modal (Standar WOW Service) */}
             {isQcModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full flex flex-col max-h-[92vh] overflow-hidden">
+                <div className="modal-shell bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
+                    <div className="modal-panel max-w-2xl">
+                    <div className="modal-grabber" />
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
                             <div className="flex items-center gap-2.5">
@@ -3639,7 +3640,7 @@ export default function TiketServisDetail() {
 
             {/* Modal Konfirmasi Persetujuan Pelanggan & Estimasi SLA Pengerjaan Servis */}
             {isAccModalOpen && (
-                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
                     <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
                         {/* Header */}
                         <div className="p-5 border-b border-slate-100 flex items-start justify-between gap-4 bg-slate-50/50">
@@ -3666,7 +3667,7 @@ export default function TiketServisDetail() {
                         </div>
 
                         {/* Body */}
-                        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+                        <div className="modal-body space-y-4 sm:space-y-5">
                             {/* Ringkasan Penawaran */}
                             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
                                 <div className="flex items-center justify-between text-slate-600">
@@ -3867,7 +3868,7 @@ export default function TiketServisDetail() {
 
             {/* Feature 2.2: Modal Pembatalan Tiket Servis */}
             {isCancelModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs animate-fade-in">
                     <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden my-auto">
                         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
                             <div className="flex items-center gap-2.5">

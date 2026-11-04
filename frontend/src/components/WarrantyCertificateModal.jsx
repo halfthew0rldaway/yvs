@@ -102,7 +102,7 @@ export default function WarrantyCertificateModal({
     };
 
     const modalContent = (
-        <div className="fixed inset-0 z-[999] overflow-y-auto flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm print:p-0 print:bg-white print:static print:inset-auto print:overflow-visible">
+        <div className="modal-shell z-[999] bg-slate-900/60 backdrop-blur-sm print:p-0 print:bg-white print:static print:inset-auto print:overflow-visible">
             {/* Inline Print Styles (Landscape Orientation) */}
             <style>{`
                 @page {
@@ -150,7 +150,8 @@ export default function WarrantyCertificateModal({
             `}</style>
 
             {/* Modal Dialog Card (Landscape Max-Width) */}
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-slate-200">
+            <div className="modal-panel max-w-5xl z-10 print:max-h-none print:rounded-none print:border-none print:shadow-none">
+                <div className="modal-grabber no-print" />
                 {/* Control Action Bar (Screen Only - Clean Light Modern Header) */}
                 <div className="no-print px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-3 min-w-0">

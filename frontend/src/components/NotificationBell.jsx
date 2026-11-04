@@ -227,8 +227,10 @@ export default function NotificationBell() {
 
             {/* Modal Kirim Memo Kolaborasi */}
             {isMemoModalOpen && (
-                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+                <div className="modal-shell z-50 bg-slate-900/40 backdrop-blur-xs">
+                    <div className="modal-panel max-w-md border-slate-100">
+                        <div className="modal-grabber" />
+                        <div className="modal-body-tight">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
@@ -290,6 +292,7 @@ export default function NotificationBell() {
                                 </button>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             )}

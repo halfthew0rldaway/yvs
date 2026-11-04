@@ -121,8 +121,9 @@ export default function DefectMapperModal({
     const currentDefectMeta = DEFECT_TYPES.find(d => d.id === selectedType) || DEFECT_TYPES[0];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-            <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+        <div className="modal-shell bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+            <div className="modal-panel max-w-4xl z-10">
+                <div className="modal-grabber" />
                 
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/80 gap-3">
@@ -201,7 +202,7 @@ export default function DefectMapperModal({
                 </div>
 
                 {/* Main Content Area: Canvas + Sidebar */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col lg:flex-row gap-5">
+                <div className="modal-body flex flex-col lg:flex-row gap-4 sm:gap-5">
                     
                     {/* Canvas Container */}
                     <div className="flex-1 flex flex-col items-center justify-center">

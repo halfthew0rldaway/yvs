@@ -178,7 +178,7 @@ export default function RestockManifestModal({ isOpen, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div className="modal-shell">
             {/* Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
@@ -186,10 +186,11 @@ export default function RestockManifestModal({ isOpen, onClose }) {
             ></div>
 
             {/* Modal Dialog (60fps Spring Modal Surface) */}
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden z-10 border border-slate-200 modal-surface">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-5xl z-10">
+                <div className="modal-grabber" />
                 
                 {/* Header */}
-                <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 shrink-0">
                             <ShoppingCart className="w-5 h-5 text-emerald-600" />

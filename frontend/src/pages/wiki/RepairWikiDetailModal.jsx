@@ -26,11 +26,12 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-            <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[90vh]">
+        <div className="modal-shell bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-3xl z-10">
+                <div className="modal-grabber" />
                 
                 {/* Header */}
-                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/80">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-slate-100 bg-slate-50/80">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -81,7 +82,7 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
                 </div>
 
                 {/* Body Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-5 text-sm">
+                <div className="modal-body space-y-4 sm:space-y-5 text-sm">
                     
                     {/* Gejala Kerusakan */}
                     <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-100">
@@ -134,7 +135,7 @@ export default function RepairWikiDetailModal({ isOpen, onClose, wiki, onEdit, o
                 </div>
 
                 {/* Footer Actions */}
-                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/80">
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/80 gap-2">
                     <div className="flex items-center gap-2">
                         {canModify && (
                             <>

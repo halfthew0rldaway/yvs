@@ -418,7 +418,136 @@ export default function RmaList() {
                         }
                     />
                 ) : (
-                    <table className="w-full text-sm text-left whitespace-nowrap">
+                    <>
+                        {/* Mobile Card View (< sm) */}
+                        <div className="sm:hidden divide-y divide-slate-100">
+                            {filteredRma.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item) => {
+                                const statusCfg = RMA_STATUS_CONFIG[item.status] || RMA_STATUS_CONFIG.diajukan;
+                                const StatusIcon = statusCfg.icon;
+                                const isFromTicket = item.tipe_sumber === "tiket_user" || item.tiket_id;
+
+                                return (
+                                    <div
+                                        key={item.id}
+                                        onClick={(e) => {
+                                            if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                            handleOpenUpdateModal(item);
+                                        }}
+                                        className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+                                    >
+                                        {/* Header: nomor + tanggal + status */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-mono font-bold text-xs text-slate-900 truncate">{item.nomor_rma}</p>
+                                                <p className="text-3xs text-slate-500 mt-0.5">
+                                                    {new Date(item.tgl_pengajuan || item.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                                </p>
+                                            </div>
+                                            <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold border whitespace-nowrap ${statusCfg.color}`}>
+                                                <StatusIcon className="w-3 h-3 shrink-0" />
+                                                <span>{statusCfg.label}</span>
+                                            </span>
+                                        </div>
+
+                                        {/* Sparepart info */}
+                                        <div className="mt-1.5">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <p className="font-semibold text-sm text-slate-800 truncate min-w-0">{item.sparepart?.nama}</p>
+                                                <span className="shrink-0 text-3xs font-bold text-blue-600">{item.jumlah} Pcs</span>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-1.5 text-3xs text-slate-500 mt-0.5">
+                                                <span className="truncate">Brand: {item.sparepart?.brand?.nama || "-"}</span>
+                                                {item.serial_number_lama && (
+                                                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 truncate max-w-full">
+                                                        SN: {item.serial_number_lama}
+                                                    </span>
+                                                )}
+                                                {item.serial_number_baru && (
+                                                    <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-mono truncate max-w-full">
+                                                        <Sparkles className="w-3 h-3 text-emerald-600 shrink-0" />
+                                                        SN Pengganti: {item.serial_number_baru}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Source + distributor */}
+                                        <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t border-slate-100/80">
+                                            {isFromTicket ? (
+                                                <>
+                                                    <span className="px-1.5 py-0.5 rounded text-3xs font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+                                                        Tiket Servis
+                                                    </span>
+                                                    <span className="text-3xs font-semibold text-slate-800 truncate max-w-[45%]">
+                                                        {item.customer_nama || item.tiket?.perangkat?.customer?.nama || "Pelanggan Toko"}
+                                                    </span>
+                                                </>
+                                            ) : item.tipe_sumber === "retail_customer" ? (
+                                                <>
+                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-3xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                                        <ShoppingBag className="w-3 h-3 text-emerald-600 shrink-0" />
+                                                        <span>Retail</span>
+                                                    </span>
+                                                    <span className="text-3xs font-semibold text-slate-800 truncate max-w-[45%]">
+                                                        {item.customer_nama || "Pelanggan Lepas"}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-3xs font-bold bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
+                                                    <Package className="w-3 h-3 text-slate-500 shrink-0" />
+                                                    <span>Stok Bengkel</span>
+                                                </span>
+                                            )}
+                                            <span className="inline-flex items-center gap-1 text-3xs text-slate-500 min-w-0">
+                                                <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
+                                                <span className="truncate">{item.supplier_nama}</span>
+                                            </span>
+                                        </div>
+
+                                        {/* Shipping + actions */}
+                                        <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100/80">
+                                            <p className="text-3xs text-slate-500 font-mono truncate min-w-0">
+                                                {item.resi_pengiriman
+                                                    ? `${item.kurir_pengiriman || "Kurir"}: ${item.resi_pengiriman}`
+                                                    : "Belum ada resi"}
+                                            </p>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenUpdateModal(item)}
+                                                    className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 text-slate-700 rounded-lg text-3xs font-bold whitespace-nowrap"
+                                                    title="Update Status / Resi / Penyelesaian"
+                                                >
+                                                    Update
+                                                    <ArrowRight className="w-3 h-3 text-slate-400" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPrintTarget(item)}
+                                                    className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Cetak Surat Jalan Retur RMA"
+                                                >
+                                                    <Printer className="w-4 h-4" />
+                                                </button>
+                                                {isAdmin && item.status === "diajukan" && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDeleteTarget(item)}
+                                                        className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Hapus / Batalkan Klaim"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Desktop Table View (>= sm) */}
+                        <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5">No. RMA & Tanggal</th>
@@ -612,14 +741,16 @@ export default function RmaList() {
                             })}
                         </tbody>
                     </table>
+                    </>
                 )}
             </TableContainer>
 
             {/* MODAL: UPDATE STATUS & PENYELESAIAN RMA */}
             {updateTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[92vh] flex flex-col">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
+                    <div className="modal-panel max-w-lg">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 gap-2">
                             <div>
                                 <h3 className="font-bold text-slate-900 text-base">Update Status & Resolusi RMA</h3>
                                 <p className="text-xs text-slate-500 font-mono">{updateTarget.nomor_rma} - {updateTarget.sparepart?.nama}</p>
@@ -752,7 +883,7 @@ export default function RmaList() {
 
             {/* MODAL: CETAK SURAT JALAN RMA */}
             {printTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
                     <style>{`
                         @media print {
                             body * { visibility: hidden !important; }
@@ -768,8 +899,9 @@ export default function RmaList() {
                             }
                         }
                     `}</style>
-                    <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div className="modal-panel max-w-xl">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 gap-2">
                             <div className="flex items-center gap-2">
                                 <Printer className="w-5 h-5 text-blue-600" />
                                 <h3 className="font-bold text-slate-900 text-base">Surat Jalan Retur Garansi (RMA Slip)</h3>
@@ -854,7 +986,7 @@ export default function RmaList() {
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-4 text-center pt-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center pt-6">
                                     <div>
                                         <p className="text-2xs text-slate-600 mb-10">Yang Mengajukan (YVS)</p>
                                         <p className="font-bold text-xs border-t border-slate-300 pt-1">({printTarget.created_by_nama || user?.nama})</p>

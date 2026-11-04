@@ -60,12 +60,13 @@ export default function ReloginModal({ isOpen, reason = "idle", onSuccess, onLog
 
     return (
         <div 
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/75 backdrop-blur-md p-4 animate-in fade-in duration-200"
+            className="modal-shell z-[9999] bg-slate-900/75 backdrop-blur-md animate-in fade-in duration-200"
             role="dialog"
             aria-modal="true"
             aria-labelledby="relogin-title"
         >
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800">
+            <div className="modal-panel max-w-md z-10 text-slate-800">
+                <div className="modal-grabber" />
                 {/* Header Decoration */}
                 <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-6 py-6 text-white text-center relative">
                     <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl mx-auto flex items-center justify-center border border-white/20 shadow-inner mb-3">

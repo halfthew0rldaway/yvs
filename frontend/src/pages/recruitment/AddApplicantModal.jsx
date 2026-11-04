@@ -90,17 +90,18 @@ export default function AddApplicantModal({ isOpen, onClose, jobs = [], onSucces
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <div className="modal-shell">
             {/* 60fps Hardware-Accelerated Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop" 
                 onClick={onClose} 
             />
 
-            <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] modal-surface z-10">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-2xl z-10">
+                <div className="modal-grabber" />
                 
                 {/* Header */}
-                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between gap-2 sm:gap-3">
                     <div className="flex items-center gap-3.5">
                         <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shadow-xs shrink-0">
                             <UserPlus className="w-5 h-5" />
@@ -124,7 +125,7 @@ export default function AddApplicantModal({ isOpen, onClose, jobs = [], onSucces
                 </div>
 
                 {/* Form Body */}
-                <form onSubmit={handleSubmit} className="p-6 sm:p-7 overflow-y-auto space-y-5">
+                <form onSubmit={handleSubmit} className="modal-body space-y-4 sm:space-y-5">
                     
                     {/* Bagian 1: Posisi & Sumber Lamaran */}
                     <div className="space-y-4">

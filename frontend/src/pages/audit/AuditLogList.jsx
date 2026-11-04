@@ -603,7 +603,63 @@ export default function AuditLogList() {
                         onAction={hasActiveFilters ? handleResetFilters : undefined}
                     />
                 ) : (
-                    <table className="w-full text-xs text-left whitespace-nowrap">
+                    <>
+                        {/* Mobile Card View (< sm) */}
+                        <div className="sm:hidden divide-y divide-slate-100">
+                            {logs.map((log) => {
+                                const entityInfo = ENTITY_CONFIG[log.entity] || ENTITY_CONFIG.sistem;
+                                const Icon = entityInfo.icon;
+                                const actionType = getActionBadge(log.action);
+                                const ActionIcon = actionType.icon;
+
+                                const dateObj = new Date(log.created_at);
+                                const dateStr = dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+                                const timeStr = dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+                                return (
+                                    <div
+                                        key={log.id}
+                                        onClick={() => setSelectedLog(log)}
+                                        className="p-3.5 active:bg-slate-50 transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-3xs shrink-0">
+                                                    {(log.user_nama || "S").charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-slate-800 text-xs truncate">{log.user_nama || "Sistem"}</p>
+                                                    <span className="text-3xs text-slate-400 uppercase font-semibold block leading-tight">
+                                                        {log.user?.role || "System"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-black uppercase tracking-wider border ${actionType.color}`}>
+                                                <ActionIcon className="w-2.5 h-2.5 shrink-0" />
+                                                <span>{actionType.label}</span>
+                                            </span>
+                                        </div>
+
+                                        <p className="text-xs text-slate-800 font-medium mt-1.5 line-clamp-2">{log.action}</p>
+
+                                        <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100/80">
+                                            <div className="flex items-center gap-1.5 min-w-0 text-3xs text-slate-500 font-mono">
+                                                <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                                                <span className="font-semibold text-slate-700">{dateStr}</span>
+                                                <span className="text-slate-400">{timeStr}</span>
+                                            </div>
+                                            <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-semibold border ${entityInfo.color}`}>
+                                                <Icon className="w-3 h-3 shrink-0" />
+                                                <span>{entityInfo.label}</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Desktop Table View (>= sm) */}
+                        <table className="hidden sm:table w-full text-xs text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-4 py-3">Waktu & Tanggal</th>
@@ -694,13 +750,15 @@ export default function AuditLogList() {
                             })}
                         </tbody>
                     </table>
+                    </>
                 )}
             </TableContainer>
 
             {/* Modal Detail Log Audit */}
             {selectedLog && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-                    <div className="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+                <div className="modal-shell bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
+                    <div className="modal-panel max-w-lg space-y-3 sm:space-y-4">
+                        <div className="modal-grabber" />
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div className="flex items-center gap-2">
                                 <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
@@ -795,8 +853,9 @@ export default function AuditLogList() {
 
             {/* Modal Housekeeping / Pembersihan Log */}
             {showCleanupModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-                    <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+                <div className="modal-shell bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
+                    <div className="modal-panel max-w-md space-y-3 sm:space-y-4">
+                        <div className="modal-grabber" />
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl shrink-0">
                                 <Trash2 className="w-5 h-5 text-rose-600" />

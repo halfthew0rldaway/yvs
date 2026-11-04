@@ -154,7 +154,7 @@ export default function InvoiceModal({
     };
 
     const modalContent = (
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 print:p-0 print:bg-white print:static print:inset-auto print:overflow-visible invoice-modal-overlay">
+        <div className="modal-shell z-[9999] bg-slate-950/70 backdrop-blur-xs print:p-0 print:bg-white print:static print:inset-auto print:overflow-visible invoice-modal-overlay">
             {/* Print Stylesheet for flawless 1-page A4 Portrait printing without background bleed */}
             <style>{`
                 @media print {
@@ -212,7 +212,8 @@ export default function InvoiceModal({
                 }
             `}</style>
 
-            <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden my-auto flex flex-col max-h-[95vh] print:max-h-none print:h-auto print:rounded-none print:border-none print:shadow-none printable-invoice-modal">
+            <div className="modal-panel max-w-4xl z-10 print:max-h-none print:h-auto print:rounded-none print:border-none print:shadow-none printable-invoice-modal">
+                <div className="modal-grabber no-print" />
                 {/* Modal Top Header (Screen Only) */}
                 <div className="no-print px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-2.5">

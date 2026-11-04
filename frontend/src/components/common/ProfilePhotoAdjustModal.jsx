@@ -287,16 +287,16 @@ export default function ProfilePhotoAdjustModal({
 
     return (
         <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs select-none animate-in fade-in duration-200"
+            className="modal-shell bg-slate-900/70 backdrop-blur-xs select-none animate-in fade-in duration-200"
             onMouseUp={handleMouseUp}
             onTouchEnd={handleTouchEnd}
         >
             <div 
-                className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden flex flex-col"
+                className="modal-panel max-w-md border-slate-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Modal Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/60">
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/60 gap-2">
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
                             <Sparkles className="w-4 h-4" />

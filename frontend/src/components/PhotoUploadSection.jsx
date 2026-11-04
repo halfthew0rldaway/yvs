@@ -523,10 +523,10 @@ export default function PhotoUploadSection({
                         setPreviewMedia(null);
                         setZoomScale(1);
                     }}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in"
+                    className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in overflow-y-auto"
                 >
                     <div 
-                        className="relative max-w-5xl w-full max-h-[92vh] flex flex-col items-center justify-center select-none" 
+                        className="relative max-w-5xl w-full max-h-[92dvh] my-auto flex flex-col items-center justify-center select-none" 
                         onClick={(e) => e.stopPropagation()}
                     >
                         {previewMedia.isVideo ? (

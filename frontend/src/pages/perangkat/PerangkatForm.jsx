@@ -640,15 +640,16 @@ export default function PerangkatForm() {
             {/* Double Confirmation Modal for Crucial Device Data Edit */}
             {isConfirmModalOpen && (
                 <div 
-                    className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+                    className="modal-shell modal-backdrop bg-slate-900/60 backdrop-blur-xs"
                     onClick={() => setIsConfirmModalOpen(false)}
                 >
                     <div 
-                        className="modal-surface relative bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden"
+                        className="modal-panel max-w-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal Header */}
-                        <div className="p-5 border-b border-slate-100 flex items-start justify-between gap-3 bg-amber-50/50">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex items-start justify-between gap-2 sm:gap-3 bg-amber-50/50">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200">
                                     <ShieldAlert className="w-5 h-5" />
@@ -672,7 +673,7 @@ export default function PerangkatForm() {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-5 space-y-4 text-xs sm:text-sm">
+                        <div className="modal-body-tight space-y-3 sm:space-y-4 text-xs sm:text-sm">
                             {/* Changed Summary Card */}
                             <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
                                 <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200/60">

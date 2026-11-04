@@ -285,7 +285,57 @@ export default function InvoiceList() {
                         onAction={searchQuery || startDate || endDate ? handleResetFilter : () => navigate("/invoice/tambah")}
                     />
                 ) : (
-                    <table className="w-full text-sm text-left whitespace-nowrap">
+                    <>
+                        {/* Mobile Card View (< sm) */}
+                        <div className="sm:hidden divide-y divide-slate-100">
+                            {invoices.map((inv) => (
+                                <div
+                                    key={inv.id}
+                                    onClick={(e) => {
+                                        if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                        navigate(`/invoice/${inv.id}`);
+                                    }}
+                                    className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+                                >
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-mono font-bold text-xs text-slate-700 truncate">{inv.tiket?.nomor_tiket}</p>
+                                            <p className="font-semibold text-sm text-slate-900 truncate mt-0.5">
+                                                {inv.tiket?.perangkat?.customer?.nama || "-"}
+                                            </p>
+                                            <p className="text-3xs text-slate-500 mt-0.5">
+                                                Teknisi: {inv.tiket?.teknisi?.nama || "-"}
+                                            </p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className="text-3xs text-slate-400 font-semibold uppercase">Total</p>
+                                            <p className="font-bold text-sm text-slate-900 font-mono">{formatRupiah(inv.total_biaya)}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100/80">
+                                        <div className="min-w-0 text-3xs text-slate-500">
+                                            <span className="block">Jasa {formatRupiah(inv.biaya_jasa)}</span>
+                                            <span className="block">Part {formatRupiah(inv.biaya_sparepart)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-3xs text-slate-400 whitespace-nowrap">
+                                                {new Date(inv.created_at).toLocaleDateString("id-ID", { year: 'numeric', month: 'short', day: 'numeric' })}
+                                            </span>
+                                            <Link
+                                                to={`/invoice/${inv.id}`}
+                                                className="inline-flex items-center justify-center px-2.5 py-1.5 bg-slate-100 active:bg-slate-200 text-slate-700 rounded-lg text-3xs font-semibold whitespace-nowrap shrink-0 transition-colors"
+                                            >
+                                                Lihat / Cetak
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop Table View (>= sm) */}
+                        <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5">No Tiket</th>
@@ -333,18 +383,20 @@ export default function InvoiceList() {
                             ))}
                         </tbody>
                     </table>
+                    </>
                 )}
             </TableContainer>
 
             {/* Modal Rekapitulasi Laporan Keuangan Periodik */}
             {isReportModalOpen && reportData && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+                <div className="modal-shell">
                     <div 
                         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
                         onClick={() => setIsReportModalOpen(false)}
                     ></div>
 
-                    <div className="relative bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden z-10 border border-slate-200">
+                    <div className="modal-panel max-w-4xl z-10">
+                        <div className="modal-grabber" />
                         {/* Header Modal */}
                         <div className="px-6 py-5 bg-white border-b border-slate-100 flex items-center justify-between print:hidden">
                             <div className="flex items-center gap-3">
@@ -394,7 +446,7 @@ export default function InvoiceList() {
                             </div>
 
                             {/* Ringkasan Finansial Card Grid */}
-                            <div className="grid grid-cols-3 gap-3 text-center">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                                     <span className="text-xs text-slate-500 font-medium block">Total Pendapatan (Omset)</span>
                                     <span className="text-lg font-bold text-blue-600 block mt-1">{formatRupiah(reportData.summary.totalPendapatan)}</span>

@@ -50,7 +50,7 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
         : "-";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="modal-shell">
             {/* 60fps Hardware-Accelerated Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop no-print" 
@@ -85,7 +85,7 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                 }
             `}</style>
 
-            <div className="relative bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-8 modal-surface z-10">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-md z-10">
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <div className="flex items-center gap-2.5">
@@ -144,7 +144,7 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                 </div>
 
                 {/* Modal Body / Printable Label */}
-                <div className="p-6 overflow-y-auto flex flex-col items-center">
+                <div className="modal-body flex flex-col items-center">
                     <div
                         id="printable-ticket-label"
                         className="w-full bg-white border-2 border-slate-900 rounded-2xl p-5 shadow-sm text-slate-900 flex flex-col items-center"

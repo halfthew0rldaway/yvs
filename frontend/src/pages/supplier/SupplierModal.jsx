@@ -101,11 +101,12 @@ export default function SupplierModal({ isOpen, onClose, supplierToEdit, onSucce
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
-            <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+        <div className="modal-shell bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-3xl z-10">
+                <div className="modal-grabber" />
                 
                 {/* Header */}
-                <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shadow-xs">
                             <Building2 className="w-5 h-5" />
@@ -129,7 +130,7 @@ export default function SupplierModal({ isOpen, onClose, supplierToEdit, onSucce
                 </div>
 
                 {/* Form Body */}
-                <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4">
+                <form onSubmit={handleSubmit} className="modal-body-tight space-y-3.5 sm:space-y-4">
                     
                     {/* Nama & Kategori */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

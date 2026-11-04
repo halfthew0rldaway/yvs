@@ -175,8 +175,9 @@ export default function AdminSignatureSelectorModal({
 
     return (
         <>
-            <div className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-in fade-in select-none overflow-y-auto">
-                <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-xl sm:max-w-2xl w-full flex flex-col overflow-hidden my-auto animate-in zoom-in-95">
+            <div className="modal-shell z-[90] bg-slate-950/80 backdrop-blur-sm animate-in fade-in select-none">
+                <div className="modal-panel max-w-xl sm:max-w-2xl animate-in zoom-in-95">
+                    <div className="modal-grabber" />
                     {/* Header */}
                     <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
                         <div className="flex items-center gap-3">
@@ -202,7 +203,7 @@ export default function AdminSignatureSelectorModal({
                     </div>
 
                     {/* Body */}
-                    <div className="p-4 sm:p-6 space-y-4 max-h-[65vh] overflow-y-auto custom-scrollbar">
+                    <div className="modal-body-tight space-y-3 sm:space-y-4">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                                 Daftar Admin / Staf Kasir ({staffList.length})

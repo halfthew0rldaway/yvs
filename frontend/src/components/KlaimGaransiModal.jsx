@@ -100,7 +100,7 @@ export default function KlaimGaransiModal({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
             {/* 60fps Hardware-Accelerated Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop"
@@ -108,9 +108,10 @@ export default function KlaimGaransiModal({
             />
 
             {/* 60fps Spring Modal Surface */}
-            <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col my-8 modal-surface z-10">
+            <div className="modal-panel max-w-xl z-10">
+                <div className="modal-grabber" />
                 {/* Header */}
-                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 p-6 text-white relative">
+                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 px-5 sm:px-6 py-5 sm:py-6 text-white relative">
                     <button
                         type="button"
                         onClick={onClose}
@@ -134,7 +135,7 @@ export default function KlaimGaransiModal({
                 </div>
 
                 {/* Body Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-5 text-sm">
+                <form onSubmit={handleSubmit} className="modal-body-tight space-y-4 sm:space-y-5 text-sm">
                     {/* Ringkasan Tiket Asal */}
                     <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-3">
                         <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 pb-3">

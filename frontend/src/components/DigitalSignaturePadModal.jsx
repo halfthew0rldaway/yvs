@@ -189,10 +189,10 @@ export default function DigitalSignaturePadModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-in fade-in select-none overflow-y-auto">
-            <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl sm:max-w-3xl w-full flex flex-col overflow-hidden my-auto animate-in zoom-in-95">
+        <div className="modal-shell z-[100] bg-slate-950/80 backdrop-blur-sm animate-in fade-in select-none">
+            <div className="modal-panel max-w-2xl sm:max-w-3xl border-slate-200 my-auto animate-in zoom-in-95">
                 {/* Modal Header */}
-                <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+                <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 gap-2">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0">
                             <PenTool className="w-5 h-5" />

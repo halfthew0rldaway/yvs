@@ -1027,7 +1027,7 @@ export default function SparepartForm() {
                             <label className="block text-2xs font-semibold text-slate-500 mb-1.5">
                                 1-Klik Preset Margin Keuntungan:
                             </label>
-                            <div className="grid grid-cols-4 gap-1.5">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                                 {[
                                     { label: "+20%", val: 20 },
                                     { label: "+30%", val: 30 },
@@ -1194,9 +1194,11 @@ export default function SparepartForm() {
 
             {/* MODAL 1: TAMBAH BRAND BARU */}
             {isAddBrandModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-                    <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 overflow-hidden">
-                        <div className="flex items-center justify-between mb-4">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+                    <div className="modal-panel max-w-sm">
+                        <div className="modal-grabber" />
+                        <div className="modal-body-tight">
+                            <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-bold text-slate-900">Tambah Merek Baru</h3>
                             <button 
                                 type="button" 
@@ -1236,7 +1238,8 @@ export default function SparepartForm() {
                                     {isAddingBrand ? "Menyimpan..." : "Simpan Merek"}
                                 </button>
                             </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

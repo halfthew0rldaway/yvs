@@ -92,11 +92,12 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-            <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+        <div className="modal-shell bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-3xl z-10">
+                <div className="modal-grabber" />
                 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80">
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/80 gap-2">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-xs">
                             <BookOpen className="w-5 h-5" />
@@ -120,7 +121,7 @@ export default function RepairWikiModal({ isOpen, onClose, wikiToEdit = null, on
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs sm:text-sm">
+                <form onSubmit={handleSubmit} className="modal-body space-y-3.5 sm:space-y-4 text-xs sm:text-sm">
                     {/* Judul Panduan */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">

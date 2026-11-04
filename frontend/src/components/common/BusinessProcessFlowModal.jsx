@@ -425,12 +425,12 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
 
     return (
         <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-4 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-200"
+            className="modal-shell bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-200"
             onClick={onClose}
         >
             {/* WIDE-TO-EDGE MODAL CONTAINER */}
             <div 
-                className="bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-slate-200 w-[98vw] max-w-[1650px] h-[95vh] max-h-[95vh] flex flex-col overflow-hidden text-slate-900"
+                className="modal-panel max-w-[1650px] h-[95dvh] max-h-[95dvh] border-slate-200 text-slate-900"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* 1. STANDARDIZED CLEAN LIGHT HEADER WITH DISTINCT PAGE TABS */}

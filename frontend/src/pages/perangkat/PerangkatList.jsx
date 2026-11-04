@@ -220,7 +220,101 @@ export default function PerangkatList() {
                         onAction={searchQuery || jenisFilter ? handleResetFilters : () => navigate("/perangkat/tambah")}
                     />
                 ) : (
-                    <table className="w-full text-sm text-left whitespace-nowrap">
+                    <>
+                        {/* Mobile Card View (< sm) - table columns flatten into stacked cards */}
+                        <div className="sm:hidden divide-y divide-slate-100">
+                            {perangkats.map((p, i) => {
+                                const serviceCount = p._count?.tiket_servis || 0;
+                                const rowNumber = (currentPage - 1) * pageSize + i + 1;
+
+                                return (
+                                    <div
+                                        key={p.id}
+                                        onClick={(e) => {
+                                            if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                            setSelectedPerangkatId(p.id);
+                                        }}
+                                        className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+                                    >
+                                        {/* Title row */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-3xs font-mono text-slate-400 shrink-0">#{rowNumber}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedPerangkatId(p.id)}
+                                                        className="font-bold text-sm text-slate-900 text-left truncate cursor-pointer"
+                                                    >
+                                                        {p.merek} {p.model}
+                                                    </button>
+                                                </div>
+                                                <p className="text-3xs text-slate-500 font-mono mt-0.5 truncate">
+                                                    SN: {p.serial_number || "-"}
+                                                </p>
+                                            </div>
+                                            <span className="shrink-0 px-2 py-0.5 bg-slate-100 text-slate-700 rounded-lg text-3xs font-medium">
+                                                {p.jenis_perangkat}
+                                            </span>
+                                        </div>
+
+                                        {/* Owner row */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedCustomerId(p.customer?.id)}
+                                            className="mt-1.5 inline-flex items-center gap-1.5 text-2xs font-semibold text-slate-700 cursor-pointer min-w-0 max-w-full"
+                                        >
+                                            <User className="w-3 h-3 text-slate-400 shrink-0" />
+                                            <span className="truncate">{p.customer?.nama || "Tanpa Nama"}</span>
+                                        </button>
+
+                                        {/* Footer: service badge + actions */}
+                                        <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100/80">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedPerangkatId(p.id)}
+                                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-3xs font-semibold border whitespace-nowrap ${
+                                                    serviceCount > 0
+                                                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                                                        : "bg-slate-50 text-slate-500 border-slate-200"
+                                                }`}
+                                            >
+                                                <History className="w-3 h-3 shrink-0" />
+                                                {serviceCount}x Servis
+                                            </button>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedPerangkatId(p.id)}
+                                                    className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                    title="Lihat Detail & Rekam Medis"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                                <Link
+                                                    to={`/perangkat/edit/${p.id}`}
+                                                    className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Edit Perangkat"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </Link>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteClick(p)}
+                                                    className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Hapus"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Desktop Table View (>= sm) */}
+                        <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5 w-16">No</th>
@@ -321,6 +415,7 @@ export default function PerangkatList() {
                             })}
                         </tbody>
                     </table>
+                    </>
                 )}
             </TableContainer>
 

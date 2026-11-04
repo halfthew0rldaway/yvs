@@ -63,7 +63,7 @@ export default function HireApplicantModal({ isOpen, onClose, applicant, onSucce
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div className="modal-shell">
             {/* 60fps Hardware-Accelerated Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop"
@@ -71,10 +71,11 @@ export default function HireApplicantModal({ isOpen, onClose, applicant, onSucce
             />
 
             {/* 60fps Spring Modal Surface */}
-            <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[90vh] modal-surface z-10">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-md z-10">
+                <div className="modal-grabber" />
                 
                 {/* Header */}
-                <div className="px-5 sm:px-6 py-4 border-b border-slate-100 bg-emerald-50/70 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-emerald-50/70 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
                             <UserCheck className="w-5 h-5" />
@@ -98,7 +99,7 @@ export default function HireApplicantModal({ isOpen, onClose, applicant, onSucce
                 </div>
 
                 {/* Candidate Highlight Card */}
-                <div className="p-5 sm:p-6 space-y-4">
+                <div className="modal-body-tight space-y-3 sm:space-y-4">
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-1.5">
                         <div className="text-xs text-slate-400 font-medium">Kandidat Terpilih:</div>
                         <div className="text-sm font-bold text-slate-900">{applicant.nama_lengkap}</div>

@@ -389,6 +389,7 @@ export default function LoanerList() {
     }
 
     return (
+        <>
         <div className="space-y-6 pb-12">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -583,7 +584,147 @@ export default function LoanerList() {
                                 onAction={isAdmin ? handleOpenAddDevice : undefined}
                             />
                         ) : (
-                            <table className="w-full text-sm text-left whitespace-nowrap">
+                            <>
+                            {/* Mobile Card View (< sm) */}
+                            <div className="sm:hidden divide-y divide-slate-100">
+                                {filteredDevices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((d) => {
+                                    const activeLoan = d.pinjaman?.[0];
+                                    return (
+                                        <div
+                                            key={d.id}
+                                            onClick={(e) => {
+                                                if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                                if (d.status === "tersedia") {
+                                                    handleOpenLoanModal(d);
+                                                } else if (d.status === "dipinjam" && activeLoan) {
+                                                    handleOpenReturnModal(activeLoan, d);
+                                                } else if (isAdmin) {
+                                                    handleOpenEditDevice(d);
+                                                }
+                                            }}
+                                            className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+                                        >
+                                            <div className="flex items-start gap-2.5">
+                                                <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+                                                    {d.kategori && d.kategori.toLowerCase().includes("hp") ? (
+                                                        <Smartphone className="w-4 h-4 text-slate-600" />
+                                                    ) : (
+                                                        <Laptop className="w-4 h-4 text-slate-600" />
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className="font-mono font-extrabold text-3xs text-blue-600 px-1.5 py-0.5 bg-blue-50 border border-blue-200 rounded">
+                                                            {d.kode_unit}
+                                                        </span>
+                                                        <span className="font-bold text-sm text-slate-900 truncate">{d.nama}</span>
+                                                    </div>
+                                                    <p className="text-3xs text-slate-500 mt-0.5 truncate">
+                                                        {d.kategori} {d.serial_number ? `• SN: ${d.serial_number}` : ""}
+                                                    </p>
+                                                </div>
+                                                <span className="shrink-0 text-3xs font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
+                                                    {d.kondisi_fisik || "Normal"}
+                                                </span>
+                                            </div>
+
+                                            <p className="text-3xs text-slate-600 mt-1.5 line-clamp-2">{d.spesifikasi || "-"}</p>
+                                            <p className="text-3xs text-slate-500 mt-0.5 flex items-center gap-1 truncate">
+                                                <Package className="w-3 h-3 text-slate-400 shrink-0" />
+                                                <span className="truncate">{d.kelengkapan || "Unit Only"}</span>
+                                            </p>
+
+                                            {/* Status */}
+                                            <div className="mt-2 pt-2 border-t border-slate-100/80">
+                                                {d.status === "tersedia" ? (
+                                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-3xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                                        <span>Tersedia di Rak</span>
+                                                    </span>
+                                                ) : d.status === "dipinjam" ? (
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-50 text-amber-700 border border-amber-200 max-w-full">
+                                                            <Clock className="w-3 h-3 shrink-0" />
+                                                            <span className="truncate">Dipinjam ({activeLoan?.customer?.nama || "Pelanggan"})</span>
+                                                        </span>
+                                                        {activeLoan?.customer?.nomor_telepon && (
+                                                            <a
+                                                                href={generateLoanWaLink(activeLoan.customer, d, activeLoan)}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors inline-flex items-center shrink-0"
+                                                                title={`Chat WhatsApp (${activeLoan.customer.nomor_telepon})`}
+                                                            >
+                                                                <MessageCircle className="w-3.5 h-3.5" />
+                                                            </a>
+                                                        )}
+                                                        {activeLoan?.tiket && (
+                                                            <Link
+                                                                to={`/tiket-servis/${activeLoan.tiket.id}`}
+                                                                className="text-3xs font-mono text-blue-600 font-semibold shrink-0"
+                                                            >
+                                                                {activeLoan.tiket.nomor_tiket} →
+                                                            </Link>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
+                                                        <Wrench className="w-3 h-3 text-slate-400 shrink-0" />
+                                                        <span>Dalam Perawatan</span>
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="flex items-center justify-end gap-1.5 mt-2 pt-2 border-t border-slate-100/80">
+                                                {d.status === "tersedia" ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleOpenLoanModal(d)}
+                                                        className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-3xs font-bold"
+                                                        title="Pinjamkan unit ini"
+                                                    >
+                                                        Pinjamkan
+                                                    </button>
+                                                ) : d.status === "dipinjam" && activeLoan ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleOpenReturnModal(activeLoan, d)}
+                                                        className="px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg text-3xs font-bold"
+                                                        title="Catat pengembalian unit"
+                                                    >
+                                                        Kembalikan
+                                                    </button>
+                                                ) : null}
+                                                {isAdmin && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleOpenEditDevice(d)}
+                                                            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                            title="Edit Data Unit"
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setDeleteTarget(d)}
+                                                            disabled={d.status === "dipinjam"}
+                                                            className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30"
+                                                            title="Hapus Unit"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Desktop Table View (>= sm) */}
+                            <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
                                 <thead className="table-header">
                                     <tr>
                                         <th className="px-6 py-3.5">Kode & Unit</th>
@@ -746,6 +887,7 @@ export default function LoanerList() {
                                     })}
                                 </tbody>
                             </table>
+                            </>
                         )}
                     </TableContainer>
                 </div>
@@ -803,7 +945,103 @@ export default function LoanerList() {
                                 description="Belum ada transaksi peminjaman unit cadangan yang tercatat di sistem."
                             />
                         ) : (
-                            <table className="w-full text-sm text-left whitespace-nowrap">
+                            <>
+                            {/* Mobile Card View (< sm) */}
+                            <div className="sm:hidden divide-y divide-slate-100">
+                                {filteredRecords.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((r) => (
+                                    <div
+                                        key={r.id}
+                                        onClick={(e) => {
+                                            if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                            setPrintTarget(r);
+                                        }}
+                                        className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <p className="font-mono font-bold text-sm text-slate-900 truncate">{r.nomor_peminjaman}</p>
+                                                <p className="text-3xs text-slate-500 mt-0.5">
+                                                    {new Date(r.tanggal_pinjam).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                                </p>
+                                            </div>
+                                            {r.status === "aktif" ? (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap shrink-0">
+                                                    <Clock className="w-3 h-3 shrink-0" />
+                                                    <span>Dipinjam</span>
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap shrink-0">
+                                                    <CheckCircle2 className="w-3 h-3 shrink-0" />
+                                                    <span>Kembali</span>
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                                            <span className="font-mono font-bold text-3xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded">
+                                                {r.loaner_device?.kode_unit}
+                                            </span>
+                                            <span className="font-semibold text-xs text-slate-800 truncate">{r.loaner_device?.nama}</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                            <span className="text-xs font-semibold text-slate-900 truncate">{r.customer?.nama}</span>
+                                            {r.customer?.nomor_telepon && (
+                                                <a
+                                                    href={generateLoanWaLink(r.customer, r.loaner_device, r)}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors inline-flex items-center shrink-0"
+                                                    title={`Chat WhatsApp (${r.customer.nomor_telepon})`}
+                                                >
+                                                    <MessageCircle className="w-3.5 h-3.5" />
+                                                </a>
+                                            )}
+                                            <Link to={`/tiket-servis/${r.tiket?.id}`} className="text-3xs text-blue-600 font-mono shrink-0">
+                                                {r.tiket?.nomor_tiket} →
+                                            </Link>
+                                        </div>
+
+                                        <p className="text-3xs text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
+                                            <span>
+                                                {r.estimasi_kembali
+                                                    ? `Batas: ${new Date(r.estimasi_kembali).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}`
+                                                    : "Tanpa batas waktu"}
+                                            </span>
+                                            <span>•</span>
+                                            <span>Deposit: {r.deposit_uang > 0 ? formatRupiah(r.deposit_uang) : "-"}</span>
+                                            {r.deposit_uang > 0 && (
+                                                <span className={`text-3xs font-bold px-1.5 py-0.5 rounded ${r.deposit_dikembalikan ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                    {r.deposit_dikembalikan ? 'Dikembalikan' : 'Ditahan'}
+                                                </span>
+                                            )}
+                                        </p>
+
+                                        <div className="flex items-center justify-end gap-1.5 mt-2 pt-2 border-t border-slate-100/80">
+                                            {r.status === "aktif" && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenReturnModal(r)}
+                                                    className="px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg text-3xs font-bold"
+                                                >
+                                                    Kembalikan
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => setPrintTarget(r)}
+                                                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                title="Cetak Surat Perjanjian Peminjaman"
+                                            >
+                                                <Printer className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Desktop Table View (>= sm) */}
+                            <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
                                 <thead className="table-header">
                                     <tr>
                                         <th className="px-6 py-3.5">No. Pinjam & Tanggal</th>
@@ -919,6 +1157,7 @@ export default function LoanerList() {
                                     ))}
                                 </tbody>
                             </table>
+                            </>
                         )}
                     </TableContainer>
                 </div>
@@ -926,9 +1165,10 @@ export default function LoanerList() {
 
             {/* MODAL: TAMBAH / EDIT UNIT CADANGAN */}
             {isDeviceModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-8">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
+                    <div className="modal-panel max-w-lg">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 gap-2">
                             <h3 className="font-bold text-slate-900 text-base">
                                 {editingDevice ? "Edit Unit Cadangan" : "Tambah Unit Cadangan Baru"}
                             </h3>
@@ -1073,9 +1313,10 @@ export default function LoanerList() {
 
             {/* MODAL: PROSES PEMINJAMAN UNIT */}
             {isLoanModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-8">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-blue-50/50">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
+                    <div className="modal-panel max-w-lg">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-blue-50/50 gap-2">
                             <div className="flex items-center gap-2.5">
                                 <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
                                     <Laptop className="w-5 h-5" />
@@ -1199,9 +1440,10 @@ export default function LoanerList() {
 
             {/* MODAL: PENGEMBALIAN UNIT */}
             {returnTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-                    <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden my-8">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
+                    <div className="modal-panel max-w-md">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 gap-2">
                             <div className="flex items-center gap-2">
                                 <RotateCcw className="w-5 h-5 text-amber-600" />
                                 <h3 className="font-bold text-slate-900 text-base">Proses Pengembalian Unit</h3>
@@ -1288,7 +1530,7 @@ export default function LoanerList() {
 
             {/* MODAL: CETAK SURAT PERJANJIAN PINJAM UNIT */}
             {printTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
                     <style>{`
                         @media print {
                             body * { visibility: hidden !important; }
@@ -1304,8 +1546,9 @@ export default function LoanerList() {
                             }
                         }
                     `}</style>
-                    <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div className="modal-panel max-w-xl">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 gap-2">
                             <div className="flex items-center gap-2">
                                 <Printer className="w-5 h-5 text-blue-600" />
                                 <h3 className="font-bold text-slate-900 text-base">Surat Serah Terima Unit Pinjaman</h3>
@@ -1423,6 +1666,7 @@ export default function LoanerList() {
                 />
             )}
         </div>
+        </>
     );
 }
 

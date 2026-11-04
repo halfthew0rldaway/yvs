@@ -109,17 +109,18 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <div className="modal-shell">
             {/* 60fps Hardware-Accelerated Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop" 
                 onClick={onClose} 
             />
 
-            <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] modal-surface z-10">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-2xl z-10">
+                <div className="modal-grabber" />
                 
                 {/* Header */}
-                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/80">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-slate-100 bg-slate-50/80">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -196,7 +197,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                 </div>
 
                 {/* Body Content */}
-                <div className="p-6 overflow-y-auto space-y-5">
+                <div className="modal-body space-y-4 sm:space-y-5">
                     
                     {/* Rubrik Penilaian Standar KEOS */}
                     <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-4">
@@ -360,7 +361,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
                     <button
                         type="button"
                         onClick={() => handleSaveEvaluation()}

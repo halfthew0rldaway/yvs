@@ -811,7 +811,147 @@ export default function SparepartList() {
                         onAction={isAdmin ? () => navigate("/sparepart/tambah") : undefined}
                     />
                 ) : (
-                    <table className="w-full text-sm text-left whitespace-nowrap">
+                    <>
+                        {/* Mobile Card View (< sm) - inventory rows flattened into stacked cards */}
+                        <div className="sm:hidden divide-y divide-slate-100">
+                            {paginatedSpareparts.length === 0 ? (
+                                <div className="px-4 py-12 text-center text-slate-500 text-xs">
+                                    Tidak ada data yang cocok dengan pencarian atau filter.
+                                </div>
+                            ) : (
+                                paginatedSpareparts.map((s, i) => {
+                                    const hpp = s.harga_beli || Math.round(s.harga * 0.7);
+                                    const margin = s.harga - hpp;
+                                    const marginPercent = s.harga > 0 ? Math.round((margin / s.harga) * 100) : 0;
+                                    const brandName = s.brand?.nama && s.brand.nama.toLowerCase() !== "lainnya" ? s.brand.nama : "";
+
+                                    return (
+                                        <div
+                                            key={s.id}
+                                            onClick={(e) => {
+                                                if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                                handleOpenUsageHistory(s);
+                                            }}
+                                            className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+                                        >
+                                            {/* Title row */}
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-3xs font-mono text-slate-400 shrink-0">#{startIndex + i + 1}</span>
+                                                        <p className="font-bold text-sm text-slate-900 truncate">
+                                                            {brandName ? `${brandName} ` : ""}{s.nama}
+                                                        </p>
+                                                    </div>
+                                                    <p className="text-3xs text-slate-500 mt-0.5">{s.kategori}</p>
+                                                </div>
+                                                <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-bold border whitespace-nowrap ${
+                                                    s.stok <= 2
+                                                        ? "bg-red-50 text-red-700 border-red-200"
+                                                        : s.stok <= 5
+                                                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                }`}>
+                                                    {s.stok} unit
+                                                </span>
+                                            </div>
+
+                                            {/* Supplier + warranty badges */}
+                                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                                {(s.supplier?.nama || s.distributor_nama) && (
+                                                    <span className="inline-flex items-center gap-1 text-3xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md font-medium max-w-full">
+                                                        <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
+                                                        <span className="truncate">{s.supplier?.nama || s.distributor_nama}</span>
+                                                    </span>
+                                                )}
+                                                {s.has_garansi_distri && (
+                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold border bg-blue-50 text-blue-700 border-blue-200">
+                                                        <ShieldCheck className="w-3 h-3 shrink-0" />
+                                                        {s.tipe_garansi_distri || "Garansi"}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Price row */}
+                                            <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100/80">
+                                                <div className="min-w-0">
+                                                    <p className="text-3xs text-slate-400 font-semibold uppercase">Harga Jual</p>
+                                                    <p className="text-xs font-bold text-slate-900 font-mono">{formatRupiah(s.harga)}</p>
+                                                </div>
+                                                {isAdmin && (
+                                                    <div className="text-right">
+                                                        <p className="text-3xs text-slate-400 font-semibold uppercase">Margin</p>
+                                                        <p className="text-xs font-semibold text-emerald-600 font-mono">
+                                                            +{formatRupiah(margin)} <span className="text-3xs text-slate-400">({marginPercent}%)</span>
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Action row */}
+                                            <div className="flex items-center justify-between gap-1 mt-2 pt-2 border-t border-slate-100/80">
+                                                <button
+                                                    onClick={() => handleOpenUsageHistory(s)}
+                                                    className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 rounded-lg text-3xs font-semibold"
+                                                    title="Lihat riwayat tiket yang menggunakan part ini"
+                                                >
+                                                    <History className="w-3 h-3 text-slate-500" />
+                                                    Audit
+                                                </button>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setQrModalTarget(s)}
+                                                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Cetak Stiker Label & QR Code Part"
+                                                    >
+                                                        <QrCode className="w-4 h-4" />
+                                                    </button>
+                                                    <Link
+                                                        to={`/rma/tambah?sparepart_id=${s.id}`}
+                                                        className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                                        title="Klaim Retur Garansi Distributor (RMA)"
+                                                    >
+                                                        <RotateCcw className="w-4 h-4" />
+                                                    </Link>
+                                                    {isAdmin ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleOpenRestock(s)}
+                                                                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                title="Quick Restock / Tambah Stok"
+                                                            >
+                                                                <PackagePlus className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteClick(s)}
+                                                                className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Hapus"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </>
+                                                    ) : s.stok <= 5 ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleReminderRestock(s)}
+                                                            className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-3xs font-semibold"
+                                                            title="Kirim pengingat restock ke Admin"
+                                                        >
+                                                            <Bell className="w-3 h-3 text-amber-600" />
+                                                            Ingatkan
+                                                        </button>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        {/* Desktop Table View (>= sm) */}
+                        <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5 font-semibold">No</th>
@@ -994,6 +1134,7 @@ export default function SparepartList() {
                             )}
                         </tbody>
                     </table>
+                    </>
                 )}
             </TableContainer>
 
@@ -1009,14 +1150,15 @@ export default function SparepartList() {
 
             {/* Quick Restock Modal */}
             {restockModalTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+                <div className="modal-shell">
                     <div 
                         className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
                         onClick={() => !submittingRestock && setRestockModalTarget(null)}
                     ></div>
 
-                    <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden z-10 border border-slate-200 modal-surface">
-                        <div className="px-6 py-4.5 bg-white text-slate-900 border-b border-slate-200 flex items-center justify-between">
+                    <div className="modal-panel max-w-md z-10">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4.5 bg-white text-slate-900 border-b border-slate-200 flex items-center justify-between gap-2">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
                                     <PackagePlus className="w-5 h-5" />
@@ -1171,14 +1313,15 @@ export default function SparepartList() {
 
             {/* Item Audit Modal: Usage & Restock History Tabs */}
             {historyModalTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+                <div className="modal-shell">
                     <div 
                         className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
                         onClick={() => setHistoryModalTarget(null)}
                     ></div>
 
-                    <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden z-10 border border-slate-200 modal-surface">
-                        <div className="px-6 py-4.5 bg-white text-slate-900 border-b border-slate-200 flex items-center justify-between">
+                    <div className="modal-panel max-w-2xl z-10">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4.5 bg-white text-slate-900 border-b border-slate-200 flex items-center justify-between gap-2">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
                                     <History className="w-5 h-5" />
@@ -1373,15 +1516,16 @@ export default function SparepartList() {
 
             {/* Global Restock Procurement Audit Modal */}
             {isGlobalRestockModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+                <div className="modal-shell">
                     <div 
                         className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" 
                         onClick={() => setIsGlobalRestockModalOpen(false)}
                     ></div>
 
-                    <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden z-10 border border-slate-200">
+                    <div className="modal-panel max-w-5xl z-10">
+                        <div className="modal-grabber" />
                         {/* Modal Header */}
-                        <div className="px-6 py-4.5 bg-white text-slate-900 flex items-center justify-between border-b border-slate-200">
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4.5 bg-white text-slate-900 flex items-center justify-between border-b border-slate-200 gap-2">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100 text-blue-600">
                                     <History className="w-5 h-5" />

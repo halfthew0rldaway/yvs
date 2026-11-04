@@ -224,7 +224,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <div className="modal-shell">
             {/* Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs modal-backdrop" 
@@ -232,10 +232,11 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
             ></div>
 
             {/* Modal Dialog (60fps Spring Modal Surface) */}
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[88vh] flex flex-col overflow-hidden z-10 border border-slate-200 modal-surface">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-5xl h-[88dvh] sm:h-[88vh] z-10">
+                <div className="modal-grabber" />
                 
                 {/* 1. Header */}
-                <div className="px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 shrink-0">
                             <Calendar className="w-5 h-5" />
@@ -265,7 +266,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                 </div>
 
                 {/* 2. Sub-Header Toolbar (Filter Tabs + Search Bar) */}
-                <div className="px-6 py-3 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div className="px-4 sm:px-6 py-3 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                         <button
                             type="button"
@@ -535,7 +536,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
                 </div>
 
                 {/* 4. Single Unified Footer */}
-                <div className="px-6 py-3.5 border-t border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                <div className="px-4 sm:px-6 py-3.5 border-t border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
                     <div className="text-xs text-slate-500 text-center sm:text-left">
                         {selectedItem ? (
                             <span>Unit <strong>{selectedItem.merek} {selectedItem.model}</strong> milik <strong>{selectedItem.customer_nama}</strong></span>

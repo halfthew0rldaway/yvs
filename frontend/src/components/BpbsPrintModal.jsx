@@ -28,7 +28,7 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+        <div className="modal-shell bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
             {/* Print Stylesheet injection */}
             <style>{`
                 @media print {
@@ -56,7 +56,8 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                 }
             `}</style>
 
-            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[95vh]">
+            <div className="modal-panel max-w-3xl z-10">
+                <div className="modal-grabber" />
                 {/* Header Modal Bar */}
                 <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/60 shrink-0 no-print">
                     <div className="flex items-center gap-3 min-w-0">
@@ -295,7 +296,7 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
                 </div>
 
                 {/* Footer Modal Bar */}
-                <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between shrink-0 no-print">
+                <div className="px-4 sm:px-6 py-3 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between shrink-0 no-print gap-2">
                     <span className="text-xs text-slate-500">Format cetak dioptimalkan untuk ukuran kertas A5 atau A4.</span>
                     <button
                         type="button"

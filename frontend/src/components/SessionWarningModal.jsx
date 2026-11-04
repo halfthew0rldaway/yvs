@@ -25,12 +25,13 @@ export default function SessionWarningModal({
 
     return (
         <div 
-            className="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="modal-shell z-[9998] bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="warning-title"
         >
-            <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-amber-200 overflow-hidden text-slate-800 animate-in zoom-in-95 duration-150">
+            <div className="modal-panel max-w-sm z-10 text-slate-800 animate-in zoom-in-95 duration-150 border-amber-200">
+                <div className="modal-grabber" />
                 {/* Visual Progress Bar on top */}
                 <div className="w-full bg-amber-100 h-1.5">
                     <div 

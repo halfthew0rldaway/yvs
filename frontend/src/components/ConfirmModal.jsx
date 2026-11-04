@@ -58,11 +58,11 @@ export default function ConfirmModal({
 
     return (
         <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
+            className="modal-shell z-[100] bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
             onClick={() => !loading && onCancel?.()}
         >
             <div 
-                className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-6 overflow-hidden text-slate-900 animate-in zoom-in-95 duration-150"
+                className="modal-panel max-w-md border-slate-200 text-slate-900 animate-in zoom-in-95 duration-150"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button */}

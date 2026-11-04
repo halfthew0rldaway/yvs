@@ -31,11 +31,12 @@ export default function SopDetailModal({ isOpen, onClose, sop, onEdit, canModify
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-            <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+        <div className="modal-shell bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-3xl z-10">
+                <div className="modal-grabber" />
                 
                 {/* Header Modal */}
-                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/80">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-slate-100 bg-slate-50/80">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -101,7 +102,7 @@ export default function SopDetailModal({ isOpen, onClose, sop, onEdit, canModify
                 </div>
 
                 {/* Body Content */}
-                <div className="p-6 overflow-y-auto space-y-5">
+                <div className="modal-body space-y-4 sm:space-y-5">
                     {activeTab === "ringkas" ? (
                         <div className="space-y-4">
                             <div className="bg-blue-50/60 p-5 rounded-2xl border border-blue-100/90">
@@ -148,7 +149,7 @@ export default function SopDetailModal({ isOpen, onClose, sop, onEdit, canModify
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
                     <div className="text-2xs text-slate-400 flex items-center gap-1.5 font-medium">
                         <Calendar className="w-3.5 h-3.5" />
                         <span>Dokumen Resmi KomputerAwet / Serv.io KEOS</span>

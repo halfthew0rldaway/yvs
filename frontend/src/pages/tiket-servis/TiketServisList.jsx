@@ -173,6 +173,118 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
     );
 });
 
+/* ------------------------------------------------------------------ */
+/* Mobile Card View (< sm) for the ticket queue                        */
+/* ------------------------------------------------------------------ */
+const TiketCard = memo(function TiketCard({ tiket, onNavigate, onSelectQr }) {
+    const { isAdmin } = useAuth();
+    const perangkatLabel = `${tiket.perangkat?.merek || ""} ${tiket.perangkat?.model || ""}`.trim();
+    return (
+        <div
+            onClick={(e) => {
+                if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                onNavigate(tiket.id);
+            }}
+            className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+        >
+            <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                    <Link
+                        to={`/tiket-servis/${tiket.id}`}
+                        className="font-mono font-bold text-sm text-slate-800 truncate"
+                    >
+                        {tiket.nomor_tiket}
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={() => onSelectQr(tiket)}
+                        className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
+                        title="Lihat & Cetak QR Code Label Unit"
+                    >
+                        <QrCode className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+                <span className="text-3xs text-slate-500 font-medium whitespace-nowrap shrink-0 flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-slate-400" />
+                    {tiket.created_at
+                        ? new Date(tiket.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
+                        : "-"}
+                </span>
+            </div>
+
+            <p className="font-semibold text-sm text-slate-900 mt-1 truncate">
+                {tiket.perangkat?.customer?.nama || "-"}
+            </p>
+            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                <span className="text-3xs text-slate-600 truncate">{perangkatLabel || "-"}</span>
+                {tiket.defect_map?.items?.length > 0 && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+                        <Laptop className="w-2.5 h-2.5" />
+                        {tiket.defect_map.items.length} Defek
+                    </span>
+                )}
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-3xs font-semibold border ${STATUS_LABELS[tiket.status]?.color || "bg-slate-100 text-slate-600 border-slate-200"}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${STATUS_LABELS[tiket.status]?.dotColor || 'bg-current'} shrink-0`} />
+                    <span className="truncate">{STATUS_LABELS[tiket.status]?.label || tiket.status}</span>
+                </span>
+                {tiket.is_garansi_claim && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                        <ShieldCheck className="w-3 h-3 text-indigo-600" />
+                        <span>Garansi</span>
+                    </span>
+                )}
+                {tiket.checklist_qc?.passed_qc && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                        <Award className="w-3 h-3 text-emerald-600" />
+                        <span>QC</span>
+                    </span>
+                )}
+                {tiket.is_revisi_acc && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-bold bg-rose-50 text-rose-700 border border-rose-200 shrink-0">
+                        <RotateCcw className="w-3 h-3 text-rose-600" />
+                        <span>Revisi</span>
+                    </span>
+                )}
+                {isAdmin && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0">
+                        <Clock className="w-3 h-3 text-amber-700" />
+                        <span>H-{tiket.warranty_status.sisaHari}</span>
+                    </span>
+                )}
+            </div>
+
+            <div className="mt-2"><SlaBadge tiket={tiket} /></div>
+
+            <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100/80">
+                {tiket.teknisi?.nama ? (
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-3xs font-bold inline-flex items-center justify-center shrink-0">
+                            {tiket.teknisi.nama.charAt(0)}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-800 truncate">
+                            {tiket.teknisi.nama.split("(")[0].trim()}
+                        </span>
+                    </div>
+                ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-3xs font-medium text-slate-400 bg-slate-50 border border-dashed border-slate-200">
+                        Belum Ditugaskan
+                    </span>
+                )}
+                <Link
+                    to={`/tiket-servis/${tiket.id}`}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-blue-600 bg-blue-50 rounded-lg font-bold text-3xs shrink-0"
+                >
+                    <span>Detail</span>
+                    <ArrowRight className="w-3 h-3" />
+                </Link>
+            </div>
+        </div>
+    );
+});
+
 export default function TiketServisList() {
     const navigate = useNavigate();
     const { isAdmin, isTeknisi, user } = useAuth();
@@ -688,7 +800,21 @@ export default function TiketServisList() {
                         onAction={hasActiveFilters ? handleResetAllFilters : () => navigate("/tiket-servis/tambah")}
                     />
                 ) : (
-                    <table className="w-full text-sm text-left whitespace-nowrap">
+                    <>
+                    {/* Mobile Card View (< sm) */}
+                    <div className="sm:hidden divide-y divide-slate-100">
+                        {tikets.map((t) => (
+                            <TiketCard
+                                key={t.id}
+                                tiket={t}
+                                onNavigate={handleNavigate}
+                                onSelectQr={handleSelectQr}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Desktop Table View (>= sm) */}
+                    <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5">No Tiket</th>
@@ -712,6 +838,7 @@ export default function TiketServisList() {
                             ))}
                         </tbody>
                     </table>
+                    </>
                 )}
             </TableContainer>
 

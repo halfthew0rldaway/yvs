@@ -89,7 +89,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div className="modal-shell">
             {/* Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs modal-backdrop" 
@@ -97,9 +97,10 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
             ></div>
 
             {/* Modal Dialog (60fps Spring Modal Surface) */}
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden z-10 border border-slate-200 modal-surface">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-4xl z-10">
+                <div className="modal-grabber" />
                 {/* Header */}
-                <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 bg-white flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold text-base shrink-0">
                             {customer?.nama ? customer.nama.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
@@ -284,7 +285,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                 </div>
 
                 {/* Content Body */}
-                <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 bg-slate-50/50 custom-scrollbar">
+                <div className="modal-body space-y-4 bg-slate-50/50">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-3"></div>
@@ -628,7 +629,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                 </div>
 
                 {/* Footer */}
-                <div className="px-5 sm:px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
                     <span className="text-xs text-slate-400 hidden sm:inline">
                         Yangversa Computer Service Management
                     </span>

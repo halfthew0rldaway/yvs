@@ -101,17 +101,18 @@ export default function TechnicianPerformanceModal({ isOpen, onClose, technician
     });
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <div className="modal-shell">
             {/* 60fps Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs modal-backdrop" 
                 onClick={onClose} 
             />
 
-            <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] modal-surface z-10">
+            <div className="modal-panel modal-surface modal-sheet-enter max-w-4xl z-10">
+                <div className="modal-grabber" />
                 
                 {/* Modal Header */}
-                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between gap-4">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between gap-2 sm:gap-4">
                     <div className="flex items-center gap-4 min-w-0">
                         {loading ? (
                             <div className="w-12 h-12 rounded-2xl bg-slate-200 animate-pulse shrink-0" />
@@ -145,7 +146,7 @@ export default function TechnicianPerformanceModal({ isOpen, onClose, technician
                 </div>
 
                 {/* Modal Body */}
-                <div className="p-6 overflow-y-auto space-y-6">
+                <div className="modal-body space-y-4 sm:space-y-6">
                     {loading ? (
                         <div className="py-20 text-center text-slate-400 space-y-3">
                             <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
@@ -412,7 +413,7 @@ export default function TechnicianPerformanceModal({ isOpen, onClose, technician
                 </div>
 
                 {/* Modal Footer */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between gap-2">
                     <span className="text-2xs text-slate-500 font-medium">
                         Menampilkan {filteredTickets.length} dari {tickets.length} total tiket penugasan
                     </span>

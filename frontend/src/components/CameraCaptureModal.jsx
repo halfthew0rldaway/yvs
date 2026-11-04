@@ -194,13 +194,14 @@ export default function CameraCaptureModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
+        <div className="modal-shell bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
             {/* Hidden canvas for snapshot rendering */}
             <canvas ref={canvasRef} className="hidden" />
 
-            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+            <div className="modal-panel max-w-2xl z-10">
+                <div className="modal-grabber" />
                 {/* Modal Header */}
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0 gap-2">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl">
                             <Camera className="w-5 h-5" />
@@ -330,7 +331,7 @@ export default function CameraCaptureModal({
                 )}
 
                 {/* Modal Footer Controls */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3 shrink-0">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
                     <button
                         type="button"
                         onClick={onClose}

@@ -67,12 +67,12 @@ export default function MediaProcessingModal({
 
     return (
         <div 
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs modal-backdrop"
+            className="modal-shell z-[9999] bg-slate-950/75 backdrop-blur-xs"
             role="dialog"
             aria-modal="true"
         >
             <div 
-                className="relative bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden p-6 sm:p-7 modal-surface"
+                className="modal-panel max-w-md border-slate-100"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Decorative Top Accent Bar */}

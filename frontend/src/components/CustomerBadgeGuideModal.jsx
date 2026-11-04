@@ -10,7 +10,7 @@ export default function CustomerBadgeGuideModal({ isOpen, onClose }) {
 
     const modalContent = (
         <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto whitespace-normal"
+            className="modal-shell whitespace-normal"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
         >
@@ -25,11 +25,12 @@ export default function CustomerBadgeGuideModal({ isOpen, onClose }) {
 
             {/* Modal Dialog (60fps Spring Modal Surface) */}
             <div 
-                className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden z-10 border border-slate-200 modal-surface whitespace-normal text-slate-800"
+                className="modal-panel max-w-2xl z-10 whitespace-normal text-slate-800"
                 onClick={(e) => e.stopPropagation()}
             >
+                <div className="modal-grabber" />
                 {/* Header */}
-                <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 bg-white flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold shrink-0">
                             <Award className="w-5 h-5" />

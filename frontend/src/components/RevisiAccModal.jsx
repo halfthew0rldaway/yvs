@@ -51,7 +51,7 @@ export default function RevisiAccModal({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div className="modal-shell">
             {/* Backdrop */}
             <div 
                 className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs modal-backdrop" 
@@ -59,9 +59,10 @@ export default function RevisiAccModal({
             />
 
             {/* Modal Dialog (60fps Spring Modal Surface) */}
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full flex flex-col overflow-hidden z-10 border border-rose-200 modal-surface">
+            <div className="modal-panel max-w-lg z-10 border-rose-200">
+                <div className="modal-grabber" />
                 {/* Header */}
-                <div className="px-5 sm:px-6 py-4.5 bg-rose-50/80 border-b border-rose-100 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4.5 bg-rose-50/80 border-b border-rose-100 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 border border-rose-200 flex items-center justify-center font-bold shrink-0">
                             <RotateCcw className="w-5 h-5" />
@@ -86,7 +87,7 @@ export default function RevisiAccModal({
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="modal-body-tight space-y-3 sm:space-y-4">
                     {/* Notice Callout */}
                     <div className="p-3.5 bg-rose-50/60 border border-rose-200 rounded-xl text-xs text-rose-900 leading-relaxed space-y-1.5">
                         <div className="flex items-center gap-2 font-bold text-rose-950">

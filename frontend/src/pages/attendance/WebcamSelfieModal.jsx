@@ -416,10 +416,11 @@ export default function WebcamSelfieModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 flex flex-col">
+        <div className="modal-shell bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+            <div className="modal-panel max-w-lg">
+                <div className="modal-grabber" />
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 gap-2">
                     <div className="flex items-center gap-2.5">
                         <div className={`p-2 rounded-xl text-white ${isActualTugasLuar || isEarlyCheckOut ? "bg-amber-600" : type === "check-in" ? "bg-emerald-600" : "bg-blue-600"}`}>
                             {isActualTugasLuar ? <MapPin className="w-5 h-5 stroke-[2.5]" /> : <Camera className="w-5 h-5 stroke-[2.5]" />}

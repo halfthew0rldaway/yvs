@@ -453,15 +453,15 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
             {/* Gallery Grid Modal */}
             {isGalleryModalOpen && (
                 <div 
-                    className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in"
+                    className="modal-shell z-[9990] bg-slate-950/70 backdrop-blur-sm animate-in fade-in"
                     onClick={() => setIsGalleryModalOpen(false)}
                 >
                     <div 
-                        className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95"
+                        className="modal-panel max-w-3xl animate-in zoom-in-95"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+                        <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between gap-2">
                             <div className="flex items-center gap-3">
                                 <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
                                     <Camera className="w-5 h-5" />
@@ -1864,9 +1864,10 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
 
             {/* Feature 4: Interactive Approval / Rejection Verification Modal */}
             {isApprovalModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
-                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-auto">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+                    <div className="modal-panel max-w-lg border-slate-200 my-auto">
+                        <div className="modal-grabber" />
+                        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 gap-2">
                             <div className="flex items-center gap-2.5">
                                 <div className={`p-2 rounded-xl ${approvalAction === "approve" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
                                     {approvalAction === "approve" ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}

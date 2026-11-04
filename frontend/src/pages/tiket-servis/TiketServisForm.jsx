@@ -1360,10 +1360,11 @@ export default function TiketServisForm() {
 
             {/* Quick Registration Modal: Pelanggan & Perangkat Baru */}
             {isQuickAddOpen && (
-                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-6">
+                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
+                    <div className="modal-panel max-w-lg">
+                        <div className="modal-grabber" />
                         {/* Header */}
-                        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                        <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 gap-2">
                             <div className="flex items-center gap-3">
                                 <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl border border-blue-200">
                                     <Plus className="w-5 h-5 text-blue-600" />

@@ -420,7 +420,111 @@ export default function UserList() {
                                 onAction={searchTerm || roleFilter ? () => { setSearchTerm(""); setRoleFilter(""); setCurrentPage(1); } : handleOpenCreateModal}
                             />
                         ) : (
-                            <table className="w-full text-sm text-left whitespace-nowrap">
+                            <>
+                            {/* Mobile Card View (< sm) */}
+                            <div className="sm:hidden divide-y divide-slate-100">
+                                {users.map((u) => (
+                                    <div
+                                        key={u.id}
+                                        onClick={(e) => {
+                                            if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
+                                            handleOpenEditModal(u);
+                                        }}
+                                        className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <UserAvatar user={u} size="w-10 h-10" textSize="text-xs" rounded="rounded-full" />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="font-semibold text-slate-900 truncate">{u.nama}</span>
+                                                    <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold border whitespace-nowrap ${
+                                                        u.role === "admin"
+                                                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                                            : u.role === "frontman"
+                                                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                            : "bg-blue-50 text-blue-700 border-blue-200"
+                                                    }`}>
+                                                        {u.role === "admin" ? <ShieldCheck className="w-3 h-3" /> : u.role === "frontman" ? <UserCheck className="w-3 h-3" /> : <Wrench className="w-3 h-3" />}
+                                                        <span className="capitalize">{u.role === "frontman" ? "Frontman" : u.role}</span>
+                                                    </span>
+                                                </div>
+                                                <span className="font-mono text-3xs text-blue-600 block truncate">@{u.username || (u.email ? u.email.split("@")[0] : `user${u.id}`)}</span>
+                                                <span className="font-mono text-3xs text-slate-500 block truncate">{u.email}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Stats row */}
+                                        <div className="mt-2 pt-2 border-t border-slate-100/80 text-3xs text-slate-600">
+                                            {u.role === "teknisi" ? (
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-medium">
+                                                        Assigned: {u.stats?.totalAssigned || 0}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedTechnicianPerfId(u.id);
+                                                        }}
+                                                        className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-semibold inline-flex items-center gap-1"
+                                                        title="Klik untuk melihat detail tiket yang diselesaikan teknisi ini"
+                                                    >
+                                                        <span>Selesai: {u.stats?.completedCount || 0}</span>
+                                                        <ChevronRight className="w-3 h-3 text-emerald-600" />
+                                                    </button>
+                                                </div>
+                                            ) : u.role === "frontman" ? (
+                                                <span className="text-amber-700 font-medium">Service Advisor & Kasir</span>
+                                            ) : (
+                                                <span className="text-slate-400 italic">Administrator</span>
+                                            )}
+                                        </div>
+
+                                        {/* Actions row */}
+                                        <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100/80">
+                                            <span className="text-3xs text-slate-400">
+                                                Dibuat {new Date(u.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <Link
+                                                    to="/attendance?tab=monitoring"
+                                                    title={`Lihat Log Presensi ${u.nama}`}
+                                                    className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                >
+                                                    <UserCheck className="w-4 h-4" />
+                                                </Link>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenResetModal(u)}
+                                                    title="Reset Password"
+                                                    className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                                >
+                                                    <Key className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenEditModal(u)}
+                                                    title="Edit User"
+                                                    className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDelete(u.id, u.nama)}
+                                                    title="Hapus User"
+                                                    className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Desktop Table View (>= sm) */}
+                            <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
                                 <thead className="table-header">
                                     <tr>
                                         <th className="px-6 py-3.5">User</th>
@@ -530,6 +634,7 @@ export default function UserList() {
                                     ))}
                                 </tbody>
                             </table>
+                            </>
                         )}
                     </TableContainer>
                 </div>
@@ -636,8 +741,10 @@ export default function UserList() {
 
             {/* CREATE / EDIT USER MODAL */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
+                <div className="modal-shell z-50 bg-slate-900/40 backdrop-blur-sm">
+                    <div className="modal-panel max-w-md border-slate-200">
+                        <div className="modal-grabber" />
+                        <div className="modal-body-tight">
                         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                             <h3 className="text-lg font-bold text-slate-900">
                                 {modalMode === "create" ? "Tambah Staf / User Baru" : "Edit Data User"}
@@ -761,14 +868,17 @@ export default function UserList() {
                                 </button>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* RESET PASSWORD MODAL */}
             {isResetModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200">
+                <div className="modal-shell z-50 bg-slate-900/40 backdrop-blur-sm">
+                    <div className="modal-panel max-w-sm border-slate-200">
+                        <div className="modal-grabber" />
+                        <div className="modal-body-tight">
                         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                             <h3 className="text-base font-bold text-slate-900">Reset Password User</h3>
                             <button onClick={() => setIsResetModalOpen(false)} className="text-slate-400 hover:text-slate-600">
@@ -811,6 +921,7 @@ export default function UserList() {
                                 </button>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             )}
