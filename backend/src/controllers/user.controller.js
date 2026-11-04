@@ -223,7 +223,7 @@ async function getSingleTechnicianPerformanceDetail(req, res) {
                             }
                         },
                         invoice: {
-                            select: { id: true, nomor_invoice: true, total_biaya: true, status_pembayaran: true }
+                            select: { id: true, total_biaya: true, biaya_jasa: true, biaya_sparepart: true, created_at: true }
                         },
                         penggunaan_sparepart: {
                             select: { id: true, jumlah: true }
@@ -306,9 +306,10 @@ async function getSingleTechnicianPerformanceDetail(req, res) {
                 } : null,
                 invoice: tk.invoice ? {
                     id: tk.invoice.id,
-                    nomor_invoice: tk.invoice.nomor_invoice,
                     total_biaya: tk.invoice.total_biaya,
-                    status_pembayaran: tk.invoice.status_pembayaran
+                    biaya_jasa: tk.invoice.biaya_jasa,
+                    biaya_sparepart: tk.invoice.biaya_sparepart,
+                    created_at: tk.invoice.created_at
                 } : null,
                 sparepart_count: tk.penggunaan_sparepart?.length || 0
             };

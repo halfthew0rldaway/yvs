@@ -36,6 +36,7 @@ const STATUS_BADGES = {
 export default function TechnicianPerformanceModal({ isOpen, onClose, technicianId }) {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'selesai' | 'aktif' | 'dibatalkan'
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -44,6 +45,7 @@ export default function TechnicianPerformanceModal({ isOpen, onClose, technician
             fetchDetail();
         } else {
             setData(null);
+            setError(null);
             setStatusFilter("all");
             setSearchQuery("");
         }
@@ -51,11 +53,14 @@ export default function TechnicianPerformanceModal({ isOpen, onClose, technician
 
     const fetchDetail = async () => {
         setLoading(true);
+        setError(null);
         try {
             const res = await api.get(`/users/performance/${technicianId}`);
             setData(res.data);
         } catch (err) {
             console.error("Gagal memuat detail performa teknisi:", err);
+            setData(null);
+            setError(err?.response?.data?.message || "Gagal memuat detail performa teknisi");
         } finally {
             setLoading(false);
         }
@@ -145,6 +150,24 @@ export default function TechnicianPerformanceModal({ isOpen, onClose, technician
                         <div className="py-20 text-center text-slate-400 space-y-3">
                             <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
                             <p className="text-xs font-medium">Memuat riwayat tiket & analitik performa teknisi...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="py-16 text-center space-y-3">
+                            <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center mx-auto text-red-500">
+                                <AlertCircle className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="font-semibold text-slate-800 text-sm">Gagal memuat data</p>
+                                <p className="text-2xs text-slate-500 mt-1 max-w-md mx-auto">{error}</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={fetchDetail}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                Coba Lagi
+                            </button>
                         </div>
                     ) : (
                         <>
@@ -334,16 +357,18 @@ export default function TechnicianPerformanceModal({ isOpen, onClose, technician
                                                             </td>
 
                                                             <td className="px-4 py-3.5 whitespace-nowrap">
-                                                                <div className="font-semibold text-slate-900 font-mono">
-                                                                    {formatCurrency(tk.invoice?.total_biaya || 0)}
-                                                                </div>
-                                                                <span className={`text-3xs font-semibold ${
-                                                                    tk.invoice?.status_pembayaran === "lunas" 
-                                                                        ? "text-emerald-600" 
-                                                                        : "text-slate-400"
-                                                                }`}>
-                                                                    {tk.invoice?.status_pembayaran === "lunas" ? "Lunas" : "Belum Lunas"}
-                                                                </span>
+                                                                {tk.invoice ? (
+                                                                    <>
+                                                                        <div className="font-semibold text-slate-900 font-mono">
+                                                                            {formatCurrency(tk.invoice.total_biaya || 0)}
+                                                                        </div>
+                                                                        <span className="text-3xs font-mono text-slate-400">
+                                                                            {tk.sparepart_count > 0 ? `${tk.sparepart_count} sparepart` : "Tanpa sparepart"}
+                                                                        </span>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="text-3xs font-semibold text-slate-400">Belum ada invoice</span>
+                                                                )}
                                                             </td>
 
                                                             <td className="px-4 py-3.5 whitespace-nowrap text-slate-500 text-2xs">

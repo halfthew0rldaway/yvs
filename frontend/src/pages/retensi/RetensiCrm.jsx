@@ -277,15 +277,14 @@ export default function RetensiCrm() {
         const nama = item.customer_nama || "Pelanggan";
         const unit = `${item.merek} ${item.model}`;
         const biaya = item.total_biaya ? `Rp ${Number(item.total_biaya).toLocaleString("id-ID")}` : "-";
-        const statusBayar = item.status_pembayaran || "Belum Dibayar";
         const noteText = customNote.trim() ? `\n* Catatan: ${customNote.trim()}` : "";
 
         if (item.diff_days >= 90) {
-            return `Yth. Bpk/Ibu ${nama},\n\nKami dari Serv.io menginformasikan mengenai perangkat Anda (${unit}, No. Tiket: #${item.nomor_tiket}) yang telah selesai dikerjakan sejak lebih dari 3 bulan yang lalu dan masih berada di rak penyimpanan workshop kami.\n\nDetail Invoice: ${biaya} (${statusBayar}).${noteText}\n\nMengingat kapasitas ruang penyimpanan workshop kami yang terbatas serta risiko penyimpanan jangka panjang di luar pengawasan, kami mohon kesediaan Bpk/Ibu untuk mengambil unit ini dalam waktu dekat. Workshop kami buka setiap hari kerja. Mohon hubungi kami untuk konfirmasi. Terima kasih.`;
+            return `Yth. Bpk/Ibu ${nama},\n\nKami dari Serv.io menginformasikan mengenai perangkat Anda (${unit}, No. Tiket: #${item.nomor_tiket}) yang telah selesai dikerjakan sejak lebih dari 3 bulan yang lalu dan masih berada di rak penyimpanan workshop kami.\n\nDetail Invoice: ${biaya}.${noteText}\n\nMengingat kapasitas ruang penyimpanan workshop kami yang terbatas serta risiko penyimpanan jangka panjang di luar pengawasan, kami mohon kesediaan Bpk/Ibu untuk mengambil unit ini dalam waktu dekat. Workshop kami buka setiap hari kerja. Mohon hubungi kami untuk konfirmasi. Terima kasih.`;
         } else if (item.diff_days >= 30) {
-            return `Halo Bpk/Ibu ${nama},\n\nIni adalah pengingat dari Serv.io mengenai unit ${unit} (Tiket #${item.nomor_tiket}). Perbaikan telah selesai lebih dari 30 hari yang lalu dan unit siap diambil di workshop kami.\n\nTotal Biaya: ${biaya} (${statusBayar}).${noteText}\n\nSilakan datang ke toko pada jam operasional untuk pengambilan dan verifikasi perangkat. Terima kasih.`;
+            return `Halo Bpk/Ibu ${nama},\n\nIni adalah pengingat dari Serv.io mengenai unit ${unit} (Tiket #${item.nomor_tiket}). Perbaikan telah selesai lebih dari 30 hari yang lalu dan unit siap diambil di workshop kami.\n\nTotal Biaya: ${biaya}.${noteText}\n\nSilakan datang ke toko pada jam operasional untuk pengambilan dan verifikasi perangkat. Terima kasih.`;
         } else {
-            return `Halo Bpk/Ibu ${nama},\n\nKami mengabarkan bahwa perbaikan untuk perangkat ${unit} (Tiket #${item.nomor_tiket}) telah rampung dan siap diambil di Serv.io Workshop.\n\nTotal Biaya: ${biaya} (${statusBayar}).${noteText}\n\nSilakan membawa nota atau nomor tiket saat pengambilan unit. Terima kasih atas kepercayaan Anda.`;
+            return `Halo Bpk/Ibu ${nama},\n\nKami mengabarkan bahwa perbaikan untuk perangkat ${unit} (Tiket #${item.nomor_tiket}) telah rampung dan siap diambil di Serv.io Workshop.\n\nTotal Biaya: ${biaya}.${noteText}\n\nSilakan membawa nota atau nomor tiket saat pengambilan unit. Terima kasih atas kepercayaan Anda.`;
         }
     };
 
@@ -1079,9 +1078,9 @@ export default function RetensiCrm() {
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between font-medium text-slate-700">
-                                            <span>Status Pembayaran:</span>
-                                            <span className={`font-bold ${currentUnclaimedItem.status_pembayaran === 'Lunas' ? 'text-emerald-700' : 'text-amber-700'}`}>
-                                                {currentUnclaimedItem.status_pembayaran}
+                                            <span>Status Penumpukan:</span>
+                                            <span className="font-bold text-amber-700">
+                                                {currentUnclaimedItem.stage_label || "Siap Diambil"}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between font-medium text-slate-700">

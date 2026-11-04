@@ -1340,7 +1340,6 @@ async function getUnclaimedDue(req, res) {
                 last_reminder_sent: t.last_reminder_sent || 0,
                 recommended_reminder: recommendedReminder,
                 total_biaya: t.invoice?.total_biaya || 0,
-                status_pembayaran: "Belum Diambil",
                 is_follow_up_sent: Boolean(lastLog),
                 last_follow_up_at: lastLog?.created_at || null,
                 last_follow_up_note: lastLog?.catatan || null
