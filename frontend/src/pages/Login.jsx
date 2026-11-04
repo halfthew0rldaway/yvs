@@ -53,9 +53,27 @@ export default function Login() {
 
         try {
             const cleanUser = username.trim();
+            // Pemetaan email fallback untuk memastikan kompatibilitas penuh dengan akun demo / akun lama database
+            const demoEmailMap = {
+                admin: "admin@workshop.com",
+                owner: "owner@workshop.com",
+                pimpinan: "owner@workshop.com",
+                manajer: "manajer@workshop.com",
+                teknisi1: "teknisi1@workshop.com",
+                teknisi2: "teknisi2@workshop.com",
+                teknisi3: "teknisi3@workshop.com",
+                teknisi4: "teknisi4@workshop.com",
+                teknisi5: "teknisi5@workshop.com",
+                teknisi6: "teknisi6@workshop.com",
+                siti: "siti.admin@workshop.com"
+            };
+            const fallbackEmail = cleanUser.includes("@") 
+                ? cleanUser 
+                : (demoEmailMap[cleanUser.toLowerCase()] || `${cleanUser}@workshop.com`);
+
             const res = await api.post("/auth/login", { 
                 username: cleanUser, 
-                email: cleanUser, 
+                email: fallbackEmail, 
                 password, 
                 rememberMe 
             });

@@ -116,6 +116,33 @@ app.use(errorHandler);
 
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server berjalan di port ${PORT}`);
+
+    // Auto-backfill username untuk akun lama yang username-nya masih NULL di database
+    (async () => {
+        try {
+            const prisma = require("./config/database");
+            const nullUsers = await prisma.user.findMany({
+                where: { username: null }
+            });
+            if (nullUsers && nullUsers.length > 0) {
+                console.log(`[BOOT] Menemukan ${nullUsers.length} akun tanpa username. Memulai auto-backfill...`);
+                for (const u of nullUsers) {
+                    const baseUser = (u.email.split("@")[0] || `user${u.id}`)
+                        .toLowerCase()
+                        .replace(/[^a-z0-9._-]/g, "");
+                    const exists = await prisma.user.findFirst({ where: { username: baseUser } });
+                    const finalUser = exists ? `${baseUser}${u.id}` : baseUser;
+                    await prisma.user.update({
+                        where: { id: u.id },
+                        data: { username: finalUser }
+                    });
+                    console.log(`[BOOT] -> Berhasil menetapkan username @${finalUser} untuk ${u.email}`);
+                }
+            }
+        } catch (err) {
+            console.warn("[BOOT] Catatan: Auto-backfill username dilewati:", err.message);
+        }
+    })();
 });
 
 module.exports = app;

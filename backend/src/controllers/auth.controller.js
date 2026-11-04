@@ -18,15 +18,32 @@ async function login(req, res) {
         }
 
         const cleanId = identifier.toLowerCase();
+        const emailFallback = cleanId.includes("@") ? cleanId : `${cleanId}@workshop.com`;
 
-        // Cari berdasarkan username ATAU email (mendukung alias praktis owner/pimpinan/superadmin)
+        // Cari berdasarkan username ATAU email (mendukung alias praktis owner/pimpinan/superadmin/admin/teknisi)
+        const orConditions = [
+            { username: cleanId },
+            { email: cleanId },
+            { email: emailFallback },
+            { email: { startsWith: `${cleanId}@` } }
+        ];
+
+        if (cleanId === "pimpinan" || cleanId === "superadmin" || cleanId === "bambang") {
+            orConditions.push({ username: "owner" }, { email: "owner@workshop.com" });
+        }
+        if (cleanId === "manajer" || cleanId === "maryam") {
+            orConditions.push({ username: "manajer" }, { email: "manajer@workshop.com" });
+        }
+        if (cleanId === "admin") {
+            orConditions.push({ email: "admin@workshop.com" });
+        }
+        if (cleanId === "teknisi1" || cleanId === "budi") {
+            orConditions.push({ username: "teknisi1" }, { email: "teknisi1@workshop.com" });
+        }
+
         const user = await prisma.user.findFirst({
             where: {
-                OR: [
-                    { username: cleanId },
-                    { email: cleanId },
-                    ...(cleanId === "pimpinan" || cleanId === "superadmin" ? [{ username: "owner" }] : [])
-                ]
+                OR: orConditions
             }
         });
 
@@ -37,6 +54,19 @@ async function login(req, res) {
         const valid = await bcrypt.compare(password, user.password);
         if (!valid) {
             return res.status(401).json({ message: "Username atau password salah" });
+        }
+
+        // Auto-heal: jika username di database masih NULL (akun sebelum migrasi), sinkronkan otomatis
+        if (!user.username) {
+            const fallbackUsername = (cleanId.includes("@") ? cleanId.split("@")[0] : cleanId)
+                .replace(/[^a-z0-9._-]/g, "");
+            try {
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { username: fallbackUsername }
+                });
+                user.username = fallbackUsername;
+            } catch (_) {}
         }
 
         // Ingat Saya: 30 hari vs 1 hari (atau JWT_EXPIRES_IN)
