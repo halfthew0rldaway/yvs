@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { 
-    ArrowLeft, Save, AlertTriangle, Lightbulb, DollarSign, Send, CheckCircle2,
+    ArrowLeft, Save, Sparkles, AlertTriangle, Lightbulb, DollarSign, Send, CheckCircle2,
     Check, X, RotateCcw, 
     Info, Wand2, ListChecks, ShieldAlert, Plus, Minus, AlignLeft, List
 } from "lucide-react";
