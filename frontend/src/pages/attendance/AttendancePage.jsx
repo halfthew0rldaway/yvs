@@ -2843,11 +2843,11 @@ export default function AttendancePage() {
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-slate-100 flex items-center justify-end gap-2.5 bg-slate-50/50">
+                        <div className="p-3.5 sm:p-4 border-t border-slate-100 flex flex-col-reverse xs:flex-row items-stretch xs:items-center justify-end gap-2 sm:gap-2.5 bg-slate-50/50">
                             <button
                                 type="button"
                                 onClick={() => setEarlyCheckOutModalOpen(false)}
-                                className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                                className="w-full xs:w-auto px-4 py-2.5 xs:py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-all cursor-pointer text-center"
                             >
                                 Batal
                             </button>
@@ -2862,7 +2862,7 @@ export default function AttendancePage() {
                                     setCameraModalType("check-out");
                                     setCameraModalOpen(true);
                                 }}
-                                className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 ring-2 ring-amber-500/20"
+                                className="w-full xs:w-auto px-5 py-2.5 xs:py-2 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 ring-2 ring-amber-500/20"
                             >
                                 <Camera className="w-3.5 h-3.5 stroke-[2.5]" />
                                 <span>Lanjut Ambil Selfie Pulang</span>

@@ -421,21 +421,21 @@ export default function WebcamSelfieModal({
                 <div className="modal-grabber" />
                 {/* Header */}
                 <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 gap-2">
-                    <div className="flex items-center gap-2.5">
-                        <div className={`p-2 rounded-xl text-white ${isActualTugasLuar || isEarlyCheckOut ? "bg-amber-600" : type === "check-in" ? "bg-emerald-600" : "bg-blue-600"}`}>
-                            {isActualTugasLuar ? <MapPin className="w-5 h-5 stroke-[2.5]" /> : <Camera className="w-5 h-5 stroke-[2.5]" />}
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className={`p-2 rounded-xl text-white shrink-0 ${isActualTugasLuar || isEarlyCheckOut ? "bg-amber-600" : type === "check-in" ? "bg-emerald-600" : "bg-blue-600"}`}>
+                            {isActualTugasLuar ? <MapPin className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" /> : <Camera className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />}
                         </div>
-                        <div>
-                            <h3 className="font-bold text-slate-800 text-sm sm:text-base">
+                        <div className="min-w-0 flex-1">
+                            <h3 className="font-bold text-slate-800 text-xs sm:text-base leading-tight truncate">
                                 {isActualTugasLuar
                                     ? "Check-In Tugas Luar (Di Luar Kantor)"
                                     : isEarlyCheckOut
-                                        ? "Verifikasi Wajah: Check-Out Pulang Lebih Awal"
+                                        ? "Verifikasi Wajah: Pulang Lebih Awal"
                                         : type === "check-in"
                                             ? "Verifikasi Wajah: Check-In Masuk"
                                             : "Verifikasi Wajah: Check-Out Pulang"}
                             </h3>
-                            <p className="text-2xs sm:text-xs text-slate-500 font-medium">
+                            <p className="text-3xs sm:text-xs text-slate-500 font-medium truncate mt-0.5">
                                 {isActualTugasLuar
                                     ? "Presensi di luar radius workshop dengan stempel GPS & review Owner"
                                     : isEarlyCheckOut
@@ -447,7 +447,7 @@ export default function WebcamSelfieModal({
                     <button
                         onClick={onClose}
                         disabled={submitting}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shrink-0"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -607,14 +607,14 @@ export default function WebcamSelfieModal({
                 )}
 
                 {/* Actions Footer */}
-                <div className="p-4 border-t border-slate-100 flex items-center justify-end gap-2.5 bg-white">
+                <div className="p-3.5 sm:p-4 border-t border-slate-100 flex flex-col-reverse xs:flex-row items-stretch xs:items-center justify-end gap-2 sm:gap-2.5 bg-white">
                     {previewImage ? (
                         <>
                             <button
                                 type="button"
                                 onClick={handleRetake}
                                 disabled={submitting}
-                                className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+                                className="w-full xs:w-auto px-4 py-2.5 xs:py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                             >
                                 <RefreshCw className="w-3.5 h-3.5" />
                                 <span>Ulangi Foto</span>
@@ -623,7 +623,7 @@ export default function WebcamSelfieModal({
                                 type="button"
                                 onClick={handleConfirm}
                                 disabled={submitting}
-                                className={`px-5 py-2 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-2 ${
+                                className={`w-full xs:w-auto px-5 py-2.5 xs:py-2 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-2 ${
                                     isActualTugasLuar
                                         ? "bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20"
                                         : type === "check-in"
@@ -639,7 +639,7 @@ export default function WebcamSelfieModal({
                                 ) : (
                                     <>
                                         <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-                                        <span>{isActualTugasLuar ? "Kirim Presensi Tugas Luar" : "Konfirmasi & Simpan Presensi"}</span>
+                                        <span>{isActualTugasLuar ? "Kirim Tugas Luar" : "Konfirmasi Presensi"}</span>
                                     </>
                                 )}
                             </button>
@@ -649,14 +649,14 @@ export default function WebcamSelfieModal({
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                                className="w-full xs:w-auto px-4 py-2.5 xs:py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-all cursor-pointer text-center"
                             >
                                 Batal
                             </button>
                             <button
                                 type="button"
                                 onClick={() => nativeCameraInputRef.current?.click()}
-                                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                                className="w-full xs:w-auto px-3.5 py-2.5 xs:py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                                 title="Buka aplikasi kamera bawaan HP langsung"
                             >
                                 <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
@@ -666,7 +666,7 @@ export default function WebcamSelfieModal({
                                 type="button"
                                 onClick={handleSnap}
                                 disabled={!cameraActive}
-                                className={`px-5 py-2 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-2 ${
+                                className={`w-full xs:w-auto px-5 py-2.5 xs:py-2 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-2 ${
                                     type === "check-in"
                                         ? "bg-emerald-600 hover:bg-emerald-700"
                                         : "bg-amber-600 hover:bg-amber-700"

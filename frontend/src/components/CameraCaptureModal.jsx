@@ -331,11 +331,11 @@ export default function CameraCaptureModal({
                 )}
 
                 {/* Modal Footer Controls */}
-                <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+                <div className="px-3.5 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2 shrink-0">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                        className="order-2 sm:order-1 px-3.5 sm:px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
                     >
                         Tutup
                     </button>
@@ -344,7 +344,7 @@ export default function CameraCaptureModal({
                         type="button"
                         disabled={!isStreaming || cameraError || currentPhotos.length >= maxPhotos || isCapturing}
                         onClick={handleTakeSnapshot}
-                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-40 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+                        className="order-1 sm:order-2 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-40 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
                         title={currentPhotos.length >= maxPhotos ? `Maksimal ${maxPhotos} foto tercapai` : "Ambil Foto"}
                     >
                         <Camera className="w-4 h-4" />
@@ -354,7 +354,7 @@ export default function CameraCaptureModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer"
+                        className="order-3 px-4 sm:px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                         <Check className="w-4 h-4" />
                         <span>Selesai ({currentPhotos.length})</span>
