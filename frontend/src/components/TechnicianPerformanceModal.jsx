@@ -189,13 +189,13 @@ export default function TechnicianPerformanceModal({ isOpen, onClose, technician
                                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
                                     <span className="text-2xs font-semibold text-slate-400 block">Rating Pelanggan</span>
                                     <div className="flex items-center gap-1 mt-0.5">
-                                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                                        <span className="text-base font-bold text-slate-800">
-                                            {summary.avgRating ? summary.avgRating : "5.0"}
+                                        <Star className={`w-4 h-4 ${summary.avgRating ? "text-amber-500 fill-amber-500" : "text-slate-300"}`} />
+                                        <span className={`text-base font-bold ${summary.avgRating ? "text-slate-800" : "text-slate-400"}`}>
+                                            {summary.avgRating ? summary.avgRating : "—"}
                                         </span>
                                     </div>
                                     <span className="text-3xs text-slate-500">
-                                        {summary.ratingCount ? `${summary.ratingCount} Ulasan` : "Rating Default"}
+                                        {summary.ratingCount ? `${summary.ratingCount} Ulasan` : "Belum ada ulasan"}
                                     </span>
                                 </div>
                             </div>

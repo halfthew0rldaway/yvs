@@ -261,7 +261,8 @@ async function getSingleTechnicianPerformanceDetail(req, res) {
             if (["selesai", "diambil"].includes(tk.status) && tk.invoice?.total_biaya) {
                 totalRevenue += tk.invoice.total_biaya;
             }
-            if (tk.completed_at && tk.created_at) {
+            // Durasi hanya dihitung dari tiket yang benar-benar selesai (konsisten dengan getTechnicianPerformance)
+            if (["selesai", "diambil"].includes(tk.status) && tk.completed_at && tk.created_at) {
                 const hrs = (new Date(tk.completed_at).getTime() - new Date(tk.created_at).getTime()) / (3600 * 1000);
                 if (hrs > 0) {
                     totalHours += hrs;
