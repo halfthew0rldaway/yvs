@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, MessageCircle, Clock, ShieldCheck, ChevronRight } from "lucide-react";
+import { useDevice } from "../../hooks/useDevice";
 
 const TOTAL_FRAMES = 240;
 
@@ -17,46 +18,41 @@ const STORY_STAGES = [
         id: "intro",
         range: [0.00, 0.18],
         eyebrow: "KOMPUTERAWET.COM · YANGVERSA COMPUTER",
-        shortEyebrow: "YVS COMPUTER · PEKAYON",
-        title: "Teman Terpercaya Merawat & Memperbaiki Komputer Anda.",
-        body: "Pusat spesialis servis laptop, PC Desktop, dan MacBook di Pekayon, Bekasi. Solusi jujur, konsultasi transparan, dan pengerjaan rapi agar perangkat Anda awet digunakan.",
+        title: "Empat Keunggulan yang Bikin Anda Tenang.",
+        body: "Spesialis servis laptop, PC Desktop, dan MacBook di Pekayon, Bekasi. Kami bekerja dengan transparansi biaya, sparepart original, dan garansi resmi — bukan sekadar tukar barang yang rusak.",
         badge: "Buka Setiap Hari 09–18 WIB",
     },
     {
         id: "inspection",
         range: [0.18, 0.38],
-        eyebrow: "TAHAP 01 · PEMERIKSAAN DETAIL",
-        shortEyebrow: "TAHAP 01 · DIAGNOSIS DETAIL",
-        title: "Pengecekan Tuntas, Estimasi Biaya Dulu Tanpa Paksaan.",
-        body: "Sebelum perbaikan dimulai, teknisi memeriksa akar masalah hingga ke level mikroskopis dan menjelaskan secara terbuka. Jika biaya tidak disetujui, unit dapat diambil tanpa biaya cek.",
-        badge: "Bebas Biaya Cek",
+        eyebrow: "KEUNGGULAN 01 · TRANSPARANSI HARGA",
+        title: "Biaya Dinaikkan Dulu, Tidak Ada Biaya Siluman.",
+        body: "Estimasi biaya dan rencana perbaikan kami sampaikan sebelum satu pun komponen disentuh. Kalau perbaikan tidak disetujui, unit tetap bisa Anda ambil tanpa biaya cek. Tidak ada kejutan harga di akhir.",
+        badge: "Gratis Cek, Tidak Paksa",
     },
     {
         id: "hardware",
         range: [0.38, 0.60],
-        eyebrow: "TAHAP 02 · PERBAIKAN & PENGGANTIAN SUKU CADANG",
-        shortEyebrow: "TAHAP 02 · PERBAIKAN HARDWARE",
-        title: "Dari Ganti Thermal Paste, Engsel, Hingga Masalah Motherboard.",
-        body: "Menangani laptop lemot, panas berlebih, engsel patah, layar pecah, mati total, hingga upgrade SSD dan RAM. Setiap suku cadang copotan dikembalikan utuh ke tangan Anda.",
-        badge: "Sparepart Transparan",
+        eyebrow: "KEUNGGULAN 02 · KEAHLIAN TINGKAT KOMPONEN",
+        title: "Yang Lain-Ganti Unit, Kami Perbaiki Akar Masalahnya.",
+        body: "Laptop mati total, motherboard rusak, BGA reballing, hingga kerusakan akibat cairan kami tangani di level komponen. Bukan sekadar menukar barang, tapi membenahi penyebabnya sampai unit benar-benar awet dipakai.",
+        badge: "BGA Reballing & Level Komponen",
     },
     {
         id: "quality",
         range: [0.60, 0.82],
-        eyebrow: "TAHAP 03 · PENGUJIAN STABILITAS & SUHU",
-        shortEyebrow: "TAHAP 03 · UJI KESTABILAN & SUHU",
-        title: "Dites Kestabilannya Sebelum Diserahkan Kembali.",
-        body: "Setiap unit dibersihkan dengan rapi dan diuji suhunya agar tidak lagi overheat atau sering hang saat dipakai bekerja. Kami pastikan perangkat siap dan nyaman digunakan.",
-        badge: "Pengujian Suhu & Stabilitas",
+        eyebrow: "KEUNGGULAN 03 · SPAREPART ORIGINAL & TERPERCAYA",
+        title: "Sparepart Original, Part Copotan Pun Dibawa Kembali.",
+        body: "Komponen pengganti kami pakai part original dan bergaransi, bukan barang tiruan. Bahkan part copotan unit Anda tetap kami kembalikan utuh sebagai bukti penggantian yang jujur.",
+        badge: "Part Original Bergaransi",
     },
     {
         id: "ready",
         range: [0.82, 1.00],
-        eyebrow: "TAHAP 04 · SERAH TERIMA & GARANSI RESMI",
-        shortEyebrow: "TAHAP 04 · SERAH TERIMA & GARANSI",
-        title: "Pantau Progres Servis Kapan Saja, Disertai Garansi Jelas.",
-        body: "Anda bisa memantau foto kondisi, riwayat pengerjaan, dan status garansi secara langsung melalui portal pelacakan ini tanpa harus bolak-balik tanya ke toko.",
-        badge: "Garansi Resmi Servis",
+        eyebrow: "KEUNGGULAN 04 · GARANSI RESMI & PELACAKAN LIVE",
+        title: "Diagnosa Jelas, Garansi Resmi, Bisa Dilacak Real-time.",
+        body: "Setiap perbaikan disertai garansi 30–90 hari tertulis dan progresnya bisa Anda pantau langsung lewat portal pelacakan. Tak perlu bolak-balik tanya kabar ke toko.",
+        badge: "Garansi 30–90 Hari",
     },
 ];
 
@@ -64,6 +60,28 @@ export default function ServiceProcess3D({ onTrackClick }) {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const [activeStage, setActiveStage] = useState(0);
+
+    // ── Pre-rendered scroll "video" gate (desktop only) ─────────────────────
+    // The 240-frame WebP sequence (+ canvas + scroll listeners + RAF loop) is heavy,
+    // so it is ONLY rendered on desktop. On phones/tablets it is skipped entirely:
+    // no frame downloads, no canvas, no scroll listeners, no RAF loop.
+    const { width: deviceWidth } = useDevice();
+
+    // Phones/tablets are detected via UA. Note: in "desktop mode" the UA still
+    // carries the mobile token (e.g. iPhone), but the viewport becomes wide, which
+    // is what we key off below.
+    const isMobileUserAgent =
+        typeof navigator !== "undefined" &&
+        /Android|webOS|iPhone|iPod|iPad|BlackBerry|IEMobile|Opera Mini|Mobile Safari/i.test(
+            navigator.userAgent || ""
+        );
+
+    // Thresholds:
+    //  • Desktop UA  -> show from 900px (the storytelling overlay needs the width).
+    //  • Mobile UA   -> only show from 960px, i.e. genuine "desktop mode".
+    //    This keeps big phones in landscape (~932px) hidden, while a phone that
+    //    requested the desktop site (980px) does get the video.
+    const showVideoSequence = deviceWidth >= 900 && (!isMobileUserAgent || deviceWidth >= 960);
 
     const framesRef = useRef(new Array(TOTAL_FRAMES).fill(null));
     const targetProgress = useRef(0);
@@ -73,6 +91,8 @@ export default function ServiceProcess3D({ onTrackClick }) {
     const lastRenderedFrame = useRef(-1);
 
     useEffect(() => {
+        if (!showVideoSequence) return;
+
         const canvas = canvasRef.current;
         const container = containerRef.current;
         if (!canvas || !container) return;
@@ -464,7 +484,7 @@ export default function ServiceProcess3D({ onTrackClick }) {
                 cancelAnimationFrame(animFrameId.current);
             }
         };
-    }, []);
+    }, [showVideoSequence]);
 
     const scrollToStage = (stageIdx) => {
         if (!containerRef.current) return;
@@ -481,6 +501,9 @@ export default function ServiceProcess3D({ onTrackClick }) {
 
     const currentStage = STORY_STAGES[activeStage] || STORY_STAGES[0];
 
+    // Mobile / tablet: hide the pre-rendered video experience completely.
+    if (!showVideoSequence) return null;
+
     return (
         <section
             ref={containerRef}
@@ -496,8 +519,8 @@ export default function ServiceProcess3D({ onTrackClick }) {
                     style={{ touchAction: "pan-y" }}
                 />
 
-                {/* 3. Desktop & iPad Storytelling Overlay (Left Column, wide-to-edge container, pointer-events-none container) */}
-                <div className="hidden md:flex absolute inset-0 z-20 items-center pointer-events-none">
+                {/* 3. Desktop storytelling overlay (Left Column, wide-to-edge container, pointer-events-none container) */}
+                <div className="absolute inset-0 z-20 flex items-center pointer-events-none">
                     <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
                         <div className="pointer-events-auto max-w-md lg:max-w-[460px] xl:max-w-[500px] space-y-4">
                             {/* Header Pill & Step Counter */}
@@ -563,95 +586,6 @@ export default function ServiceProcess3D({ onTrackClick }) {
                     </div>
                 </div>
 
-                {/* 4. Mobile Viewport Architecture: Integrated Top HUD & Docked Bottom Glass Sheet */}
-                <div className="md:hidden">
-                    {/* Top Viewfinder HUD with Interactive Stage Stepper */}
-                    <div className="absolute top-0 left-0 right-0 z-20 pointer-events-auto px-4 pt-[max(env(safe-area-inset-top,0px),12px)] pb-3 bg-gradient-to-b from-white via-white/95 to-transparent">
-                        {/* 5-Segment Interactive Progress Line */}
-                        <div className="grid grid-cols-5 gap-1.5 w-full">
-                            {STORY_STAGES.map((s, idx) => (
-                                <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => scrollToStage(idx)}
-                                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                                        idx === activeStage
-                                            ? "bg-blue-600 h-2 shadow-xs"
-                                            : idx < activeStage
-                                            ? "bg-blue-300"
-                                            : "bg-slate-200/90"
-                                    }`}
-                                    aria-label={`Pindah ke ${s.shortEyebrow || s.eyebrow}`}
-                                />
-                            ))}
-                        </div>
-
-                        {/* Top Metadata Row: Stage Label & Counter */}
-                        <div className="flex items-center justify-between gap-2 mt-2">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse shrink-0" />
-                                <span className="font-mono text-3xs font-bold text-blue-700 uppercase tracking-wider truncate">
-                                    {currentStage.shortEyebrow || currentStage.eyebrow}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="font-mono text-3xs font-extrabold text-slate-700 bg-white/90 border border-slate-200/80 px-2 py-0.5 rounded-full shadow-2xs">
-                                    0{activeStage + 1} / 0{STORY_STAGES.length}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Bottom Docked Editorial Glass Sheet (Edge-to-Edge, Seamless, Zero Pop-up Feel) */}
-                    <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-auto pb-[max(env(safe-area-inset-bottom,0px),10px)]">
-                        <div className="bg-white/94 backdrop-blur-xl border-t border-slate-200/80 rounded-t-3xl shadow-[0_-8px_30px_rgba(15,23,42,0.06)] px-4 sm:px-6 pt-2 pb-3 space-y-2">
-                            {/* Subtle Grab Bar Indicator */}
-                            <div className="w-8 h-1 bg-slate-300/80 rounded-full mx-auto mb-1" />
-
-                            {/* Badge Pill */}
-                            <div className="flex items-center justify-between gap-2">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 font-mono text-3xs font-bold tracking-wider uppercase whitespace-nowrap shrink-0 w-fit max-w-max">
-                                    ✦ {currentStage.badge}
-                                </span>
-                                <span className="text-3xs font-mono text-slate-400 whitespace-nowrap shrink-0">
-                                    Swipe scroll ↓
-                                </span>
-                            </div>
-
-                            {/* Stage Title */}
-                            <h3 className="font-display font-extrabold text-sm sm:text-base text-slate-900 leading-snug">
-                                {currentStage.title}
-                            </h3>
-
-                            {/* Stage Description */}
-                            <p className="font-sans text-xs text-slate-600 leading-relaxed text-left line-clamp-2">
-                                {currentStage.body}
-                            </p>
-
-                            {/* Streamlined Mobile Action Bar */}
-                            <div className="pt-1 flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={onTrackClick}
-                                    className="flex-1 py-2.5 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer min-h-[40px] transition-all whitespace-nowrap shrink-0 w-fit"
-                                >
-                                    <Search className="w-3.5 h-3.5 shrink-0" />
-                                    <span className="whitespace-nowrap">Lacak Status Servis</span>
-                                </button>
-                                <a
-                                    href="https://wa.me/628121034212?text=Halo%20Yangversa%20Computer,%20saya%20ingin%20konsultasi%20mengenai%20perangkat%20laptop/PC%20saya"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="py-2.5 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-98 text-emerald-700 border border-emerald-200 font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs min-h-[40px] transition-all whitespace-nowrap shrink-0 w-fit max-w-max"
-                                    title="Konsultasi WhatsApp"
-                                >
-                                    <MessageCircle className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
-                                    <span className="whitespace-nowrap">WA CS</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
     );

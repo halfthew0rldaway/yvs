@@ -100,13 +100,14 @@ export default function LandingHero({ onTrackSubmit, loading }) {
                             <button
                                 type="button"
                                 onClick={() => {
-                                    const el = document.getElementById("service-workflow");
+                                    // The video storytelling section is desktop-only.
+                                    const el = document.getElementById("service-workflow") || document.getElementById("track-lookup");
                                     if (el) el.scrollIntoView({ behavior: "smooth" });
                                 }}
                                 className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-sans font-medium text-sm transition-all cursor-pointer"
                             >
                                 <ArrowDown className="w-4 h-4 text-slate-400" />
-                                Simulasi Tahapan Servis
+                                Lihat Keunggulan Kami
                             </button>
                         </div>
                     </div>

@@ -53,7 +53,7 @@ export default function LandingFooter() {
                         <ul className="space-y-2.5 text-sm text-slate-600 font-medium">
                             <li>
                                 <a href="#service-workflow" className="hover:text-blue-600 transition-colors">
-                                    Proses Perbaikan
+                                    Keunggulan Kami
                                 </a>
                             </li>
                             <li>

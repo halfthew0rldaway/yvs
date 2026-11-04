@@ -56,6 +56,20 @@ export default function LandingNavbar({ onSearchClick }) {
                 top: Math.max(0, offsetPosition),
                 behavior: "smooth"
             });
+            return;
+        }
+
+        // Fallback: the pre-rendered "Proses Perbaikan" video section is desktop-only,
+        // so on mobile it may not exist in the DOM. Scroll to the tracking hub instead.
+        if (id === "service-workflow") {
+            const fallbackEl = document.getElementById("track-lookup");
+            if (fallbackEl) {
+                const navbarOffset = window.innerWidth >= 640 ? 64 : 56;
+                window.scrollTo({
+                    top: Math.max(0, fallbackEl.getBoundingClientRect().top + window.pageYOffset - navbarOffset),
+                    behavior: "smooth"
+                });
+            }
         }
     };
 
@@ -111,7 +125,7 @@ export default function LandingNavbar({ onSearchClick }) {
                         onClick={() => scrollToSection("service-workflow")}
                         className="hover:text-blue-600 transition-colors cursor-pointer"
                     >
-                        Proses Perbaikan
+                        Keunggulan Kami
                     </button>
                     <button
                         type="button"
@@ -202,7 +216,7 @@ export default function LandingNavbar({ onSearchClick }) {
                             className="md:hidden absolute top-full left-0 right-0 z-50 overflow-hidden bg-white/98 backdrop-blur-xl border-b border-slate-200 px-4 py-4 space-y-1 shadow-xl"
                         >
                             {[
-                                { num: "01", label: "Proses Perbaikan", id: "service-workflow" },
+                                { num: "01", label: "Keunggulan Kami", id: "service-workflow" },
                                 { num: "02", label: "Layanan Kami", id: "service-spec" },
                                 { num: "03", label: "Standar Pemeriksaan", id: "engineering-standards" },
                                 { num: "04", label: "Ulasan Google Maps (4.7★)", id: "workshop-reviews" },
