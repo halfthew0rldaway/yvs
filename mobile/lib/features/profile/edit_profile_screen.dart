@@ -18,6 +18,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
+  late TextEditingController _usernameController;
   late TextEditingController _emailController;
   bool _isSaving = false;
 
@@ -26,12 +27,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.initState();
     final user = ref.read(authProvider).user;
     _nameController = TextEditingController(text: user?.nama ?? '');
+    _usernameController = TextEditingController(text: user?.username ?? '');
     _emailController = TextEditingController(text: user?.email ?? '');
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     super.dispose();
   }
@@ -157,6 +160,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _isSaving = true);
     final error = await ref.read(authProvider.notifier).updateProfile(
       nama: _nameController.text.trim(),
+      username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
     );
     if (!mounted) return;
@@ -363,6 +367,32 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) return 'Nama tidak boleh kosong';
                       return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Username
+                  const Text('Username (Kredensial Login)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: _usernameController,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.none,
+                    decoration: const InputDecoration(
+                      hintText: 'admin, teknisi1',
+                      prefixIcon: Icon(Icons.alternate_email, size: 20),
+                    ),
+                    inputFormatters: const [],
+                    onChanged: (val) {
+                      final clean = val.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+                      if (clean != val) {
+                        _usernameController.value = TextEditingValue(
+                          text: clean,
+                          selection: TextSelection.collapsed(offset: clean.length),
+                        );
+                      }
                     },
                   ),
                   const SizedBox(height: 16),

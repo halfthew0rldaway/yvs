@@ -1267,7 +1267,7 @@ class DashboardScreen extends ConsumerWidget {
   ) {
     // Role manajerial/owner (pimpinan) tidak wajib absen
     final authState = ref.watch(authProvider);
-    final role = authState.user?['role']?.toString().toLowerCase();
+    final role = authState.user?.role.toLowerCase();
     if (role == 'pimpinan') {
       return const SizedBox.shrink();
     }

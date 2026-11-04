@@ -92,7 +92,7 @@ class AttendanceGuard {
   }) {
     // Role manajerial/owner (pimpinan) tidak wajib absen
     final user = ref.read(authProvider).user;
-    final role = user?['role']?.toString().toLowerCase();
+    final role = user?.role.toLowerCase();
     if (role == 'pimpinan') {
       return true;
     }

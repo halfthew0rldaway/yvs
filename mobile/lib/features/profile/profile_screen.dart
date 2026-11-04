@@ -196,14 +196,27 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          user?.email ?? '-',
+                          '@${user?.username ?? (user?.email.split('@').first ?? 'user')}',
                           style: const TextStyle(
                             fontSize: 12.5,
-                            color: AppTheme.textSecondary,
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w600,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (user?.email != null) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            user!.email,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                         const SizedBox(height: 8),
                         Row(
                           children: [

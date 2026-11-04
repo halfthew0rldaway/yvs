@@ -235,7 +235,7 @@ async function uploadProfilePhoto(req, res) {
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: { foto_profile: newAvatarUrl },
-            select: { id: true, nama: true, email: true, role: true, foto_profile: true }
+            select: { id: true, nama: true, username: true, email: true, role: true, foto_profile: true }
         });
 
         await recordActivity({
@@ -272,7 +272,7 @@ async function removeProfilePhoto(req, res) {
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: { foto_profile: null },
-            select: { id: true, nama: true, email: true, role: true, foto_profile: true }
+            select: { id: true, nama: true, username: true, email: true, role: true, foto_profile: true }
         });
 
         await recordActivity({

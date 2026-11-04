@@ -12,7 +12,8 @@ import {
     Upload, 
     RefreshCw,
     Wrench,
-    ShieldCheck
+    ShieldCheck,
+    AtSign
 } from "lucide-react";
 import toast from "react-hot-toast";
 import UserAvatar from "../components/common/UserAvatar";
@@ -25,6 +26,7 @@ export default function Profile() {
 
     const [formData, setFormData] = useState({
         nama: user?.nama || "",
+        username: user?.username || "",
         email: user?.email || "",
         currentPassword: "",
         newPassword: "",
@@ -261,7 +263,10 @@ export default function Profile() {
                         <h2 className="text-base sm:text-lg font-bold text-slate-900 break-words max-w-full">
                             {user?.nama}
                         </h2>
-                        <p className="text-xs text-slate-500 font-mono mt-0.5 break-all">
+                        <p className="text-xs text-blue-600 font-mono mt-0.5 break-all">
+                            @{user?.username || (user?.email ? user.email.split("@")[0] : "user")}
+                        </p>
+                        <p className="text-2xs text-slate-400 font-mono mt-0.5 break-all">
                             {user?.email}
                         </p>
 
@@ -301,6 +306,29 @@ export default function Profile() {
                                                 value={formData.nama}
                                                 onChange={handleChange}
                                                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="username">
+                                            Username <span className="text-slate-400 font-normal">(Kredensial Login)</span>
+                                        </label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                                <AtSign className="h-4 w-4" />
+                                            </div>
+                                            <input
+                                                id="username"
+                                                name="username"
+                                                type="text"
+                                                autoComplete="username"
+                                                autoCapitalize="none"
+                                                spellCheck="false"
+                                                value={formData.username}
+                                                onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s+/g, "") })}
+                                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono"
+                                                placeholder="admin, teknisi1"
                                             />
                                         </div>
                                     </div>

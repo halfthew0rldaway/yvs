@@ -93,16 +93,16 @@ class ChecklistData {
     if (jenisPerangkat == null || jenisPerangkat.isEmpty) return laptopItems;
     final j = jenisPerangkat.toLowerCase().trim();
 
-    if (j.includes('printer') || j.includes('scanner') || j.includes('cetak') || j.includes('plotter') || j.includes('pos')) {
+    if (j.contains('printer') || j.contains('scanner') || j.contains('cetak') || j.contains('plotter') || j.contains('pos')) {
       return printerItems;
     }
-    if (j.includes('desktop') || j.includes('pc') || j.includes('komputer') || j.includes('tower') || j.includes('all-in-one') || j.includes('aio') || j.includes('rakitan')) {
+    if (j.contains('desktop') || j.contains('pc') || j.contains('komputer') || j.contains('tower') || j.contains('all-in-one') || j.contains('aio') || j.contains('rakitan')) {
       return pcItems;
     }
-    if (j.includes('smartphone') || j.includes('hp') || j.includes('handphone') || j.includes('tablet') || j.includes('ipad') || j.includes('tab') || j.includes('android') || j.includes('iphone')) {
+    if (j.contains('smartphone') || j.contains('hp') || j.contains('handphone') || j.contains('tablet') || j.contains('ipad') || j.contains('tab') || j.contains('android') || j.contains('iphone')) {
       return smartphoneItems;
     }
-    if (j.includes('laptop') || j.includes('notebook') || j.includes('ultrabook') || j.includes('macbook')) {
+    if (j.contains('laptop') || j.contains('notebook') || j.contains('ultrabook') || j.contains('macbook')) {
       return laptopItems;
     }
     return otherItems;

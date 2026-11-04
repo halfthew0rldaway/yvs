@@ -119,6 +119,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<String?> updateProfile({
     required String nama,
+    String? username,
     required String email,
     String? currentPassword,
     String? newPassword,
@@ -129,6 +130,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'nama': nama.trim(),
         'email': email.trim(),
       };
+      if (username != null && username.trim().isNotEmpty) {
+        body['username'] = username.trim().toLowerCase();
+      }
       if (currentPassword != null && currentPassword.isNotEmpty) {
         body['currentPassword'] = currentPassword;
       }

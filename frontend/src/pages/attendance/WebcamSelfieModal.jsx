@@ -23,6 +23,7 @@ function drawRoundedRect(ctx, x, y, width, height, radius, fillStyle) {
 
 // Helper: Word wrap text on Canvas
 function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+    if (!text || typeof text !== "string") return y;
     const words = text.split(" ");
     let line = "";
     let linesDrawn = 0;

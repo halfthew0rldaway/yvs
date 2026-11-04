@@ -521,7 +521,7 @@ async function uploadUserPhoto(req, res) {
         const updated = await prisma.user.update({
             where: { id },
             data: { foto_profile: newAvatarUrl },
-            select: { id: true, nama: true, email: true, role: true, foto_profile: true, created_at: true }
+            select: { id: true, nama: true, username: true, email: true, role: true, foto_profile: true, created_at: true }
         });
 
         return res.json({ message: "Foto profil user berhasil diperbarui", data: updated, foto_profile: newAvatarUrl });
