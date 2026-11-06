@@ -41,12 +41,16 @@ async function getAll(req, res) {
         // izinkan pencarian mencakup seluruh tiket agar teknisi mengetahui status tiket tersebut
         // (apakah tiket baru atau sudah ditangani teknisi lain).
         if (req.user?.role === "teknisi" && !search) {
-            andConditions.push({
-                OR: [
-                    { teknisi_id: req.user.id },
-                    { status: "diterima", teknisi_id: null }
-                ]
-            });
+            if (teknisi_id) {
+                andConditions.push({ teknisi_id: Number(teknisi_id) });
+            } else {
+                andConditions.push({
+                    OR: [
+                        { teknisi_id: req.user.id },
+                        { teknisi_id: null, status: { notIn: ["selesai", "diambil", "dibatalkan"] } }
+                    ]
+                });
+            }
         } else if (teknisi_id) {
             andConditions.push({ teknisi_id: Number(teknisi_id) });
         }
@@ -163,7 +167,7 @@ async function getAll(req, res) {
             ? {
                 OR: [
                     { teknisi_id: req.user.id },
-                    { status: "diterima", teknisi_id: null }
+                    { teknisi_id: null, status: { notIn: ["selesai", "diambil", "dibatalkan"] } }
                 ]
             }
             : {};
@@ -177,7 +181,7 @@ async function getAll(req, res) {
                 skip,
                 take: limit,
             }),
-            prisma.tiketServis.count({ where: { status: "diterima", teknisi_id: null } }),
+            prisma.tiketServis.count({ where: { teknisi_id: null, status: { notIn: ["selesai", "diambil", "dibatalkan"] } } }),
             prisma.tiketServis.count({
                 where: {
                     ...countBase,
@@ -303,10 +307,10 @@ async function getById(req, res) {
         // Restriksi role Teknisi:
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
-        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
         if (req.user?.role === "teknisi") {
-            const isMyTicket = tiket.teknisi_id === req.user.id;
-            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
+            const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
                 return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
             }
@@ -576,10 +580,10 @@ async function update(req, res) {
         // Restriksi role Teknisi:
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
-        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
         if (req.user?.role === "teknisi") {
-            const isMyTicket = tiket.teknisi_id === req.user.id;
-            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
+            const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
                 return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
             }
@@ -630,10 +634,10 @@ async function update(req, res) {
 
         // RBAC: Teknisi hanya boleh ambil alih jika kosong, dan hanya boleh edit tiket sendiri
         if (req.user.role === "teknisi") {
-            if (teknisi_id && teknisi_id !== req.user.id) {
+            if (teknisi_id !== undefined && teknisi_id !== null && Number(teknisi_id) !== Number(req.user.id)) {
                 return res.status(403).json({ message: "Akses ditolak: Anda tidak bisa menugaskan tiket ke teknisi lain." });
             }
-            if (tiket.teknisi_id && tiket.teknisi_id !== req.user.id) {
+            if (tiket.teknisi_id && Number(tiket.teknisi_id) !== Number(req.user.id)) {
                 return res.status(403).json({ message: "Akses ditolak: Ini bukan tiket Anda." });
             }
         }
@@ -867,10 +871,10 @@ async function updateDefectMap(req, res) {
         // Restriksi role Teknisi:
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
-        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
         if (req.user?.role === "teknisi") {
-            const isMyTicket = tiket.teknisi_id === req.user.id;
-            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
+            const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
                 return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
             }
@@ -908,10 +912,10 @@ async function updateReminder(req, res) {
         // Restriksi role Teknisi:
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
-        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
         if (req.user?.role === "teknisi") {
-            const isMyTicket = tiket.teknisi_id === req.user.id;
-            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
+            const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
                 return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
             }
@@ -1086,10 +1090,10 @@ async function markWarrantyFollowUp(req, res) {
         // Restriksi role Teknisi:
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
-        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
         if (req.user?.role === "teknisi") {
-            const isMyTicket = tiket.teknisi_id === req.user.id;
-            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
+            const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
                 return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
             }
@@ -1233,10 +1237,10 @@ async function markMaintenanceFollowUp(req, res) {
         // Restriksi role Teknisi:
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
-        // 2. Tiket berstatus 'diterima' yang belum di-assign ke siapapun (tiket.status === 'diterima' && !tiket.teknisi_id)
+        // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
         if (req.user?.role === "teknisi") {
-            const isMyTicket = tiket.teknisi_id === req.user.id;
-            const isUnassignedPool = tiket.status === "diterima" && !tiket.teknisi_id;
+            const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
+            const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
                 return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
             }

@@ -117,7 +117,7 @@ export default function DashboardAttendanceCard() {
                                 Disetujui ({activeLeave.jumlah_hari} Hari)
                             </span>
                         </div>
-                        <p className="text-2xs sm:text-xs text-sky-800 mt-0.5 leading-relaxed truncate">
+                        <p className="text-2xs sm:text-xs text-sky-800 mt-0.5 leading-relaxed line-clamp-2 break-words">
                             {activeLeave.alasan || "Pengajuan izin karyawan aktif"}
                         </p>
                     </div>

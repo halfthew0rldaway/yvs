@@ -406,7 +406,7 @@ async function teknisiList(req, res) {
     try {
         const teknisis = await prisma.user.findMany({
             where: { role: "teknisi" },
-            select: { id: true, nama: true, email: true },
+            select: { id: true, nama: true, email: true, foto_profile: true },
         });
 
         return res.json(teknisis);

@@ -119,20 +119,26 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
     final currentUser = ref.read(authProvider).user;
     if (currentUser == null) return;
+    final currentTicket = ref.read(ticketDetailProvider(widget.ticketId)).value;
 
     setState(() => _isActionLoading = true);
     try {
+      final payload = <String, dynamic>{
+        'teknisi_id': currentUser.id,
+      };
+      if (currentTicket?.status == 'diterima') {
+        payload['status'] = 'didiagnosis';
+      }
       await _client.dio.put(
         '${ApiConstants.tickets}/${widget.ticketId}',
-        data: {
-          'teknisi_id': currentUser.id,
-          'status': 'didiagnosis',
-        },
+        data: payload,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Berhasil mengambil alih tiket! Status kini: Didiagnosis'),
+          SnackBar(
+            content: Text(currentTicket?.status == 'diterima'
+                ? 'Berhasil mengambil alih tiket! Status kini: Didiagnosis'
+                : 'Berhasil mengambil alih tiket!'),
             backgroundColor: AppTheme.success,
           ),
         );

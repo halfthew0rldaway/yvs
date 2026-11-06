@@ -83,7 +83,8 @@ class TicketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final device = ticket.perangkat;
     final customer = device?.customer;
-    final isUnassigned = ticket.teknisiId == null && ticket.teknisi == null;
+    final isUnassigned = (ticket.teknisiId == null && ticket.teknisi == null) &&
+        !['selesai', 'diambil', 'dibatalkan'].contains(ticket.status);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

@@ -100,7 +100,7 @@ class DashboardScreen extends ConsumerWidget {
           ref.invalidate(attendanceStatusProvider);
         },
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 110.0),
           children: [
             // Scheduled Attendance Reminders (09:00 WIB Pagi & 18:00 WIB Sore)
             _buildAttendanceScheduledReminder(context, ref, attendance),
@@ -127,15 +127,18 @@ class DashboardScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Halo, ${(user?.nama ?? "Teknisi").split('(')[0].trim()}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Halo, ${(user?.nama ?? "Teknisi").split('(')[0].trim()}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
+                            ),
+                            maxLines: 1,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 3),
                         Row(

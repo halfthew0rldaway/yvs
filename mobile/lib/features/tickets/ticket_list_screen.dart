@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_theme.dart';
@@ -80,17 +81,22 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
 
     setState(() => _isClaiming = true);
     try {
+      final payload = <String, dynamic>{
+        'teknisi_id': currentUser.id,
+      };
+      if (ticket.status == 'diterima') {
+        payload['status'] = 'didiagnosis';
+      }
       await _client.dio.put(
         '${ApiConstants.tickets}/${ticket.id}',
-        data: {
-          'teknisi_id': currentUser.id,
-          'status': 'didiagnosis',
-        },
+        data: payload,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Tiket #${ticket.nomorTiket} berhasil diambil alih! Status: Didiagnosis.'),
+            content: Text(ticket.status == 'diterima'
+                ? 'Tiket #${ticket.nomorTiket} berhasil diambil alih! Status: Didiagnosis.'
+                : 'Tiket #${ticket.nomorTiket} berhasil diambil alih!'),
             backgroundColor: AppTheme.success,
           ),
         );
@@ -99,9 +105,13 @@ class _TicketListScreenState extends ConsumerState<TicketListScreen> {
       ref.invalidate(dashboardProvider);
     } catch (e) {
       if (mounted) {
+        String msg = 'Gagal mengambil alih tiket. Silakan coba lagi.';
+        if (e is DioException && e.response?.data is Map && e.response?.data['message'] != null) {
+          msg = e.response!.data['message'].toString();
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal mengambil alih tiket. Silakan coba lagi.'),
+          SnackBar(
+            content: Text(msg),
             backgroundColor: AppTheme.error,
           ),
         );

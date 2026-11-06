@@ -381,11 +381,31 @@ export default function TiketServisDetail() {
     const [sparepartSearchQuery, setSparepartSearchQuery] = useState("");
     const [sparepartCategoryFilter, setSparepartCategoryFilter] = useState("");
     const [useSparepartLoading, setUseSparepartLoading] = useState(false);
+    const [teknisiList, setTeknisiList] = useState([]);
+    const [isAssigningTeknisi, setIsAssigningTeknisi] = useState(false);
 
     useEffect(() => {
         fetchTiket();
         api.get("/sparepart").then((res) => setSpareparts(res.data)).catch(() => { });
-    }, [id]);
+        if (isAdmin) {
+            api.get("/dashboard/teknisi-list").then((res) => setTeknisiList(res.data || [])).catch(() => { });
+        }
+    }, [id, isAdmin]);
+
+    async function handleAssignTeknisi(newTeknisiId) {
+        try {
+            setIsAssigningTeknisi(true);
+            await api.put(`/tiket-servis/${id}`, {
+                teknisi_id: newTeknisiId ? Number(newTeknisiId) : null
+            });
+            toast.success(newTeknisiId ? "Teknisi berhasil ditugaskan!" : "Penugasan teknisi berhasil dicabut");
+            fetchTiket();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal mengubah penugasan teknisi");
+        } finally {
+            setIsAssigningTeknisi(false);
+        }
+    }
 
     async function fetchTiket() {
         try {
@@ -594,11 +614,18 @@ export default function TiketServisDetail() {
     async function handleTakeOver() {
         if (!user) return;
         try {
-            await api.put(`/tiket-servis/${id}`, { 
-                teknisi_id: user.id,
-                status: "didiagnosis"
-            });
-            toast.success("Berhasil mengambil alih tiket! Status tiket kini: Didiagnosis");
+            const payload = { 
+                teknisi_id: user.id
+            };
+            if (tiket?.status === "diterima") {
+                payload.status = "didiagnosis";
+            }
+            await api.put(`/tiket-servis/${id}`, payload);
+            toast.success(
+                tiket?.status === "diterima"
+                    ? "Berhasil mengambil alih tiket! Status tiket kini: Didiagnosis"
+                    : "Berhasil mengambil alih tiket!"
+            );
             setIsTakeOverModalOpen(false);
             fetchTiket();
         } catch (err) {
@@ -1041,15 +1068,15 @@ export default function TiketServisDetail() {
                         </button>
                     )}
 
-                    {/* Stage Action: Diterima (Claim) */}
-                    {isTeknisi && !tiket.teknisi && tiket.status === "diterima" && (
+                    {/* Stage Action: Klaim & Ambil Alih Tiket (Unassigned Active Ticket) */}
+                    {isTeknisi && !tiket.teknisi && !["selesai", "diambil", "dibatalkan"].includes(tiket.status) && (
                         <button
                             type="button"
                             onClick={() => setIsTakeOverModalOpen(true)}
                             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-amber-600/20 shrink-0 cursor-pointer whitespace-nowrap"
                         >
                             <Wrench className="w-4 h-4" />
-                            <span>Klaim & Mulai Diagnosis</span>
+                            <span>{tiket.status === "diterima" ? "Klaim & Mulai Diagnosis" : "Klaim & Ambil Alih Tiket"}</span>
                         </button>
                     )}
 
@@ -1731,13 +1758,37 @@ export default function TiketServisDetail() {
                         </div>
 
                         <div className="flex items-start gap-3">
-                            <Wrench className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-                            <div>
-                                <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-0.5">Teknisi Penanggung Jawab</p>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                    {tiket.teknisi && <UserAvatar user={tiket.teknisi} size="w-5 h-5" textSize="text-3xs" rounded="rounded-full" />}
-                                    <p className="font-medium text-slate-900">{tiket.teknisi?.nama || <span className="text-amber-600 italic">Belum ditugaskan</span>}</p>
-                                </div>
+                            <Wrench className="w-4 h-4 text-slate-400 mt-1 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">Teknisi Penanggung Jawab</p>
+                                {isAdmin ? (
+                                    <div className="space-y-1.5">
+                                        <select
+                                            value={tiket.teknisi_id || ""}
+                                            onChange={(e) => handleAssignTeknisi(e.target.value)}
+                                            disabled={isAssigningTeknisi || isLocked}
+                                            className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 cursor-pointer shadow-2xs"
+                                        >
+                                            <option value="">-- Belum Ditugaskan --</option>
+                                            {teknisiList.map((t) => (
+                                                <option key={t.id} value={t.id}>
+                                                    {t.nama}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {tiket.teknisi && (
+                                            <div className="flex items-center gap-1.5 text-2xs text-slate-500 pl-0.5">
+                                                <UserAvatar user={tiket.teknisi} size="w-4 h-4" textSize="text-3xs" rounded="rounded-full" />
+                                                <span className="truncate">{tiket.teknisi.nama}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        {tiket.teknisi && <UserAvatar user={tiket.teknisi} size="w-5 h-5" textSize="text-3xs" rounded="rounded-full" />}
+                                        <p className="font-medium text-slate-900">{tiket.teknisi?.nama || <span className="text-amber-600 italic">Belum ditugaskan</span>}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="flex items-start gap-3">
@@ -2428,14 +2479,31 @@ export default function TiketServisDetail() {
             {/* 4. Contextual Actions & Alerts */}
             {/* Unassigned Warning for Admin */}
             {isAdmin && !tiket.teknisi && tiket.status !== "selesai" && tiket.status !== "diambil" && tiket.status !== "dibatalkan" && (
-                <div className="bg-amber-50/50 border border-amber-200 rounded-2xl p-6 shadow-sm mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle className="w-5 h-5 text-amber-600" />
-                        <h2 className="text-base font-bold text-amber-900">Perhatian: Tiket Belum Ditugaskan!</h2>
+                <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 sm:p-5 shadow-xs mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                            <h2 className="text-sm sm:text-base font-bold text-amber-900">Perhatian: Tiket Belum Ditugaskan!</h2>
+                            <p className="text-xs sm:text-sm text-amber-700/90 mt-0.5">
+                                Tiket ini belum memiliki teknisi penanggung jawab. Pilih teknisi untuk mulai pengerjaan:
+                            </p>
+                        </div>
                     </div>
-                    <p className="text-sm text-amber-700/80">
-                        Tiket ini belum memiliki teknisi penanggung jawab sehingga proses diagnosis dan perbaikan tidak bisa dimulai. Silakan pilih teknisi pada menu di panel "Informasi Tiket" di sebelah kanan.
-                    </p>
+                    <div className="w-full sm:w-auto flex items-center gap-2 shrink-0">
+                        <select
+                            value=""
+                            onChange={(e) => e.target.value && handleAssignTeknisi(e.target.value)}
+                            disabled={isAssigningTeknisi}
+                            className="w-full sm:w-auto text-xs font-bold px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs transition-colors cursor-pointer border-none focus:ring-2 focus:ring-amber-500"
+                        >
+                            <option value="" className="bg-white text-slate-800">-- Pilih & Tugaskan Teknisi --</option>
+                            {teknisiList.map((t) => (
+                                <option key={t.id} value={t.id} className="bg-white text-slate-800">
+                                    {t.nama}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             )}
 
@@ -3374,7 +3442,10 @@ export default function TiketServisDetail() {
                 onCancel={() => setIsTakeOverModalOpen(false)}
                 onConfirm={handleTakeOver}
                 title="Ambil Alih Tiket"
-                message="Anda yakin ingin mengambil alih tiket ini? Status tiket akan berubah menjadi Didiagnosis dan Anda akan menjadi teknisi penanggung jawab."
+                message={tiket?.status === "diterima"
+                    ? "Anda yakin ingin mengambil alih tiket ini? Status tiket akan berubah menjadi Didiagnosis dan Anda akan menjadi teknisi penanggung jawab."
+                    : "Anda yakin ingin mengambil alih tiket ini? Anda akan ditugaskan sebagai teknisi penanggung jawab tiket ini."
+                }
                 confirmText="Ya, Ambil Alih"
                 confirmColor="amber"
                 icon={<Wrench className="w-6 h-6 text-amber-600" />}
