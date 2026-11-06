@@ -93,6 +93,9 @@ async function main() {
         for (const tbl of ["AttendancePolicy", "attendance_policy", "attendancepolicy"]) {
             // Update default workshop location to Pekayon if using the old default (-6.2088)
             await prisma.$executeRawUnsafe(`UPDATE ${tbl} SET nama_kantor = 'Workshop Utama Pekayon', latitude = -6.274323, longitude = 106.977425 WHERE latitude BETWEEN -6.2090 AND -6.2080 OR nama_kantor = 'Workshop Utama';`).catch(() => {});
+            // Geofence tolerance raised 100 m -> 500 m. Only touch policies still on
+            // the old default so an owner-customised radius is never overwritten.
+            await prisma.$executeRawUnsafe(`UPDATE ${tbl} SET radius_meter = 500 WHERE radius_meter = 100;`).catch(() => {});
         }
     } catch (e) {
         // Kolom sudah ada atau variasi casing diabaikan

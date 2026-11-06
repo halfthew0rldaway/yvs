@@ -16,6 +16,7 @@ class ApiConstants {
 
   // Dashboard
   static const String teknisiDashboard = '/dashboard/teknisi';
+  static const String adminDashboard = '/dashboard/admin';
 
   // Tiket Servis
   static const String tickets = '/tiket-servis';

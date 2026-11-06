@@ -101,9 +101,9 @@ class ScoopedFloatingDock extends StatelessWidget {
 
               // 2. Left Destinations Row
               Positioned(
-                left: 8,
+                left: 4,
                 top: dockTop,
-                width: centerX - 46,
+                width: centerX - 40,
                 height: dockHeight,
                 child: Row(
                   children: leftDestinations.map((destination) {
@@ -121,8 +121,8 @@ class ScoopedFloatingDock extends StatelessWidget {
 
               // 3. Right Destinations Row
               Positioned(
-                left: centerX + 46,
-                right: 8,
+                left: centerX + 40,
+                right: 4,
                 top: dockTop,
                 height: dockHeight,
                 child: Row(
@@ -330,18 +330,20 @@ class _DockItem extends StatelessWidget {
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             padding: EdgeInsets.symmetric(
-              horizontal: isSelected ? 12 : 8,
-              vertical: isSelected ? 6 : 4,
+              horizontal: isSelected ? 7 : 3,
+              vertical: isSelected ? 5 : 3,
             ),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF0F172A) : Colors.transparent,
+              // Brand-tinted soft pill instead of the harsh obsidian (0xFF0F172A)
+              // block that clashed with the light dock and read as "ugly black blob".
+              color: isSelected ? AppTheme.primary : Colors.transparent,
               borderRadius: BorderRadius.circular(22),
               boxShadow: isSelected
-                  ? const [
+                  ? [
                       BoxShadow(
-                        color: Color(0x280F172A),
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
+                        color: AppTheme.primary.withValues(alpha: 0.28),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ]
                   : null,
@@ -356,20 +358,22 @@ class _DockItem extends StatelessWidget {
                   children: [
                     Icon(
                       isSelected ? destination.selectedIcon : destination.icon,
-                      size: isSelected ? 20 : 21,
+                      size: isSelected ? 19 : 20,
                       color: isSelected ? Colors.white : const Color(0xFF64748B),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      destination.label,
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected ? Colors.white : const Color(0xFF64748B),
-                        letterSpacing: -0.2,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        destination.label,
+                        style: TextStyle(
+                          fontSize: 9.2,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          color: isSelected ? Colors.white : const Color(0xFF64748B),
+                          letterSpacing: -0.3,
+                        ),
+                        maxLines: 1,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -385,7 +389,7 @@ class _DockItem extends StatelessWidget {
                         color: const Color(0xFFEF4444),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
+                          color: isSelected ? AppTheme.primary : Colors.white,
                           width: 1.2,
                         ),
                       ),
@@ -443,10 +447,12 @@ class _CenterActionButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
+        // Brand blue so the centre action button matches the dock's active
+        // pill (AppTheme.primary) instead of reading as a different blue.
         gradient: const LinearGradient(
           colors: [
-            Color(0xFF38BDF8), // Vibrant Sky Blue (Reference match)
-            Color(0xFF0284C7), // Deep Ocean Blue
+            AppTheme.primary, // brand blue-600
+            AppTheme.primaryDark, // brand blue-700
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -457,13 +463,13 @@ class _CenterActionButton extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0284C7).withValues(alpha: 0.40),
+            color: AppTheme.primary.withValues(alpha: 0.40),
             blurRadius: 14,
             offset: const Offset(0, 6),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: const Color(0xFF38BDF8).withValues(alpha: 0.25),
+            color: AppTheme.primaryLight.withValues(alpha: 0.25),
             blurRadius: 4,
             offset: const Offset(0, 2),
             spreadRadius: 0,

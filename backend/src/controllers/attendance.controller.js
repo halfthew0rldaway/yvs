@@ -57,9 +57,9 @@ async function getOrCreatePolicy() {
         policy = await prisma.attendancePolicy.create({
             data: {
                 nama_kantor: "Workshop Utama Pekayon",
-                latitude: -6.274323,
-                longitude: 106.977425,
-                radius_meter: 100,
+                latitude: -6.260626,
+                longitude: 106.987405,
+                radius_meter: 300,
                 jam_masuk: "09:00",
                 toleransi_menit: 15,
                 jam_pulang: "18:00",
@@ -197,17 +197,27 @@ async function checkIn(req, res) {
         let isInRadius = true;
         let statusReview = "valid";
 
+        // GPS accuracy reported by the device (metres, 68% confidence). A fix
+        // that is 90 m away with +/-120 m accuracy cannot honestly be called
+        // "outside a 100 m radius", so widen the effective boundary by the
+        // reported uncertainty. Capped so this cannot become a free pass.
+        const rawAccuracy = req.body.accuracy !== undefined && req.body.accuracy !== "" ? parseFloat(req.body.accuracy) : null;
+        const accuracyMeters = rawAccuracy !== null && !isNaN(rawAccuracy) && rawAccuracy > 0
+            ? Math.min(Math.round(rawAccuracy), 200)
+            : 0;
+        const effectiveRadius = policy.radius_meter + accuracyMeters;
+
         if (userLat !== null && userLon !== null && !isNaN(userLat) && !isNaN(userLon)) {
             distanceMeters = calculateDistanceMeters(userLat, userLon, policy.latitude, policy.longitude);
-            isInRadius = distanceMeters <= policy.radius_meter;
+            isInRadius = distanceMeters <= effectiveRadius;
 
             if (policy.is_geofence_active && !isInRadius) {
                 if (!isTugasLuar) {
                     return res.status(400).json({
-                        message: `Check-In ditolak: Anda berada di luar radius workshop (${distanceMeters} meter dari workshop, batas maksimal ${policy.radius_meter} meter). Jika Anda sedang bertugas di luar (antar unit/jemput sparepart/tugas luar), silakan gunakan opsi Check-In Tugas Luar.`,
+                        message: `Check-In ditolak: Anda berada di luar radius workshop (${distanceMeters} meter dari workshop, batas maksimal ${effectiveRadius} meter). Jika Anda sedang bertugas di luar (antar unit/jemput sparepart/tugas luar), silakan gunakan opsi Check-In Tugas Luar.`,
                         out_of_radius: true,
                         distanceMeters,
-                        maxRadius: policy.radius_meter
+                        maxRadius: effectiveRadius
                     });
                 }
 
@@ -365,19 +375,26 @@ async function checkOut(req, res) {
         let distanceMeters = 0;
         let isInRadius = true;
 
+        // Same accuracy tolerance as check-in (see comment there).
+        const rawAccuracyOut = req.body.accuracy !== undefined && req.body.accuracy !== "" ? parseFloat(req.body.accuracy) : null;
+        const accuracyMetersOut = rawAccuracyOut !== null && !isNaN(rawAccuracyOut) && rawAccuracyOut > 0
+            ? Math.min(Math.round(rawAccuracyOut), 200)
+            : 0;
+        const effectiveRadiusOut = policy.radius_meter + accuracyMetersOut;
+
         if (userLat !== null && userLon !== null && !isNaN(userLat) && !isNaN(userLon)) {
             distanceMeters = calculateDistanceMeters(userLat, userLon, policy.latitude, policy.longitude);
-            if (policy.is_geofence_active && distanceMeters > policy.radius_meter) {
+            if (policy.is_geofence_active && distanceMeters > effectiveRadiusOut) {
                 if (!isTugasLuar) {
                     return res.status(400).json({
-                        message: `Check-Out ditolak: Anda berada di luar radius workshop (${distanceMeters} meter dari workshop, batas maksimal ${policy.radius_meter} meter).`,
+                        message: `Check-Out ditolak: Anda berada di luar radius workshop (${distanceMeters} meter dari workshop, batas maksimal ${effectiveRadiusOut} meter).`,
                         out_of_radius: true,
                         distanceMeters,
-                        maxRadius: policy.radius_meter
+                        maxRadius: effectiveRadiusOut
                     });
                 }
             }
-            isInRadius = distanceMeters <= policy.radius_meter;
+            isInRadius = distanceMeters <= effectiveRadiusOut;
         }
 
         // 3. Foto Selfie Check-Out

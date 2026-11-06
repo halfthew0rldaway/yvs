@@ -179,18 +179,25 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
               child: const Icon(Icons.handshake_outlined, color: AppTheme.primary, size: 20),
             ),
             const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Serah Terima Unit',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                ),
-                Text(
-                  'Handover & Tanda Tangan Pelanggan',
-                  style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-                ),
-              ],
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Serah Terima Unit',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    'Handover & Tanda Tangan Pelanggan',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

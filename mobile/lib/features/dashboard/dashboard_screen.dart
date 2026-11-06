@@ -33,8 +33,13 @@ class DashboardScreen extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final isFrontmanOrAdmin = user?.role == 'frontman' || user?.role == 'admin' || user?.role == 'pimpinan';
-    final dashboardAsync = ref.watch(dashboardProvider);
+    // /dashboard/teknisi is authorize("teknisi") only, so admin & pimpinan would
+    // get a 403 there. They get the workshop-wide summary instead.
+    final isAdminView = isAdminCompanionRole(user?.role);
     final attendanceAsync = ref.watch(attendanceStatusProvider);
+    // Admin/pimpinan never read the per-teknisi SLA engine (403 for them).
+    final technicianAsync = isAdminView ? null : ref.watch(dashboardProvider);
+    final adminAsync = isAdminView ? ref.watch(adminDashboardProvider) : null;
     final attendance = attendanceAsync.valueOrNull;
 
     final nowStr = CurrencyFormatter.formatHeaderDateTime(DateTime.now());
@@ -51,21 +56,34 @@ class DashboardScreen extends ConsumerWidget {
                 color: const Color(0xFFEFF6FF),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.handyman_rounded, color: AppTheme.primary, size: 20),
+              child: Icon(
+                isAdminView ? Icons.admin_panel_settings_rounded : Icons.handyman_rounded,
+                color: AppTheme.primary,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Serv.io Workshop',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                ),
-                Text(
-                  'Meja Kerja: ${user?.nama ?? "Teknisi"}',
-                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-                ),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Serv.io Workshop',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    isAdminView
+                        ? 'Admin: ${(user?.nama ?? "Utama").split('(')[0].trim()}'
+                        : 'Meja: ${(user?.nama ?? "Teknisi").split('(')[0].trim()}',
+                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -76,7 +94,8 @@ class DashboardScreen extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(dashboardProvider);
+          ref.invalidate(isAdminView ? adminDashboardProvider : dashboardProvider);
+          ref.invalidate(sparepartsProvider);
           ref.invalidate(ticketsProvider);
           ref.invalidate(attendanceStatusProvider);
         },
@@ -109,7 +128,7 @@ class DashboardScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Halo, ${user?.nama ?? "Teknisi"}',
+                          'Halo, ${(user?.nama ?? "Teknisi").split('(')[0].trim()}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -264,7 +283,7 @@ class DashboardScreen extends ConsumerWidget {
                       : _QuickActionButton(
                           icon: Icons.assignment_outlined,
                           label: 'Tiket Saya',
-                          sublabel: 'Antrean Meja',
+                          sublabel: 'Antrean',
                           color: const Color(0xFF10B981),
                           onTap: () {
                             ref.read(ticketFilterProvider.notifier).state = const TicketFilterState(
@@ -311,101 +330,537 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // SLA Donut Card & Dual Alerts
-            dashboardAsync.when(
-              loading: () => Container(
-                height: 240,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: const CircularProgressIndicator(),
-              ),
-              error: (err, _) {
-                final isAuthError = err is DioException && err.response?.statusCode == 401;
-                return Container(
-                  padding: const EdgeInsets.all(14),
+            // Technician: SLA donut + urgent alerts. Admin/pimpinan: workshop
+            // operations summary (no SLA — that engine is per-meja teknisi).
+            if (isAdminView && adminAsync != null)
+              _buildAdminSummary(context, ref, adminAsync)
+            else if (technicianAsync != null)
+              technicianAsync.when(
+                loading: () => Container(
+                  height: 240,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppTheme.errorBg,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.errorBorder),
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.border),
                   ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.error_outline, color: AppTheme.error),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              isAuthError
-                                  ? 'Sesi Anda telah berakhir atau belum terautentikasi di server live.'
-                                  : 'Gagal memuat analitik SLA: $err',
-                              style: const TextStyle(fontSize: 12, color: AppTheme.errorText),
+                  child: const CircularProgressIndicator(),
+                ),
+                error: (err, _) {
+                  final isAuthError = err is DioException && err.response?.statusCode == 401;
+                  return Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorBg,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.errorBorder),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: AppTheme.error),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                isAuthError
+                                    ? 'Sesi Anda telah berakhir atau belum terautentikasi di server live.'
+                                    : 'Gagal memuat analitik SLA: $err',
+                                style: const TextStyle(fontSize: 12, color: AppTheme.errorText),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (isAuthError) ...[
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.login, size: 16),
+                              label: const Text('Login Ulang ke Server'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                              ),
+                              onPressed: () async {
+                                await ref.read(authProvider.notifier).logout();
+                                if (context.mounted) {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                    (route) => false,
+                                  );
+                                }
+                              },
                             ),
                           ),
                         ],
-                      ),
-                      if (isAuthError) ...[
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.login, size: 16),
-                            label: const Text('Login Ulang ke Server'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                            ),
-                            onPressed: () async {
-                              await ref.read(authProvider.notifier).logout();
-                              if (context.mounted) {
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                  (route) => false,
-                                );
-                              }
-                            },
-                          ),
-                        ),
                       ],
-                    ],
-                  ),
-                );
-              },
-              data: (data) => Column(
+                    ),
+                  );
+                },
+                data: (data) => Column(
+                  children: [
+                    _buildSlaCard(context, ref, data),
+                    const SizedBox(height: 12),
+                    _buildUrgentAlerts(context, ref, data),
+                  ],
+                ),
+              ),
+
+            // Active Workspace Section (Sedang Dikerjakan) - Only for technicians
+            if (!isAdminView && technicianAsync != null) ...[
+              const SizedBox(height: 16),
+              technicianAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (data) => _buildActiveWorkspaceSection(context, ref, data),
+              ),
+            ],
+            const SizedBox(height: 16),
+
+            // Low Stock Spareparts Section (Admin & Technician)
+            if (isAdminView && adminAsync != null)
+              adminAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (adminData) => _buildLowStockSection(context, ref, adminData.sparepartHampirHabis),
+              )
+            else if (technicianAsync != null)
+              technicianAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (data) => _buildLowStockSection(context, ref, data.sparepartHampirHabis),
+              ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminSummary(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<AdminDashboardSummary> adminAsync,
+  ) {
+    return adminAsync.when(
+      loading: () => Container(
+        height: 220,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.border),
+        ),
+        child: const CircularProgressIndicator(),
+      ),
+      error: (err, _) {
+        final isAuthError = err is DioException && err.response?.statusCode == 401;
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppTheme.errorBg,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppTheme.errorBorder),
+          ),
+          child: Column(
+            children: [
+              Row(
                 children: [
-                  _buildSlaCard(context, ref, data),
-                  const SizedBox(height: 12),
-                  _buildUrgentAlerts(context, ref, data),
+                  const Icon(Icons.error_outline, color: AppTheme.error),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      isAuthError
+                          ? 'Sesi Anda telah berakhir. Silakan login ulang.'
+                          : 'Gagal memuat ringkasan admin: $err',
+                      style: const TextStyle(fontSize: 12, color: AppTheme.errorText),
+                    ),
+                  ),
                 ],
               ),
+              if (isAuthError) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.login, size: 16),
+                    label: const Text('Login Ulang ke Server'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: () async {
+                      await ref.read(authProvider.notifier).logout();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+      data: (data) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Revenue / Monthly Income Banner
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x201E3A8A),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
-            const SizedBox(height: 14),
-
-            // Quick Actions Command Toolbar
-            _buildQuickActions(context),
-            const SizedBox(height: 16),
-
-            // Active Workspace Section (Sedang Dikerjakan)
-            dashboardAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-              data: (data) => _buildActiveWorkspaceSection(context, ref, data),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'PENDAPATAN BULAN INI',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFBFDBFE),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          CurrencyFormatter.formatRupiah(data.pendapatanBulanIni),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.speed_rounded, size: 12, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${data.rataRataHari.toStringAsFixed(0)} Hari',
+                        style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+          ),
+          const SizedBox(height: 12),
 
-            // Low Stock Spareparts Section
-            dashboardAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-              data: (data) => _buildLowStockSection(context, ref, data.sparepartHampirHabis),
+          // Operational KPI 2x2 Grid (Customer, Perangkat, Tiket Aktif, Tiket Selesai)
+          Row(
+            children: [
+              Expanded(
+                child: _buildAdminStatCard(
+                  icon: Icons.people_alt_outlined,
+                  iconColor: const Color(0xFF2563EB),
+                  iconBg: const Color(0xFFEFF6FF),
+                  title: 'TOTAL CUSTOMER',
+                  value: '${data.totalCustomer}',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TicketListScreen()),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildAdminStatCard(
+                  icon: Icons.devices_rounded,
+                  iconColor: const Color(0xFF6366F1),
+                  iconBg: const Color(0xFFEEF2FF),
+                  title: 'TOTAL PERANGKAT',
+                  value: '${data.totalPerangkat}',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TicketListScreen()),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAdminStatCard(
+                  icon: Icons.confirmation_number_outlined,
+                  iconColor: const Color(0xFFF59E0B),
+                  iconBg: const Color(0xFFFEF3C7),
+                  title: 'TIKET AKTIF',
+                  value: '${data.tiketAktif}',
+                  onTap: () {
+                    ref.read(ticketFilterProvider.notifier).state = const TicketFilterState(
+                      status: 'aktif',
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TicketListScreen()),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildAdminStatCard(
+                  icon: Icons.task_alt_rounded,
+                  iconColor: const Color(0xFF10B981),
+                  iconBg: const Color(0xFFECFDF5),
+                  title: 'TIKET SELESAI',
+                  value: '${data.tiketSelesai}',
+                  onTap: () {
+                    ref.read(ticketFilterProvider.notifier).state = const TicketFilterState(
+                      status: 'selesai',
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TicketListScreen()),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          // Operational Alerts (Overdue & Express)
+          if (data.overdueCount > 0 || data.expressCount > 0) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (data.overdueCount > 0)
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        ref.read(ticketFilterProvider.notifier).state = const TicketFilterState(
+                          slaUrgency: 'overdue',
+                        );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const TicketListScreen()),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF2F2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFFECACA)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 18),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${data.overdueCount} Overdue',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF991B1B),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const Text(
+                                    'Melewati SLA',
+                                    style: TextStyle(fontSize: 9.5, color: Color(0xFFB91C1C)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded, color: Color(0xFFEF4444), size: 14),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                if (data.overdueCount > 0 && data.expressCount > 0)
+                  const SizedBox(width: 8),
+                if (data.expressCount > 0)
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        ref.read(ticketFilterProvider.notifier).state = const TicketFilterState(
+                          slaPaket: 'express',
+                        );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const TicketListScreen()),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFBFDBFE)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.bolt_rounded, color: Color(0xFF2563EB), size: 18),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${data.expressCount} Express',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1E40AF),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const Text(
+                                    'Prioritas Cepat',
+                                    style: TextStyle(fontSize: 9.5, color: Color(0xFF1D4ED8)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded, color: Color(0xFF2563EB), size: 14),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 24),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminStatCard({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.border),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x060F172A),
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 15),
+                ),
+                const Icon(Icons.chevron_right_rounded, size: 15, color: AppTheme.textMuted),
+              ],
+            ),
+            const SizedBox(height: 8),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textMuted,
+                  letterSpacing: 0.3,
+                ),
+                maxLines: 1,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+              ),
+            ),
           ],
         ),
       ),
@@ -741,104 +1196,7 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildActionButton(
-            context,
-            icon: Icons.qr_code_scanner,
-            label: 'Scan QR',
-            iconColor: AppTheme.primary,
-            bgColor: const Color(0xFFEFF6FF),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const QrScannerScreen()),
-            ),
-          ),
-          _buildActionButton(
-            context,
-            icon: Icons.assignment_outlined,
-            label: 'Tiket Saya',
-            iconColor: AppTheme.indigo,
-            bgColor: const Color(0xFFEEF2FF),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const TicketListScreen()),
-            ),
-          ),
-          _buildActionButton(
-            context,
-            icon: Icons.inventory_2_outlined,
-            label: 'Cek Stok',
-            iconColor: const Color(0xFF0D9488),
-            bgColor: const Color(0xFFCCFBF1),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SparepartListScreen()),
-            ),
-          ),
-          _buildActionButton(
-            context,
-            icon: Icons.menu_book_rounded,
-            label: 'Pustaka SOP',
-            iconColor: const Color(0xFFD97706),
-            bgColor: const Color(0xFFFEF3C7),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const WikiListScreen()),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildActionButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color iconColor,
-    required Color bgColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Column(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildActiveWorkspaceSection(BuildContext context, WidgetRef ref, DashboardData data) {
     final activeTickets = data.activeTickets;
@@ -1566,7 +1924,7 @@ class _QuickActionButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 3),
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(12),
@@ -1583,33 +1941,38 @@ class _QuickActionButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(7),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 18, color: color),
+              child: Icon(icon, size: 17, color: color),
             ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+            const SizedBox(height: 5),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+                maxLines: 1,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
-            Text(
-              sublabel,
-              style: TextStyle(
-                fontSize: 9.5,
-                color: color,
-                fontWeight: FontWeight.w600,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                sublabel,
+                style: TextStyle(
+                  fontSize: 9.0,
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.2,
+                ),
+                maxLines: 1,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

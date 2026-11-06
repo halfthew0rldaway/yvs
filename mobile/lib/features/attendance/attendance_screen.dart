@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/location_helper.dart';
 import '../../core/widgets/offline_banner.dart';
 import '../../data/providers/attendance_provider.dart';
 import '../../data/providers/auth_provider.dart';
@@ -115,10 +116,31 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     setState(() => _isActionLoading = true);
     try {
       final client = ApiClient();
+      final position = await getAttendancePosition();
       final formMap = <String, dynamic>{
         'foto': await MultipartFile.fromFile(photo.path, filename: 'selfie_masuk_${DateTime.now().millisecondsSinceEpoch}.jpg'),
-        'device_info': 'Serv.io Companion Mobile App',
+        'device_info': 'Yangversa Companion Mobile App',
       };
+
+      if (position != null) {
+        formMap['latitude'] = position.latitude.toString();
+        formMap['longitude'] = position.longitude.toString();
+        // Let the server widen the geofence by the fix's own uncertainty,
+        // otherwise an honest 90 m fix with +/-120 m accuracy gets rejected.
+        formMap['accuracy'] = position.accuracy.round().toString();
+      } else if (!isTugasLuar) {
+        // No fix: report the real cause instead of letting the server answer
+        // `out_of_radius`, which would wrongly open the Tugas Luar modal.
+        if (!mounted) return;
+        setState(() => _isActionLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lokasi GPS belum terdeteksi. Pastikan GPS aktif dan izin lokasi diberikan, lalu coba lagi.'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+        return;
+      }
 
       if (isTugasLuar) {
         formMap['is_tugas_luar'] = 'true';
@@ -513,9 +535,25 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     setState(() => _isActionLoading = true);
     try {
       final client = ApiClient();
+      final position = await getAttendancePosition();
       final map = <String, dynamic>{
         'foto': await MultipartFile.fromFile(photo.path, filename: 'selfie_pulang_${DateTime.now().millisecondsSinceEpoch}.jpg'),
       };
+      if (position != null) {
+        map['latitude'] = position.latitude.toString();
+        map['longitude'] = position.longitude.toString();
+        map['accuracy'] = position.accuracy.round().toString();
+      } else {
+        if (!mounted) return;
+        setState(() => _isActionLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lokasi GPS belum terdeteksi. Pastikan GPS aktif dan izin lokasi diberikan, lalu coba lagi.'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+        return;
+      }
       if (alasanPulangCepat != null && alasanPulangCepat.isNotEmpty) {
         map['alasan_pulang_cepat'] = alasanPulangCepat;
       }
@@ -601,18 +639,25 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               child: const Icon(Icons.pin_drop_rounded, color: AppTheme.primary, size: 20),
             ),
             const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Presensi Workshop',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                ),
-                Text(
-                  'Selfie & Geofencing GPS',
-                  style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-                ),
-              ],
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Presensi Workshop',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    'Selfie & Geofencing GPS',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -686,9 +731,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                           children: [
                             const Icon(Icons.location_on_rounded, size: 13, color: Colors.white),
                             const SizedBox(width: 4),
-                            Text(
-                              '${policy?['nama_kantor'] ?? "Workshop Pekayon"} (Radius ${policy?['radius_meter'] ?? 100}m)',
-                              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                            Flexible(
+                              child: Text(
+                                '${policy?['nama_kantor'] ?? "Workshop Pekayon"} (Radius ${policy?['radius_meter'] ?? 100}m)',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ],
                         ),

@@ -68,7 +68,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header Logo Serv.io
+                // Header Logo Yangversa
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                   decoration: BoxDecoration(
@@ -77,10 +77,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: const Column(
                     children: [
-                      Icon(Icons.build_circle_outlined, size: 48, color: Colors.white),
+                      Image(
+                        image: AssetImage('assets/icons/logo_yangversa.png'),
+                        height: 56,
+                        width: 56,
+                        fit: BoxFit.contain,
+                      ),
                       SizedBox(height: 10),
                       Text(
-                        'SERV.IO',
+                        'YANGVERSA',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,

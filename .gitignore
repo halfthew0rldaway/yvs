@@ -36,3 +36,4 @@ presentation/
 # Track dependency lockfiles for reproducible builds
 !backend/package-lock.json
 !frontend/package-lock.json
+.gradle_home/

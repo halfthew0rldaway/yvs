@@ -23,7 +23,7 @@ void main() {
     await tester.pump();
 
     // Verify that the title and login widgets render
-    expect(find.text('SERV.IO'), findsOneWidget);
+    expect(find.text('YANGVERSA'), findsOneWidget);
     expect(find.text('Masuk Akun Workshop'), findsOneWidget);
     expect(find.byType(TextField), findsNWidgets(2));
   });

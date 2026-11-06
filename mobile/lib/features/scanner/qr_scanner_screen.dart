@@ -656,18 +656,26 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> with SingleTi
         fit: StackFit.expand,
         children: [
           // 1. MobileScanner Camera View
-          MobileScanner(
-            controller: _scannerController,
-            onDetect: (capture) {
-              if (_hasScanned || _isSearching) return;
-              final barcodes = capture.barcodes;
-              for (final barcode in barcodes) {
-                if (barcode.rawValue != null && barcode.rawValue!.isNotEmpty) {
-                  _searchAndNavigate(barcode.rawValue!);
-                  break;
-                }
-              }
-            },
+          // ClipRect + cover fit so the preview fills the whole screen edge to
+          // edge. Without this the plugin letterboxes the preview (contain fit),
+          // leaving black bars that mismatch the dimmed overlay and scan window.
+          Positioned.fill(
+            child: ClipRect(
+              child: MobileScanner(
+                controller: _scannerController,
+                fit: BoxFit.cover,
+                onDetect: (capture) {
+                  if (_hasScanned || _isSearching) return;
+                  final barcodes = capture.barcodes;
+                  for (final barcode in barcodes) {
+                    if (barcode.rawValue != null && barcode.rawValue!.isNotEmpty) {
+                      _searchAndNavigate(barcode.rawValue!);
+                      break;
+                    }
+                  }
+                },
+              ),
+            ),
           ),
 
           // 2. Custom Painter Cutout & High-tech Laser Reticle
@@ -902,72 +910,92 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> with SingleTi
             ),
 
           // 6. Bottom Floating Ergonomic Deck (Manual Input Trigger)
+          // ROOT CAUSE of the "one character per line" collapse: Positioned
+          // (left/right) + ClipRRect + BackdropFilter form a chain of loose /
+          // unbounded constraints. `width: double.infinity` resolves against an
+          // infinite maxWidth, so the card shrink-wrapped to the icon and the
+          // label got ~0 width -> one glyph per line.
+          // Fix: give the card a concrete width from the real screen size and
+          // put BackdropFilter INSIDE the sized box so it never sees infinity.
           Positioned(
             left: 20,
             right: 20,
             bottom: MediaQuery.of(context).padding.bottom + 16,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xD9131B2E),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white12, width: 1),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x66000000),
-                        blurRadius: 16,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: const BoxDecoration(
-                          color: Color(0x332563EB),
-                          shape: BoxShape.circle,
+            child: SizedBox(
+              width: screenSize.width - 40,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xD9131B2E),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white12, width: 1),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x66000000),
+                          blurRadius: 16,
+                          offset: Offset(0, 6),
                         ),
-                        child: const Icon(Icons.edit_note_rounded, color: Color(0xFF38BDF8), size: 22),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              'Barcode Rusak / Tidak Terbaca?',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12.5,
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: const BoxDecoration(
+                                color: Color(0x332563EB),
+                                shape: BoxShape.circle,
                               ),
+                              child: const Icon(Icons.edit_note_rounded, color: Color(0xFF38BDF8), size: 22),
                             ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Gunakan opsi input kode tiket manual',
-                              style: TextStyle(color: Colors.white60, fontSize: 11),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Barcode Rusak / Tidak Terbaca?',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.5,
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Gunakan opsi input kode tiket manual',
+                                    style: TextStyle(color: Colors.white60, fontSize: 11, height: 1.3),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                      ElevatedButton(
-                        onPressed: _showManualInputDialog,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
+                        const SizedBox(height: 10),
+                        ElevatedButton.icon(
+                          onPressed: _showManualInputDialog,
+                          icon: const Icon(Icons.keyboard_rounded, size: 16),
+                          label: const Text('Input Manual', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2563EB),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
                         ),
-                        child: const Text('Input Manual', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

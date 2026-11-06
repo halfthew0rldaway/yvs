@@ -233,9 +233,9 @@ export default function AttendancePage() {
     // Policy Settings Form State
     const [policyForm, setPolicyForm] = useState({
         nama_kantor: "Workshop Utama Pekayon",
-        latitude: -6.274323,
-        longitude: 106.977425,
-        radius_meter: 100,
+        latitude: -6.260626,
+        longitude: 106.987405,
+        radius_meter: 300,
         jam_masuk: "09:00",
         toleransi_menit: 15,
         jam_pulang: "18:00",
@@ -1291,8 +1291,8 @@ export default function AttendancePage() {
                                         </p>
                                         <p className="text-2xs mt-0.5">
                                             {locationData.isInRadius
-                                                ? `Anda terdeteksi di lokasi workshop (${locationData.distance}m <= ${policy?.radius_meter}m).`
-                                                : `Jarak Anda (${locationData.distance}m) melebihi batas geofence (${policy?.radius_meter}m). Anda dapat menggunakan opsi Check-In Tugas Luar.`}
+                                                ? `Anda terdeteksi di lokasi workshop (${locationData.distance}m <= ${policy?.radius_meter || 500}m).`
+                                                : `Jarak Anda (${locationData.distance}m) melebihi batas geofence (${policy?.radius_meter || 500}m). Anda dapat menggunakan opsi Check-In Tugas Luar.`}
                                         </p>
                                     </div>
                                 </div>

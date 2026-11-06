@@ -217,6 +217,7 @@ export default function DashboardAttendanceCard() {
     }
 
     // Case 4: Belum Check-In Hari Ini (Default Morning Prompt)
+    const officeShortName = (policy?.nama_kantor || "Pekayon").replace(/^Workshop\s+/i, "");
     return (
         <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full min-w-0">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
@@ -232,14 +233,14 @@ export default function DashboardAttendanceCard() {
                             Wajib Hadir
                         </span>
                     </div>
-                    <p className="text-2xs sm:text-xs text-amber-800 mt-0.5 leading-relaxed flex items-center gap-1 flex-wrap">
-                        <span className="inline-flex items-center gap-1">
+                    <div className="text-2xs sm:text-xs text-amber-800 mt-1 leading-snug flex items-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1 shrink-0">
                             <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
                             <span>Jam masuk {policy?.jam_masuk || "09:00"} WIB (Toleransi {policy?.toleransi_menit || 15}m)</span>
                         </span>
-                        <span className="hidden xs:inline text-amber-400">•</span>
-                        <span>Workshop {policy?.nama_kantor || "Utama"}</span>
-                    </p>
+                        <span className="text-amber-400">•</span>
+                        <span className="font-medium">Workshop {officeShortName}</span>
+                    </div>
                 </div>
             </div>
             <Link

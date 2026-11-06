@@ -157,6 +157,74 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
   return DashboardData.fromJson(response.data);
 });
 
+// Admin Dashboard summary — the /dashboard/admin response is shaped very
+// differently from the technician one (workshop-wide financials, no per-meja
+// SLA engine), so it gets its own lean model instead of reusing DashboardData.
+class AdminDashboardSummary {
+  final int totalCustomer;
+  final int totalPerangkat;
+  final int tiketAktif;
+  final int tiketSelesai;
+  final double pendapatanBulanIni;
+  final double rataRataHari;
+  final int totalTiketSelesaiDihitung;
+  final int totalWikis;
+  final int overdueCount;
+  final int expressCount;
+  final List<SparepartModel> sparepartHampirHabis;
+
+  AdminDashboardSummary({
+    required this.totalCustomer,
+    required this.totalPerangkat,
+    required this.tiketAktif,
+    required this.tiketSelesai,
+    required this.pendapatanBulanIni,
+    required this.rataRataHari,
+    required this.totalTiketSelesaiDihitung,
+    required this.totalWikis,
+    this.overdueCount = 0,
+    this.expressCount = 0,
+    this.sparepartHampirHabis = const [],
+  });
+
+  static int _toInt(dynamic v) => v is int ? v : int.tryParse(v?.toString() ?? '') ?? 0;
+  static double _toDouble(dynamic v) => v is num ? v.toDouble() : double.tryParse(v?.toString() ?? '') ?? 0.0;
+
+  factory AdminDashboardSummary.fromJson(Map<String, dynamic> json) {
+    List<SparepartModel> parts = [];
+    if (json['sparepartHampirHabis'] is List) {
+      parts = (json['sparepartHampirHabis'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map((item) => SparepartModel.fromJson(item))
+          .toList();
+    }
+
+    return AdminDashboardSummary(
+      totalCustomer: _toInt(json['totalCustomer']),
+      totalPerangkat: _toInt(json['totalPerangkat']),
+      tiketAktif: _toInt(json['tiketAktif']),
+      tiketSelesai: _toInt(json['tiketSelesai']),
+      pendapatanBulanIni: _toDouble(json['pendapatanBulanIni']),
+      rataRataHari: _toDouble(json['rataRataHari']),
+      totalTiketSelesaiDihitung: _toInt(json['totalTiketSelesaiDihitung']),
+      totalWikis: _toInt(json['totalWikis']),
+      overdueCount: _toInt(json['overdueCount']),
+      expressCount: _toInt(json['expressCount']),
+      sparepartHampirHabis: parts,
+    );
+  }
+}
+
+// Roles that own the workshop-wide dashboard (backend: authorize("admin","pimpinan"))
+bool isAdminCompanionRole(String? role) => role == 'admin' || role == 'pimpinan';
+
+// Admin Dashboard Provider (ringkasan operasional workshop, bukan SLA per-teknisi)
+final adminDashboardProvider = FutureProvider.autoDispose<AdminDashboardSummary>((ref) async {
+  final client = ApiClient();
+  final response = await client.getWithCache(ApiConstants.adminDashboard);
+  return AdminDashboardSummary.fromJson(Map<String, dynamic>.from(response.data as Map));
+});
+
 // Tiket List Filter State
 class TicketFilterState {
   final String status;
