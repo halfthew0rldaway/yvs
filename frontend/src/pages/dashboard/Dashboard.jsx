@@ -32,7 +32,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import toast from 'react-hot-toast';
 import DashboardAttendanceCard from "../../components/DashboardAttendanceCard";
 
-function StatCard({ label, value, icon: Icon, color = "blue", to }) {
+function StatCard({ label, value, icon: Icon, color = "blue", to, className = "" }) {
     const colors = {
         blue: "bg-blue-50 text-blue-600 border-blue-100 group-hover:bg-blue-100 group-hover:border-blue-200 transition-colors",
         green: "bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-emerald-100 group-hover:border-emerald-200 transition-colors",
@@ -43,17 +43,17 @@ function StatCard({ label, value, icon: Icon, color = "blue", to }) {
     };
 
     const cardContent = (
-        <div className="flex items-center gap-3">
-            <div className={`p-2.5 sm:p-3 rounded-xl border shrink-0 ${colors[color]}`}>
-                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className={`p-2 sm:p-2.5 md:p-3 rounded-xl border shrink-0 ${colors[color]}`}>
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate">{label}</p>
-                <p className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-0.5 truncate tracking-tight" title={value}>{value}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">{label}</p>
+                <p className="text-base sm:text-xl md:text-2xl font-extrabold text-slate-900 mt-0.5 truncate tracking-tight" title={value}>{value}</p>
             </div>
             {to && (
-                <div className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0">
-                    <ArrowRight className="w-4 h-4" />
+                <div className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0 hidden xs:block">
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
             )}
         </div>
@@ -63,7 +63,7 @@ function StatCard({ label, value, icon: Icon, color = "blue", to }) {
         return (
             <Link 
                 to={to} 
-                className="group bg-white rounded-xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 hover:border-blue-300 hover:shadow-md transition-all duration-200 flex flex-col justify-center h-full block cursor-pointer"
+                className={`group bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-slate-200/90 hover:border-blue-300 hover:shadow-md transition-all duration-200 flex flex-col justify-center h-full block cursor-pointer ${className}`}
             >
                 {cardContent}
             </Link>
@@ -71,7 +71,7 @@ function StatCard({ label, value, icon: Icon, color = "blue", to }) {
     }
 
     return (
-        <div className="bg-white rounded-xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 hover:shadow-md transition-shadow duration-200 flex flex-col justify-center h-full">
+        <div className={`bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-slate-200/90 hover:shadow-md transition-shadow duration-200 flex flex-col justify-center h-full ${className}`}>
             {cardContent}
         </div>
     );
@@ -534,12 +534,12 @@ export default function Dashboard() {
                 {/* Status Presensi & Geofencing Hari Ini */}
                 <DashboardAttendanceCard />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-3.5">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-3.5">
                     <StatCard label="Total Customer" value={data?.totalCustomer || 0} icon={Users} color="blue" to="/customer" />
                     <StatCard label="Total Perangkat" value={data?.totalPerangkat || 0} icon={MonitorSmartphone} color="slate" to="/perangkat" />
                     <StatCard label="Tiket Aktif" value={data?.tiketAktif || 0} icon={Ticket} color="amber" to="/tiket-servis?status=aktif" />
                     <StatCard label="Tiket Selesai" value={data?.tiketSelesai || 0} icon={CheckCircle2} color="green" to="/tiket-servis?status=selesai" />
-                    <StatCard label="Pendapatan (Bulan Ini)" value={formatRupiah(data?.pendapatanBulanIni || 0)} icon={BadgeDollarSign} color="indigo" to="/invoice" />
+                    <StatCard label="Pendapatan (Bulan Ini)" value={formatRupiah(data?.pendapatanBulanIni || 0)} icon={BadgeDollarSign} color="indigo" to="/invoice" className="col-span-2 sm:col-span-2 lg:col-span-1" />
                 </div>
 
                 {/* SLA & Antrean Compliance Chart Card */}
@@ -547,7 +547,7 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
                     {/* Charts Section */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col h-[380px]">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col min-h-[280px] h-[300px] sm:h-[350px] lg:h-[380px]">
                         <div className="flex items-center justify-between mb-3.5">
                             <div>
                                 <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Distribusi Status Tiket</h2>
@@ -607,7 +607,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Sparepart hampir habis */}
-                    <div className="lg:col-span-1 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col h-[380px]">
+                    <div className="lg:col-span-1 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col min-h-[260px] h-[300px] sm:h-[350px] lg:h-[380px]">
                         <div className="flex items-center justify-between mb-3.5">
                             <div className="flex items-center gap-2">
                                 <AlertTriangle className="w-5 h-5 text-amber-500" />
@@ -664,7 +664,7 @@ export default function Dashboard() {
                 {/* Row 3: Tren Pendapatan + Avg Waktu + Top Kerusakan */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
                     {/* Tren Pendapatan Bulanan - Area Chart */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col h-[350px]">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col min-h-[240px] h-[260px] sm:h-[300px] lg:h-[350px]">
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                                 <TrendingUp className="w-5 h-5 text-blue-600" />
@@ -803,18 +803,18 @@ export default function Dashboard() {
             {/* Status Presensi & Geofencing Hari Ini */}
             <DashboardAttendanceCard />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-3.5">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-3.5">
                 <StatCard label="Antrean Tersedia" value={data?.tiketTersedia || 0} icon={Ticket} color="red" to="/tiket-servis?status=diterima" />
                 <StatCard label="Tiket Ditugaskan" value={data?.tiketDitugaskan || 0} icon={ClipboardList} color="blue" to="/tiket-servis?scope=my" />
                 <StatCard label="Menunggu Diagnosis" value={data?.menungguDiagnosis || 0} icon={Search} color="amber" to="/tiket-servis?scope=my&status=diterima" />
                 <StatCard label="Dalam Perbaikan" value={data?.dalamPerbaikan || 0} icon={Wrench} color="indigo" to="/tiket-servis?scope=my&status=dalam_perbaikan" />
-                <StatCard label="Selesai Diperbaiki" value={data?.tiketSelesai || 0} icon={CheckCircle2} color="green" to="/tiket-servis?scope=my&status=selesai" />
+                <StatCard label="Selesai Diperbaiki" value={data?.tiketSelesai || 0} icon={CheckCircle2} color="green" to="/tiket-servis?scope=my&status=selesai" className="col-span-2 sm:col-span-2 lg:col-span-1" />
             </div>
 
             {/* SLA & Antrean Compliance Chart Card */}
             <SlaMonitoringCard slaSummary={data?.slaSummary} isTeknisi={true} />
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-bold text-slate-900 tracking-tight">Status Tugas Perbaikan Anda</h2>
                     <Link to="/tiket-servis?scope=my" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
@@ -895,7 +895,7 @@ export default function Dashboard() {
             </div>
 
             {/* Active Tickets List */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mt-6">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 mt-4 sm:mt-6">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">

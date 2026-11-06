@@ -1325,7 +1325,7 @@ export default function TiketServisForm() {
                     onChange={setFotos}
                 />
 
-                <div className="flex items-center gap-3 pt-4 border-t border-slate-100 mt-8">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100 mt-8">
                     <button
                         type="button"
                         onClick={() => navigate("/tiket-servis")}

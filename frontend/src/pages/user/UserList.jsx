@@ -315,10 +315,10 @@ export default function UserList() {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex border-b border-slate-200">
+            <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar">
                 <button
                     onClick={() => setActiveTab("users")}
-                    className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
+                    className={`flex items-center gap-2 px-4 sm:px-5 py-3 text-xs sm:text-sm font-semibold border-b-2 transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                         activeTab === "users"
                             ? "border-blue-600 text-blue-600"
                             : "border-transparent text-slate-500 hover:text-slate-700"
@@ -329,7 +329,7 @@ export default function UserList() {
                 </button>
                 <button
                     onClick={() => setActiveTab("performance")}
-                    className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
+                    className={`flex items-center gap-2 px-4 sm:px-5 py-3 text-xs sm:text-sm font-semibold border-b-2 transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                         activeTab === "performance"
                             ? "border-blue-600 text-blue-600"
                             : "border-transparent text-slate-500 hover:text-slate-700"
@@ -356,10 +356,10 @@ export default function UserList() {
                             />
                         </div>
 
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar py-0.5">
                             <button
                                 onClick={() => setRoleFilter("")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
                                     !roleFilter ? "bg-blue-600 text-white border-blue-600 shadow-xs" : "bg-white text-slate-600 border-slate-200"
                                 }`}
                             >
@@ -367,7 +367,7 @@ export default function UserList() {
                             </button>
                             <button
                                 onClick={() => setRoleFilter("admin")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
                                     roleFilter === "admin" ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-600 border-slate-200"
                                 }`}
                             >
@@ -375,7 +375,7 @@ export default function UserList() {
                             </button>
                             <button
                                 onClick={() => setRoleFilter("frontman")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
                                     roleFilter === "frontman" ? "bg-amber-600 text-white border-amber-600" : "bg-white text-slate-600 border-slate-200"
                                 }`}
                             >
@@ -383,7 +383,7 @@ export default function UserList() {
                             </button>
                             <button
                                 onClick={() => setRoleFilter("teknisi")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
                                     roleFilter === "teknisi" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-200"
                                 }`}
                             >

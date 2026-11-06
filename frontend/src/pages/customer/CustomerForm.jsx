@@ -232,7 +232,7 @@ export default function CustomerForm() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 pt-4 border-t border-slate-100 mt-8">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100 mt-8">
                     <button
                         type="button"
                         onClick={() => returnUrl ? navigate(returnUrl) : navigate("/customer")}
@@ -341,11 +341,11 @@ export default function CustomerForm() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-2.5">
+                        <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5">
                             <button
                                 type="button"
                                 onClick={() => setIsConfirmModalOpen(false)}
-                                className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                                className="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-center"
                             >
                                 Periksa Kembali
                             </button>
@@ -353,7 +353,7 @@ export default function CustomerForm() {
                                 type="button"
                                 onClick={executeSave}
                                 disabled={!isDoubleConfirmed || loading}
-                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+                                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer text-center"
                             >
                                 {loading ? (
                                     <>

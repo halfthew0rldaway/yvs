@@ -1079,7 +1079,7 @@ export default function DiagnosisForm() {
                     />
 
                     {/* Form Action Buttons */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-slate-100 mt-8">
+                    <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-slate-100 mt-8">
                         <button
                             type="button"
                             onClick={() => navigate(`/tiket-servis/${id}`)}
@@ -1088,7 +1088,7 @@ export default function DiagnosisForm() {
                             Batal
                         </button>
 
-                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                             <button
                                 type="button"
                                 onClick={() => handleSave(false)}

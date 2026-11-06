@@ -482,12 +482,12 @@ export default function LoanerList() {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex items-center justify-between border-b border-slate-200">
-                <div className="flex items-center gap-6">
+            <div className="border-b border-slate-200 overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-4 sm:gap-6 min-w-max">
                     <button
                         type="button"
                         onClick={() => { setActiveTab("devices"); setCurrentPage(1); }}
-                        className={`pb-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`pb-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
                             activeTab === "devices"
                                 ? "border-blue-600 text-blue-600"
                                 : "border-transparent text-slate-500 hover:text-slate-900"
@@ -500,7 +500,7 @@ export default function LoanerList() {
                     <button
                         type="button"
                         onClick={() => { setActiveTab("records"); setCurrentPage(1); }}
-                        className={`pb-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`pb-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
                             activeTab === "records"
                                 ? "border-blue-600 text-blue-600"
                                 : "border-transparent text-slate-500 hover:text-slate-900"

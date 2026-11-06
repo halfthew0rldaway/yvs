@@ -216,19 +216,19 @@ export default function RepairWikiList() {
             </div>
 
             {/* Segmented Main Navigation Tabs */}
-            <div className="flex items-center p-1.5 bg-slate-200/70 rounded-2xl max-w-md">
+            <div className="flex items-center p-1.5 bg-slate-200/70 rounded-2xl w-full sm:max-w-md">
                 <button
                     type="button"
                     onClick={() => setMainTab("sop")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
+                    className={`flex-1 min-w-0 py-2 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                         mainTab === "sop"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
                     <ShieldCheck className="w-4 h-4 shrink-0" />
-                    <span className="whitespace-nowrap">Standar SOP Operasional</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold whitespace-nowrap shrink-0 ${
+                    <span className="truncate"><span className="hidden sm:inline">Standar </span>SOP<span className="hidden sm:inline"> Operasional</span></span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-3xs font-semibold shrink-0 ${
                         mainTab === "sop" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {sops.length}
@@ -238,15 +238,15 @@ export default function RepairWikiList() {
                 <button
                     type="button"
                     onClick={() => setMainTab("wiki")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
+                    className={`flex-1 min-w-0 py-2 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                         mainTab === "wiki"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
                     <Wrench className="w-4 h-4 shrink-0" />
-                    <span className="whitespace-nowrap">Pustaka Servis Hardware</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold whitespace-nowrap shrink-0 ${
+                    <span className="truncate"><span className="hidden sm:inline">Pustaka </span>Wiki Hardware</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-3xs font-semibold shrink-0 ${
                         mainTab === "wiki" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {wikis.length}

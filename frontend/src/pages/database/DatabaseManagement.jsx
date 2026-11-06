@@ -724,10 +724,11 @@ export default function DatabaseManagement() {
 
             {/* Confirmation Modal for Cleanup */}
             {isCleanupModalOpen && (
-                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
-                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+                <div className="modal-shell modal-backdrop bg-slate-900/60 backdrop-blur-xs" onClick={() => setIsCleanupModalOpen(false)}>
+                    <div className="modal-panel max-w-md p-5 sm:p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-grabber" />
                         <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-rose-100 text-rose-700 rounded-xl">
+                            <div className="p-2.5 bg-rose-100 text-rose-700 rounded-xl shrink-0">
                                 <Trash2 className="w-5 h-5" />
                             </div>
                             <div>
@@ -756,11 +757,11 @@ export default function DatabaseManagement() {
                             </span>
                         </div>
 
-                        <div className="pt-3 flex items-center justify-end gap-2.5">
+                        <div className="pt-3 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
                             <button
                                 type="button"
                                 onClick={() => setIsCleanupModalOpen(false)}
-                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                                className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-center"
                             >
                                 Batal
                             </button>
@@ -768,7 +769,7 @@ export default function DatabaseManagement() {
                                 type="button"
                                 onClick={handleCleanup}
                                 disabled={isCleaning}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50 text-center"
                             >
                                 {isCleaning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                                 <span>Ya, Bersihkan Log</span>

@@ -441,7 +441,7 @@ export default function Layout({ children }) {
     }
 
     return (
-        <div className="flex h-screen print:h-auto bg-slate-50 overflow-hidden print:overflow-visible font-sans">
+        <div className="flex h-[100dvh] print:h-auto bg-slate-50 overflow-hidden print:overflow-visible font-sans">
             {/* Mobile / Tablet backdrop */}
             {isSidebarOpen && (
                 <div 
@@ -454,7 +454,7 @@ export default function Layout({ children }) {
             <aside 
                 className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col transition-all duration-300 ease-in-out print:hidden ${
                     isSidebarOpen 
-                        ? "w-72 translate-x-0 shadow-lg lg:shadow-none" 
+                        ? "w-72 max-w-[85vw] translate-x-0 shadow-lg lg:shadow-none" 
                         : "-translate-x-full lg:translate-x-0 lg:w-0 lg:border-r-0 lg:overflow-hidden"
                 }`}
             >
@@ -695,7 +695,7 @@ export default function Layout({ children }) {
                     </div>
 
                     {/* Center: Live Clock (Optimized for Mobile) */}
-                    <div className="flex items-center justify-center gap-2 select-none shrink-0 px-1">
+                    <div className="hidden xs:flex items-center justify-center gap-1.5 select-none shrink-0 px-1">
                         <span className="font-mono tabular-nums text-xs sm:text-base lg:text-lg font-semibold text-slate-800 tracking-tight">
                             {hours}<span className="text-slate-300">:</span>{minutes}<span className="hidden sm:inline"><span className="text-slate-300">:</span>{seconds}</span>
                         </span>
@@ -706,13 +706,14 @@ export default function Layout({ children }) {
                     </div>
 
                     {/* Right: Quick Action Button & Notification Bell */}
-                    <div className="flex items-center justify-end gap-2 shrink-0">
+                    <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
                         {/* Interactive Business Flow / SOP Guide Help Button */}
                         <button
                             type="button"
                             onClick={() => setIsProcessFlowModalOpen(true)}
-                            className="inline-flex items-center justify-center gap-1.5 h-9 px-2.5 sm:px-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
+                            className="inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
                             title="Panduan Interaktif Alur Proses Bisnis & SOP Serv.io"
+                            aria-label="Panduan Alur Proses"
                         >
                             <HelpCircle className="w-4 h-4 text-blue-600 shrink-0" />
                             <span className="hidden sm:inline whitespace-nowrap">Alur Proses</span>
@@ -722,8 +723,9 @@ export default function Layout({ children }) {
                         <button
                             type="button"
                             onClick={() => setIsScannerOpen(true)}
-                            className="inline-flex items-center justify-center gap-1.5 h-9 px-2.5 sm:px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
+                            className="inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
                             title="Pindai QR Tiket atau Barcode Sparepart dengan Kamera"
+                            aria-label="Pindai QR"
                         >
                             <QrCode className="w-4 h-4 text-blue-600 shrink-0" />
                             <span className="hidden sm:inline whitespace-nowrap">Scan QR</span>

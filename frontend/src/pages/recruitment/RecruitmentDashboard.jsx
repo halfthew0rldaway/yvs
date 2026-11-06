@@ -206,11 +206,11 @@ export default function RecruitmentDashboard() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     <button
                         type="button"
                         onClick={() => setIsAddApplicantOpen(true)}
-                        className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs flex items-center gap-2 transition-colors cursor-pointer"
+                        className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs flex items-center gap-2 transition-colors cursor-pointer w-full sm:w-auto justify-center"
                     >
                         <UserPlus className="w-4 h-4 text-slate-600" />
                         <span>Catat Pelamar Baru</span>
@@ -218,7 +218,7 @@ export default function RecruitmentDashboard() {
                     <button
                         type="button"
                         onClick={() => navigate("/recruitment/jobs/tambah")}
-                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
+                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer w-full sm:w-auto justify-center"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Buka Lowongan Baru</span>
@@ -260,19 +260,19 @@ export default function RecruitmentDashboard() {
             </div>
 
             {/* Segmented Tab Navigation */}
-            <div className="flex items-center p-1.5 bg-slate-200/70 rounded-2xl max-w-md">
+            <div className="flex items-center p-1.5 bg-slate-200/70 rounded-2xl w-full sm:max-w-md">
                 <button
                     type="button"
                     onClick={() => setActiveTab("pipeline")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
+                    className={`flex-1 min-w-0 py-2 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                         activeTab === "pipeline"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
                     <Users className="w-4 h-4 shrink-0" />
-                    <span className="whitespace-nowrap">Pipeline Pelamar</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold whitespace-nowrap shrink-0 ${
+                    <span className="truncate">Pipeline Pelamar</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-3xs font-semibold shrink-0 ${
                         activeTab === "pipeline" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {applicants.length}
@@ -282,15 +282,15 @@ export default function RecruitmentDashboard() {
                 <button
                     type="button"
                     onClick={() => setActiveTab("jobs")}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
+                    className={`flex-1 min-w-0 py-2 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                         activeTab === "jobs"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
                     <Briefcase className="w-4 h-4 shrink-0" />
-                    <span className="whitespace-nowrap">Daftar Lowongan</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-3xs font-semibold whitespace-nowrap shrink-0 ${
+                    <span className="truncate">Daftar Lowongan</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-3xs font-semibold shrink-0 ${
                         activeTab === "jobs" ? "bg-blue-100 text-blue-700" : "bg-slate-300 text-slate-700"
                     }`}>
                         {jobs.length}

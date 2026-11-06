@@ -416,8 +416,8 @@ export default function WebcamSelfieModal({
     if (!isOpen) return null;
 
     return (
-        <div className="modal-shell bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-            <div className="modal-panel max-w-lg">
+        <div className="modal-shell modal-backdrop bg-slate-900/60 backdrop-blur-xs animate-fadeIn" onClick={onClose}>
+            <div className="modal-panel max-w-lg" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-grabber" />
                 {/* Header */}
                 <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 gap-2">
@@ -464,7 +464,7 @@ export default function WebcamSelfieModal({
                 />
 
                 {/* Camera / Preview Area */}
-                <div className="p-5 flex flex-col items-center justify-center bg-slate-900 relative min-h-[340px]">
+                <div className="p-3.5 sm:p-5 flex flex-col items-center justify-center bg-slate-900 relative min-h-[260px] sm:min-h-[340px]">
                     {cameraError ? (
                         <div className="text-center p-6 max-w-sm">
                             <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-3">

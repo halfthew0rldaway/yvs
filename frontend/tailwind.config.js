@@ -3,6 +3,9 @@ export default {
     content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
     theme: {
         extend: {
+            screens: {
+                xs: '375px',
+            },
             fontSize: {
                 '4xs': ['0.5625rem', { lineHeight: '0.75rem' }], // 9px / 12px
                 '3xs': ['0.625rem', { lineHeight: '0.875rem' }], // 10px / 14px
