@@ -111,6 +111,20 @@ async function main() {
         } else {
             console.log(`✅ [INIT] Data aman (${userCount} staf/pengguna ditemukan). Seeding dilewati.`);
         }
+
+        // 4. Pastikan akun Owner (Arni & Vivero) selalu ada dan sinkron di environment staging
+        const isStaging = process.env.APP_ENV === "staging" || 
+                          process.env.DATABASE_URL?.includes("yvs_staging") || 
+                          process.env.STAGING_OWNER_ARNI_PASSWORD || 
+                          process.env.STAGING_OWNER_VIVERO_PASSWORD;
+        if (isStaging) {
+            console.log("👑 [INIT] Menjalankan sinkronisasi akun Owner staging...");
+            try {
+                execSync("node scripts/staging-owner-users.js", { stdio: "inherit" });
+            } catch (ownerErr) {
+                console.warn("⚠️ [INIT] Peringatan: Sinkronisasi akun Owner staging dilewati:", ownerErr.message);
+            }
+        }
     } catch (err) {
         console.warn("⚠️ [INIT] Pengecekan data pengguna dilewati:", err.message);
     } finally {

@@ -16,9 +16,9 @@ class ApiClient {
   ApiClient._internal() {
     dio = Dio(
       BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
+        baseUrl: _safeBaseUrl(),
+        connectTimeout: Duration(seconds: _connectTimeoutSeconds()),
+        receiveTimeout: Duration(seconds: _receiveTimeoutSeconds()),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -57,6 +57,40 @@ class ApiClient {
         },
       ),
     );
+  }
+
+  /// Terapkan ulang konfigurasi environment (baseUrl & timeout) ke instance Dio.
+  /// Dipanggil setelah `.env` dimuat di main.dart agar request pertama
+  /// sudah menuju backend yang benar.
+  void applyEnvironmentConfig() {
+    dio.options.baseUrl = _safeBaseUrl();
+    dio.options.connectTimeout = Duration(seconds: _connectTimeoutSeconds());
+    dio.options.receiveTimeout = Duration(seconds: _receiveTimeoutSeconds());
+  }
+
+  String _safeBaseUrl() {
+    try {
+      return ApiConstants.baseUrl;
+    } catch (_) {
+      // Env belum dimuat (dotenv belum siap) — gunakan default staging.
+      return 'https://staging.101.32.127.55.sslip.io/api';
+    }
+  }
+
+  int _connectTimeoutSeconds() {
+    try {
+      return ApiConstants.connectTimeoutSeconds;
+    } catch (_) {
+      return 30;
+    }
+  }
+
+  int _receiveTimeoutSeconds() {
+    try {
+      return ApiConstants.receiveTimeoutSeconds;
+    } catch (_) {
+      return 30;
+    }
   }
 
   Future<void> setToken(String token) async {

@@ -1,10 +1,84 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+/// Konfigurasi environment aplikasi mobile.
+///
+/// Sumber nilai (prioritas tertinggi ke terendah):
+///   1. `--dart-define=...`     (CI / build per-environment)
+///   2. file `.env`             (flutter_dotenv, dibaca di main.dart)
+///   3. fallback default di kelas ini
+class AppEnvironment {
+  static const String _envName = String.fromEnvironment('APP_ENV');
+  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
+  static const String _envAssetBaseUrl = String.fromEnvironment('API_ASSET_BASE_URL');
+
+  /// Nama environment aktif: `staging`, `production`, atau `development`.
+  /// Nilai ini menjadi bagian dari cache key offline sehingga data antar
+  /// environment tidak pernah tercampur.
+  static String get name {
+    if (_envName.isNotEmpty) return _envName;
+    final fromFile = _readEnv('APP_ENV');
+    if (fromFile != null && fromFile.trim().isNotEmpty) return fromFile.trim();
+    return 'development';
+  }
+
+  static bool get isProduction => name == 'production';
+  static bool get isStaging => name == 'staging';
+
+  /// Membaca nilai dari `.env` secara aman.
+  ///
+  /// `dotenv.maybeGet` melempar `NotInitializedError` bila `.env` belum
+  /// dimuat (mis. unit test atau build release tanpa asset .env), sehingga
+  /// akses harus dibungkus agar aplikasi tidak crash.
+  static String? _readEnv(String key) {
+    try {
+      final value = dotenv.maybeGet(key);
+      if (value == null) return null;
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
 class ApiConstants {
-  // Base URLs
-  // Live Production VPS Backend
-  static const String baseUrl = 'https://101.32.127.55.sslip.io/api';
-  static const String localUrl = 'http://127.0.0.1:5001/api';
-  static const String emulatorUrl = 'http://10.0.2.2:5001/api';
-  static const String lanUrl = 'http://192.168.18.131:5001/api';
+  // Base URLs — seluruhnya berasal dari environment (.env / --dart-define).
+  static const String _prodBaseUrl = 'https://101.32.127.55.sslip.io/api';
+  static const String _stagingBaseUrl = 'https://staging.101.32.127.55.sslip.io/api';
+
+  /// Base URL API yang sedang aktif.
+  /// Tidak ada lagi host hardcoded (localhost / 10.0.2.2 / LAN IP) di source.
+  static String get baseUrl {
+    if (AppEnvironment._envBaseUrl.isNotEmpty) return AppEnvironment._envBaseUrl;
+    final fromFile = AppEnvironment._readEnv('API_BASE_URL');
+    if (fromFile != null && fromFile.trim().isNotEmpty) return fromFile.trim();
+    return AppEnvironment.isProduction ? _prodBaseUrl : _stagingBaseUrl;
+  }
+
+  /// Origin publik (tanpa suffix `/api`) untuk meresolve path gambar/upload.
+  static String get assetBaseUrl {
+    if (AppEnvironment._envAssetBaseUrl.isNotEmpty) return AppEnvironment._envAssetBaseUrl;
+    final fromFile = AppEnvironment._readEnv('API_ASSET_BASE_URL');
+    if (fromFile != null && fromFile.trim().isNotEmpty) return fromFile.trim();
+    return baseUrl.replaceAll(RegExp(r'/api/*$'), '');
+  }
+
+  /// Prefix cache offline, dipisah per environment agar data staging
+  /// dan production tidak pernah bercampur di perangkat yang sama.
+  static String get environmentFingerprint {
+    final sanitized = baseUrl.replaceAll(RegExp(r'[^A-Za-z0-9]'), '_');
+    return '${AppEnvironment.name}_$sanitized';
+  }
+
+  /// Timeout jaringan (detik).
+  static int get connectTimeoutSeconds => _intFromEnv('API_CONNECT_TIMEOUT', 30);
+  static int get receiveTimeoutSeconds => _intFromEnv('API_RECEIVE_TIMEOUT', 30);
+
+  static int _intFromEnv(String key, int fallback) {
+    final raw = AppEnvironment._readEnv(key);
+    if (raw == null) return fallback;
+    return int.tryParse(raw.trim()) ?? fallback;
+  }
 
   // Auth
   static const String login = '/auth/login';
@@ -63,8 +137,8 @@ class ApiConstants {
 
   static String resolveImageUrl(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    final baseWithoutApi = baseUrl.replaceAll('/api', '');
-    return '$baseWithoutApi${path.startsWith('/') ? '' : '/'}$path';
+    final origin = assetBaseUrl;
+    return '$origin${path.startsWith('/') ? '' : '/'}$path';
   }
 }
 

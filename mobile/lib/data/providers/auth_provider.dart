@@ -82,11 +82,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final identifier = usernameOrEmail.trim();
+      final cleanId = identifier.toLowerCase();
+
+      // Pemetaan email fallback identik dengan frontend web untuk menjamin kompatibilitas login di staging & dev
+      const Map<String, String> demoEmailMap = {
+        'admin': 'admin@workshop.com',
+        'owner': 'owner@workshop.com',
+        'pimpinan': 'owner@workshop.com',
+        'manajer': 'manajer@workshop.com',
+        'arni': 'arni@workshop.com',
+        'vivero': 'vivero@workshop.com',
+        'teknisi1': 'teknisi1@workshop.com',
+        'teknisi2': 'teknisi2@workshop.com',
+        'teknisi3': 'teknisi3@workshop.com',
+        'teknisi4': 'teknisi4@workshop.com',
+        'teknisi5': 'teknisi5@workshop.com',
+        'teknisi6': 'teknisi6@workshop.com',
+        'siti': 'siti.admin@workshop.com',
+      };
+
+      final fallbackEmail = cleanId.contains('@')
+          ? cleanId
+          : (demoEmailMap[cleanId] ?? '$cleanId@workshop.com');
+
       final response = await _apiClient.dio.post(
         ApiConstants.login,
         data: {
           'username': identifier,
-          'email': identifier,
+          'email': fallbackEmail,
           'password': password
         },
       );

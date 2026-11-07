@@ -28,8 +28,14 @@ async function login(req, res) {
             { email: { startsWith: `${cleanId}@` } }
         ];
 
-        if (cleanId === "pimpinan" || cleanId === "superadmin" || cleanId === "bambang") {
+        if (cleanId === "pimpinan" || cleanId === "superadmin" || cleanId === "bambang" || cleanId === "owner") {
             orConditions.push({ username: "owner" }, { email: "owner@workshop.com" });
+        }
+        if (cleanId === "arni" || cleanId === "owner2" || cleanId === "arni.owner") {
+            orConditions.push({ username: "arni" }, { email: "arni@workshop.com" }, { email: "arni.owner@workshop.com" });
+        }
+        if (cleanId === "vivero" || cleanId === "owner3" || cleanId === "vivero.owner") {
+            orConditions.push({ username: "vivero" }, { email: "vivero@workshop.com" }, { email: "vivero.owner@workshop.com" });
         }
         if (cleanId === "manajer" || cleanId === "maryam") {
             orConditions.push({ username: "manajer" }, { email: "manajer@workshop.com" });
@@ -56,10 +62,10 @@ async function login(req, res) {
             return res.status(401).json({ message: "Username atau password salah" });
         }
 
-        // Auto-heal: jika username di database masih NULL (akun sebelum migrasi), sinkronkan otomatis
+        // Auto-heal: jika username di database masih NULL (akun sebelum migrasi), sinkronkan otomatis dari email prefix atau identifier
         if (!user.username) {
-            const fallbackUsername = (cleanId.includes("@") ? cleanId.split("@")[0] : cleanId)
-                .replace(/[^a-z0-9._-]/g, "");
+            const rawPrefix = user.email ? user.email.split("@")[0] : (cleanId.includes("@") ? cleanId.split("@")[0] : cleanId);
+            const fallbackUsername = (rawPrefix || `user${user.id}`).replace(/[^a-z0-9._-]/g, "") || `user${user.id}`;
             try {
                 await prisma.user.update({
                     where: { id: user.id },

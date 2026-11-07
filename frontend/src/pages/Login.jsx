@@ -59,6 +59,8 @@ export default function Login() {
                 owner: "owner@workshop.com",
                 pimpinan: "owner@workshop.com",
                 manajer: "manajer@workshop.com",
+                arni: "arni@workshop.com",
+                vivero: "vivero@workshop.com",
                 teknisi1: "teknisi1@workshop.com",
                 teknisi2: "teknisi2@workshop.com",
                 teknisi3: "teknisi3@workshop.com",
@@ -96,9 +98,9 @@ export default function Login() {
     }
 
     // Fungsi bantu cepat isi akun demo
-    function handleSelectDemoAccount(demoUsername) {
+    function handleSelectDemoAccount(demoUsername, customPassword) {
         setUsername(demoUsername);
-        setPassword("password123");
+        setPassword(customPassword || "password123");
         setError("");
     }
 
@@ -300,10 +302,26 @@ export default function Login() {
                             </button>
                             <button
                                 type="button"
+                                onClick={() => handleSelectDemoAccount("arni", "ownerArni2026!")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Staging (Ibu Arni)</span>
+                                <span className="block font-mono text-3xs text-blue-600 truncate">arni</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleSelectDemoAccount("vivero", "ownerVivero2026!")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Staging (Bpk. Vivero)</span>
+                                <span className="block font-mono text-3xs text-blue-600 truncate">vivero</span>
+                            </button>
+                            <button
+                                type="button"
                                 onClick={() => handleSelectDemoAccount("manajer")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Manajerial / Co-Owner (Hj. Maryam)</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Manajerial (Hj. Maryam)</span>
                                 <span className="block font-mono text-3xs text-blue-600 truncate">manajer</span>
                             </button>
                             <button

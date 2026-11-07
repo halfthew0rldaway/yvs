@@ -88,6 +88,51 @@ class ChecklistData {
   // Default items untuk backward compatibility
   static const List<ChecklistItem> items = laptopItems;
 
+  /// Peta seluruh label checklist yang dikenal aplikasi (key -> item).
+  /// Dipakai sebagai KAMUS LABEL saja — bukan sumber data kebenaran.
+  static final Map<String, ChecklistItem> _labelDictionary = {
+    for (final item in [
+      ...laptopItems,
+      ...pcItems,
+      ...printerItems,
+      ...smartphoneItems,
+      ...otherItems,
+    ])
+      item.key: item,
+  };
+
+  /// Bangun daftar checklist yang MENGIKUTI DATA STAGING.
+  ///
+  /// Urutan sumber:
+  ///   1. Key yang benar-benar tersimpan pada `checklist_intake` / `checklist_qc`
+  ///      milik tiket (data asli dari database staging) — hanya key ini yang
+  ///      ditampilkan, sehingga aplikasi tidak pernah menampilkan item yang
+  ///      tidak ada di tiket.
+  ///   2. Jika tiket belum punya checklist sama sekali, pakai template lokal
+  ///      sesuai jenis perangkat sebagai fallback tampilan awal.
+  ///
+  /// Label & ikon diambil dari kamus lokal; key tak dikenal tetap ditampilkan
+  /// memakai key tersebut sebagai label agar tidak ada data yang hilang.
+  static List<ChecklistItem> resolveForTicket(
+    String? jenisPerangkat,
+    Map<String, dynamic>? storedChecklist,
+  ) {
+    final storedKeys = storedChecklist?.keys.where((k) => k.trim().isNotEmpty).toList() ?? const <String>[];
+    if (storedKeys.isEmpty) {
+      return getItemsForDevice(jenisPerangkat);
+    }
+
+    return storedKeys.map((key) {
+      final known = _labelDictionary[key];
+      if (known != null) return known;
+      return ChecklistItem(
+        key: key,
+        label: key.replaceAll('_', ' ').trim(),
+        icon: Icons.check_circle_outline,
+      );
+    }).toList();
+  }
+
   /// Resolusi checklist spesifik berdasarkan jenis perangkat tiket
   static List<ChecklistItem> getItemsForDevice(String? jenisPerangkat) {
     if (jenisPerangkat == null || jenisPerangkat.isEmpty) return laptopItems;

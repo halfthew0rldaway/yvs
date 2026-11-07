@@ -193,6 +193,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               onPressed: () {
                                 setState(() {
+                                  _usernameController.text = 'arni';
+                                  _passwordController.text = 'ownerArni2026!';
+                                });
+                              },
+                              child: const Column(
+                                children: [
+                                  Text('Owner Arni', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF0D9488))),
+                                  Text('arni', style: TextStyle(fontSize: 9, color: AppTheme.textSecondary)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _usernameController.text = 'vivero';
+                                  _passwordController.text = 'ownerVivero2026!';
+                                });
+                              },
+                              child: const Column(
+                                children: [
+                                  Text('Owner Vivero', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF0D9488))),
+                                  Text('vivero', style: TextStyle(fontSize: 9, color: AppTheme.textSecondary)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              onPressed: () {
+                                setState(() {
                                   _usernameController.text = 'teknisi1';
                                   _passwordController.text = 'password123';
                                 });

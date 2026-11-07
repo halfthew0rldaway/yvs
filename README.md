@@ -689,17 +689,20 @@ Script akan otomatis:
 
 Setelah frontend terbuka di browser, gunakan kredensial berikut untuk masuk:
 
-| Role & Jabatan | Akun Email | Password Default | Aksesibilitas Fitur |
+| Role & Jabatan | Akun Email / Username | Password Default | Aksesibilitas Fitur |
 | :--- | :--- | :--- | :--- |
-| **Admin Utama** | `admin@workshop.com` | `password123` | Akses penuh manajerial, inventaris, faktur, tiket, dan CRM |
-| **Service Advisor (Admin)** | `siti.admin@workshop.com` | `password123` | Front-desk intake, komunikasi pelanggan, dan modul retensi CRM |
-| **Pimpinan / Owner** | `pimpinan@workshop.com` | `password123` | Monitoring analitik bisnis, audit log, dan laporan keuangan |
-| **Teknisi 1 (Senior Specialist)** | `teknisi1@workshop.com` | `password123` | Penanganan perbaikan hardware tingkat lanjut & QC |
-| **Teknisi 2 (PC Gaming)** | `teknisi2@workshop.com` | `password123` | Spesialis PC gaming, overclocking, dan thermal cooling |
-| **Teknisi 3 (MacBook Specialist)** | `teknisi3@workshop.com` | `password123` | Spesialis perbaikan Apple MacBook dan iMac |
-| **Teknisi 4 (Hardware & Display)** | `teknisi4@workshop.com` | `password123` | Penggantian layar panel LCD dan perbaikan engsel |
-| **Teknisi 5 (Software & OS)** | `teknisi5@workshop.com` | `password123` | Instalasi sistem operasi, backup data, dan recovery |
-| **Teknisi 6 (Motherboard Tech)** | `teknisi6@workshop.com` | `password123` | Micro-soldering dan perbaikan jalur motherboard |
+| **Owner Staging (Ibu Arni)** | `arni` / `arni@workshop.com` | `ownerArni2026!` | Owner & Pimpinan: analitik bisnis, audit log, persetujuan revisi, profil & ubah password |
+| **Owner Staging (Bpk. Vivero)** | `vivero` / `vivero@workshop.com` | `ownerVivero2026!` | Owner & Pimpinan: analitik bisnis, audit log, persetujuan revisi, profil & ubah password |
+| **Owner Utama (H. Bambang)** | `owner` / `owner@workshop.com` | `password123` | Akses penuh manajerial, analitik bisnis, audit log, laporan keuangan |
+| **Manajerial / Co-Owner (Hj. Maryam)** | `manajer` / `manajer@workshop.com` | `password123` | Manajerial, analitik, absensi & persetujuan |
+| **Admin Utama** | `admin` / `admin@workshop.com` | `password123` | Akses penuh operasional, inventaris, faktur, tiket, dan CRM |
+| **Service Advisor (Frontman)** | `siti` / `siti.admin@workshop.com` | `password123` | Front-desk intake, komunikasi pelanggan, dan modul retensi CRM |
+| **Teknisi 1 (Senior Specialist)** | `teknisi1` / `teknisi1@workshop.com` | `password123` | Penanganan perbaikan hardware tingkat lanjut & QC |
+| **Teknisi 2 (PC Gaming)** | `teknisi2` / `teknisi2@workshop.com` | `password123` | Spesialis PC gaming, overclocking, dan thermal cooling |
+| **Teknisi 3 (MacBook Specialist)** | `teknisi3` / `teknisi3@workshop.com` | `password123` | Spesialis perbaikan Apple MacBook dan iMac |
+| **Teknisi 4 (Hardware & Display)** | `teknisi4` / `teknisi4@workshop.com` | `password123` | Penggantian layar panel LCD dan perbaikan engsel |
+| **Teknisi 5 (Software & OS)** | `teknisi5` / `teknisi5@workshop.com` | `password123` | Instalasi sistem operasi, backup data, dan recovery |
+| **Teknisi 6 (Motherboard Tech)** | `teknisi6` / `teknisi6@workshop.com` | `password123` | Micro-soldering dan perbaikan jalur motherboard |
 
 > **Fitur Pelacakan Publik (Tanpa Login):** Akses halaman **  ** untuk melacak status tiket servis menggunakan nomor tiket.
 

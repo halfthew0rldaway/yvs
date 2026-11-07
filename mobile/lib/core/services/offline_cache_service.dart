@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_constants.dart';
 
 class CachedResponse<T> {
   final T data;
@@ -23,8 +24,34 @@ class CachedResponse<T> {
 }
 
 class OfflineCacheService {
-  static const String _prefix = 'servio_cache_';
-  static const String _timePrefix = 'servio_cache_time_';
+  static const String _basePrefix = 'servio_cache_';
+  static const String _baseTimePrefix = 'servio_cache_time_';
+
+  /// Prefix efektif yang sudah di-scope ke environment aktif.
+  /// Contoh: `servio_cache_staging_https___staging_101_32_127_55_sslip_io_api_`
+  static String get _prefix => '$_basePrefix${ApiConstants.environmentFingerprint}_';
+  static String get _timePrefix => '$_baseTimePrefix${ApiConstants.environmentFingerprint}_';
+
+  /// Hapus cache milik environment LAIN (mis. sisa production) agar
+  /// perangkat tidak pernah menampilkan data dari backend yang berbeda.
+  /// Cache milik environment aktif tetap dipertahankan.
+  static Future<void> clearForeignEnvironments() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentPrefix = _prefix;
+      final currentTimePrefix = _timePrefix;
+
+      final staleKeys = prefs.getKeys().where((k) {
+        final isCacheKey = k.startsWith(_basePrefix) || k.startsWith(_baseTimePrefix);
+        if (!isCacheKey) return false;
+        return !k.startsWith(currentPrefix) && !k.startsWith(currentTimePrefix);
+      }).toList();
+
+      for (final k in staleKeys) {
+        await prefs.remove(k);
+      }
+    } catch (_) {}
+  }
 
   /// Simpan response data JSON ke SharedPreferences
   static Future<void> setCache(String key, dynamic data) async {

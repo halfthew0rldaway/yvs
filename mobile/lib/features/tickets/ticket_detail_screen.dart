@@ -1234,7 +1234,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: ChecklistData.getItemsForDevice(ticket.perangkat?.jenisPerangkat).map((item) {
+                        children: ChecklistData.resolveForTicket(ticket.perangkat?.jenisPerangkat, intakeMap).map((item) {
                           final isOk = intakeMap[item.key] == true;
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1560,7 +1560,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                     ),
                     const SizedBox(height: 8),
-                    ...ChecklistData.getItemsForDevice(ticket.perangkat?.jenisPerangkat).map((item) {
+                    ...ChecklistData.resolveForTicket(ticket.perangkat?.jenisPerangkat, qcMap).map((item) {
                       final isChecked = qcMap[item.key] == true;
                       return CheckboxListTile(
                         dense: true,

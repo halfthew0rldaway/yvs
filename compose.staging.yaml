@@ -39,10 +39,13 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      APP_ENV: staging
       PORT: "5000"
       DATABASE_URL: "mysql://${MYSQL_USER:-yvs_staging}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE:-yvs_staging}"
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
       JWT_EXPIRES_IN: 7d
+      STAGING_OWNER_ARNI_PASSWORD: ${STAGING_OWNER_ARNI_PASSWORD:-ownerArni2026!}
+      STAGING_OWNER_VIVERO_PASSWORD: ${STAGING_OWNER_VIVERO_PASSWORD:-ownerVivero2026!}
     volumes:
       - yvs_staging_uploads:/app/uploads
     depends_on:
