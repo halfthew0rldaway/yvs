@@ -62,6 +62,19 @@ class _QcVerificationModalState extends State<QcVerificationModal> {
   }
 
   Future<void> _submit() async {
+    // QC (Inspeksi Pra-Penyerahan) hanya valid pada status 'dalam_perbaikan'.
+    // Backend hanya mengizinkan transisi dalam_perbaikan -> selesai,
+    // sehingga submit dari status lain (didiagnosis/diterima/dll) ditolak di sini.
+    if (widget.ticket.status != 'dalam_perbaikan') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Inspeksi QC (Pra-Penyerahan) hanya dapat dilakukan saat status "Dalam Perbaikan".'),
+          backgroundColor: AppTheme.warning,
+        ),
+      );
+      return;
+    }
+
     final hasRepairLog = widget.ticket.logPerbaikan?.any((l) => l.fase == 'Perbaikan') ?? false;
 
     if (!hasRepairLog && _catatanController.text.trim().isEmpty) {
@@ -137,24 +150,28 @@ class _QcVerificationModalState extends State<QcVerificationModal> {
     final hasRepairLog = widget.ticket.logPerbaikan?.any((l) => l.fase == 'Perbaikan') ?? false;
     final allChecked = _qcItems.values.every((v) => v == true);
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.88,
-      ),
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 580),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.88,
+          ),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          decoration: const BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
           // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -310,7 +327,9 @@ class _QcVerificationModalState extends State<QcVerificationModal> {
           ),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 }
 

@@ -37,3 +37,8 @@ presentation/
 !backend/package-lock.json
 !frontend/package-lock.json
 .gradle_home/
+
+# Mobile local build artifacts (APK/IPA) - never push binaries to git
+mobile/dist/
+mobile/build/
+mobile/.dart_tool/

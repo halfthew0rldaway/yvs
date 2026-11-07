@@ -166,7 +166,21 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
   }
 
   // Update QC Checklist
-  Future<void> _toggleQc(Map<String, dynamic> currentQc, String key, bool value) async {
+  //
+  // QC (Inspeksi Pra-Penyerahan) hanya boleh diubah saat tiket dalam status
+  // 'dalam_perbaikan'. Transisi status backend hanya mengizinkan
+  // dalam_perbaikan -> selesai, sehingga QC di status lain (didiagnosis,
+  // diterima, dll.) tidak valid dan harus di-blokir di sisi UI.
+  Future<void> _toggleQc(Map<String, dynamic> currentQc, String key, bool value, String ticketStatus) async {
+    if (ticketStatus != 'dalam_perbaikan') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Inspeksi QC (Pra-Penyerahan) hanya dapat dilakukan saat status "Dalam Perbaikan".'),
+          backgroundColor: AppTheme.warning,
+        ),
+      );
+      return;
+    }
     if (!AttendanceGuard.verifyOrPrompt(context, ref, actionName: 'memperbarui Quality Control')) return;
 
     final updated = Map<String, dynamic>.from(currentQc);
@@ -1297,7 +1311,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                               showModalBottomSheet(
                                 context: context,
                                 isScrollControlled: true,
-                                builder: (_) => DiagnosisModal(ticketId: ticket.id, onSuccess: _refresh),
+                                builder: (_) => DiagnosisModal(
+                                  ticketId: ticket.id,
+                                  jenisPerangkat: ticket.perangkat?.jenisPerangkat,
+                                  initialIntake: ticket.checklistIntake,
+                                  onSuccess: _refresh,
+                                ),
                               );
                             },
                           ),
@@ -1560,6 +1579,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                     ),
                     const SizedBox(height: 8),
+                    // QC hanya dapat diubah saat status 'dalam_perbaikan'
                     ...ChecklistData.resolveForTicket(ticket.perangkat?.jenisPerangkat, qcMap).map((item) {
                       final isChecked = qcMap[item.key] == true;
                       return CheckboxListTile(
@@ -1568,9 +1588,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                         title: Text(item.label, style: const TextStyle(fontSize: 13)),
                         secondary: Icon(item.icon, size: 16),
                         value: isChecked,
-                        onChanged: (val) {
-                          if (val != null) _toggleQc(qcMap, item.key, val);
-                        },
+                        // QC hanya dapat diubah saat status 'dalam_perbaikan'
+                        onChanged: ticket.status == 'dalam_perbaikan'
+                            ? (val) {
+                                if (val != null) _toggleQc(qcMap, item.key, val, ticket.status);
+                              }
+                            : null,
                       );
                     }),
                     const Divider(height: 16),
@@ -1583,9 +1606,11 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       ),
                       secondary: const Icon(Icons.workspace_premium, color: AppTheme.success),
                       value: qcMap['passed_qc'] == true,
-                      onChanged: (val) {
-                        if (val != null) _toggleQc(qcMap, 'passed_qc', val);
-                      },
+                      onChanged: ticket.status == 'dalam_perbaikan'
+                          ? (val) {
+                              if (val != null) _toggleQc(qcMap, 'passed_qc', val, ticket.status);
+                            }
+                          : null,
                     ),
                   ],
                 ),
@@ -1972,7 +1997,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
             showModalBottomSheet(
               context: context,
               isScrollControlled: true,
-              builder: (_) => DiagnosisModal(ticketId: ticket.id, onSuccess: _refresh),
+              builder: (_) => DiagnosisModal(
+                ticketId: ticket.id,
+                jenisPerangkat: ticket.perangkat?.jenisPerangkat,
+                initialIntake: ticket.checklistIntake,
+                onSuccess: _refresh,
+              ),
             );
           },
         );

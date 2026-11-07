@@ -57,7 +57,11 @@ class DashboardScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                isAdminView ? Icons.admin_panel_settings_rounded : Icons.handyman_rounded,
+                user?.role == 'frontman'
+                    ? Icons.support_agent_rounded
+                    : isAdminView
+                        ? Icons.admin_panel_settings_rounded
+                        : Icons.handyman_rounded,
                 color: AppTheme.primary,
                 size: 20,
               ),
@@ -75,9 +79,11 @@ class DashboardScreen extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    isAdminView
-                        ? 'Admin: ${(user?.nama ?? "Utama").split('(')[0].trim()}'
-                        : 'Meja: ${(user?.nama ?? "Teknisi").split('(')[0].trim()}',
+                    user?.role == 'frontman'
+                        ? 'Frontman: ${(user?.nama ?? "Front Desk").split('(')[0].trim()}'
+                        : isAdminView
+                            ? 'Admin: ${(user?.nama ?? "Utama").split('(')[0].trim()}'
+                            : 'Meja: ${(user?.nama ?? "Teknisi").split('(')[0].trim()}',
                     style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

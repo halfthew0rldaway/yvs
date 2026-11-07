@@ -107,7 +107,7 @@ void main() {
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 Text(
-                  'Meja: Budi Santoso',
+                  'Meja: $longName',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 11),
@@ -121,6 +121,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Meja Kerja: $longName'), findsOneWidget);
+    expect(find.text('Meja: $longName'), findsOneWidget);
   });
 }

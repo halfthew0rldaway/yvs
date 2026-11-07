@@ -215,8 +215,8 @@ class AdminDashboardSummary {
   }
 }
 
-// Roles that own the workshop-wide dashboard (backend: authorize("admin","pimpinan"))
-bool isAdminCompanionRole(String? role) => role == 'admin' || role == 'pimpinan';
+// Roles that own the workshop-wide dashboard (backend: authorize("admin","pimpinan","frontman"))
+bool isAdminCompanionRole(String? role) => role == 'admin' || role == 'pimpinan' || role == 'frontman';
 
 // Admin Dashboard Provider (ringkasan operasional workshop, bukan SLA per-teknisi)
 final adminDashboardProvider = FutureProvider.autoDispose<AdminDashboardSummary>((ref) async {

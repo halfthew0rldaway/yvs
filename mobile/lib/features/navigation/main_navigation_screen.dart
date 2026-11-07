@@ -140,15 +140,25 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       bottomNavigationBar: SafeArea(
         top: false,
         bottom: true,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: ScoopedFloatingDock(
-            currentIndex: safeIndex,
-            onItemSelected: _onTabSelected,
-            onCenterAction: _openQrScanner,
-            centerIcon: Icons.qr_code_scanner_rounded,
-            centerTooltip: 'Pindai QR Tiket / Unit',
-            destinations: destinations,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          // heightFactor keeps the bar wrapped to the dock's height.
+          // Without it Align expands to the Scaffold's max height,
+          // starving the IndexedStack body (blank screen, only navbar).
+          heightFactor: 1.0,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 540),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: ScoopedFloatingDock(
+                currentIndex: safeIndex,
+                onItemSelected: _onTabSelected,
+                onCenterAction: _openQrScanner,
+                centerIcon: Icons.qr_code_scanner_rounded,
+                centerTooltip: 'Pindai QR Tiket / Unit',
+                destinations: destinations,
+              ),
+            ),
           ),
         ),
       ),

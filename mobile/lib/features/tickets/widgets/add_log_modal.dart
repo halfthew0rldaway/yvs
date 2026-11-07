@@ -116,23 +116,30 @@ class _AddLogModalState extends State<AddLogModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 580),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.88,
+          ),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -148,12 +155,24 @@ class _AddLogModalState extends State<AddLogModal> {
                         child: const Icon(Icons.timeline_rounded, color: AppTheme.primary, size: 20),
                       ),
                       const SizedBox(width: 10),
-                      const Text(
-                        'Tambah Catatan Progres',
-                        style: TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Catatan Tambahan (Opsional)',
+                              style: TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Timeline terisi otomatis dari diagnosa, part & QC',
+                              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -166,21 +185,43 @@ class _AddLogModalState extends State<AddLogModal> {
               ),
               const SizedBox(height: 14),
 
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F9FF),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFBAE6FD)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.auto_awesome_outlined, size: 16, color: AppTheme.primary),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Hasil diagnosa, pemasangan part & QC sudah tercatat otomatis. Tulis di sini hanya untuk info tambahan.',
+                        style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
               // Catatan
-              const Text('Catatan Pengerjaan *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              const Text('Catatan Lapangan *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _catatanController,
                 maxLines: 3,
                 decoration: const InputDecoration(
-                  hintText: 'Misal: Selesai re-balling IC power, pembersihan korosi jalur baterai, atau pengetesan tegangan...',
+                  hintText: 'Cth: menunggu konfirmasi customer via WA, board di-ultrasonic tunggu kering 2 jam...',
                 ),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Catatan perbaikan wajib diisi' : null,
+                validator: (val) => val == null || val.trim().isEmpty ? 'Catatan wajib diisi' : null,
               ),
               const SizedBox(height: 14),
 
               // Foto Dokumentasi
-              const Text('Dokumentasi Foto Fisik (Kamera / Galeri)',
+              const Text('Foto Lampiran (Opsional)',
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
 
@@ -274,12 +315,14 @@ class _AddLogModalState extends State<AddLogModal> {
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Simpan Catatan & Foto', style: TextStyle(fontWeight: FontWeight.bold)),
+                    : const Text('Simpan Catatan Tambahan', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

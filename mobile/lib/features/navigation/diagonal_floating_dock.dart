@@ -263,16 +263,11 @@ class _ScoopedDockPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final path = _buildPath(size);
 
-    // 1. Layered Ambient Drop Shadows
-    final shadowPaint1 = Paint()
-      ..color = const Color(0x140F172A)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
-    canvas.drawPath(path.shift(const Offset(0, 6)), shadowPaint1);
-
-    final shadowPaint2 = Paint()
-      ..color = const Color(0x080F172A)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-    canvas.drawPath(path.shift(const Offset(0, 2)), shadowPaint2);
+    // 1. Clean, subtle ambient drop shadow (no harsh muddy glow)
+    final shadowPaint = Paint()
+      ..color = const Color(0x0F0F172A)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawPath(path.shift(const Offset(0, 3)), shadowPaint);
 
     // 2. Fill Background
     final fillPaint = Paint()
@@ -322,31 +317,21 @@ class _DockItem extends StatelessWidget {
           HapticFeedback.selectionClick();
           onTap();
         },
-        borderRadius: BorderRadius.circular(24),
-        splashColor: AppTheme.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(20),
+        splashColor: AppTheme.primary.withValues(alpha: 0.08),
         highlightColor: Colors.transparent,
         child: Center(
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
+            duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            padding: EdgeInsets.symmetric(
-              horizontal: isSelected ? 7 : 3,
-              vertical: isSelected ? 5 : 3,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 4,
             ),
             decoration: BoxDecoration(
-              // Brand-tinted soft pill instead of the harsh obsidian (0xFF0F172A)
-              // block that clashed with the light dock and read as "ugly black blob".
-              color: isSelected ? AppTheme.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: AppTheme.primary.withValues(alpha: 0.28),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
+              // Clean primary tint background for active state instead of heavy solid block
+              color: isSelected ? AppTheme.primaryLight : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Stack(
               clipBehavior: Clip.none,
@@ -358,8 +343,8 @@ class _DockItem extends StatelessWidget {
                   children: [
                     Icon(
                       isSelected ? destination.selectedIcon : destination.icon,
-                      size: isSelected ? 19 : 20,
-                      color: isSelected ? Colors.white : const Color(0xFF64748B),
+                      size: 21,
+                      color: isSelected ? AppTheme.primary : const Color(0xFF64748B),
                     ),
                     const SizedBox(height: 2),
                     FittedBox(
@@ -367,10 +352,10 @@ class _DockItem extends StatelessWidget {
                       child: Text(
                         destination.label,
                         style: TextStyle(
-                          fontSize: 9.2,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isSelected ? Colors.white : const Color(0xFF64748B),
-                          letterSpacing: -0.3,
+                          fontSize: 9.5,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? AppTheme.primary : const Color(0xFF64748B),
+                          letterSpacing: -0.2,
                         ),
                         maxLines: 1,
                       ),
@@ -463,15 +448,9 @@ class _CenterActionButton extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.40),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: AppTheme.primaryLight.withValues(alpha: 0.25),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: AppTheme.primary.withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
             spreadRadius: 0,
           ),
         ],
