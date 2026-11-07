@@ -378,38 +378,38 @@ Terima kasih atas kepercayaan Anda kepada YVS.
             <div className="modal-panel max-w-2xl z-10">
                 <div className="modal-grabber" />
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/50 gap-2">
-                    <div className="flex items-center gap-2.5">
-                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
-                            <MessageSquare className="w-5 h-5" />
+                <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-slate-100 bg-slate-50/50 gap-2">
+                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                        <div className="p-1.5 sm:p-2 bg-emerald-50 text-emerald-600 rounded-lg sm:rounded-xl border border-emerald-100 shrink-0">
+                            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
-                        <div>
-                            <h2 className="text-base font-bold text-slate-900">Generator Pesan WhatsApp Pelanggan</h2>
-                            <p className="text-xs text-slate-500">
+                        <div className="min-w-0">
+                            <h2 className="text-3xs xs:text-sm sm:text-base font-bold text-slate-900 break-words">Generator Pesan WhatsApp Pelanggan</h2>
+                            <p className="text-3xs xs:text-2xs sm:text-xs text-slate-500 break-words">
                                 Standar komunikasi pelayanan prima (Sopan, terstruktur, tanpa singkatan)
                             </p>
                         </div>
                     </div>
                     <button 
                         onClick={onClose}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors shrink-0 cursor-pointer"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="modal-body-tight space-y-3.5 sm:space-y-4">
+                <div className="modal-body-tight space-y-3 sm:space-y-4 text-3xs xs:text-2xs sm:text-xs">
                     {/* Scenario Tabs */}
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                        <label className="block text-3xs xs:text-2xs sm:text-xs font-semibold text-slate-700 uppercase tracking-wide sm:tracking-wider mb-1.5 sm:mb-2">
                             Pilih Skenario Komunikasi
                         </label>
-                        <div className="flex flex-wrap sm:flex-nowrap gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+                        <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-nowrap gap-1 sm:gap-1.5 p-1 bg-slate-100 rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-semibold">
                             <button
                                 type="button"
                                 onClick={() => setScenario("penawaran")}
-                                className={`flex-1 min-w-[120px] sm:min-w-0 py-2 px-2.5 rounded-lg transition-all text-center ${
+                                className={`sm:flex-1 py-1.5 sm:py-2 px-1.5 sm:px-2.5 rounded-md sm:rounded-lg transition-all text-center cursor-pointer ${
                                     scenario === "penawaran" 
                                         ? "bg-white text-blue-600 shadow-sm" 
                                         : "text-slate-600 hover:text-slate-900"
@@ -420,7 +420,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                             <button
                                 type="button"
                                 onClick={() => setScenario("izin_tambahan")}
-                                className={`flex-1 min-w-[120px] sm:min-w-0 py-2 px-2.5 rounded-lg transition-all text-center ${
+                                className={`sm:flex-1 py-1.5 sm:py-2 px-1.5 sm:px-2.5 rounded-md sm:rounded-lg transition-all text-center cursor-pointer ${
                                     scenario === "izin_tambahan" 
                                         ? "bg-white text-blue-600 shadow-sm" 
                                         : "text-slate-600 hover:text-slate-900"
@@ -431,7 +431,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                             <button
                                 type="button"
                                 onClick={() => setScenario("selesai")}
-                                className={`flex-1 min-w-[100px] sm:min-w-0 py-2 px-2.5 rounded-lg transition-all text-center ${
+                                className={`sm:flex-1 py-1.5 sm:py-2 px-1.5 sm:px-2.5 rounded-md sm:rounded-lg transition-all text-center cursor-pointer ${
                                     scenario === "selesai" 
                                         ? "bg-white text-blue-600 shadow-sm" 
                                         : "text-slate-600 hover:text-slate-900"
@@ -442,7 +442,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                             <button
                                 type="button"
                                 onClick={() => setScenario("garansi_tips")}
-                                className={`flex-1 min-w-[110px] sm:min-w-0 py-2 px-2.5 rounded-lg transition-all text-center ${
+                                className={`sm:flex-1 py-1.5 sm:py-2 px-1.5 sm:px-2.5 rounded-md sm:rounded-lg transition-all text-center cursor-pointer ${
                                     scenario === "garansi_tips" 
                                         ? "bg-white text-blue-600 shadow-sm" 
                                         : "text-slate-600 hover:text-slate-900"
@@ -453,7 +453,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                             <button
                                 type="button"
                                 onClick={() => setScenario("pengingat")}
-                                className={`flex-1 min-w-[110px] sm:min-w-0 py-2 px-2.5 rounded-lg transition-all text-center ${
+                                className={`sm:flex-1 py-1.5 sm:py-2 px-1.5 sm:px-2.5 rounded-md sm:rounded-lg transition-all text-center cursor-pointer ${
                                     scenario === "pengingat" 
                                         ? "bg-white text-blue-600 shadow-sm" 
                                         : "text-slate-600 hover:text-slate-900"
@@ -464,7 +464,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                             <button
                                 type="button"
                                 onClick={() => setScenario("pengingat_garansi")}
-                                className={`flex-1 min-w-[120px] sm:min-w-0 py-2 px-2.5 rounded-lg transition-all text-center ${
+                                className={`sm:flex-1 py-1.5 sm:py-2 px-1.5 sm:px-2.5 rounded-md sm:rounded-lg transition-all text-center cursor-pointer ${
                                     scenario === "pengingat_garansi" 
                                         ? "bg-white text-blue-600 shadow-sm" 
                                         : "text-slate-600 hover:text-slate-900"
@@ -477,25 +477,25 @@ Terima kasih atas kepercayaan Anda kepada YVS.
 
                     {/* Scenario Context Fields */}
                     {(scenario === "penawaran" || scenario === "pengingat_garansi") && (
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5">
-                            <div className="flex items-center justify-between flex-wrap gap-2">
-                                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                                    Adaptasi Gaya Bahasa Pelanggan
+                        <div className="bg-slate-50 p-2.5 sm:p-4 rounded-lg sm:rounded-xl border border-slate-200 space-y-2 sm:space-y-2.5">
+                            <div className="flex items-center justify-between flex-wrap gap-1.5 sm:gap-2">
+                                <span className="text-3xs xs:text-2xs sm:text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600 shrink-0" />
+                                    <span>Adaptasi Gaya Bahasa Pelanggan</span>
                                 </span>
                                 {customer?.tipe_kepribadian && (
-                                    <span className="text-3xs font-bold bg-white text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                                    <span className="text-3xs font-bold bg-white text-blue-700 px-1.5 sm:px-2 py-0.5 rounded-full border border-blue-200">
                                         Profil: {customer.tipe_kepribadian}
                                     </span>
                                 )}
                             </div>
-                            <div className="flex flex-wrap sm:flex-nowrap gap-1.5 pt-1">
+                            <div className="grid grid-cols-3 xs:grid-cols-5 gap-1 sm:gap-1.5 pt-1">
                                 {["Koleris", "Sanguinis", "Plegmatis", "Melankolis", "Netral"].map((tone) => (
                                     <button
                                         key={tone}
                                         type="button"
                                         onClick={() => setPersonalityMode(tone)}
-                                        className={`flex-1 min-w-[70px] sm:min-w-0 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all border text-center ${
+                                        className={`py-1.5 px-1 sm:px-2 rounded-md sm:rounded-lg text-3xs xs:text-2xs sm:text-xs font-semibold transition-all border text-center cursor-pointer ${
                                             personalityMode === tone
                                                 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                                                 : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
@@ -505,7 +505,7 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                                     </button>
                                 ))}
                             </div>
-                            <p className="text-2xs text-slate-500 pt-0.5">
+                            <p className="text-3xs xs:text-2xs text-slate-500 pt-0.5 break-words">
                                 {personalityMode === "Koleris" && "Gaya ringkas, tegas, to the point, langsung biaya dan waktu pengerjaan."}
                                 {personalityMode === "Sanguinis" && "Gaya hangat, ramah, antusias, apresiatif, sertakan foto unit."}
                                 {personalityMode === "Plegmatis" && "Gaya tenang, sabar, suportif, tanpa mendesak keputusan."}
@@ -516,39 +516,39 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                     )}
 
                     {scenario === "izin_tambahan" && (
-                        <div className="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-3">
-                            <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-                                <ShieldAlert className="w-4 h-4 text-amber-600" />
-                                Parameter Tindakan Berisiko Tinggi
+                        <div className="bg-amber-50/70 p-2.5 sm:p-4 rounded-lg sm:rounded-xl border border-amber-200 space-y-2.5 sm:space-y-3">
+                            <span className="text-3xs xs:text-2xs sm:text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                                <ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 shrink-0" />
+                                <span>Parameter Tindakan Berisiko Tinggi</span>
                             </span>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                                <div>
-                                    <label className="block text-2xs font-semibold text-slate-700 mb-1">Tindakan</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                                <div className="min-w-0">
+                                    <label className="block text-3xs xs:text-2xs font-semibold text-slate-700 mb-1">Tindakan</label>
                                     <input
                                         type="text"
                                         value={tindakanTambahan}
                                         onChange={(e) => setTindakanTambahan(e.target.value)}
-                                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                        className="w-full px-2 sm:px-3 py-1.5 bg-white border border-slate-200 rounded-md sm:rounded-lg text-3xs xs:text-2xs sm:text-xs"
                                         placeholder="Misal: Flash BIOS / Reball"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-2xs font-semibold text-slate-700 mb-1">Potensi Risiko</label>
+                                <div className="min-w-0">
+                                    <label className="block text-3xs xs:text-2xs font-semibold text-slate-700 mb-1">Potensi Risiko</label>
                                     <input
                                         type="text"
                                         value={risikoTambahan}
                                         onChange={(e) => setRisikoTambahan(e.target.value)}
-                                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                        className="w-full px-2 sm:px-3 py-1.5 bg-white border border-slate-200 rounded-md sm:rounded-lg text-3xs xs:text-2xs sm:text-xs"
                                         placeholder="Risiko unit / data"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-2xs font-semibold text-slate-700 mb-1">Tambahan Biaya (Rp)</label>
+                                <div className="min-w-0">
+                                    <label className="block text-3xs xs:text-2xs font-semibold text-slate-700 mb-1">Tambahan Biaya (Rp)</label>
                                     <input
                                         type="number"
                                         value={biayaTambahan}
                                         onChange={(e) => setBiayaTambahan(e.target.value)}
-                                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                        className="w-full px-2 sm:px-3 py-1.5 bg-white border border-slate-200 rounded-md sm:rounded-lg text-3xs xs:text-2xs sm:text-xs"
                                     />
                                 </div>
                             </div>
@@ -556,18 +556,18 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                     )}
 
                     {scenario === "pengingat" && (
-                        <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-200 flex items-center justify-between gap-3 text-xs">
-                            <span className="font-bold text-blue-900 flex items-center gap-1.5">
-                                <Clock className="w-4 h-4 text-blue-600" />
-                                Periode Pengingat Penyimpanan Unit:
+                        <div className="bg-blue-50/70 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-blue-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                            <span className="text-3xs xs:text-2xs sm:text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
+                                <span>Periode Pengingat Penyimpanan Unit:</span>
                             </span>
-                            <div className="flex gap-2">
+                            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 shrink-0">
                                 {["30", "60", "90"].map((p) => (
                                     <button
                                         key={p}
                                         type="button"
                                         onClick={() => setReminderPeriod(p)}
-                                        className={`px-3 py-1 rounded-lg font-bold transition-all border ${
+                                        className={`px-2 sm:px-3 py-1 rounded-md sm:rounded-lg text-3xs xs:text-2xs sm:text-xs font-bold transition-all border text-center cursor-pointer ${
                                             reminderPeriod === p 
                                                 ? "bg-blue-600 text-white border-blue-600" 
                                                 : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
@@ -582,11 +582,11 @@ Terima kasih atas kepercayaan Anda kepada YVS.
 
                     {/* Message Preview and Editor */}
                     <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-1 xs:gap-2 mb-1.5">
+                            <label className="text-3xs xs:text-2xs sm:text-xs font-semibold text-slate-700 uppercase tracking-wide sm:tracking-wider">
                                 Teks Pesan WhatsApp (Dapat Diedit Langsung)
                             </label>
-                            <span className="text-2xs text-slate-400">
+                            <span className="text-3xs xs:text-2xs text-slate-400 break-words">
                                 Ditujukan ke: <span className="font-semibold text-slate-700">{customer?.nama} ({customer?.nomor_telepon})</span>
                             </span>
                         </div>
@@ -594,35 +594,35 @@ Terima kasih atas kepercayaan Anda kepada YVS.
                             value={messageText}
                             onChange={(e) => setMessageText(e.target.value)}
                             rows={9}
-                            className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 leading-relaxed outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all resize-none"
+                            className="w-full p-2.5 sm:p-3.5 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-mono text-slate-800 leading-relaxed outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all resize-none"
                         />
                     </div>
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="p-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between gap-3">
+                <div className="p-3 sm:p-4 border-t border-slate-100 bg-slate-50/80 flex flex-col-reverse xs:flex-row xs:items-center xs:justify-between gap-2 sm:gap-3">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition-colors"
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-3xs xs:text-2xs sm:text-xs font-semibold rounded-lg sm:rounded-xl transition-colors cursor-pointer"
                     >
                         Tutup
                     </button>
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 xs:flex xs:items-center gap-1.5 sm:gap-2">
                         <button
                             type="button"
                             onClick={handleCopy}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-sm"
+                            className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-3xs xs:text-2xs sm:text-xs font-bold rounded-lg sm:rounded-xl transition-all shadow-sm cursor-pointer"
                         >
-                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+                            {copied ? <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 shrink-0" /> : <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 shrink-0" />}
                             <span>{copied ? "Tersalin" : "Salin Pesan"}</span>
                         </button>
                         <button
                             type="button"
                             onClick={handleSendWhatsApp}
-                            className="inline-flex items-center gap-1.5 px-5 py-2 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-green-500/20"
+                            className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-5 py-1.5 sm:py-2 bg-[#25D366] hover:bg-[#128C7E] text-white text-3xs xs:text-2xs sm:text-xs font-bold rounded-lg sm:rounded-xl transition-all shadow-md shadow-green-500/20 cursor-pointer"
                         >
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                             <span>Buka di WhatsApp</span>
                         </button>
                     </div>

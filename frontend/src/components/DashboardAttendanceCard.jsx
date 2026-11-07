@@ -225,8 +225,8 @@ export default function DashboardAttendanceCard() {
                     <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span className="text-xs sm:text-sm font-bold text-amber-950 tracking-tight leading-snug">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
+                        <span className="text-xs sm:text-sm font-bold text-amber-950 tracking-tight leading-snug break-words">
                             Pengingat: Anda Belum Presensi Hari Ini
                         </span>
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-wider bg-amber-200 text-amber-900 border border-amber-300 shrink-0">

@@ -1,6 +1,6 @@
 import { Clock, Zap, AlertTriangle, CheckCircle2, ShieldAlert, Wrench, Search, Pause } from "lucide-react";
 
-// Paket SLA Tahap 1: Estimasi Pengecekan & Diagnosis (Ditentukan saat Intake)
+// Paket SLA Tahap 1: Pengecekan (Ditentukan saat Intake)
 export const SLA_PENGECEKAN_PACKAGES = [
     {
         id: "express",
@@ -40,7 +40,7 @@ export const SLA_PENGECEKAN_PACKAGES = [
     }
 ];
 
-// Paket SLA Tahap 2: Estimasi Pengerjaan Servis Fisik (Ditentukan saat Pelanggan ACC Penawaran)
+// Paket SLA Tahap 2: Pengerjaan (Ditentukan saat Pelanggan ACC Penawaran)
 export const SLA_PENGERJAAN_PACKAGES = [
     {
         id: "express",
@@ -196,7 +196,7 @@ export function computeClientSla(tiket) {
     };
 
     let activePhase = "pengecekan";
-    let phaseLabel = "Estimasi Pengecekan / Diagnosis";
+    let phaseLabel = "Tahap 1: Pengecekan";
     let isPaused = false;
     let isOverdue = false;
     let urgency = "normal";
@@ -207,7 +207,7 @@ export function computeClientSla(tiket) {
 
     if (status === "diterima" || status === "didiagnosis") {
         activePhase = "pengecekan";
-        phaseLabel = "Tahap 1: Estimasi Pengecekan & Diagnosis";
+        phaseLabel = "Tahap 1: Pengecekan";
         const totalDurationMs = Math.max(targetPengecekanAt.getTime() - createdAt.getTime(), 1);
         const elapsedMs = now.getTime() - createdAt.getTime();
         const remainingMs = targetPengecekanAt.getTime() - now.getTime();
@@ -228,16 +228,16 @@ export function computeClientSla(tiket) {
         }
     } else if (status === "menunggu_persetujuan") {
         activePhase = "menunggu_persetujuan";
-        phaseLabel = "Tahap Penawaran Biaya (Menunggu ACC)";
+        phaseLabel = "Penawaran (Menunggu ACC)";
         isPaused = true;
         isOverdue = false;
         urgency = "paused";
         percentElapsed = 100;
         timeText = "Menunggu ACC";
-        statusLabel = "Menunggu ACC (Estimasi Servis Belum Dimulai)";
+        statusLabel = "Menunggu ACC";
     } else if (status === "disetujui" || status === "dalam_perbaikan") {
         activePhase = "pengerjaan";
-        phaseLabel = "Tahap 2: Estimasi Pengerjaan Servis Fisik";
+        phaseLabel = "Tahap 2: Pengerjaan";
         const startRepair = disetujuiAt || createdAt;
         const targetRepair = targetSelesaiAt || new Date(startRepair.getTime() + (pkgServis.hours || 48) * 3600000);
 
@@ -306,7 +306,7 @@ export function computeClientSla(tiket) {
             is_completed: ["selesai", "diambil"].includes(status),
             is_active: status === "disetujui" || status === "dalam_perbaikan",
             status_label: !disetujuiAt && !["disetujui", "dalam_perbaikan", "selesai", "diambil"].includes(status)
-                ? "Menunggu Konfirmasi Penawaran (Estimasi Servis Belum Dimulai)"
+                ? "Menunggu ACC"
                 : (status === "selesai" || status === "diambil")
                     ? (completedOnTime ? "Pengerjaan Sesuai Estimasi" : "Pengerjaan Melewati Estimasi")
                     : (targetSelesaiAt && now > targetSelesaiAt ? `Lewat Estimasi Servis (${formatDuration(now - targetSelesaiAt)})` : `Estimasi Servis ${formatDuration(targetSelesaiAt - now)} tersisa`)
@@ -401,27 +401,27 @@ export default function SlaBadge({ tiket, className = "" }) {
 
     return (
         <div 
-            className={`inline-flex items-center gap-1.5 flex-nowrap whitespace-nowrap select-none ${className}`}
+            className={`inline-flex items-center gap-1.5 flex-nowrap whitespace-nowrap select-none max-w-full ${className}`}
             title={sla.tooltip_label || sla.status_label}
         >
             {/* SLA Package Pill - Fixed width 68px for perfect table vertical alignment */}
             {isExpress ? (
-                <span className="inline-flex items-center justify-center gap-1 w-[68px] py-0.5 rounded-md text-3xs font-bold bg-amber-500/10 text-amber-700 border border-amber-300/80 shrink-0">
+                <span className="inline-flex items-center justify-center gap-1 w-[60px] sm:w-[68px] py-0.5 rounded-md text-3xs font-bold bg-amber-500/10 text-amber-700 border border-amber-300/80 shrink-0">
                     <Zap className="w-2.5 h-2.5 text-amber-600 fill-amber-500 shrink-0" />
                     <span>Express</span>
                 </span>
             ) : isKompleks ? (
-                <span className="inline-flex items-center justify-center w-[68px] py-0.5 rounded-md text-3xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 shrink-0">
+                <span className="inline-flex items-center justify-center w-[60px] sm:w-[68px] py-0.5 rounded-md text-3xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 shrink-0">
                     <span>Kompleks</span>
                 </span>
             ) : (
-                <span className="inline-flex items-center justify-center w-[68px] py-0.5 rounded-md text-3xs font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                <span className="inline-flex items-center justify-center w-[60px] sm:w-[68px] py-0.5 rounded-md text-3xs font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
                     <span>Reguler</span>
                 </span>
             )}
 
             {/* SLA Countdown & Health Ring Pill - Fixed width 116px for perfect table vertical alignment */}
-            <span className={`inline-flex items-center gap-1.5 w-[116px] px-2 py-0.5 rounded-md text-xs border ${urgencyStyle} shrink-0`}>
+            <span className={`inline-flex items-center gap-1.5 w-[100px] sm:w-[116px] px-1.5 sm:px-2 py-0.5 rounded-md text-3xs sm:text-xs border ${urgencyStyle} shrink-0 min-w-0`}>
                 <SlaProgressRing 
                     percent={sla.percent_elapsed} 
                     urgency={sla.urgency} 
@@ -429,7 +429,7 @@ export default function SlaBadge({ tiket, className = "" }) {
                     isPaused={isPaused} 
                     size={14} 
                 />
-                <span className="tabular-nums tracking-tight font-medium truncate">{sla.short_status_label}</span>
+                <span className="tabular-nums tracking-tight font-medium truncate min-w-0">{sla.short_status_label}</span>
             </span>
         </div>
     );
@@ -459,29 +459,29 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-3.5 xs:p-4 sm:p-5 shadow-xs space-y-4 min-w-0 max-w-full overflow-hidden">
             {/* Header: Paket Estimasi SLA */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-xs ${pkgCek.badgeBg}`}>
-                        <pkgCek.icon className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 xs:gap-3 pb-3 border-b border-slate-100 min-w-0 max-w-full">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border shadow-xs shrink-0 ${pkgCek.badgeBg}`}>
+                        <pkgCek.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <span className="font-semibold text-slate-900 text-sm whitespace-nowrap">Paket Estimasi SLA: {pkgCek.shortLabel}</span>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <span className="font-bold text-slate-900 text-xs sm:text-sm">Paket Estimasi SLA: {pkgCek.shortLabel}</span>
                             {sla.sla_paket === "express" && (
-                                <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-amber-500 text-white uppercase tracking-wider whitespace-nowrap shrink-0">
+                                <span className="px-2 py-0.5 rounded-full text-3xs font-extrabold bg-amber-500 text-white uppercase tracking-wider shrink-0">
                                     Priority Queue
                                 </span>
                             )}
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">{pkgCek.desc}</p>
+                        <p className="text-2xs sm:text-xs text-slate-500 mt-0.5 leading-snug break-words">{pkgCek.desc}</p>
                     </div>
                 </div>
 
-                <div className="inline-flex items-center gap-2 self-start sm:self-auto">
-                    <span className="text-2xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">Fase Operasional:</span>
-                    <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border whitespace-nowrap shrink-0 ${
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 self-start sm:self-auto min-w-0 max-w-full">
+                    <span className="text-3xs sm:text-2xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">Fase:</span>
+                    <span className={`px-2 py-1 rounded-md text-3xs xs:text-2xs sm:text-xs font-semibold border break-words leading-snug max-w-full ${
                         isPaused 
                             ? "bg-amber-50 text-amber-800 border-amber-300"
                             : sla.active_phase === "pengecekan"
@@ -496,21 +496,21 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
             </div>
 
             {/* Dual Phase SLA Comparison Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                 {/* Tahap 1: Estimasi SLA Pengecekan / Diagnosis */}
-                <div className={`p-4 rounded-xl border transition-all ${
+                <div className={`p-3 xs:p-3.5 sm:p-4 rounded-xl border transition-all min-w-0 max-w-full overflow-hidden ${
                     sla.active_phase === "pengecekan"
                         ? "bg-blue-50/50 border-blue-200 ring-2 ring-blue-500/10"
                         : "bg-slate-50 border-slate-200"
                 }`}>
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                    <div className="flex items-start justify-between gap-2 mb-2 flex-wrap min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0">
                                 1
                             </div>
-                            <h4 className="text-xs font-bold text-slate-900">Tahap 1: Estimasi Pengecekan & Diagnosis</h4>
+                            <h4 className="text-2xs xs:text-xs font-bold text-slate-900 break-words leading-snug min-w-0">Tahap 1: Pengecekan</h4>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-3xs font-bold border whitespace-nowrap shrink-0 ${
+                        <span className={`px-2 py-0.5 rounded text-3xs font-bold border shrink-0 max-w-full break-words leading-snug ${
                             sla.pengecekan?.is_completed
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : sla.pengecekan?.is_active && sla.is_overdue
@@ -525,42 +525,42 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                         Pemeriksaan hardware/software dan perumusan penawaran estimasi biaya untuk pelanggan.
                     </p>
 
-                    <div className="text-xs space-y-1 pt-2 border-t border-slate-200/60">
-                        <div className="flex items-center justify-between text-slate-600">
+                    <div className="text-xs space-y-1.5 pt-2 border-t border-slate-200/60">
+                        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-0.5 xs:gap-2 text-slate-600">
                             <span className="text-2xs text-slate-400">Estimasi Target Cek:</span>
-                            <span className="font-semibold text-slate-800">{formatDate(sla.target_pengecekan_at)}</span>
+                            <span className="font-semibold text-slate-800 text-2xs sm:text-xs">{formatDate(sla.target_pengecekan_at)}</span>
                         </div>
-                        <div className="flex items-center justify-between text-slate-600">
+                        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-0.5 xs:gap-2 text-slate-600">
                             <span className="text-2xs text-slate-400">Status Waktu:</span>
-                            <span className="font-semibold text-slate-700">{sla.pengecekan?.status_label}</span>
+                            <span className="font-semibold text-slate-700 text-2xs sm:text-xs">{sla.pengecekan?.status_label}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Tahap 2: Estimasi SLA Pengerjaan Servis Fisik */}
-                <div className={`p-4 rounded-xl border transition-all ${
+                <div className={`p-3 xs:p-3.5 sm:p-4 rounded-xl border transition-all min-w-0 max-w-full overflow-hidden ${
                     sla.active_phase === "pengerjaan"
                         ? "bg-indigo-50/50 border-indigo-200 ring-2 ring-indigo-500/10"
                         : "bg-slate-50 border-slate-200"
                 }`}>
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">
+                    <div className="flex items-start justify-between gap-2 mb-2 flex-wrap min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
                                 2
                             </div>
-                            <h4 className="text-xs font-bold text-slate-900">Tahap 2: Estimasi Pengerjaan Servis Fisik</h4>
+                            <h4 className="text-2xs xs:text-xs font-bold text-slate-900 break-words leading-snug min-w-0">Tahap 2: Servis Fisik</h4>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                             {onEditSla && !isClosed && (
                                 <button
                                     type="button"
                                     onClick={onEditSla}
-                                    className="text-2xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline px-1.5 py-0.5 rounded cursor-pointer whitespace-nowrap shrink-0"
+                                    className="text-2xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline px-1 py-0.5 rounded cursor-pointer whitespace-nowrap shrink-0"
                                 >
                                     Ubah Estimasi
                                 </button>
                             )}
-                            <span className={`px-2 py-0.5 rounded text-3xs font-bold border whitespace-nowrap shrink-0 ${
+                            <span className={`px-2 py-0.5 rounded text-3xs font-bold border shrink-0 ${
                                 sla.pengerjaan?.is_completed
                                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                     : isPaused
@@ -574,9 +574,9 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                                 {sla.pengerjaan?.is_completed 
                                     ? "Servis Selesai" 
                                     : isPaused 
-                                        ? "SLA Pause (Menunggu ACC)" 
+                                        ? "SLA Pause" 
                                         : sla.pengerjaan?.is_active 
-                                            ? (sla.is_overdue ? "Lewat Estimasi Servis" : "Sedang Dikerjakan") 
+                                            ? (sla.is_overdue ? "Lewat Estimasi" : "Sedang Dikerjakan") 
                                             : "Menunggu ACC"}
                             </span>
                         </div>
@@ -586,17 +586,17 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                         Pengerjaan fisik komponen. Timer pengerjaan dimulai HANYA setelah pelanggan menyetujui penawaran biaya.
                     </p>
 
-                    <div className="text-xs space-y-1 pt-2 border-t border-slate-200/60">
-                        <div className="flex items-center justify-between text-slate-600">
-                            <span className="text-2xs text-slate-400">Persetujuan Pelanggan:</span>
-                            <span className="font-semibold text-slate-800">
-                                {sla.disetujui_at ? formatDate(sla.disetujui_at) : "Belum di-ACC (Timer Belum Berjalan)"}
+                    <div className="text-xs space-y-1.5 pt-2 border-t border-slate-200/60">
+                        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-0.5 xs:gap-2 text-slate-600">
+                            <span className="text-2xs text-slate-400">Persetujuan:</span>
+                            <span className="font-semibold text-slate-800 text-2xs sm:text-xs">
+                                {sla.disetujui_at ? formatDate(sla.disetujui_at) : "Belum di-ACC"}
                             </span>
                         </div>
-                        <div className="flex items-center justify-between text-slate-600">
-                            <span className="text-2xs text-slate-400">Estimasi Target Selesai:</span>
-                            <span className="font-semibold text-slate-800">
-                                {sla.disetujui_at ? formatDate(sla.target_selesai_at) : "Ditentukan saat penawaran di-ACC"}
+                        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-0.5 xs:gap-2 text-slate-600">
+                            <span className="text-2xs text-slate-400">Estimasi Target:</span>
+                            <span className="font-semibold text-slate-800 text-2xs sm:text-xs">
+                                {sla.disetujui_at ? formatDate(sla.target_selesai_at) : "Ditentukan saat di-ACC"}
                             </span>
                         </div>
                     </div>
@@ -605,21 +605,21 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
 
             {/* Banner Khusus Ketika Berada di Status Menunggu Persetujuan */}
             {isPaused && (
-                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900 leading-relaxed">
-                    <div className="flex items-start gap-3">
+                <div className="p-3 xs:p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 text-2xs xs:text-xs text-amber-900 leading-relaxed min-w-0 max-w-full overflow-hidden">
+                    <div className="flex items-start gap-2.5 min-w-0">
                         <Pause className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                        <div>
-                            <span className="font-bold block text-amber-950 mb-0.5">Status: Tahap Penawaran Biaya (Tidak Ada SLA Berjalan)</span>
-                            Pengecekan diagnosis awal telah selesai. Saat ini bengkel sedang menunggu keputusan persetujuan estimasi biaya dari pelanggan. Timer estimasi pengerjaan servis tidak berjalan (zero SLA clock) selama masa penawaran ini.
+                        <div className="min-w-0 break-words">
+                            <span className="font-bold block text-amber-950 mb-0.5 break-words leading-snug">Status: Penawaran (Menunggu ACC)</span>
+                            <span className="block break-words leading-relaxed">Pengecekan diagnosis awal telah selesai. Saat ini bengkel sedang menunggu keputusan persetujuan estimasi biaya dari pelanggan. Timer estimasi pengerjaan servis tidak berjalan (zero SLA clock) selama masa penawaran ini.</span>
                         </div>
                     </div>
                     {onAccClick && (
                         <button
                             type="button"
                             onClick={onAccClick}
-                            className="shrink-0 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 self-end sm:self-center cursor-pointer"
+                            className="w-full sm:w-auto shrink-0 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-2xs xs:text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                            <CheckCircle2 className="w-4 h-4" />
+                            <CheckCircle2 className="w-4 h-4 shrink-0" />
                             <span>ACC Penawaran & Atur SLA</span>
                         </button>
                     )}
@@ -628,13 +628,13 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
 
             {/* Active Phase Linear Progress Bar */}
             {!isClosed && !isPaused && (
-                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium text-slate-600 flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Progres {sla.phase_label}:</span>
+                <div className="p-2.5 xs:p-3.5 bg-slate-50 rounded-xl border border-slate-100 flex flex-col gap-2 min-w-0 max-w-full overflow-hidden">
+                    <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 text-2xs sm:text-xs min-w-0">
+                        <span className="font-medium text-slate-600 flex items-center gap-1.5 min-w-0">
+                            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="break-words leading-snug">Progres {sla.phase_label}:</span>
                         </span>
-                        <span className={`font-semibold px-2 py-0.5 rounded-md text-xs border ${
+                        <span className={`font-semibold px-2 py-0.5 rounded-md text-2xs sm:text-xs border self-start xs:self-auto max-w-full break-words leading-snug ${
                             sla.is_overdue 
                                 ? "bg-rose-50 text-rose-700 border-rose-200 animate-pulse font-bold" 
                                 : sla.percent_elapsed >= 75 
@@ -660,9 +660,9 @@ export function SlaCountdownCard({ tiket, onAccClick, onEditSla }) {
                         />
                     </div>
 
-                    <div className="flex items-center justify-between text-2xs text-slate-400">
-                        <span>Waktu terpakai: {sla.percent_elapsed}%</span>
-                        <span>{sla.is_overdue ? "Melewati Estimasi Waktu" : `Estimasi sisa ${sla.time_text}`}</span>
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-2xs text-slate-400 min-w-0">
+                        <span className="shrink-0">Waktu terpakai: {sla.percent_elapsed}%</span>
+                        <span className="text-right break-words min-w-0">{sla.is_overdue ? "Melewati Estimasi Waktu" : `Estimasi sisa ${sla.time_text}`}</span>
                     </div>
                 </div>
             )}

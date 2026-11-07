@@ -6,6 +6,10 @@ export default {
             screens: {
                 xs: '375px',
             },
+            boxShadow: {
+                // Ultra-subtle lift used by compact buttons/cards (shadow-2xs)
+                '2xs': '0 1px 2px 0 rgb(0 0 0 / 0.04)',
+            },
             fontSize: {
                 '4xs': ['0.5625rem', { lineHeight: '0.75rem' }], // 9px / 12px
                 '3xs': ['0.625rem', { lineHeight: '0.875rem' }], // 10px / 14px

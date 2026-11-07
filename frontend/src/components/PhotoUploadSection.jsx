@@ -279,16 +279,16 @@ export default function PhotoUploadSection({
     }
 
     return (
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="bg-white p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs min-w-0">
             {/* Header & Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 mb-3">
+                <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <label className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <Camera className="w-4 h-4 text-blue-600" />
-                            <span>{label}</span>
+                        <label className="text-2xs xs:text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5 sm:gap-2 min-w-0">
+                            <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
+                            <span className="break-words">{label}</span>
                         </label>
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
+                        <span className={`text-3xs xs:text-2xs sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-bold whitespace-nowrap ${
                             photos.length >= maxPhotos 
                                 ? "bg-amber-100 text-amber-800 border border-amber-200" 
                                 : "bg-blue-50 text-blue-700 border border-blue-200"
@@ -301,14 +301,14 @@ export default function PhotoUploadSection({
                             type="button"
                             onClick={toggleHdMode}
                             disabled={disabled || isCompressing}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer select-none ${
+                            className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full text-3xs xs:text-2xs sm:text-xs font-semibold border transition-all cursor-pointer select-none ${
                                 isHdMode 
                                     ? "bg-amber-500/10 text-amber-900 border-amber-300 shadow-2xs hover:bg-amber-500/20" 
                                     : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
                             }`}
                             title={isHdMode ? "Mode HD aktif: 100% resolusi asli tanpa kompresi" : "Mode Standar Seimbang: Resolusi 2.5K tajam, kualitas 90% (anti-buram & hemat kuota)"}
                         >
-                            <div className={`w-2 h-2 rounded-full transition-colors ${isHdMode ? "bg-amber-500 ring-2 ring-amber-300 animate-pulse" : "bg-slate-400"}`} />
+                            <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-colors shrink-0 ${isHdMode ? "bg-amber-500 ring-2 ring-amber-300 animate-pulse" : "bg-slate-400"}`} />
                             <span className={`px-1.5 py-0.2 rounded text-3xs font-black uppercase tracking-wider ${
                                 isHdMode ? "bg-amber-500 text-white" : "bg-slate-200 text-slate-700"
                             }`}>
@@ -320,7 +320,7 @@ export default function PhotoUploadSection({
                         </button>
                     </div>
                     {sublabel && (
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-3xs xs:text-2xs sm:text-xs text-slate-500 mt-1 break-words">
                             {isHdMode 
                                 ? "Mode HD aktif: Foto & video disimpan kualitas asli tanpa kompresi (ukuran berkas penuh)." 
                                 : sublabel}
@@ -360,15 +360,15 @@ export default function PhotoUploadSection({
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="grid grid-cols-1 xs:grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2">
                     <button
                         type="button"
                         disabled={disabled || isCompressing || photos.length >= maxPhotos}
                         onClick={() => setIsCameraModalOpen(true)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-blue-600/20 disabled:opacity-40 cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-bold transition-all shadow-sm shadow-blue-600/20 disabled:opacity-40 cursor-pointer whitespace-nowrap"
                         title="Buka Kamera Langsung / Webcam"
                     >
-                        <Camera className="w-4 h-4" />
+                        <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                         <span>Foto Kamera</span>
                     </button>
 
@@ -378,10 +378,10 @@ export default function PhotoUploadSection({
                             type="button"
                             disabled={disabled || isCompressing || photos.length >= maxPhotos}
                             onClick={() => nativeVideoInputRef.current?.click()}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-purple-600/20 disabled:opacity-40 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-bold transition-all shadow-sm shadow-purple-600/20 disabled:opacity-40 cursor-pointer whitespace-nowrap"
                             title="Rekam Video Kerusakan / Selesai Servis"
                         >
-                            <Video className="w-4 h-4" />
+                            <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                             <span>Rekam Video</span>
                         </button>
                     )}
@@ -390,10 +390,10 @@ export default function PhotoUploadSection({
                         type="button"
                         disabled={disabled || isCompressing || photos.length >= maxPhotos}
                         onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition-all shadow-2xs disabled:opacity-40 cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-semibold transition-all shadow-2xs disabled:opacity-40 cursor-pointer whitespace-nowrap"
                         title="Pilih Foto atau Video dari Galeri"
                     >
-                        <Upload className="w-4 h-4 text-slate-500" />
+                        <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 shrink-0" />
                         <span>Pilih File</span>
                     </button>
                 </div>
@@ -403,15 +403,15 @@ export default function PhotoUploadSection({
             {photos.length === 0 ? (
                 <div 
                     onClick={() => !disabled && !isCompressing && fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/20 rounded-2xl p-6 text-center transition-all cursor-pointer group"
+                    className="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center transition-all cursor-pointer group"
                 >
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <ImageIcon className="w-6 h-6" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center mb-2.5 sm:mb-3 group-hover:scale-110 transition-transform">
+                        <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <p className="text-xs font-bold text-slate-800">
+                    <p className="text-2xs xs:text-xs font-bold text-slate-800 break-words">
                         Belum ada dokumentasi media
                     </p>
-                    <p className="text-2xs text-slate-400 mt-1 max-w-sm mx-auto">
+                    <p className="text-3xs xs:text-2xs text-slate-400 mt-1 max-w-sm mx-auto break-words">
                         Klik untuk memilih berkas dari galeri atau gunakan tombol Foto Kamera di atas.
                         {isHdMode 
                             ? " Mode HD Kualitas Asli aktif." 
@@ -419,7 +419,7 @@ export default function PhotoUploadSection({
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
                     {photos.map((item, idx) => {
                         const mediaUrl = getMediaUrl(item);
                         const isVid = isVideo(item);
@@ -495,10 +495,10 @@ export default function PhotoUploadSection({
                             className="border-2 border-dashed border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl aspect-square flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-blue-600 transition-all cursor-pointer group"
                             title="Tambah foto atau video"
                         >
-                            <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
-                                <Plus className="w-4 h-4" />
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
+                                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </div>
-                            <span className="text-2xs font-bold">Tambah Media</span>
+                            <span className="text-3xs xs:text-2xs font-bold text-center px-1">Tambah Media</span>
                         </button>
                     )}
                 </div>
@@ -557,7 +557,7 @@ export default function PhotoUploadSection({
                                 </div>
 
                                 {/* Floating Zoom Controls Bar for High Detail Inspection */}
-                                <div className="mt-3 inline-flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/20 shadow-2xl text-white text-xs">
+                                <div className="mt-2 sm:mt-3 inline-flex items-center gap-1.5 sm:gap-2 bg-slate-900/90 backdrop-blur-md px-2.5 sm:px-3.5 py-1.5 rounded-xl sm:rounded-2xl border border-white/20 shadow-2xl text-white text-2xs sm:text-xs max-w-full">
                                     <button
                                         type="button"
                                         onClick={() => setZoomScale(prev => Math.max(1, prev - 0.5))}
@@ -600,10 +600,10 @@ export default function PhotoUploadSection({
                                 setPreviewMedia(null);
                                 setZoomScale(1);
                             }}
-                            className="absolute -top-3 -right-3 p-2 bg-white text-slate-900 rounded-full hover:bg-slate-200 transition-colors shadow-xl cursor-pointer"
+                            className="absolute top-1 right-1 sm:-top-3 sm:-right-3 p-1.5 sm:p-2 bg-white text-slate-900 rounded-full hover:bg-slate-200 transition-colors shadow-xl cursor-pointer"
                             title="Tutup Preview"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                     </div>
                 </div>

@@ -126,6 +126,82 @@
     @apply text-xs text-slate-500 mt-1.5 leading-relaxed;
   }
 
+  /* ============================================================
+     DETAIL PAGE SCALE (ticket / customer / device detail pages)
+     ------------------------------------------------------------
+     One normalized scale for cards, section headers, meta rows,
+     chips and buttons so font sizes and component sizes stay
+     proportional from 320px phones up to desktop.
+     ============================================================ */
+  .detail-page {
+    @apply space-y-3 sm:space-y-4 lg:space-y-6 pb-8 sm:pb-10 min-w-0 max-w-full;
+  }
+
+  /* Card container: consistent radius + responsive padding everywhere */
+  .detail-card {
+    @apply bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-5 md:p-6 shadow-sm border border-slate-200 min-w-0 max-w-full;
+  }
+
+  /* Card header row with divider (icon + title + optional actions) */
+  .card-head {
+    @apply flex items-start sm:items-center justify-between gap-2.5 sm:gap-3 mb-3.5 sm:mb-5 pb-3 sm:pb-4 border-b border-slate-100 flex-wrap;
+  }
+  .card-head-title {
+    @apply flex items-center gap-2 min-w-0 text-sm sm:text-base font-bold text-slate-900 leading-tight;
+  }
+
+  /* Meta row icon (customer / device / complaint rows) */
+  .meta-icon {
+    @apply w-4 h-4 mt-0.5 shrink-0;
+  }
+  .meta-label {
+    @apply text-2xs xs:text-xs font-semibold uppercase tracking-wider text-slate-500;
+  }
+  .meta-value {
+    @apply text-xs sm:text-sm text-slate-800 break-words;
+  }
+  .meta-value-muted {
+    @apply text-2xs xs:text-xs text-slate-500 break-words;
+  }
+
+  /* Chip / pill — the single source of truth for small badges */
+  .chip {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-3xs sm:text-2xs font-bold whitespace-nowrap leading-tight;
+  }
+  .chip-sm {
+    @apply px-1.5 py-0 text-4xs sm:text-3xs;
+  }
+
+  /* Alert / banner block used across the detail page */
+  .alert-banner {
+    @apply rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm min-w-0;
+  }
+  .alert-banner-body {
+    @apply flex items-start gap-2.5 sm:gap-3.5 min-w-0 flex-1;
+  }
+  .alert-banner-icon {
+    @apply p-2 sm:p-2.5 rounded-lg sm:rounded-xl shrink-0 mt-0.5;
+  }
+  .alert-banner-title {
+    @apply text-xs xs:text-sm font-bold leading-snug break-words;
+  }
+  .alert-banner-text {
+    @apply text-2xs xs:text-xs mt-1 leading-relaxed break-words;
+  }
+
+  /* Toolbar action button (header actions: Cetak BPBS, QR, WA, …) */
+  .action-btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg sm:rounded-xl text-2xs xs:text-xs sm:text-sm font-semibold transition-all shadow-2xs px-2.5 py-1.5 xs:px-3 xs:py-2 sm:px-4 sm:py-2.5 shrink-0 cursor-pointer leading-none;
+  }
+  .action-btn-label {
+    @apply hidden xs:inline truncate;
+  }
+
+  /* Compact inline action button / link (Profil, Edit, Lihat, …) */
+  .mini-btn {
+    @apply inline-flex items-center gap-1 px-2 py-1 rounded-md sm:rounded-lg text-3xs sm:text-2xs font-semibold transition-all shadow-2xs shrink-0 whitespace-nowrap cursor-pointer leading-tight;
+  }
+
   /* Standardized Table Typography */
   .table-header {
     @apply sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm text-slate-500 uppercase tracking-wider text-2xs font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0];
