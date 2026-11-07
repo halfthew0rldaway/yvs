@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.get("/admin", authorize("admin", "pimpinan"), adminDashboard);
+router.get("/admin", authorize("admin", "pimpinan", "frontman"), adminDashboard);
 router.get("/teknisi", authorize("teknisi"), teknisiDashboard);
 router.get("/teknisi-list", authorize("admin", "pimpinan"), teknisiList);
 router.get("/activities/export", authorize("admin", "pimpinan"), exportActivities);
