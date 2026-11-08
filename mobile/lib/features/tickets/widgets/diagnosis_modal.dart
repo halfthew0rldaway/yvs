@@ -382,20 +382,28 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
               const SizedBox(height: 14),
 
               // Checklist cek fungsi komponen (paritas web DiagnosisForm)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
                   Text(
                     'Cek Komponen ($_checkedCount/${_items.length} Dicek${_issueCount > 0 ? ' • $_issueCount Rusak' : ''})',
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text('Auto-sync', style: TextStyle(fontSize: 11)),
-                      Switch(
-                        value: _autoSync,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (v) => setState(() => _autoSync = v),
+                      const SizedBox(width: 4),
+                      Transform.scale(
+                        scale: 0.85,
+                        child: Switch(
+                          value: _autoSync,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          onChanged: (v) => setState(() => _autoSync = v),
+                        ),
                       ),
                     ],
                   ),

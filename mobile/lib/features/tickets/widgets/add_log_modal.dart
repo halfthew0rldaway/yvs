@@ -140,9 +140,6 @@ class _AddLogModalState extends State<AddLogModal> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
@@ -155,11 +152,11 @@ class _AddLogModalState extends State<AddLogModal> {
                         child: const Icon(Icons.timeline_rounded, color: AppTheme.primary, size: 20),
                       ),
                       const SizedBox(width: 10),
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Catatan Tambahan (Opsional)',
                               style: TextStyle(
                                 fontSize: 16.5,
@@ -167,22 +164,20 @@ class _AddLogModalState extends State<AddLogModal> {
                                 color: AppTheme.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            const Text(
+                            SizedBox(height: 2),
+                            Text(
                               'Timeline terisi otomatis dari diagnosa, part & QC',
                               style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                             ),
                           ],
                         ),
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: () => Navigator.pop(context),
+                      ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
               const SizedBox(height: 14),
 
               Container(

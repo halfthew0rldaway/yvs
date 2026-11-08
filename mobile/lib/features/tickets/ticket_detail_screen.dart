@@ -2018,11 +2018,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                             Text('Garansi & Tips Perawatan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                           ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.accent),
-                          onPressed: () => _editWarrantySettings(ticket),
-                          tooltip: 'Ubah Garansi',
-                        ),
+                        if (isAdmin)
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.accent),
+                            onPressed: () => _editWarrantySettings(ticket),
+                            tooltip: 'Ubah Garansi (Admin)',
+                          ),
                       ],
                     ),
                     const Divider(height: 20),
@@ -2070,15 +2071,17 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.replay_outlined, size: 18),
-                        label: const Text('Terbitkan Klaim Garansi Retur'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: ticket.warrantyStatus!.isExpired ? AppTheme.warning : AppTheme.accent,
+                      if (isAdmin) ...[
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.replay_outlined, size: 18),
+                          label: const Text('Terbitkan Klaim Garansi Retur'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ticket.warrantyStatus!.isExpired ? AppTheme.warning : AppTheme.accent,
+                          ),
+                          onPressed: _isActionLoading ? null : () => _createWarrantyClaim(ticket),
                         ),
-                        onPressed: _isActionLoading ? null : () => _createWarrantyClaim(ticket),
-                      ),
+                      ],
                     ],
                     if (ticket.status == 'selesai' || ticket.status == 'diambil') ...[
                       const SizedBox(height: 10),
