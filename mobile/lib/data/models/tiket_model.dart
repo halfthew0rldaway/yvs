@@ -252,6 +252,12 @@ class TiketModel {
   final String? statusEstimasi;
   final String? targetPengecekanAt;
   final String? targetSelesaiAt;
+  final bool izinBongkar;
+  final bool izinAksesOs;
+  final bool izinBackupMandiri;
+  final String? batasanIzin;
+  final String? prioritasPelanggan;
+  final List<dynamic>? peminjamanLoaner;
 
   TiketModel({
     required this.id,
@@ -289,6 +295,12 @@ class TiketModel {
     this.statusEstimasi,
     this.targetPengecekanAt,
     this.targetSelesaiAt,
+    this.izinBongkar = true,
+    this.izinAksesOs = true,
+    this.izinBackupMandiri = true,
+    this.batasanIzin,
+    this.prioritasPelanggan,
+    this.peminjamanLoaner,
   });
 
   /// Parse foto_kondisi which can be a JSON string, a List, or null
@@ -448,6 +460,12 @@ class TiketModel {
       statusEstimasi: json['status_estimasi']?.toString(),
       targetPengecekanAt: json['target_pengecekan_at']?.toString(),
       targetSelesaiAt: json['target_selesai_at']?.toString(),
+      izinBongkar: json['izin_bongkar'] == null ? true : (json['izin_bongkar'] == true || json['izin_bongkar'] == 1 || json['izin_bongkar'].toString() == 'true'),
+      izinAksesOs: json['izin_akses_os'] == null ? true : (json['izin_akses_os'] == true || json['izin_akses_os'] == 1 || json['izin_akses_os'].toString() == 'true'),
+      izinBackupMandiri: json['izin_backup_mandiri'] == null ? true : (json['izin_backup_mandiri'] == true || json['izin_backup_mandiri'] == 1 || json['izin_backup_mandiri'].toString() == 'true'),
+      batasanIzin: json['batasan_izin']?.toString(),
+      prioritasPelanggan: json['prioritas_pelanggan']?.toString(),
+      peminjamanLoaner: json['peminjaman_loaner'] is List ? (json['peminjaman_loaner'] as List) : null,
     );
   }
 }

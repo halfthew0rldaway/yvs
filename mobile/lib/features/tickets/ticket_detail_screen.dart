@@ -882,6 +882,85 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                         ],
                       ),
                     ],
+
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+                    const SizedBox(height: 10),
+
+                    // Protocol SOP & Izin Pelanggan (Bab 9)
+                    const Row(
+                      children: [
+                        Icon(Icons.verified_user_outlined, size: 14, color: AppTheme.primary),
+                        SizedBox(width: 6),
+                        Text(
+                          'Protokol Layanan & Izin Unit',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: ticket.izinBongkar ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: ticket.izinBongkar ? const Color(0xFFA7F3D0) : const Color(0xFFFECACA),
+                            ),
+                          ),
+                          child: Text(
+                            'Bongkar: ${ticket.izinBongkar ? "Diizinkan" : "Dilarang"}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: ticket.izinBongkar ? const Color(0xFF065F46) : const Color(0xFF991B1B),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: ticket.izinAksesOs ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: ticket.izinAksesOs ? const Color(0xFFA7F3D0) : const Color(0xFFFECACA),
+                            ),
+                          ),
+                          child: Text(
+                            'Akses OS: ${ticket.izinAksesOs ? "Diizinkan" : "Dilarang"}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: ticket.izinAksesOs ? const Color(0xFF065F46) : const Color(0xFF991B1B),
+                            ),
+                          ),
+                        ),
+                        if (ticket.prioritasPelanggan != null && ticket.prioritasPelanggan!.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFCBD5E1)),
+                            ),
+                            child: Text(
+                              'Prioritas: ${ticket.prioritasPelanggan}',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (ticket.batasanIzin != null && ticket.batasanIzin!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'Batasan Khusus: ${ticket.batasanIzin}',
+                        style: const TextStyle(fontSize: 11.5, color: Color(0xFFB45309), fontStyle: FontStyle.italic),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1987,6 +2066,87 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                         },
                       ),
                     ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Unit Pinjaman / Backup Device Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.laptop_chromebook_outlined, size: 18, color: AppTheme.primary),
+                        SizedBox(width: 8),
+                        Text('Unit Pinjaman (Loaner / Backup)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      ],
+                    ),
+                    const Divider(height: 20),
+                    if (ticket.peminjamanLoaner != null && ticket.peminjamanLoaner!.isNotEmpty) ...[
+                      ...ticket.peminjamanLoaner!.map((loan) {
+                        final isAktif = loan['status'] == 'aktif';
+                        final device = loan['loaner_device'] is Map ? loan['loaner_device'] : null;
+                        final deviceName = device != null ? '[${device['kode_unit'] || 'LOAN'}] ${device['nama'] || 'Unit Cadangan'}' : 'Unit Pinjaman';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isAktif ? const Color(0xFFFEF3C7) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: isAktif ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      deviceName,
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isAktif ? const Color(0xFF92400E) : const Color(0xFF334155)),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isAktif ? const Color(0xFFD97706) : const Color(0xFF64748B),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      isAktif ? 'SEDANG DIPINJAM' : 'DIKEMBALIKAN',
+                                      style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'No. Pinjam: ${loan['nomor_peminjaman'] ?? '-'}',
+                                style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                              ),
+                              if (loan['catatan_kondisi'] != null && loan['catatan_kondisi'].toString().isNotEmpty)
+                                Text(
+                                  'Kondisi: ${loan['catatan_kondisi']}',
+                                  style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ] else
+                      const Text(
+                        'Pelanggan tidak sedang meminjam unit cadangan.',
+                        style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, fontStyle: FontStyle.italic),
+                      ),
                   ],
                 ),
               ),

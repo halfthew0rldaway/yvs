@@ -126,7 +126,7 @@ class _HandoverScreenState extends ConsumerState<HandoverScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
-    final canAccessHandover = user?.role == 'frontman' || user?.role == 'admin' || user?.role == 'pimpinan';
+    final canAccessHandover = user?.role == 'frontman' || user?.role == 'admin' || user?.role == 'pimpinan' || user?.role == 'teknisi';
 
     if (!canAccessHandover) {
       return Scaffold(
