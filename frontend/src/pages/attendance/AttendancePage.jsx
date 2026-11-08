@@ -554,10 +554,39 @@ export default function AttendancePage() {
 
     // Check-In Submit via Webcam
     const handleCheckInCapture = async (fileBlob, extraData = {}) => {
+        // Resolve most accurate real-time GPS coordinate available
+        let activeLat = locationData.latitude;
+        let activeLon = locationData.longitude;
+        let activeAcc = locationData.accuracy;
+
+        if (navigator.geolocation && (activeLat === null || activeLon === null)) {
+            try {
+                const freshPos = await new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        resolve,
+                        () => {
+                            navigator.geolocation.getCurrentPosition(
+                                resolve,
+                                () => resolve(null),
+                                { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+                            );
+                        },
+                        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+                    );
+                });
+                if (freshPos?.coords) {
+                    activeLat = freshPos.coords.latitude;
+                    activeLon = freshPos.coords.longitude;
+                    activeAcc = freshPos.coords.accuracy;
+                }
+            } catch (_) {}
+        }
+
         const formData = new FormData();
         formData.append("foto", fileBlob);
-        if (locationData.latitude !== null) formData.append("latitude", locationData.latitude);
-        if (locationData.longitude !== null) formData.append("longitude", locationData.longitude);
+        if (activeLat !== null && activeLat !== undefined) formData.append("latitude", activeLat);
+        if (activeLon !== null && activeLon !== undefined) formData.append("longitude", activeLon);
+        if (activeAcc !== null && activeAcc !== undefined) formData.append("accuracy", Math.round(activeAcc));
         formData.append("device_info", navigator.userAgent);
         if (locationData.addressName) {
             formData.append("catatan", `Alamat Lokasi: ${locationData.addressName}`);
@@ -605,10 +634,39 @@ export default function AttendancePage() {
 
     // Check-Out Submit via Webcam
     const handleCheckOutCapture = async (fileBlob) => {
+        // Resolve most accurate real-time GPS coordinate available
+        let activeLat = locationData.latitude;
+        let activeLon = locationData.longitude;
+        let activeAcc = locationData.accuracy;
+
+        if (navigator.geolocation && (activeLat === null || activeLon === null)) {
+            try {
+                const freshPos = await new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        resolve,
+                        () => {
+                            navigator.geolocation.getCurrentPosition(
+                                resolve,
+                                () => resolve(null),
+                                { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+                            );
+                        },
+                        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+                    );
+                });
+                if (freshPos?.coords) {
+                    activeLat = freshPos.coords.latitude;
+                    activeLon = freshPos.coords.longitude;
+                    activeAcc = freshPos.coords.accuracy;
+                }
+            } catch (_) {}
+        }
+
         const formData = new FormData();
         formData.append("foto", fileBlob);
-        if (locationData.latitude !== null) formData.append("latitude", locationData.latitude);
-        if (locationData.longitude !== null) formData.append("longitude", locationData.longitude);
+        if (activeLat !== null && activeLat !== undefined) formData.append("latitude", activeLat);
+        if (activeLon !== null && activeLon !== undefined) formData.append("longitude", activeLon);
+        if (activeAcc !== null && activeAcc !== undefined) formData.append("accuracy", Math.round(activeAcc));
         formData.append("device_info", navigator.userAgent);
         if (earlyCheckOutReason.trim()) {
             formData.append("alasan_pulang_cepat", earlyCheckOutReason.trim());

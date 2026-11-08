@@ -1,15 +1,15 @@
 import 'package:geolocator/geolocator.dart';
 
 /// Resolves the device position for attendance geofencing.
-/// Uses a tiered progressive strategy:
+/// Uses a tiered progressive strategy resilient to all conditions (outdoors, deep indoors, concrete roofs):
+/// 0. Immediate pre-fetch of lastKnownPosition as a baseline fallback.
 /// 1. Try high accuracy (GNSS satellite) with an 8-second timeout.
 /// 2. If indoors/timeout, try medium/balanced accuracy (Wi-Fi + cell tower triangulation)
-///    with a 6-second timeout (fast and reliable indoors).
-/// 3. If live fix fails, fallback to getLastKnownPosition() if fresh (up to 15 minutes,
-///    accuracy <= 250m).
-/// 4. Final fallback to low accuracy (3s timeout).
-/// Always passes the recorded position with accuracy to the backend, where the geofence
-/// is widened by the reported accuracy uncertainty.
+///    with a 6-second timeout.
+/// 3. If live fix fails, evaluate baseline cached fix or fresh getLastKnownPosition()
+///    (up to 24 hours if valid coords).
+/// 4. Final fallback to low accuracy (4s timeout).
+/// 5. Absolute fallback: return any cached position rather than failing to null.
 Future<Position?> getAttendancePosition() async {
   try {
     if (!await Geolocator.isLocationServiceEnabled()) return null;
@@ -23,6 +23,12 @@ Future<Position?> getAttendancePosition() async {
       return null;
     }
 
+    // Step 0: Immediate pre-fetch of cached position as an instant fallback
+    Position? quickCached;
+    try {
+      quickCached = await Geolocator.getLastKnownPosition();
+    } catch (_) {}
+
     // Step 1: High Accuracy GNSS (8s timeout)
     try {
       final highPos = await Geolocator.getCurrentPosition(
@@ -35,7 +41,6 @@ Future<Position?> getAttendancePosition() async {
     } catch (_) {}
 
     // Step 2: Indoor / Wi-Fi / Cell tower assisted (Medium / Balanced, 6s timeout)
-    // Under concrete workshop roof, Wi-Fi SSID / Google Location Accuracy works much faster
     try {
       final mediumPos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -46,30 +51,27 @@ Future<Position?> getAttendancePosition() async {
       return mediumPos;
     } catch (_) {}
 
-    // Step 3: Cached recent fix (up to 15 minutes, accuracy <= 250m)
-    try {
-      final last = await Geolocator.getLastKnownPosition();
-      if (last != null) {
-        final age = DateTime.now().difference(last.timestamp);
-        if (age <= const Duration(minutes: 15) && last.accuracy <= 250) {
-          return last;
-        }
+    // Step 3: Check cached position if recent (<= 30 minutes, accuracy <= 350m)
+    if (quickCached != null) {
+      final age = DateTime.now().difference(quickCached.timestamp);
+      if (age <= const Duration(minutes: 30) && quickCached.accuracy <= 350) {
+        return quickCached;
       }
-    } catch (_) {}
+    }
 
-    // Step 4: Low accuracy fallback as last resort (3s timeout)
+    // Step 4: Low accuracy fallback (4s timeout)
     try {
       return await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.low,
-          timeLimit: Duration(seconds: 3),
+          timeLimit: Duration(seconds: 4),
         ),
       );
     } catch (_) {}
 
-    // Final fallback: any last known position available
+    // Final fallback: any last known position available rather than failing completely
     final fallbackLast = await Geolocator.getLastKnownPosition();
-    return fallbackLast;
+    return fallbackLast ?? quickCached;
   } catch (_) {
     return null;
   }
