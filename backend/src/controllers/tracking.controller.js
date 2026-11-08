@@ -50,7 +50,7 @@ async function track(req, res) {
             include: {
                 perangkat: { include: { customer: true } },
                 teknisi: { select: { nama: true } },
-                diagnosis: { select: { masalah: true, solusi: true, estimasi_biaya: true } },
+                diagnosis: { select: { masalah: true, solusi: true, estimasi_biaya: true, created_at: true } },
                 log_perbaikan: { orderBy: { created_at: "desc" } },
                 penggunaan_sparepart: { include: { sparepart: { select: { nama: true, kategori: true, harga: true } } } },
                 invoice: true
@@ -109,6 +109,7 @@ async function track(req, res) {
                         masalah: t.diagnosis.masalah || "-",
                         solusi: t.diagnosis.solusi || "-",
                         estimasi_biaya: t.diagnosis.estimasi_biaya || 0,
+                        created_at: t.diagnosis.created_at || null,
                     }
                     : null,
                 log_perbaikan: t.log_perbaikan || [],

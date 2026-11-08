@@ -160,7 +160,7 @@ function safeParseUrls(val) {
     return [];
 }
 
-function TrackingProgress({ currentStatus, onWarrantyClick }) {
+function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
     if (currentStatus === 'dibatalkan') {
         return (
             <div className="mb-10 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-700">
@@ -171,49 +171,159 @@ function TrackingProgress({ currentStatus, onWarrantyClick }) {
     }
 
     const steps = [
-        { id: ['diterima'], label: 'Diterima' },
-        { id: ['didiagnosis', 'menunggu_persetujuan', 'disetujui'], label: 'Diagnosis' },
-        { id: ['dalam_perbaikan'], label: 'Diperbaiki' },
-        { id: ['selesai'], label: 'Selesai' },
-        { id: ['diambil'], label: 'Diambil' }
+        {
+            id: ['diterima'],
+            key: 'diterima',
+            label: 'Diterima',
+            targetId: 'section-intake',
+            color: 'blue',
+            nodeColor: 'bg-blue-600 border-blue-200 text-white shadow-blue-500/25',
+            activeRing: 'ring-blue-100',
+            textColor: 'text-blue-700',
+            timestamp: tiket?.created_at,
+        },
+        {
+            id: ['didiagnosis', 'menunggu_persetujuan', 'disetujui'],
+            key: 'diagnosis',
+            label: 'Diagnosis',
+            targetId: 'section-diagnosis',
+            color: 'amber',
+            nodeColor: 'bg-amber-500 border-amber-200 text-white shadow-amber-500/25',
+            activeRing: 'ring-amber-100',
+            textColor: 'text-amber-700',
+            timestamp: tiket?.diagnosis?.created_at || (tiket?.log_perbaikan?.find(l => l.fase === 'Diagnosis')?.created_at),
+        },
+        {
+            id: ['dalam_perbaikan'],
+            key: 'perbaikan',
+            label: 'Diperbaiki',
+            targetId: 'section-repair',
+            color: 'indigo',
+            nodeColor: 'bg-indigo-600 border-indigo-200 text-white shadow-indigo-500/25',
+            activeRing: 'ring-indigo-100',
+            textColor: 'text-indigo-700',
+            timestamp: tiket?.disetujui_at || (tiket?.log_perbaikan?.find(l => l.fase?.toLowerCase().includes('perbaikan'))?.created_at),
+        },
+        {
+            id: ['selesai'],
+            key: 'selesai',
+            label: 'Selesai',
+            targetId: 'section-qc',
+            color: 'emerald',
+            nodeColor: 'bg-emerald-600 border-emerald-200 text-white shadow-emerald-500/25',
+            activeRing: 'ring-emerald-100',
+            textColor: 'text-emerald-700',
+            timestamp: tiket?.completed_at || (tiket?.log_perbaikan?.find(l => l.fase === 'Selesai')?.created_at),
+        },
+        {
+            id: ['diambil'],
+            key: 'diambil',
+            label: 'Diambil',
+            targetId: 'section-handover',
+            color: 'teal',
+            nodeColor: 'bg-teal-600 border-teal-200 text-white shadow-teal-500/25',
+            activeRing: 'ring-teal-100',
+            textColor: 'text-teal-700',
+            timestamp: tiket?.tgl_diambil || tiket?.invoice?.ttd_customer_at || (tiket?.log_perbaikan?.find(l => l.fase === 'Penyerahan Unit')?.created_at),
+        }
     ];
 
     let currentStepIndex = steps.findIndex(step => step.id.includes(currentStatus));
     if (currentStepIndex === -1) currentStepIndex = 0;
 
+    const handleStepClick = (step, idx) => {
+        // Can jump if step has been passed or currently active
+        const isReached = idx <= currentStepIndex;
+        if (!isReached) return;
+
+        if (step.key === 'diambil' && onWarrantyClick) {
+            onWarrantyClick();
+            return;
+        }
+
+        const el = document.getElementById(step.targetId);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-4', 'ring-blue-300', 'transition-all');
+            setTimeout(() => {
+                el.classList.remove('ring-4', 'ring-blue-300');
+            }, 1800);
+        } else if (onWarrantyClick && (step.key === 'selesai' || step.key === 'diambil')) {
+            onWarrantyClick();
+        }
+    };
+
+    const formatStepTime = (dateStr) => {
+        if (!dateStr) return null;
+        try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return null;
+            return d.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (_) {
+            return null;
+        }
+    };
+
     return (
-        <div className="mb-12 w-full max-w-3xl mx-auto px-2 sm:px-4">
-            <div className="flex items-center justify-between relative">
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1.5 bg-slate-100 rounded-full z-0"></div>
+        <div className="mb-14 w-full max-w-3xl mx-auto px-2 sm:px-4">
+            <div className="flex items-start justify-between relative">
+                {/* Connecting track lines */}
+                <div className="absolute left-6 right-6 top-4 sm:top-6 h-1 bg-slate-200/80 rounded-full z-0"></div>
                 <div 
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-blue-500 rounded-full z-0 transition-all duration-700 ease-out"
-                    style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
+                    className="absolute left-6 top-4 sm:top-6 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 rounded-full z-0 transition-all duration-700 ease-out"
+                    style={{ width: `calc(${(currentStepIndex / (steps.length - 1)) * 100}% - 3rem)` }}
                 ></div>
                 
                 {steps.map((step, idx) => {
                     const isCompleted = idx <= currentStepIndex;
                     const isActive = idx === currentStepIndex;
-                    const isWarrantyStep = (step.label === 'Selesai' || step.label === 'Diambil') && isCompleted;
+                    const timeStr = formatStepTime(step.timestamp);
 
                     return (
                         <div 
                             key={idx} 
-                            onClick={() => {
-                                if (isWarrantyStep && onWarrantyClick) {
-                                    onWarrantyClick();
-                                }
-                            }}
-                            className={`relative z-10 flex flex-col items-center gap-2 ${isWarrantyStep ? 'cursor-pointer group' : ''}`}
-                            title={isWarrantyStep ? "Klik untuk langsung melompat ke Kartu Garansi & QR Pick-up" : undefined}
+                            onClick={() => handleStepClick(step, idx)}
+                            className={`relative z-10 flex flex-col items-center group ${
+                                isCompleted ? 'cursor-pointer' : 'cursor-default opacity-60'
+                            }`}
+                            title={isCompleted ? `Ketuk untuk melihat rincian tahap ${step.label}` : undefined}
                         >
-                            <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-base border-4 transition-all duration-500 ${
-                                isCompleted ? 'bg-blue-600 border-blue-100 text-white shadow-md shadow-blue-500/20' : 'bg-white border-slate-100 text-slate-300'
-                            } ${isActive ? 'ring-4 ring-blue-50/80 scale-110' : ''} ${isWarrantyStep ? 'group-hover:scale-115 group-hover:ring-4 group-hover:ring-emerald-200' : ''}`}>
-                                {isCompleted && !isActive ? <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6" /> : idx + 1}
+                            <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-base border-3 sm:border-4 transition-all duration-300 ${
+                                isCompleted 
+                                    ? `${step.nodeColor} shadow-md` 
+                                    : 'bg-white border-slate-200 text-slate-400'
+                            } ${isActive ? `ring-4 ${step.activeRing} scale-110 shadow-lg` : ''} ${
+                                isCompleted ? 'group-hover:scale-115 group-active:scale-95' : ''
+                            }`}>
+                                {isCompleted && !isActive ? (
+                                    <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6" />
+                                ) : (
+                                    idx + 1
+                                )}
                             </div>
-                            <span className={`text-4xs xs:text-3xs sm:text-xs md:text-sm font-bold absolute -bottom-6 sm:-bottom-8 whitespace-nowrap transition-colors ${isCompleted ? 'text-slate-800' : 'text-slate-400'} ${isWarrantyStep ? 'group-hover:text-emerald-700' : ''}`}>
+
+                            {/* Label */}
+                            <span className={`text-3xs xs:text-2xs sm:text-xs md:text-sm font-bold mt-2 whitespace-nowrap transition-colors ${
+                                isCompleted ? (isActive ? `${step.textColor} font-black` : 'text-slate-800') : 'text-slate-400'
+                            }`}>
                                 {step.label}
                             </span>
+
+                            {/* Exact Timestamp */}
+                            {timeStr ? (
+                                <span className="text-4xs sm:text-3xs font-medium text-slate-500 mt-0.5 whitespace-nowrap hidden xs:inline-block">
+                                    {timeStr}
+                                </span>
+                            ) : (
+                                <span className="text-4xs sm:text-3xs text-transparent mt-0.5 whitespace-nowrap hidden xs:inline-block select-none">
+                                    -
+                                </span>
+                            )}
                         </div>
                     );
                 })}
@@ -1030,7 +1140,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
 
     // Auto-focus helper: smoothly scrolls into view and draws attention to the warranty card
     const scrollToWarranty = (openModal = false) => {
-        const el = document.getElementById("warranty-section") || document.getElementById("warranty-card");
+        const el = document.getElementById("section-handover") || document.getElementById("warranty-section") || document.getElementById("warranty-card");
         if (el) {
             el.scrollIntoView({ behavior: "smooth", block: "center" });
             setIsWarrantyFocused(true);
@@ -1332,7 +1442,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
             </div>
 
             <div className="p-6 sm:p-8 flex-1">
-                <TrackingProgress currentStatus={t.status} onWarrantyClick={() => scrollToWarranty(false)} />
+                <TrackingProgress currentStatus={t.status} tiket={t} onWarrantyClick={() => scrollToWarranty(false)} />
 
                 {/* Feature 7: SLA Target & Real-time Progress Countdown */}
                 {['diterima', 'didiagnosis', 'menunggu_persetujuan', 'disetujui', 'dalam_perbaikan'].includes(t.status) && (
@@ -1343,7 +1453,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
 
                 {/* QR Code and Warranty Section for Selesai / Diambil (Enhanced with Equal-Height Balanced Holographic Cards) */}
                 {['selesai', 'diambil'].includes(t.status) && (
-                    <div id="warranty-section" className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch scroll-mt-24">
+                    <div id="section-handover" className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch scroll-mt-24 rounded-2xl p-2 transition-all">
                         {/* Fast-Pass Pick-up Voucher Card */}
                         <HolographicTiltCard foilType="silver" className="p-6 sm:p-7 flex flex-col justify-between h-full">
                             <div className="flex flex-col h-full justify-between">
@@ -1592,11 +1702,11 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                     const devCat = getDeviceCategory(t?.jenis_perangkat || t?.perangkat?.jenis_perangkat);
                     const intakeItems = getHardwareChecklistForCategory(devCat);
                     return (
-                        <div className="mb-8 pt-6 border-t border-slate-100">
+                        <div id="section-intake" className="mb-8 pt-6 border-t border-slate-100 scroll-mt-24 rounded-2xl p-2 transition-all">
                             <div className="flex items-center gap-2.5 mb-4">
                                 <ClipboardCheck className="w-5 h-5 text-blue-600" />
-                                <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Kondisi Awal Perangkat (Sebelum Perbaikan)</h5>
-                                <span className="text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Kondisi Awal Perangkat (Tahap 1: Diterima)</h5>
+                                <span className="text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
                                     {devCat}
                                 </span>
                             </div>
@@ -1624,7 +1734,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 })()}
 
                 {t.diagnosis && (
-                    <div className="mb-8 pt-6 border-t border-slate-100">
+                    <div id="section-diagnosis" className="mb-8 pt-6 border-t border-slate-100 scroll-mt-24 rounded-2xl p-2 transition-all">
                         {/* Header Section with Badge */}
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                             <div className="flex items-center gap-2.5">
@@ -1865,7 +1975,9 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 )}
                 
                 {/* Feature: Yangversa Sparepart Transparency & Old Part Return SOP Card */}
-                <SparepartTransparencyCard parts={t?.penggunaan_sparepart} />
+                <div id="section-repair" className="scroll-mt-24 rounded-2xl p-2 transition-all">
+                    <SparepartTransparencyCard parts={t?.penggunaan_sparepart} />
+                </div>
 
                 <div className="pt-6 border-t border-slate-100">
                     <h5 className="font-semibold text-slate-900 mb-4">Riwayat Perbaikan</h5>
@@ -1892,7 +2004,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                     const devCat = getDeviceCategory(t?.jenis_perangkat || t?.perangkat?.jenis_perangkat);
                     const qcItems = getQcChecklistForCategory(devCat);
                     return (
-                        <div className="pt-6 border-t border-slate-100">
+                        <div id="section-qc" className="pt-6 border-t border-slate-100 scroll-mt-24 rounded-2xl p-2 transition-all">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                                 <div>
                                     <div className="flex items-center gap-2.5">
