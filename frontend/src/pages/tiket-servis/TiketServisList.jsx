@@ -92,12 +92,6 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
                     <span className="truncate max-w-[200px]" title={`${tiket.perangkat?.merek || ""} ${tiket.perangkat?.model || ""}`}>
                         {tiket.perangkat?.merek} {tiket.perangkat?.model}
                     </span>
-                    {tiket.defect_map?.items?.length > 0 && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0" title={`${tiket.defect_map.items.length} cacat fisik tercatat`}>
-                            <Laptop className="w-2.5 h-2.5" />
-                            {tiket.defect_map.items.length} Defek
-                        </span>
-                    )}
                 </div>
             </td>
             <td className="px-6 py-3.5 align-middle">
@@ -217,12 +211,6 @@ const TiketCard = memo(function TiketCard({ tiket, onNavigate, onSelectQr }) {
             </p>
             <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                 <span className="text-3xs text-slate-600 truncate">{perangkatLabel || "-"}</span>
-                {tiket.defect_map?.items?.length > 0 && (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
-                        <Laptop className="w-2.5 h-2.5" />
-                        {tiket.defect_map.items.length} Defek
-                    </span>
-                )}
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap mt-2">
