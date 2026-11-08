@@ -2872,7 +2872,7 @@ export default function TiketServisDetail() {
                                     <Lock className="w-3 h-3 text-slate-400 shrink-0" />
                                     <span>Terkunci</span>
                                 </span>
-                            ) : (isAdmin || isAssignedToMe) && !isEditingSopPermissions && (
+                            ) : isAdmin && !isEditingSopPermissions && (
                                 <button
                                     type="button"
                                     onClick={(e) => {
@@ -2881,6 +2881,7 @@ export default function TiketServisDetail() {
                                         setIsEditingSopPermissions(true);
                                     }}
                                     className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1 text-3xs xs:text-2xs sm:text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-md sm:rounded-lg transition-colors shadow-2xs cursor-pointer"
+                                    title="Edit protokol izin (hanya admin/frontman yang berwenang konfirmasi pelanggan)"
                                 >
                                     <Edit className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                     <span>Edit</span>
