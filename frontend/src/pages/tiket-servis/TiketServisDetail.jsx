@@ -1696,7 +1696,7 @@ export default function TiketServisDetail() {
                                         <span className="text-2xs text-slate-400 font-medium flex items-center gap-1 shrink-0">
                                             <Lock className="w-3 h-3 text-slate-400" /> Terkunci
                                         </span>
-                                    ) : (isAdmin || isAssignedToMe) && !isEditingVault && (
+                                    ) : isAdmin && !isEditingVault && (
                                         <button 
                                             onClick={() => {
                                                 setVaultTipeKunci(tiket.tipe_kunci || "Tidak Ada");
@@ -1838,12 +1838,14 @@ export default function TiketServisDetail() {
                                 ) : (
                                     <div className="flex items-center justify-between gap-2 p-2.5 bg-slate-50 rounded-lg sm:rounded-xl border border-slate-100 text-2xs xs:text-xs">
                                         <span className="text-slate-500">Pelanggan belum meminjam unit cadangan.</span>
-                                        <Link
-                                            to={`/loaner?action=new&tiket_id=${tiket.id}`}
-                                            className="mini-btn text-blue-600 hover:text-blue-800 border border-transparent hover:border-blue-200 shrink-0"
-                                        >
-                                            + Pinjamkan Unit
-                                        </Link>
+                                        {isAdmin && (
+                                            <Link
+                                                to={`/loaner?action=new&tiket_id=${tiket.id}`}
+                                                className="mini-btn text-blue-600 hover:text-blue-800 border border-transparent hover:border-blue-200 shrink-0"
+                                            >
+                                                + Pinjamkan Unit
+                                            </Link>
+                                        )}
                                     </div>
                                 )}
                             </div>

@@ -1199,13 +1199,14 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                             Text('Detail Unit & Kredensial', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                           ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.primary),
-                          onPressed: () => _editCredentials(ticket),
-                          tooltip: 'Edit Kredensial',
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
+                        if (isAdmin)
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.primary),
+                            onPressed: () => _editCredentials(ticket),
+                            tooltip: 'Edit Kredensial',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
                       ],
                     ),
                     const Divider(height: 18),

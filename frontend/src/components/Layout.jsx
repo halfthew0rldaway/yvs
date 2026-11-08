@@ -182,7 +182,6 @@ const teknisiNavGroups = [
         icon: Ticket,
         items: [
             { path: "/tiket-servis", label: "Tiket Servis", icon: Ticket },
-            { path: "/loaner", label: "Unit Pinjaman (Loaner)", icon: Laptop },
         ]
     },
     {

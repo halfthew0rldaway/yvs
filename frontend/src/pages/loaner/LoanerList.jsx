@@ -421,16 +421,18 @@ export default function LoanerList() {
                         </button>
                     )}
 
-                    <button
-                        type="button"
-                        onClick={() => handleOpenLoanModal()}
-                        disabled={deviceStats.tersedia === 0}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        title={deviceStats.tersedia === 0 ? "Tidak ada unit tersedia" : "Pinjamkan unit ke customer"}
-                    >
-                        <Layers className="w-4 h-4" />
-                        <span>Pinjamkan Unit Cadangan</span>
-                    </button>
+                    {isAdmin && (
+                        <button
+                            type="button"
+                            onClick={() => handleOpenLoanModal()}
+                            disabled={deviceStats.tersedia === 0}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            title={deviceStats.tersedia === 0 ? "Tidak ada unit tersedia" : "Pinjamkan unit ke customer"}
+                        >
+                            <Layers className="w-4 h-4" />
+                            <span>Pinjamkan Unit Cadangan</span>
+                        </button>
+                    )}
                 </div>
             </div>
 

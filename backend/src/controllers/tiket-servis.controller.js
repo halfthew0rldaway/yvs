@@ -640,6 +640,10 @@ async function update(req, res) {
             if (tiket.teknisi_id && Number(tiket.teknisi_id) !== Number(req.user.id)) {
                 return res.status(403).json({ message: "Akses ditolak: Ini bukan tiket Anda." });
             }
+            // Kredensial / PIN unit dicatat oleh Customer/Admin/Frontman saat intake dan tidak boleh diubah oleh teknisi
+            if (tipe_kunci !== undefined || password_perangkat !== undefined) {
+                return res.status(403).json({ message: "Akses ditolak: Teknisi tidak memiliki hak akses untuk mengubah kredensial/PIN unit." });
+            }
         }
 
         // Lock enforcement untuk status selesai / diambil / dibatalkan
