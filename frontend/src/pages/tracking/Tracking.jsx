@@ -366,12 +366,12 @@ function TrackingListItem({ t, onClick }) {
 }
 
 /* ===== Feature 1: Photo & Video Media Gallery Modal & Lightbox ===== */
-function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, externalPhoto, onCloseExternal }) {
+function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, externalPhoto, onCloseExternal, activeCategory = null, title = null, subtitle = null }) {
     const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIdx, setLightboxIdx] = useState(0);
     const [customItem, setCustomItem] = useState(null);
-    const [activeTab, setActiveTab] = useState("all");
+    const [activeTab, setActiveTab] = useState(activeCategory || "all");
     const [imgErrors, setImgErrors] = useState({});
 
     // Collect all media into categorized array
@@ -409,6 +409,13 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
         allPhotos.push({ url, label: `Hasil Selesai & QC #${i + 1}`, category: 'completed', categoryLabel: "Selesai & QC" });
     });
 
+    // Update active tab when activeCategory changes
+    useEffect(() => {
+        if (activeCategory) {
+            setActiveTab(activeCategory);
+        }
+    }, [activeCategory]);
+
     // Handle external trigger (e.g. from timeline click)
     useEffect(() => {
         if (externalPhoto && externalPhoto.url) {
@@ -431,6 +438,11 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
 
     if (allPhotos.length === 0 && !customItem) return null;
 
+    // Filter relevant photos for banner display if scoped to category
+    const scopedPhotos = activeCategory ? allPhotos.filter(p => p.category === activeCategory) : allPhotos;
+    if (activeCategory && scopedPhotos.length === 0 && !customItem) return null;
+
+    const displayPhotos = scopedPhotos.length > 0 ? scopedPhotos : allPhotos;
     const currentList = customItem ? [customItem, ...allPhotos] : allPhotos;
 
     const openLightbox = (idx) => { 
@@ -467,8 +479,8 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
 
     return (
         <>
-            {/* Compact Summary Card instead of sprawling layout section */}
-            <div className="mb-8 pt-6 border-t border-slate-100">
+            {/* Compact Summary Card */}
+            <div className="pt-2">
                 <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-50 via-white to-blue-50/40 rounded-2xl border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs hover:border-blue-300 transition-all">
                     <div className="flex items-start sm:items-center gap-3.5">
                         <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/20">
@@ -476,30 +488,33 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                         </div>
                         <div>
                             <div className="flex items-center gap-2 mb-0.5">
-                                <h5 className="font-bold text-slate-900 text-sm sm:text-base">Dokumentasi Media Perangkat</h5>
+                                <h5 className="font-bold text-slate-900 text-sm sm:text-base">
+                                    {title || "Dokumentasi Media Perangkat"}
+                                </h5>
                                 <span className="px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-blue-100 text-blue-700">
-                                    {allPhotos.length} Media
+                                    {displayPhotos.length} Media
                                 </span>
                             </div>
                             <p className="text-xs text-slate-500 leading-relaxed">
-                                Foto kondisi fisik awal, pembuktian diagnosa, proses perbaikan, dan hasil akhir QC.
+                                {subtitle || (activeCategory === 'diagnosis' ? "Dokumentasi foto/video pembuktian kendala saat diagnosis oleh teknisi." : "Foto kondisi fisik awal, pembuktian diagnosa, proses perbaikan, dan hasil akhir QC.")}
                             </p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3 self-stretch sm:self-center justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
-                        {/* Stacked Interactive Preview Thumbnails with Video & Error Fallbacks */}
+                        {/* Stacked Interactive Preview Thumbnails */}
                         <div className="flex -space-x-2.5 overflow-hidden py-1">
-                            {allPhotos.slice(0, 4).map((p, i) => {
+                            {displayPhotos.slice(0, 4).map((p, i) => {
                                 const url = getMediaUrl(p.url);
                                 const isVid = isVideo(p.url);
                                 const hasError = imgErrors[p.url];
+                                const originalGlobalIdx = allPhotos.indexOf(p);
 
                                 return (
                                     <button
                                         key={i}
                                         type="button"
-                                        onClick={() => openLightbox(i)}
+                                        onClick={() => openLightbox(originalGlobalIdx >= 0 ? originalGlobalIdx : i)}
                                         className="relative inline-flex items-center justify-center h-9 w-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden shrink-0 transition-transform hover:scale-110 hover:z-20 cursor-pointer bg-slate-100"
                                         title={`Buka ${p.label || "Media"} (#${i + 1})`}
                                     >
@@ -525,21 +540,27 @@ function PhotoGallery({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, e
                                     </button>
                                 );
                             })}
-                            {allPhotos.length > 4 && (
+                            {displayPhotos.length > 4 && (
                                 <button
                                     type="button"
-                                    onClick={() => setIsGalleryModalOpen(true)}
+                                    onClick={() => {
+                                        if (activeCategory) setActiveTab(activeCategory);
+                                        setIsGalleryModalOpen(true);
+                                    }}
                                     className="relative inline-flex items-center justify-center h-9 w-9 rounded-full ring-2 ring-white bg-blue-600 text-white text-3xs font-extrabold shadow-2xs shrink-0 hover:scale-110 hover:z-20 transition-transform cursor-pointer"
                                     title="Lihat semua media"
                                 >
-                                    +{allPhotos.length - 4}
+                                    +{displayPhotos.length - 4}
                                 </button>
                             )}
                         </div>
 
                         <button
                             type="button"
-                            onClick={() => setIsGalleryModalOpen(true)}
+                            onClick={() => {
+                                if (activeCategory) setActiveTab(activeCategory);
+                                setIsGalleryModalOpen(true);
+                            }}
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer shrink-0"
                         >
                             <ZoomIn className="w-4 h-4" />
@@ -1708,15 +1729,17 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                         </div>
                                     </div>
 
-                                    {/* Estimasi Biaya Highlight Banner */}
+                                    {/* Estimasi Biaya & Penawaran Highlight Banner */}
                                     <div className="md:col-span-2 bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50/60 p-4 sm:p-5 rounded-2xl border border-blue-200/80 shadow-2xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm shrink-0">
                                                 <CreditCard className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <span className="block text-blue-900 font-bold text-xs sm:text-sm">Estimasi Biaya Awal (Jasa & Komponen)</span>
-                                                <span className="block text-3xs sm:text-2xs text-blue-600/80">Biaya estimasi standar sebelum pengerjaan dimulai</span>
+                                                <span className="block text-blue-900 font-bold text-xs sm:text-sm">Estimasi Biaya & Penawaran Awal (Jasa & Komponen)</span>
+                                                <span className="block text-3xs sm:text-2xs text-blue-600/80">
+                                                    Biaya penawaran resmi yang diajukan teknisi sebelum pengerjaan perbaikan dimulai
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="text-left sm:text-right w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-blue-200/50">
@@ -1724,6 +1747,21 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                                 {formatRupiah(t.diagnosis.estimasi_biaya)}
                                             </span>
                                         </div>
+                                    </div>
+
+                                    {/* Dokumentasi Foto/Video Temuan Diagnosis */}
+                                    <div className="md:col-span-2">
+                                        <PhotoGallery 
+                                            fotoKondisi={t.foto_kondisi} 
+                                            fotoDiagnosis={t.foto_diagnosis} 
+                                            fotoSelesai={t.foto_selesai} 
+                                            logPerbaikan={t.log_perbaikan} 
+                                            externalPhoto={externalPhoto}
+                                            onCloseExternal={() => setExternalPhoto(null)}
+                                            activeCategory="diagnosis"
+                                            title="Dokumentasi Temuan Diagnosis"
+                                            subtitle="Foto dan video pembuktian kendala komponen internal yang ditemukan saat proses diagnosa oleh teknisi."
+                                        />
                                     </div>
 
                                     {/* Feature 4: Interactive Customer Approval Banner */}
@@ -1818,6 +1856,19 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                         <div id="section-repair" className="rounded-2xl">
                             <SparepartTransparencyCard parts={t?.penggunaan_sparepart} />
                         </div>
+
+                        {/* Dokumentasi Foto/Video Pengerjaan & Penggantian Part */}
+                        <PhotoGallery 
+                            fotoKondisi={t.foto_kondisi} 
+                            fotoDiagnosis={t.foto_diagnosis} 
+                            fotoSelesai={t.foto_selesai} 
+                            logPerbaikan={t.log_perbaikan} 
+                            externalPhoto={externalPhoto}
+                            onCloseExternal={() => setExternalPhoto(null)}
+                            activeCategory="repair"
+                            title="Dokumentasi Proses Pengerjaan"
+                            subtitle="Foto dan dokumentasi proses perbaikan komponen serta instalasi sparepart oleh teknisi."
+                        />
                     </motion.div>
                 )}
 
@@ -1899,6 +1950,19 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                 </div>
                             );
                         })()}
+
+                        {/* Dokumentasi Hasil Selesai & QC */}
+                        <PhotoGallery 
+                            fotoKondisi={t.foto_kondisi} 
+                            fotoDiagnosis={t.foto_diagnosis} 
+                            fotoSelesai={t.foto_selesai} 
+                            logPerbaikan={t.log_perbaikan} 
+                            externalPhoto={externalPhoto}
+                            onCloseExternal={() => setExternalPhoto(null)}
+                            activeCategory="completed"
+                            title="Dokumentasi Hasil Selesai & QC"
+                            subtitle="Foto dan video bukti kelayakan fisik & operasional perangkat yang telah lulus uji mutu."
+                        />
 
                         {/* Feature 3: Post-Service Care Tips */}
                         <CareTipsCard tips={t?.tips_perawatan} />
