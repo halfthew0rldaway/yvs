@@ -1625,19 +1625,76 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
 
                 {t.diagnosis && (
                     <div className="mb-8 pt-6 border-t border-slate-100">
-                        <h5 className="font-semibold text-slate-900 mb-4 text-sm sm:text-base">Hasil Diagnosis</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                            <div className="flex flex-col h-full">
-                                <h6 className="text-slate-500 font-medium mb-2 text-sm sm:text-base">Masalah</h6>
-                                <p className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed flex-1 break-words whitespace-pre-line text-sm sm:text-base">{t.diagnosis.masalah}</p>
+                        {/* Header Section with Badge */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-200/60 shadow-2xs">
+                                    <Search className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h5 className="font-bold text-slate-900 text-sm sm:text-base">Hasil Diagnosis & Rekomendasi</h5>
+                                    <p className="text-3xs sm:text-2xs text-slate-500">Evaluasi menyeluruh perangkat dan rekomendasi tindakan teknisi</p>
+                                </div>
                             </div>
-                            <div className="flex flex-col h-full">
-                                <h6 className="text-slate-500 font-medium mb-2 text-sm sm:text-base">Solusi</h6>
-                                <p className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed flex-1 break-words whitespace-pre-line text-sm sm:text-base">{t.diagnosis.solusi}</p>
+                            <span className="px-2.5 py-1 rounded-full text-3xs xs:text-2xs font-extrabold uppercase tracking-wide bg-amber-50 text-amber-700 border border-amber-200/80">
+                                Tahap Diagnosis
+                            </span>
+                        </div>
+
+                        {/* Balanced 2-Column Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                            {/* Card: Masalah Ditemukan */}
+                            <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all hover:border-slate-300">
+                                <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                                        <h6 className="text-xs sm:text-sm font-bold text-slate-800">Temuan Masalah / Pengecekan</h6>
+                                    </div>
+                                    <span className="text-3xs font-semibold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600">
+                                        Kondisi Fisik & Fungsi
+                                    </span>
+                                </div>
+                                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                                    <div className="text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words space-y-1">
+                                        {t.diagnosis.masalah}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="md:col-span-2 bg-blue-50/50 p-4 sm:p-5 rounded-xl border border-blue-100/50 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                <span className="text-blue-600 font-medium text-sm sm:text-base">Estimasi Biaya Awal</span>
-                                <span className="text-blue-700 font-semibold text-lg">{formatRupiah(t.diagnosis.estimasi_biaya)}</span>
+
+                            {/* Card: Solusi / Tindakan */}
+                            <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all hover:border-slate-300">
+                                <div className="px-4 py-3 bg-emerald-50/50 border-b border-emerald-100/70 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Wrench className="w-4 h-4 text-emerald-600 shrink-0" />
+                                        <h6 className="text-xs sm:text-sm font-bold text-slate-800">Rekomendasi Solusi & Tindakan</h6>
+                                    </div>
+                                    <span className="text-3xs font-semibold px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-700">
+                                        Rencana Perbaikan
+                                    </span>
+                                </div>
+                                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                                    <div className="text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words">
+                                        {t.diagnosis.solusi}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Estimasi Biaya Highlight Banner */}
+                            <div className="md:col-span-2 bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50/60 p-4 sm:p-5 rounded-2xl border border-blue-200/80 shadow-2xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm shrink-0">
+                                        <CreditCard className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <span className="block text-blue-900 font-bold text-xs sm:text-sm">Estimasi Biaya Awal (Jasa & Komponen)</span>
+                                        <span className="block text-3xs sm:text-2xs text-blue-600/80">Biaya estimasi standar sebelum pengerjaan dimulai</span>
+                                    </div>
+                                </div>
+                                <div className="text-left sm:text-right w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-blue-200/50">
+                                    <span className="text-blue-900 font-extrabold text-lg sm:text-xl tracking-tight">
+                                        {formatRupiah(t.diagnosis.estimasi_biaya)}
+                                    </span>
+                                </div>
                             </div>
 
                             {/* Feature 4: Interactive Customer Approval Banner */}
