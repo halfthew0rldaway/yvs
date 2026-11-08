@@ -340,36 +340,64 @@ async function appendRealisticDummy() {
                 estimasi_biaya: 250000
             }
         },
-        // Skenario 6: Selesai (Lolos QC, Menunggu Pengambilan & Pelunasan)
+        // Skenario 6: Selesai (Lolos QC, Menunggu Pengambilan & Pelunasan - Lengkap Seluruh Tahapan)
         {
             devIndex: 5,
             status: "selesai",
             teknisiIndex: 0, // Budi Santoso
-            keluhan: "Suhu GPU tembus 92°C saat gaming, thermal throttling parah hingga FPS drop tajam, kipas kanan berbunyi dengung kasar.",
-            kelengkapan: "Unit Laptop Acer Nitro, Charger 180W Original",
+            keluhan: "Suhu GPU tembus 92°C saat gaming berat, thermal throttling parah hingga FPS drop tajam, kipas pendingin kanan berbunyi dengung kasar, dan engsel bodi kiri berderit.",
+            kelengkapan: "Unit Laptop Acer Nitro 5, Charger Original 180W, Dus Box",
             tipe_kunci: "PIN",
             password_perangkat: "0000",
             sla_paket: "express",
             kondisi_fisik: "Kotor",
-            spesifikasi_awal: "Intel Core i7-12700H, RAM 16GB, RTX 3060 6GB",
+            spesifikasi_awal: "Intel Core i7-12700H, RAM 16GB DDR4, RTX 3060 6GB, SSD NVMe 512GB",
             kategori_perbaikan: "Kipas & Thermal",
             completed_at: new Date(Date.now() - 3600000 * 2), // 2 jam lalu
+            durasi_garansi: "1 Bulan",
+            tips_perawatan: "1. Bersihkan sirkulasi ventilasi udara bawah minimal 1 bulan sekali.\n2. Hindari meletakkan laptop di atas kasur/bantal saat sesi bermain game.\n3. Gunakan cooling pad tambahan dan lakukan repasting berkala setiap 6-12 bulan.",
+            sparepartIndex: 3, // Thermal Paste Honeywell PTM7950
+            foto_kondisi: JSON.stringify([
+                "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80",
+                "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=800&q=80"
+            ]),
+            foto_diagnosis: JSON.stringify([
+                "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=800&q=80",
+                "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80"
+            ]),
+            foto_selesai: JSON.stringify([
+                "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80",
+                "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=800&q=80"
+            ]),
+            defect_map: {
+                items: [
+                    { id: 1, surface: "top", x: 30, y: 40, type: "scratch", severity: "minor", note: "Baret halus pemakaian pada cover atas" },
+                    { id: 2, surface: "bottom", x: 70, y: 65, type: "dent", severity: "minor", note: "Cat mengelupas dekat exhaust pendingin" }
+                ]
+            },
             checklist_qc: {
-                suhu_normal: true,
-                keyboard_test: true,
-                sound_test: true,
-                charging_test: true,
-                wifi_test: true
+                power_test: true,
+                display_test: true,
+                keyboard_touchpad: true,
+                audio_multimedia: true,
+                port_io_connectivity: true,
+                os_thermal_performance: true,
+                clean_wow: true,
+                accessories_handover: true,
+                passed_qc: true,
+                qc_by: "Budi Santoso (Senior Specialist)",
+                qc_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+                catatan_qc: "Suhu idle turun drastis ke 41°C, full load FurMark 68°C stabil (sebelumnya 92°C). Dual fan hening, bodi dilap kinclong standar WOW Service."
             },
             diagnosisData: {
-                masalah: "Thermal paste pabrik mengeras kering (*pump-out effect*), kipas GPU tersumbat gumpalan serat debu tebal pada bilah radiator.",
-                solusi: "Deep cleaning modul thermal dual-fan, repasting Honeywell PTM7950 phase change pad, ganti K5-Pro thermal putty pada VRAM/VRM MOSFET.",
-                estimasi_biaya: 250000
+                masalah: "Komponen Berfungsi Normal:\n• Port USB: Normal\n• Port Type-C: Normal\n• Port HDMI / Display: Normal\n• Keyboard: Normal\n• Touchpad: Normal\n• Layar / LCD: Normal\n• Webcam Kamera: Normal\n• Mikrofon (Mic): Normal\n• Speaker Audio: Normal\n• Audio Jack 3.5mm: Normal\n• WiFi & Bluetooth: Normal\n• Baterai & Charging: Normal\n• Slot RAM: Normal\n• SSD / Storage: Normal\n• Fan & Pendingin: Abnormal (Kipas GPU tersumbat gumpalan serat debu tebal & pasta termal pabrik mengeras kering *pump-out effect*).",
+                solusi: "Deep cleaning modul thermal dual-fan heatsink, repasting pad fase ganti Honeywell PTM7950, aplikasi K5-Pro thermal putty pada VRAM/VRM MOSFET, dan pelumasan bearing kipas.",
+                estimasi_biaya: 350000
             },
             invoiceData: {
-                biaya_jasa: 250000,
-                biaya_sparepart: 0,
-                total_biaya: 250000
+                biaya_jasa: 200000,
+                biaya_sparepart: 150000,
+                total_biaya: 350000
             }
         },
         // Skenario 7: Diambil (Lunas, Garansi Aktif, Ada Rating Bintang 5)
@@ -449,6 +477,10 @@ async function appendRealisticDummy() {
                 keluhan: sc.keluhan,
                 kelengkapan: sc.kelengkapan,
                 status: sc.status,
+                foto_kondisi: sc.foto_kondisi || null,
+                foto_diagnosis: sc.foto_diagnosis || null,
+                foto_selesai: sc.foto_selesai || null,
+                defect_map: sc.defect_map || null,
                 tipe_kunci: sc.tipe_kunci || "Tidak Ada",
                 password_perangkat: sc.password_perangkat || null,
                 sla_paket: sc.sla_paket || "reguler",
@@ -514,6 +546,20 @@ async function appendRealisticDummy() {
                     tiket_id: tiket.id,
                     fase: "Pengujian & QC",
                     catatan: "Pengerjaan servis selesai. Lolos uji Quality Control 15 parameter teknisi Yangversa."
+                }
+            });
+        }
+
+        // 7b. Tambah Penggunaan Sparepart jika ada
+        if (sc.sparepartIndex !== undefined && createdSpareparts[sc.sparepartIndex]) {
+            const spSelected = createdSpareparts[sc.sparepartIndex];
+            const snPart = `SN-${spSelected.nama.substring(0, 3).toUpperCase()}-${String(100000 + i * 17).padStart(6, "0")}`;
+            await prisma.penggunaanSparepart.create({
+                data: {
+                    tiket_id: tiket.id,
+                    sparepart_id: spSelected.id,
+                    jumlah: 1,
+                    serial_number: snPart
                 }
             });
         }

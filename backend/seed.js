@@ -774,7 +774,7 @@ Untuk menjaga kepuasan dan kelancaran produktivitas pelanggan prioritas, Serv.io
         };
 
         let checklist_qc = null;
-        if (cfg.qcPassed || cfg.status === "diambil") {
+        if (cfg.qcPassed || cfg.status === "selesai" || cfg.status === "diambil") {
             checklist_qc = {
                 power_test: true,
                 display_test: true,
@@ -789,7 +789,7 @@ Untuk menjaga kepuasan dan kelancaran produktivitas pelanggan prioritas, Serv.io
                 qc_at: completedAt ? completedAt.toISOString() : new Date().toISOString(),
                 catatan_qc: "Semua pengujian 8 poin normal. Suhu idle 41C, full load 67C. Bodi dilap kinclong bebas debu standar WOW Service."
             };
-        } else if (cfg.status === "dalam_perbaikan" || cfg.status === "selesai") {
+        } else if (cfg.status === "dalam_perbaikan") {
             checklist_qc = {
                 power_test: true,
                 display_test: true,
@@ -870,6 +870,14 @@ Untuk menjaga kepuasan dan kelancaran produktivitas pelanggan prioritas, Serv.io
                     `https://picsum.photos/seed/yvs_t_${i}_1/800/600`,
                     `https://picsum.photos/seed/yvs_t_${i}_2/800/600`
                 ]),
+                foto_diagnosis: cfg.status !== "diterima" && cfg.status !== "dibatalkan" ? JSON.stringify([
+                    `https://picsum.photos/seed/yvs_diag_${i}_1/800/600`,
+                    `https://picsum.photos/seed/yvs_diag_${i}_2/800/600`
+                ]) : null,
+                foto_selesai: ["selesai", "diambil"].includes(cfg.status) ? JSON.stringify([
+                    `https://picsum.photos/seed/yvs_done_${i}_1/800/600`,
+                    `https://picsum.photos/seed/yvs_done_${i}_2/800/600`
+                ]) : null,
                 status: cfg.status,
                 created_at: createdAt,
                 completed_at: completedAt,
