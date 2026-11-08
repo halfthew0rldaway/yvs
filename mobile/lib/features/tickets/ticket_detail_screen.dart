@@ -2119,7 +2119,9 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       ...ticket.peminjamanLoaner!.map((loan) {
                         final isAktif = loan['status'] == 'aktif';
                         final device = loan['loaner_device'] is Map ? loan['loaner_device'] : null;
-                        final deviceName = device != null ? '[${device['kode_unit'] || 'LOAN'}] ${device['nama'] || 'Unit Cadangan'}' : 'Unit Pinjaman';
+                        final deviceKode = device != null ? (device['kode_unit'] ?? 'LOAN') : 'LOAN';
+                        final deviceNama = device != null ? (device['nama'] ?? 'Unit Cadangan') : 'Unit Cadangan';
+                        final deviceName = device != null ? '[$deviceKode] $deviceNama' : 'Unit Pinjaman';
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),

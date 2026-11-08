@@ -128,6 +128,12 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
     }
   }
 
+  void _removePhoto(int index) {
+    if (index >= 0 && index < _diagnosisPhotos.length) {
+      setState(() => _diagnosisPhotos.removeAt(index));
+    }
+  }
+
   /// Menyusun ringkasan checklist format Paragraf Natural atau Poin List (paritas penuh web DiagnosisForm)
   String _buildChecklistText() {
     final checkedKeys = _checkStatus.keys.where(
@@ -553,7 +559,7 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
                 children: [
                   const Text('Masalah Ditemukan *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                   Text(
-                    _formatMode == DiagnosisFormatMode.paragraph ? 'Mode: Paragraf' : 'Mode: Poin List',
+                    _formatMode == 'paragraph' ? 'Mode: Paragraf' : 'Mode: Poin List',
                     style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
                   ),
                 ],
