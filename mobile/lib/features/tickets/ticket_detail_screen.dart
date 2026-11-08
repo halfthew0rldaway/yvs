@@ -1611,91 +1611,94 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
               ],
 
               // Quality Control (QC Akhir) Checklist
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.verified_outlined, size: 18, color: AppTheme.success),
-                            SizedBox(width: 8),
-                            Text('Inspeksi QC (Pengecekan Akhir)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          ],
-                        ),
-                        if (qcMap['passed_qc'] == true)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppTheme.successBg,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: AppTheme.successBorder),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.check_circle_rounded, size: 12, color: AppTheme.successText),
-                                SizedBox(width: 4),
-                                Text(
-                                  'LULUS QC',
-                                  style: TextStyle(color: AppTheme.successText, fontWeight: FontWeight.bold, fontSize: 10),
-                                ),
-                              ],
-                            ),
+              // Hanya ditampilkan pada tahap dalam_perbaikan, selesai, atau diambil agar tidak bloated saat proses diagnosa awal
+              if (['dalam_perbaikan', 'selesai', 'diambil'].contains(ticket.status)) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.verified_outlined, size: 18, color: AppTheme.success),
+                              SizedBox(width: 8),
+                              Text('Inspeksi QC (Pengecekan Akhir)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            ],
                           ),
-                      ],
-                    ),
-                    const Divider(height: 20),
-                    const Text(
-                      'Centang pengujian perangkat sebelum unit diserahkan:',
-                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                    ),
-                    const SizedBox(height: 8),
-                    // QC hanya dapat diubah saat status 'dalam_perbaikan'
-                    ...ChecklistData.resolveForTicket(ticket.perangkat?.jenisPerangkat, qcMap).map((item) {
-                      final isChecked = qcMap[item.key] == true;
-                      return CheckboxListTile(
+                          if (qcMap['passed_qc'] == true)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppTheme.successBg,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: AppTheme.successBorder),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.check_circle_rounded, size: 12, color: AppTheme.successText),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'LULUS QC',
+                                    style: TextStyle(color: AppTheme.successText, fontWeight: FontWeight.bold, fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                      const Divider(height: 20),
+                      const Text(
+                        'Centang pengujian perangkat sebelum unit diserahkan:',
+                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      ),
+                      const SizedBox(height: 8),
+                      // QC hanya dapat diubah saat status 'dalam_perbaikan'
+                      ...ChecklistData.resolveForTicket(ticket.perangkat?.jenisPerangkat, qcMap).map((item) {
+                        final isChecked = qcMap[item.key] == true;
+                        return CheckboxListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(item.label, style: const TextStyle(fontSize: 13)),
+                          secondary: Icon(item.icon, size: 16),
+                          value: isChecked,
+                          // QC hanya dapat diubah saat status 'dalam_perbaikan'
+                          onChanged: ticket.status == 'dalam_perbaikan'
+                              ? (val) {
+                                  if (val != null) _toggleQc(qcMap, item.key, val, ticket.status);
+                                }
+                              : null,
+                        );
+                      }),
+                      const Divider(height: 16),
+                      CheckboxListTile(
                         dense: true,
                         contentPadding: EdgeInsets.zero,
-                        title: Text(item.label, style: const TextStyle(fontSize: 13)),
-                        secondary: Icon(item.icon, size: 16),
-                        value: isChecked,
-                        // QC hanya dapat diubah saat status 'dalam_perbaikan'
+                        title: const Text(
+                          'Quality Control PASSED (Final Approval)',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.successText),
+                        ),
+                        secondary: const Icon(Icons.workspace_premium, color: AppTheme.success),
+                        value: qcMap['passed_qc'] == true,
                         onChanged: ticket.status == 'dalam_perbaikan'
                             ? (val) {
-                                if (val != null) _toggleQc(qcMap, item.key, val, ticket.status);
+                                if (val != null) _toggleQc(qcMap, 'passed_qc', val, ticket.status);
                               }
                             : null,
-                      );
-                    }),
-                    const Divider(height: 16),
-                    CheckboxListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text(
-                        'Quality Control PASSED (Final Approval)',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.successText),
                       ),
-                      secondary: const Icon(Icons.workspace_premium, color: AppTheme.success),
-                      value: qcMap['passed_qc'] == true,
-                      onChanged: ticket.status == 'dalam_perbaikan'
-                          ? (val) {
-                              if (val != null) _toggleQc(qcMap, 'passed_qc', val, ticket.status);
-                            }
-                          : null,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
 
               // Repair Logs Timeline Section
               Container(

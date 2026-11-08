@@ -3339,6 +3339,8 @@ export default function TiketServisDetail() {
                 </div>
 
                 {/* Accordion 4: Inspeksi Kendali Mutu (QC Pra-Penyerahan WOW) */}
+                {/* Hanya ditampilkan pada tahap dalam_perbaikan, selesai, atau diambil agar teknisi tidak terbebani saat proses diagnosa awal */}
+                {["dalam_perbaikan", "selesai", "diambil"].includes(tiket.status) && (
                 <div className="detail-card">
                     <div
                         onClick={() => setIsQcOpen(!isQcOpen)}
@@ -3476,6 +3478,7 @@ export default function TiketServisDetail() {
                         </div>
                     )}
                 </div>
+                )}
             </div>
 
             <ConfirmModal
