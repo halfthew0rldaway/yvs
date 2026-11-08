@@ -1736,10 +1736,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                     const Divider(height: 20),
                     if (ticket.logPerbaikan != null && ticket.logPerbaikan!.isNotEmpty) () {
                       final logs = ticket.logPerbaikan!;
-                      final activeIdx = (_selectedLogNodeIndex != null && _selectedLogNodeIndex! < logs.length)
-                          ? _selectedLogNodeIndex!
-                          : logs.length - 1;
-                      final activeLog = logs[activeIdx];
+                      final activeIdx = _selectedLogNodeIndex;
+                      final activeLog = (activeIdx != null && activeIdx < logs.length) ? logs[activeIdx] : null;
 
                       Color getNodeColor(String fase) {
                         switch (fase) {
@@ -1779,9 +1777,6 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                         }
                       }
 
-                      final activeNodeColor = getNodeColor(activeLog.fase);
-                      final activeNodeIcon = getNodeIcon(activeLog.fase);
-
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1805,7 +1800,9 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                                     children: [
                                       GestureDetector(
                                         onTap: () {
-                                          setState(() => _selectedLogNodeIndex = idx);
+                                          setState(() {
+                                            _selectedLogNodeIndex = isSelected ? null : idx;
+                                          });
                                         },
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
@@ -1867,98 +1864,126 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
-
-                          // Active Node Detail Card (Full Text & Readable)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: AppTheme.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppTheme.border),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x060F172A),
-                                  blurRadius: 6,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
+                          
+                          if (activeLog == null) ...[
+                            const SizedBox(height: 8),
+                            const Center(
+                              child: Text(
+                                'Ketuk salah satu nomor node di atas untuk membaca rincian catatan & melihat foto.',
+                                style: TextStyle(fontSize: 11, color: AppTheme.textMuted, fontStyle: FontStyle.italic),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: activeNodeColor.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: activeNodeColor.withValues(alpha: 0.3)),
+                          ],
+
+                          // Active Node Detail Card (Hidden by default, shown when node clicked)
+                          if (activeLog != null) ...[
+                            const SizedBox(height: 12),
+                            Builder(
+                              builder: (context) {
+                                final activeNodeColor = getNodeColor(activeLog.fase);
+                                final activeNodeIcon = getNodeIcon(activeLog.fase);
+                                return Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppTheme.border),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x060F172A),
+                                        blurRadius: 6,
+                                        offset: Offset(0, 2),
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Icon(activeNodeIcon, size: 13, color: activeNodeColor),
-                                          const SizedBox(width: 5),
-                                          Text(
-                                            'Tahap #${activeIdx + 1}: ${activeLog.fase}',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w700,
-                                              color: activeNodeColor,
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: activeNodeColor.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: activeNodeColor.withValues(alpha: 0.3)),
                                             ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(activeNodeIcon, size: 13, color: activeNodeColor),
+                                                const SizedBox(width: 5),
+                                                Text(
+                                                  'Tahap #${activeIdx! + 1}: ${activeLog.fase}',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: activeNodeColor,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                CurrencyFormatter.formatDate(activeLog.createdAt),
+                                                style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              GestureDetector(
+                                                onTap: () => setState(() => _selectedLogNodeIndex = null),
+                                                child: const Icon(Icons.close, size: 16, color: AppTheme.textMuted),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                    ),
-                                    Text(
-                                      CurrencyFormatter.formatDate(activeLog.createdAt),
-                                      style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  activeLog.catatan,
-                                  style: const TextStyle(
-                                    fontSize: 13.5,
-                                    height: 1.45,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                ),
-                                if (activeLog.fotoUrl != null && activeLog.fotoUrl!.isNotEmpty) ...[
-                                  const SizedBox(height: 12),
-                                  const Divider(height: 1),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    'Lampiran Foto:',
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  InkWell(
-                                    borderRadius: BorderRadius.circular(8),
-                                    onTap: () {
-                                      final img = ApiConstants.resolveImageUrl(activeLog.fotoUrl!);
-                                      ImageViewerDialog.show(context, img, title: 'Foto Progres: ${activeLog.fase}');
-                                    },
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: CachedNetworkImage(
-                                        imageUrl: ApiConstants.resolveImageUrl(activeLog.fotoUrl!),
-                                        width: 150,
-                                        height: 95,
-                                        fit: BoxFit.cover,
-                                        placeholder: (_, __) => Container(width: 150, height: 95, color: AppTheme.borderLight),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        activeLog.catatan,
+                                        style: const TextStyle(
+                                          fontSize: 13.5,
+                                          height: 1.45,
+                                          color: AppTheme.textPrimary,
+                                        ),
                                       ),
-                                    ),
+                                      if (activeLog.fotoUrl != null && activeLog.fotoUrl!.isNotEmpty) ...[
+                                        const SizedBox(height: 12),
+                                        const Divider(height: 1),
+                                        const SizedBox(height: 8),
+                                        const Text(
+                                          'Lampiran Foto:',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        InkWell(
+                                          borderRadius: BorderRadius.circular(8),
+                                          onTap: () {
+                                            final img = ApiConstants.resolveImageUrl(activeLog.fotoUrl!);
+                                            ImageViewerDialog.show(context, img, title: 'Foto Progres: ${activeLog.fase}');
+                                          },
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: CachedNetworkImage(
+                                              imageUrl: ApiConstants.resolveImageUrl(activeLog.fotoUrl!),
+                                              width: 150,
+                                              height: 95,
+                                              fit: BoxFit.cover,
+                                              placeholder: (_, __) => Container(width: 150, height: 95, color: AppTheme.borderLight),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                ],
-                              ],
+                                );
+                              },
                             ),
-                          ),
+                          ],
                         ],
                       );
                     }()

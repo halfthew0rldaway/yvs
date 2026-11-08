@@ -193,8 +193,9 @@ function getLogPhaseConfig(fase) {
 }
 
 function RepairLogNodesTimeline({ logs = [], onImageClick }) {
-    const [selectedIdx, setSelectedIdx] = useState(logs.length - 1);
-    const activeLog = logs[selectedIdx] || logs[logs.length - 1];
+    // Default null (tersembunyi). Rincian & foto hanya muncul saat node diklik
+    const [selectedIdx, setSelectedIdx] = useState(null);
+    const activeLog = selectedIdx !== null ? logs[selectedIdx] : null;
 
     if (!logs || logs.length === 0) return null;
 
@@ -214,18 +215,18 @@ function RepairLogNodesTimeline({ logs = [], onImageClick }) {
                             <div key={log.id || idx} className="relative z-10 flex flex-col items-center mx-3 sm:mx-4 cursor-pointer group">
                                 <button
                                     type="button"
-                                    onClick={() => setSelectedIdx(idx)}
+                                    onClick={() => setSelectedIdx(isSelected ? null : idx)}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white shadow-sm transition-all duration-200 cursor-pointer ${cfg.bg} ${
                                         isSelected 
                                             ? `ring-4 ${cfg.ring} scale-110 shadow-md` 
                                             : 'opacity-75 hover:opacity-100 hover:scale-105'
                                     }`}
-                                    title={`Klik untuk membaca log ${cfg.label} (${idx + 1})`}
+                                    title={`Klik untuk membuka/menutup rincian catatan ${cfg.label} (${idx + 1})`}
                                 >
                                     {idx + 1}
                                 </button>
                                 <span 
-                                    onClick={() => setSelectedIdx(idx)}
+                                    onClick={() => setSelectedIdx(isSelected ? null : idx)}
                                     className={`text-3xs font-bold mt-1.5 whitespace-nowrap transition-colors ${
                                         isSelected ? 'text-slate-900 font-extrabold' : 'text-slate-400 group-hover:text-slate-600'
                                     }`}
@@ -238,24 +239,41 @@ function RepairLogNodesTimeline({ logs = [], onImageClick }) {
                 </div>
             </div>
 
-            {/* Selected Log Detail Card (Readable, Expandable & Clickable) */}
+            {/* Instruction placeholder when collapsed */}
+            {selectedIdx === null && (
+                <p className="text-2xs text-slate-400 italic text-center py-0.5">
+                    Ketuk salah satu node angka di atas untuk melihat rincian catatan dan foto.
+                </p>
+            )}
+
+            {/* Selected Log Detail Card (Readable, Expandable & Clickable, Hidden by default) */}
             {activeLog && (
-                <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs animate-in fade-in duration-150">
+                <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs animate-in fade-in duration-200">
                     <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-100">
                         <div className="flex items-center gap-2">
                             <span className={`chip chip-sm font-bold border ${getLogPhaseConfig(activeLog.fase).chipBg}`}>
                                 Node #{selectedIdx + 1}: {activeLog.fase}
                             </span>
                         </div>
-                        <span className="text-2xs text-slate-400 font-medium">
-                            {new Date(activeLog.created_at).toLocaleDateString("id-ID", { 
-                                day: 'numeric', 
-                                month: 'short', 
-                                year: 'numeric',
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                            })}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-2xs text-slate-400 font-medium">
+                                {new Date(activeLog.created_at).toLocaleDateString("id-ID", { 
+                                    day: 'numeric', 
+                                    month: 'short', 
+                                    year: 'numeric',
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                })}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedIdx(null)}
+                                className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                                title="Tutup rincian"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
                     </div>
 
                     {/* The Whole Log Text (Clean & Highly Readable) */}

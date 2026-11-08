@@ -224,8 +224,9 @@ function TrackingProgress({ currentStatus, onWarrantyClick }) {
 
 function TrackingRepairLogNodes({ logs = [], onPhotoClick }) {
     const sorted = [...logs].sort((a, b) => new Date(a?.created_at || 0) - new Date(b?.created_at || 0));
-    const [selectedIdx, setSelectedIdx] = useState(sorted.length - 1);
-    const activeLog = sorted[selectedIdx] || sorted[sorted.length - 1];
+    // Default null (hidden). Muncul hanya saat node diklik.
+    const [selectedIdx, setSelectedIdx] = useState(null);
+    const activeLog = selectedIdx !== null ? sorted[selectedIdx] : null;
 
     if (!sorted.length) return null;
 
@@ -249,9 +250,9 @@ function TrackingRepairLogNodes({ logs = [], onPhotoClick }) {
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             {/* Horizontal Nodes Connector */}
-            <div className="bg-slate-50/90 p-4 rounded-2xl border border-slate-200/80 overflow-x-auto custom-scrollbar">
+            <div className="bg-slate-50/90 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 overflow-x-auto custom-scrollbar">
                 <div className="flex items-center min-w-max px-2 py-2 relative">
                     <div className="absolute left-6 right-6 top-6 h-1 bg-slate-200 rounded-full z-0"></div>
                     {sorted.map((log, idx) => {
@@ -261,17 +262,18 @@ function TrackingRepairLogNodes({ logs = [], onPhotoClick }) {
                             <div key={idx} className="relative z-10 flex flex-col items-center mx-3 sm:mx-4 cursor-pointer group">
                                 <button
                                     type="button"
-                                    onClick={() => setSelectedIdx(idx)}
+                                    onClick={() => setSelectedIdx(isSelected ? null : idx)}
                                     className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs text-white shadow-sm transition-all duration-200 cursor-pointer ${style.bg} ${
                                         isSelected 
                                             ? `ring-4 ${style.ring} scale-110 shadow-md` 
                                             : 'opacity-75 hover:opacity-100 hover:scale-105'
                                     }`}
+                                    title="Klik untuk membuka/menutup rincian catatan proses ini"
                                 >
                                     {idx + 1}
                                 </button>
                                 <span 
-                                    onClick={() => setSelectedIdx(idx)}
+                                    onClick={() => setSelectedIdx(isSelected ? null : idx)}
                                     className={`text-3xs font-bold mt-2 whitespace-nowrap transition-colors ${
                                         isSelected ? 'text-slate-900 font-extrabold' : 'text-slate-400 group-hover:text-slate-600'
                                     }`}
@@ -284,18 +286,35 @@ function TrackingRepairLogNodes({ logs = [], onPhotoClick }) {
                 </div>
             </div>
 
-            {/* Selected Node Details Card */}
+            {/* Instruction if hidden */}
+            {selectedIdx === null && (
+                <p className="text-2xs text-slate-400 italic text-center py-1">
+                    Ketuk salah satu node angka di atas untuk membaca rincian catatan dan melihat lampiran foto.
+                </p>
+            )}
+
+            {/* Selected Node Details Card (Hidden by default, shows on click) */}
             {activeLog && (
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs animate-in fade-in duration-150">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs animate-in fade-in duration-200">
                     <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-100">
                         <span className={`text-3xs uppercase font-bold px-2.5 py-1 rounded-md border ${getNodeStyle(activeLog?.fase).chip}`}>
                             Tahap #{selectedIdx + 1}: {activeLog?.fase}
                         </span>
-                        <span className="text-2xs text-slate-400 font-medium">
-                            {formatDateSafe(activeLog?.created_at, { 
-                                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                            })}
-                        </span>
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xs text-slate-400 font-medium">
+                                {formatDateSafe(activeLog?.created_at, { 
+                                    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                })}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedIdx(null)}
+                                className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors"
+                                title="Tutup rincian"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
 
                     <p className="text-slate-800 text-sm leading-relaxed whitespace-pre-line break-words mb-3">

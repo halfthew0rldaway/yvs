@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/checklist_items.dart';
@@ -32,9 +34,14 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
   final _solusiController = TextEditingController();
   final _catatanLogController = TextEditingController();
   final _biayaController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  final List<XFile> _diagnosisPhotos = [];
+
   bool _isLoading = false;
   bool _autoSync = true;
+  String _formatMode = 'bullet'; // 'bullet' (Poin List) | 'paragraph' (Paragraf Natural)
   String _lastGenerated = '';
+
   // key -> 'ok' | 'issue' | null (null = belum dicek)
   final Map<String, String?> _checkStatus = {};
   // key -> catatan singkat per komponen
@@ -95,38 +102,106 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
   int get _issueCount =>
       _checkStatus.values.where((s) => s == 'issue').length;
 
-  /// Menyusun ringkasan checklist gaya web (bullet) untuk auto-sync ke masalah.
+  Future<void> _pickPhoto(ImageSource source) async {
+    if (_diagnosisPhotos.length >= 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Maksimal 10 foto dokumentasi diagnosis.')),
+      );
+      return;
+    }
+    try {
+      final picked = await _picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        setState(() => _diagnosisPhotos.add(picked));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengambil foto: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    }
+  }
+
+  /// Menyusun ringkasan checklist format Paragraf Natural atau Poin List (paritas penuh web DiagnosisForm)
   String _buildChecklistText() {
-    final issueLines = <String>[];
-    final okLines = <String>[];
-    _checkStatus.forEach((key, status) {
-      if (status == null) return;
-      final label = _labelFor(key);
-      final note = _noteControllers[key]?.text.trim() ?? '';
-      if (status == 'issue') {
-        issueLines.add(note.isEmpty
-            ? '\u2022 $label: Tidak berfungsi / bermasalah'
-            : '\u2022 $label: Bermasalah ($note)');
-      } else if (status == 'ok') {
-        okLines.add(note.isEmpty ? '\u2022 $label: Normal' : '\u2022 $label: Normal ($note)');
-      }
-    });
-    if (issueLines.isEmpty && okLines.isEmpty) return '';
-    final buf = StringBuffer();
-    if (issueLines.isNotEmpty) {
-      buf.writeln('Hasil Pengecekan / Kendala Ditemukan:');
-      for (final l in issueLines) {
-        buf.writeln(l);
+    final checkedKeys = _checkStatus.keys.where(
+      (k) => _checkStatus[k] == 'ok' || _checkStatus[k] == 'issue'
+    ).toList();
+    if (checkedKeys.isEmpty) return '';
+
+    final okItems = <Map<String, String>>[];
+    final issueItems = <Map<String, String>>[];
+
+    for (final k in checkedKeys) {
+      final label = _labelFor(k);
+      final note = _noteControllers[k]?.text.trim() ?? '';
+      final status = _checkStatus[k];
+      if (status == 'ok') {
+        okItems.add({'label': label, 'note': note});
+      } else if (status == 'issue') {
+        issueItems.add({'label': label, 'note': note});
       }
     }
-    if (okLines.isNotEmpty) {
-      if (issueLines.isNotEmpty) buf.writeln('');
-      buf.writeln('Komponen Berfungsi Normal:');
-      for (final l in okLines) {
-        buf.writeln(l);
+
+    if (_formatMode == 'paragraph') {
+      final parts = <String>[];
+      if (okItems.isNotEmpty) {
+        final okNames = okItems.map((i) => i['note']!.isNotEmpty ? "${i['label']} (${i['note']})" : i['label']!).toList();
+        parts.add("fungsi ${okNames.join(', ')} ok.");
       }
+      if (issueItems.isNotEmpty) {
+        final issueSentences = issueItems.map((i) {
+          final note = i['note']!;
+          final label = i['label']!;
+          if (note.isNotEmpty) {
+            final lower = note.toLowerCase();
+            if (lower.startsWith("tidak") || lower.startsWith("rusak") || lower.startsWith("mati") || lower.startsWith("ada") || lower.startsWith("penuh")) {
+              return "$label $note.";
+            }
+            return "$label bermasalah ($note).";
+          }
+          return "$label tidak fungsi / bermasalah.";
+        }).toList();
+        parts.addAll(issueSentences);
+      }
+      return parts.join(" ");
+    } else {
+      // Poin List (Bullet mode)
+      final buf = StringBuffer();
+      if (issueItems.isNotEmpty) {
+        buf.writeln('Hasil Pengecekan / Kendala Ditemukan:');
+        for (final item in issueItems) {
+          final note = item['note']!;
+          final label = item['label']!;
+          if (note.isNotEmpty) {
+            final lower = note.toLowerCase();
+            if (lower.startsWith("tidak") || lower.startsWith("rusak") || lower.startsWith("mati") || lower.startsWith("ada") || lower.startsWith("penuh")) {
+              buf.writeln('• $label: $note');
+            } else {
+              buf.writeln('• $label: Bermasalah ($note)');
+            }
+          } else {
+            buf.writeln('• $label: Tidak berfungsi / bermasalah');
+          }
+        }
+      }
+      if (okItems.isNotEmpty) {
+        if (issueItems.isNotEmpty) buf.writeln('');
+        buf.writeln('Komponen Berfungsi Normal:');
+        for (final item in okItems) {
+          final note = item['note']!;
+          final label = item['label']!;
+          buf.writeln(note.isNotEmpty ? '• $label: Normal ($note)' : '• $label: Normal');
+        }
+      }
+      return buf.toString().trim();
     }
-    return buf.toString().trim();
   }
 
   /// Sinkronisasi hasil checklist ke kotak masalah tanpa menghapus catatan teknisi.
@@ -188,36 +263,33 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
           ? _catatanLogController.text.trim()
           : 'Pemeriksaan Unit: Ditemukan kendala $masalah. Rekomendasi tindakan perbaikan: $solusi.';
 
-      // Pre-emptively create/ensure log diagnosis so backend validation always passes
-      try {
-        await client.dio.post(
-          ApiConstants.logPerbaikan,
-          data: {
-            'tiket_id': widget.ticketId,
-            'fase': 'Diagnosis',
-            'catatan': logNotes,
-          },
-        );
-      } catch (_) {
-        // Silently continue in case already logged
+      final formData = FormData();
+      formData.fields.add(MapEntry('tiket_id', widget.ticketId.toString()));
+      formData.fields.add(MapEntry('masalah', masalah));
+      formData.fields.add(MapEntry('solusi', solusi));
+      formData.fields.add(MapEntry('catatan_diagnosis', logNotes));
+      formData.fields.add(MapEntry(
+        'estimasi_biaya',
+        (double.tryParse(_biayaController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0).toString(),
+      ));
+
+      for (final photo in _diagnosisPhotos) {
+        formData.files.add(MapEntry(
+          'foto_diagnosis',
+          await MultipartFile.fromFile(photo.path, filename: photo.name),
+        ));
       }
 
       await client.dio.post(
         ApiConstants.diagnosis,
-        data: {
-          'tiket_id': widget.ticketId,
-          'masalah': masalah,
-          'solusi': solusi,
-          'catatan_diagnosis': logNotes,
-          'estimasi_biaya': double.tryParse(_biayaController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
-        },
+        data: formData,
       );
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Hasil diagnosis & catatan teknis berhasil disimpan'),
+            content: Text('Hasil diagnosis & foto dokumentasi berhasil disimpan'),
             backgroundColor: AppTheme.success,
           ),
         );
@@ -303,20 +375,118 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
               ),
               const SizedBox(height: 14),
 
-            // Checklist cek fungsi komponen (paritas web DiagnosisForm)
-              Text('Cek Fungsi Komponen ($_checkedCount/${_items.length} Dicek${_issueCount > 0 ? ' • $_issueCount Rusak' : ''})',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              // Checklist cek fungsi komponen (paritas web DiagnosisForm)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Cek Komponen ($_checkedCount/${_items.length} Dicek${_issueCount > 0 ? ' • $_issueCount Rusak' : ''})',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  Row(
+                    children: [
+                      const Text('Auto-sync', style: TextStyle(fontSize: 11)),
+                      Switch(
+                        value: _autoSync,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        onChanged: (v) => setState(() => _autoSync = v),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               const SizedBox(height: 4),
-              const Text('Menyesuaikan jenis perangkat. Ketuk OK / Rusak untuk auto-susun laporan.',
-                  style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-              const SizedBox(height: 8),
+
+              // Format Mode Selector (Poin List vs Paragraf Natural)
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          setState(() => _formatMode = 'bullet');
+                          _syncChecklistToMasalah();
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 7),
+                          decoration: BoxDecoration(
+                            color: _formatMode == 'bullet' ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: _formatMode == 'bullet' ? const [BoxShadow(color: Color(0x0C000000), blurRadius: 4)] : null,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.format_list_bulleted, size: 14, color: _formatMode == 'bullet' ? AppTheme.primary : AppTheme.textMuted),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Poin List',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: _formatMode == 'bullet' ? FontWeight.w700 : FontWeight.w500,
+                                  color: _formatMode == 'bullet' ? AppTheme.primary : AppTheme.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          setState(() => _formatMode = 'paragraph');
+                          _syncChecklistToMasalah();
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 7),
+                          decoration: BoxDecoration(
+                            color: _formatMode == 'paragraph' ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: _formatMode == 'paragraph' ? const [BoxShadow(color: Color(0x0C000000), blurRadius: 4)] : null,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.notes, size: 14, color: _formatMode == 'paragraph' ? AppTheme.primary : AppTheme.textMuted),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Paragraf Natural',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: _formatMode == 'paragraph' ? FontWeight.w700 : FontWeight.w500,
+                                  color: _formatMode == 'paragraph' ? AppTheme.primary : AppTheme.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 6),
               Row(
                 children: [
-                  TextButton.icon(onPressed: _setAllOk, icon: const Icon(Icons.done_all, size: 16), label: const Text('Semua OK', style: TextStyle(fontSize: 11))),
-                  TextButton.icon(onPressed: _resetChecklist, icon: const Icon(Icons.refresh, size: 16), label: const Text('Reset', style: TextStyle(fontSize: 11))),
-                  const Spacer(),
-                  const Text('Auto-sync', style: TextStyle(fontSize: 11)),
-                  Switch(value: _autoSync, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, onChanged: (v) => setState(() => _autoSync = v)),
+                  TextButton.icon(
+                    onPressed: _setAllOk,
+                    icon: const Icon(Icons.done_all, size: 15),
+                    label: const Text('Semua OK', style: TextStyle(fontSize: 11.5)),
+                  ),
+                  TextButton.icon(
+                    onPressed: _resetChecklist,
+                    icon: const Icon(Icons.refresh, size: 15),
+                    label: const Text('Reset', style: TextStyle(fontSize: 11.5)),
+                  ),
                 ],
               ),
               ..._items.map((item) {
@@ -378,30 +548,55 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
               const SizedBox(height: 14),
 
               // Masalah
-              const Text('Masalah Ditemukan *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Masalah Ditemukan *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  Text(
+                    _formatMode == DiagnosisFormatMode.paragraph ? 'Mode: Paragraf' : 'Mode: Poin List',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _masalahController,
-                maxLines: 2,
-                decoration: const InputDecoration(
+                minLines: 5,
+                maxLines: 12,
+                keyboardType: TextInputType.multiline,
+                style: const TextStyle(fontSize: 13, height: 1.4),
+                decoration: InputDecoration(
                   hintText: 'Jelaskan temuan kerusakan fisik, komponen short, atau software...',
+                  alignLabelWithHint: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (val) => val == null || val.trim().isEmpty ? 'Masalah wajib diisi' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // Solusi
               const Text('Solusi / Rekomendasi Tindakan *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _solusiController,
-                maxLines: 2,
-                decoration: const InputDecoration(
+                minLines: 4,
+                maxLines: 8,
+                keyboardType: TextInputType.multiline,
+                style: const TextStyle(fontSize: 13, height: 1.4),
+                decoration: InputDecoration(
                   hintText: 'Tindakan yang perlu dilakukan (ganti part / reball / flash)...',
+                  alignLabelWithHint: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (val) => val == null || val.trim().isEmpty ? 'Solusi wajib diisi' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // Catatan Teknis / Log Perbaikan (Auto-created)
               const Text('Catatan Teknis Pengerjaan Meja Servis (Opsional)',
@@ -409,12 +604,118 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
               const SizedBox(height: 6),
               TextFormField(
                 controller: _catatanLogController,
-                maxLines: 2,
-                decoration: const InputDecoration(
+                minLines: 3,
+                maxLines: 6,
+                keyboardType: TextInputType.multiline,
+                style: const TextStyle(fontSize: 13, height: 1.4),
+                decoration: InputDecoration(
                   hintText: 'Contoh: Ukur tegangan VDD drop 0.8V, terdeteksi IC power panas...',
+                  alignLabelWithHint: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+
+              // Dokumentasi Foto Diagnosis
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Dokumentasi Foto Diagnosis', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  Text('${_diagnosisPhotos.length}/10 Foto',
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_diagnosisPhotos.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          'Belum ada foto dokumentasi (kerusakan komponen/hasil uji fisik).',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 90,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _diagnosisPhotos.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          itemBuilder: (context, idx) {
+                            final file = _diagnosisPhotos[idx];
+                            return Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    File(file.path),
+                                    width: 90,
+                                    height: 90,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 2,
+                                  right: 2,
+                                  child: InkWell(
+                                    onTap: () => _removePhoto(idx),
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      padding: const EdgeInsets.all(2),
+                                      child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: _diagnosisPhotos.length >= 10 ? null : () => _pickPhoto(ImageSource.camera),
+                          icon: const Icon(Icons.camera_alt, size: 16),
+                          label: const Text('Kamera', style: TextStyle(fontSize: 12)),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        OutlinedButton.icon(
+                          onPressed: _diagnosisPhotos.length >= 10 ? null : () => _pickPhoto(ImageSource.gallery),
+                          icon: const Icon(Icons.photo_library, size: 16),
+                          label: const Text('Galeri', style: TextStyle(fontSize: 12)),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
 
               // Estimasi Biaya
               const Text('Estimasi Biaya Jasa & Sparepart (Rp) *',
@@ -423,9 +724,14 @@ class _DiagnosisModalState extends State<DiagnosisModal> {
               TextFormField(
                 controller: _biayaController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
                   hintText: 'Contoh: 150000',
                   prefixText: 'Rp ',
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) return 'Estimasi biaya wajib diisi';
