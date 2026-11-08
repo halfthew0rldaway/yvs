@@ -373,16 +373,18 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
 }
 
 export default function Dashboard() {
-    const { isAdmin, user } = useAuth();
+    const { isAdmin, isPimpinan, isPimpinanOrAdmin, user } = useAuth();
     const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
 
+    const isManagerialView = isPimpinanOrAdmin;
+
     const loadData = useCallback(async (isInitial = false) => {
         if (isInitial) setLoading(true);
         try {
-            const endpoint = isAdmin ? "/dashboard/admin" : "/dashboard/teknisi";
+            const endpoint = isManagerialView ? "/dashboard/admin" : "/dashboard/teknisi";
             const res = await api.get(endpoint);
             
             // Inject fillColor and shortName into chartData
@@ -400,7 +402,7 @@ export default function Dashboard() {
         } finally {
             if (isInitial) setLoading(false);
         }
-    }, [isAdmin]);
+    }, [isManagerialView]);
 
     useEffect(() => {
         loadData(true);
@@ -430,13 +432,17 @@ export default function Dashboard() {
         );
     }
 
-    if (isAdmin) {
+    if (isManagerialView) {
+        const welcomeSubtitle = isPimpinan
+            ? "Selamat datang di Dashboard Bisnis & Eksekutif. Pantau performa finansial, efisiensi operasional bengkel, dan produktivitas tim secara terpadu."
+            : "Selamat datang di Dashboard Admin. Berikut ringkasan performa sistem hari ini.";
+
         return (
             <div className="space-y-4 sm:space-y-4.5">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
                         <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Halo, {user?.nama}!</h1>
-                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Selamat datang di Dashboard Admin. Berikut ringkasan performa sistem hari ini.</p>
+                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{welcomeSubtitle}</p>
                     </div>
 
                     {/* Quick Access Toolbar: Backup Database & Log Audit */}
