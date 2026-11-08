@@ -5,7 +5,7 @@ import api from "../../services/api";
 import { 
     ArrowLeft, Save, Sparkles, AlertTriangle, Lightbulb, DollarSign, Send, CheckCircle2,
     Check, X, RotateCcw, 
-    Info, Wand2, ListChecks, ShieldAlert, Plus, Minus, AlignLeft, List
+    Info, Wand2, ListChecks, ShieldAlert, Plus, Minus, AlignLeft, List, Laptop, Wrench
 } from "lucide-react";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
 import MediaProcessingModal from "../../components/MediaProcessingModal";
@@ -281,12 +281,13 @@ export default function DiagnosisForm() {
                 const rawFotos = res.data?.diagnosis?.foto_diagnosis || res.data?.foto_diagnosis;
                 if (rawFotos) {
                     try {
-                        loadedPhotos = typeof rawFotos === "string" ? JSON.parse(rawFotos) : rawFotos;
+                        const parsed = typeof rawFotos === "string" ? JSON.parse(rawFotos) : rawFotos;
+                        loadedPhotos = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
                     } catch (e) {
                         loadedPhotos = [];
                     }
                 }
-                setFotos(loadedPhotos || []);
+                setFotos(Array.isArray(loadedPhotos) ? loadedPhotos : []);
 
                 // Restore checklist status from ticket intake if already recorded
                 if (res.data?.checklist_intake) {
@@ -804,7 +805,7 @@ export default function DiagnosisForm() {
                             </span>
                             <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar flex-1">
                                 {DEVICE_CATEGORIES.map(cat => {
-                                    const CatIcon = cat.icon;
+                                    const CatIcon = (typeof cat?.icon === 'function' || (typeof cat?.icon === 'object' && cat?.icon !== null && cat?.icon.$$typeof)) ? cat.icon : Laptop;
                                     const isActive = selectedCategory === cat.id;
                                     return (
                                         <button
@@ -857,7 +858,7 @@ export default function DiagnosisForm() {
                     {/* Grid Hardware Items */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                         {currentCategoryItems.map((item) => {
-                            const ItemIcon = item.icon;
+                            const ItemIcon = (typeof item?.icon === 'function' || (typeof item?.icon === 'object' && item?.icon !== null && item?.icon.$$typeof)) ? item.icon : Wrench;
                             const itemData = checklistStatus[item.key] || {};
                             const isOk = itemData.status === "ok";
                             const isIssue = itemData.status === "issue";

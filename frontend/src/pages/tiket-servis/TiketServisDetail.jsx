@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
-import { ArrowLeft, Edit, Save, Trash2, CheckCircle2, XCircle, AlertCircle, Phone, MapPin, Search, Plus, Filter, MonitorSmartphone, User, Info, FileText, Wrench, ClipboardList, Send, Package, Camera, ExternalLink, MessageCircle, CheckCircle, ArrowRight, PenTool, FileCheck, AlertTriangle, ShieldCheck, Award, KeyRound, Lock, Eye, EyeOff, History, Calendar, Clock, Copy, Check, ChevronDown, ChevronUp, Shield, Sparkles, Smile, HardDrive, Target, BookOpen, Zap, ShieldAlert, Play, QrCode, Printer, Laptop, RotateCcw, Layers } from "lucide-react";
+import { ArrowLeft, Edit, Save, Trash2, CheckCircle2, XCircle, AlertCircle, Phone, MapPin, Search, Plus, Filter, MonitorSmartphone, User, Info, FileText, Wrench, ClipboardList, Send, Package, Camera, ExternalLink, MessageCircle, CheckCircle, ArrowRight, PenTool, FileCheck, AlertTriangle, ShieldCheck, Award, KeyRound, Lock, Eye, EyeOff, History, Calendar, Clock, Copy, Check, ChevronDown, ChevronUp, Shield, Sparkles, Smile, HardDrive, Target, BookOpen, Zap, ShieldAlert, Play, QrCode, Printer, Laptop, RotateCcw, Layers, CreditCard } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import SopWaModal from "../../components/SopWaModal";
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
@@ -123,6 +123,133 @@ const MAINTENANCE_TIPS = {
         "Gunakan tas laptop bermaterial tebal saat bepergian."
     ]
 };
+
+function TicketStageStepperCompact({ status, tiket }) {
+    if (status === 'dibatalkan') return null;
+
+    const stages = [
+        {
+            ids: ['diterima'],
+            key: 'diterima',
+            label: 'Diterima',
+            color: 'bg-blue-600 border-blue-200 text-white shadow-blue-500/20',
+            activeRing: 'ring-blue-200',
+            textColor: 'text-blue-700',
+            timestamp: tiket?.created_at,
+        },
+        {
+            ids: ['didiagnosis', 'menunggu_persetujuan', 'disetujui'],
+            key: 'diagnosis',
+            label: 'Diagnosis',
+            color: 'bg-amber-500 border-amber-200 text-white shadow-amber-500/20',
+            activeRing: 'ring-amber-200',
+            textColor: 'text-amber-700',
+            timestamp: tiket?.diagnosis?.created_at || (tiket?.log_perbaikan?.find(l => l.fase === 'Diagnosis')?.created_at),
+        },
+        {
+            ids: ['dalam_perbaikan'],
+            key: 'perbaikan',
+            label: 'Diperbaiki',
+            color: 'bg-indigo-600 border-indigo-200 text-white shadow-indigo-500/20',
+            activeRing: 'ring-indigo-200',
+            textColor: 'text-indigo-700',
+            timestamp: tiket?.disetujui_at || (tiket?.log_perbaikan?.find(l => l.fase?.toLowerCase().includes('perbaikan'))?.created_at),
+        },
+        {
+            ids: ['selesai'],
+            key: 'selesai',
+            label: 'Selesai',
+            color: 'bg-emerald-600 border-emerald-200 text-white shadow-emerald-500/20',
+            activeRing: 'ring-emerald-200',
+            textColor: 'text-emerald-700',
+            timestamp: tiket?.completed_at || (tiket?.log_perbaikan?.find(l => l.fase === 'Selesai')?.created_at),
+        },
+        {
+            ids: ['diambil'],
+            key: 'diambil',
+            label: 'Diambil',
+            color: 'bg-teal-600 border-teal-200 text-white shadow-teal-500/20',
+            activeRing: 'ring-teal-200',
+            textColor: 'text-teal-700',
+            timestamp: tiket?.tgl_diambil || tiket?.invoice?.ttd_customer_at || (tiket?.log_perbaikan?.find(l => l.fase === 'Penyerahan Unit')?.created_at),
+        }
+    ];
+
+    let currentIdx = stages.findIndex(st => st.ids.includes(status));
+    if (currentIdx === -1) currentIdx = 0;
+
+    const formatTime = (dateStr) => {
+        if (!dateStr) return null;
+        try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return null;
+            return d.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (_) {
+            return null;
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-3 sm:p-4 mb-4 sm:mb-5">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+                <span className="text-3xs sm:text-2xs font-extrabold uppercase tracking-wider text-slate-400">
+                    Progres Alur Servis
+                </span>
+                <span className="text-3xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                    Tahap {currentIdx + 1} dari {stages.length}
+                </span>
+            </div>
+            <div className="flex items-start justify-between relative px-2 sm:px-6 pt-2 pb-1">
+                {/* Connecting Line Track */}
+                <div className="absolute left-6 right-6 sm:left-12 sm:right-12 top-5 sm:top-5.5 h-1 bg-slate-100 rounded-full z-0"></div>
+                <div 
+                    className="absolute left-6 sm:left-12 top-5 sm:top-5.5 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 rounded-full z-0 transition-all duration-500 ease-out"
+                    style={{ width: `calc(${(currentIdx / (stages.length - 1)) * 100}% - 1.5rem)` }}
+                ></div>
+
+                {stages.map((stage, idx) => {
+                    const isPassed = idx < currentIdx;
+                    const isCurrent = idx === currentIdx;
+                    const isCompleted = idx <= currentIdx;
+                    const timeStr = formatTime(stage.timestamp);
+
+                    return (
+                        <div key={stage.key} className="relative z-10 flex flex-col items-center flex-1 max-w-[20%] text-center">
+                            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-2xs sm:text-xs transition-all duration-300 border-2 ${
+                                isCurrent
+                                    ? `${stage.color} ring-4 ${stage.activeRing} scale-105 shadow-sm`
+                                    : isPassed
+                                        ? 'bg-emerald-500 border-emerald-200 text-white shadow-2xs'
+                                        : 'bg-slate-100 border-slate-200 text-slate-400'
+                            }`}>
+                                {isPassed ? (
+                                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                ) : (
+                                    <span>{idx + 1}</span>
+                                )}
+                            </div>
+                            <span className={`text-3xs sm:text-2xs font-bold mt-1.5 truncate max-w-full ${
+                                isCurrent ? `${stage.textColor} font-black` : isPassed ? 'text-slate-700' : 'text-slate-400'
+                            }`}>
+                                {stage.label}
+                            </span>
+                            {timeStr && (
+                                <span className="text-4xs text-slate-400 font-medium hidden sm:inline-block leading-tight mt-0.5 truncate max-w-full">
+                                    {timeStr}
+                                </span>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
 function generateWarrantyWaLink(tiket) {
     if (!tiket || !tiket.perangkat?.customer) return "#";
@@ -1194,6 +1321,9 @@ export default function TiketServisDetail() {
                 </div>
             </div>
 
+            {/* 0. Alur Proses / Tahapan Servis Stepper Compact */}
+            <TicketStageStepperCompact status={tiket.status} tiket={tiket} />
+
             {/* Feature 7: SLA Express Queue & Countdown Alert */}
             <SlaCountdownCard 
                 tiket={tiket} 
@@ -1965,6 +2095,92 @@ export default function TiketServisDetail() {
                     </div>
                 </div>
             </div>
+
+            {/* Hasil Diagnosis & Rekomendasi Tindakan Teknisi */}
+            {tiket.diagnosis && (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 sm:p-5 mb-5 sm:mb-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-100">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-200/60 shadow-2xs">
+                                <Search className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-900 text-sm sm:text-base">Hasil Diagnosis & Rekomendasi</h3>
+                                <p className="text-3xs sm:text-2xs text-slate-500">Evaluasi teknis kondisi perangkat dan rekomendasi tindakan servis</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {(isAdmin || isAssignedToMe) && !["selesai", "diambil", "dibatalkan"].includes(tiket.status) && (
+                                <Link
+                                    to={`/tiket-servis/${id}/diagnosis`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-2xs font-bold transition-colors cursor-pointer"
+                                    title="Edit temuan diagnosis atau estimasi biaya"
+                                >
+                                    <Edit className="w-3.5 h-3.5" />
+                                    <span>Edit Diagnosis</span>
+                                </Link>
+                            )}
+                            <span className="px-2.5 py-1 rounded-full text-3xs font-extrabold uppercase tracking-wide bg-amber-50 text-amber-700 border border-amber-200/80">
+                                Tahap Diagnosis
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Temuan Masalah */}
+                        <div className="flex flex-col h-full bg-slate-50/50 rounded-xl border border-slate-200/80 overflow-hidden">
+                            <div className="px-3.5 py-2.5 bg-slate-100/70 border-b border-slate-200/60 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                                    <h4 className="text-xs font-bold text-slate-800">Temuan Masalah / Pengecekan</h4>
+                                </div>
+                                <span className="text-3xs font-semibold px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600">
+                                    Kondisi Fisik & Fungsi
+                                </span>
+                            </div>
+                            <div className="p-3.5 sm:p-4 flex-1 text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words">
+                                {tiket.diagnosis.masalah || "-"}
+                            </div>
+                        </div>
+
+                        {/* Rekomendasi Solusi */}
+                        <div className="flex flex-col h-full bg-slate-50/50 rounded-xl border border-slate-200/80 overflow-hidden">
+                            <div className="px-3.5 py-2.5 bg-emerald-50/50 border-b border-emerald-100/70 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                    <Wrench className="w-4 h-4 text-emerald-600 shrink-0" />
+                                    <h4 className="text-xs font-bold text-slate-800">Rekomendasi Solusi & Tindakan</h4>
+                                </div>
+                                <span className="text-3xs font-semibold px-2 py-0.5 rounded bg-white border border-emerald-200 text-emerald-700">
+                                    Rencana Perbaikan
+                                </span>
+                            </div>
+                            <div className="p-3.5 sm:p-4 flex-1 text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words">
+                                {tiket.diagnosis.solusi || "-"}
+                            </div>
+                        </div>
+
+                        {/* Estimasi Biaya Awal Highlight Banner */}
+                        <div className="md:col-span-2 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-blue-50/60 p-3.5 sm:p-4 rounded-xl border border-blue-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                                    <CreditCard className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <span className="block text-blue-900 font-bold text-xs sm:text-sm">Estimasi Biaya & Penawaran Awal (Jasa & Komponen)</span>
+                                    <span className="block text-3xs text-blue-600/80">
+                                        Biaya penawaran resmi yang diajukan teknisi sebelum pengerjaan perbaikan dimulai
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="text-left sm:text-right w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-blue-200/50">
+                                <span className="text-blue-900 font-extrabold text-base sm:text-lg tracking-tight">
+                                    {formatRupiah(tiket.diagnosis.estimasi_biaya || 0)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Diagnosis Form Action */}
             {(isAdmin || (isTeknisi && isAssignedToMe)) && ["diterima", "didiagnosis"].includes(tiket.status) && !tiket.diagnosis && (
