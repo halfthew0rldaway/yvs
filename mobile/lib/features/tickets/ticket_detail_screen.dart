@@ -1661,13 +1661,79 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                         itemCount: ticket.logPerbaikan!.length,
                         itemBuilder: (context, idx) {
                           final log = ticket.logPerbaikan![idx];
+                          
+                          // Dynamic Styling Per Fase
+                          Color dotColor = AppTheme.primary;
+                          Color badgeBg = const Color(0xFFEFF6FF); // blue-50
+                          Color badgeText = const Color(0xFF1D4ED8); // blue-700
+                          Color borderColor = const Color(0xFFBFDBFE);
+                          IconData faseIcon = Icons.build_circle_outlined;
+
+                          switch (log.fase) {
+                            case 'Diagnosis':
+                              dotColor = const Color(0xFFF59E0B); // Amber
+                              badgeBg = const Color(0xFFFFFBEB);
+                              badgeText = const Color(0xFFB45309);
+                              borderColor = const Color(0xFFFDE68A);
+                              faseIcon = Icons.search_rounded;
+                              break;
+                            case 'Catatan Admin':
+                              dotColor = const Color(0xFF8B5CF6); // Purple
+                              badgeBg = const Color(0xFFF5F3FF);
+                              badgeText = const Color(0xFF6D28D9);
+                              borderColor = const Color(0xFFDDD6FE);
+                              faseIcon = Icons.admin_panel_settings_outlined;
+                              break;
+                            case 'Selesai':
+                              dotColor = const Color(0xFF10B981); // Emerald
+                              badgeBg = const Color(0xFFECFDF5);
+                              badgeText = const Color(0xFF047857);
+                              borderColor = const Color(0xFFA7F3D0);
+                              faseIcon = Icons.check_circle_outline_rounded;
+                              break;
+                            case 'Penyerahan Unit':
+                              dotColor = const Color(0xFF0D9488); // Teal
+                              badgeBg = const Color(0xFFF0FDFA);
+                              badgeText = const Color(0xFF0F766E);
+                              borderColor = const Color(0xFF99F6E4);
+                              faseIcon = Icons.handshake_outlined;
+                              break;
+                            case 'Pembatalan':
+                              dotColor = const Color(0xFFEF4444); // Red
+                              badgeBg = const Color(0xFFFEF2F2);
+                              badgeText = const Color(0xFFB91C1C);
+                              borderColor = const Color(0xFFFECACA);
+                              faseIcon = Icons.cancel_outlined;
+                              break;
+                            case 'Revisi ACC':
+                              dotColor = const Color(0xFFEA580C); // Orange
+                              badgeBg = const Color(0xFFFFF7ED);
+                              badgeText = const Color(0xFFC2410C);
+                              borderColor = const Color(0xFFFED7AA);
+                              faseIcon = Icons.history_rounded;
+                              break;
+                            default: // Perbaikan
+                              dotColor = AppTheme.primary;
+                              badgeBg = const Color(0xFFEFF6FF);
+                              badgeText = const Color(0xFF1D4ED8);
+                              borderColor = const Color(0xFFBFDBFE);
+                              faseIcon = Icons.build_circle_outlined;
+                          }
+
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppTheme.background,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppTheme.borderLight),
+                              color: AppTheme.surface,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppTheme.border),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x040F172A),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1676,18 +1742,26 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: log.fase == 'Diagnosis' ? AppTheme.warningBg : AppTheme.infoBg,
-                                        borderRadius: BorderRadius.circular(4),
+                                        color: badgeBg,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(color: borderColor),
                                       ),
-                                      child: Text(
-                                        log.fase,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: log.fase == 'Diagnosis' ? AppTheme.warningText : AppTheme.infoText,
-                                        ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(faseIcon, size: 12, color: badgeText),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            log.fase,
+                                            style: TextStyle(
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: badgeText,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                     Text(
@@ -1696,24 +1770,24 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 6),
-                                Text(log.catatan, style: const TextStyle(fontSize: 13, height: 1.3)),
+                                const SizedBox(height: 8),
+                                Text(log.catatan, style: const TextStyle(fontSize: 13, height: 1.35, color: AppTheme.textPrimary)),
                                 if (log.fotoUrl != null && log.fotoUrl!.isNotEmpty) ...[
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 10),
                                   InkWell(
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: BorderRadius.circular(8),
                                     onTap: () {
                                       final img = ApiConstants.resolveImageUrl(log.fotoUrl!);
                                       ImageViewerDialog.show(context, img, title: 'Foto Progres: ${log.fase}');
                                     },
                                     child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.circular(8),
                                       child: CachedNetworkImage(
                                         imageUrl: ApiConstants.resolveImageUrl(log.fotoUrl!),
-                                        width: 120,
-                                        height: 80,
+                                        width: 140,
+                                        height: 90,
                                         fit: BoxFit.cover,
-                                        placeholder: (_, __) => Container(width: 120, height: 80, color: AppTheme.borderLight),
+                                        placeholder: (_, __) => Container(width: 140, height: 90, color: AppTheme.borderLight),
                                       ),
                                     ),
                                   ),

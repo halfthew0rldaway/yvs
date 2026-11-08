@@ -2006,17 +2006,27 @@ export default function TiketServisDetail() {
                             <div className="space-y-4">
                                 {tiket.log_perbaikan.map((log, index) => {
                                     let dotColor = "bg-blue-500";
-                                    let badgeColor = "bg-blue-100 text-blue-700";
-                                    let label = "Perbaikan";
+                                    let badgeColor = "bg-blue-100 text-blue-700 border-blue-200";
+                                    let label = log.fase || "Perbaikan";
 
                                     if (log.fase === "Diagnosis") {
                                         dotColor = "bg-amber-500";
-                                        badgeColor = "bg-amber-100 text-amber-700";
-                                        label = "Diagnosis";
+                                        badgeColor = "bg-amber-100 text-amber-700 border-amber-200";
                                     } else if (log.fase === "Catatan Admin") {
                                         dotColor = "bg-purple-500";
-                                        badgeColor = "bg-purple-100 text-purple-700";
-                                        label = "Admin";
+                                        badgeColor = "bg-purple-100 text-purple-700 border-purple-200";
+                                    } else if (log.fase === "Selesai") {
+                                        dotColor = "bg-emerald-500";
+                                        badgeColor = "bg-emerald-100 text-emerald-700 border-emerald-200";
+                                    } else if (log.fase === "Penyerahan Unit") {
+                                        dotColor = "bg-teal-500";
+                                        badgeColor = "bg-teal-100 text-teal-700 border-teal-200";
+                                    } else if (log.fase === "Pembatalan") {
+                                        dotColor = "bg-rose-500";
+                                        badgeColor = "bg-rose-100 text-rose-700 border-rose-200";
+                                    } else if (log.fase === "Revisi ACC") {
+                                        dotColor = "bg-orange-500";
+                                        badgeColor = "bg-orange-100 text-orange-700 border-orange-200";
                                     }
 
                                     return (

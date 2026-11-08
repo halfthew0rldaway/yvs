@@ -26,21 +26,21 @@ async function create(req, res) {
             }
         }
 
-        // Pastikan teknisi memiliki log diagnosis; jika belum ada, otomatis buatkan dari catatan diagnosis
-        if (req.user.role === "teknisi") {
-            const logDiagnosis = await prisma.logPerbaikan.findFirst({
-                where: { tiket_id: Number(tiket_id), fase: "Diagnosis" }
+        // Pastikan pencatatan log otomatis fase Diagnosis selalu ada
+        const logDiagnosis = await prisma.logPerbaikan.findFirst({
+            where: { tiket_id: Number(tiket_id), fase: "Diagnosis" }
+        });
+        if (!logDiagnosis) {
+            const firstFoto = uploadedPhotos && uploadedPhotos.length > 0 ? uploadedPhotos[0] : null;
+            const catatanLog = req.body.catatan_diagnosis || `[Hasil Diagnosis] Masalah: ${masalah}. Rencana Tindakan: ${solusi}. Estimasi: Rp ${estimasi.toLocaleString('id-ID')}`;
+            await prisma.logPerbaikan.create({
+                data: {
+                    tiket_id: Number(tiket_id),
+                    fase: "Diagnosis",
+                    catatan: catatanLog,
+                    foto_url: firstFoto,
+                }
             });
-            if (!logDiagnosis) {
-                const catatanLog = req.body.catatan_diagnosis || `Diagnosa Awal: ${masalah}. Rencana Tindakan: ${solusi}`;
-                await prisma.logPerbaikan.create({
-                    data: {
-                        tiket_id: Number(tiket_id),
-                        fase: "Diagnosis",
-                        catatan: catatanLog,
-                    }
-                });
-            }
         }
 
         // Cek apakah sudah ada diagnosis

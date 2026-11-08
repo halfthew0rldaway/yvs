@@ -757,6 +757,14 @@ async function update(req, res) {
         // Jika status diubah menjadi selesai dan sebelumnya bukan selesai, set completed_at
         if (status === "selesai" && tiket.status !== "selesai") {
             updateData.completed_at = new Date();
+            // Catat log otomatis saat unit selesai dikerjakan & lolos QC
+            await prisma.logPerbaikan.create({
+                data: {
+                    tiket_id: id,
+                    fase: "Selesai",
+                    catatan: `[Unit Selesai] Pengerjaan teknisi dan verifikasi QC telah selesai. Unit dinyatakan siap diambil oleh pelanggan.`,
+                },
+            });
         } else if (status && status !== "selesai" && tiket.status === "selesai") {
             // Jika dikembalikan ke status sebelum selesai
             updateData.completed_at = null;
@@ -811,11 +819,24 @@ async function update(req, res) {
         // Catat log serah terima jika status diubah menjadi diambil
         if (status === "diambil" && tiket.status !== "diambil") {
             const signer = req.body.nama_penerima || tiket.perangkat?.customer?.nama || "Pelanggan";
+            
+            // Cek apakah ada foto handover yang baru saja diunggah
+            let handoverFotoUrl = null;
+            if (tiket.foto_handover) {
+                try {
+                    const photos = typeof tiket.foto_handover === 'string' ? JSON.parse(tiket.foto_handover) : tiket.foto_handover;
+                    if (Array.isArray(photos) && photos.length > 0) {
+                        handoverFotoUrl = photos[0];
+                    }
+                } catch (_) {}
+            }
+
             await prisma.logPerbaikan.create({
                 data: {
                     tiket_id: id,
                     fase: "Penyerahan Unit",
-                    catatan: `[Handover Selesai] Unit telah resmi diserahkan kepada: ${signer}. Pelanggan membubuhkan tanda tangan serah terima dan foto verifikasi.`,
+                    catatan: `[Handover Selesai] Unit telah resmi diserahkan kepada: ${signer}. Pelanggan membubuhkan tanda tangan serah terima dan foto verifikasi fisik unit.`,
+                    foto_url: handoverFotoUrl,
                 },
             });
         }
@@ -1497,6 +1518,20 @@ async function uploadFotoHandover(req, res) {
                 foto_handover: JSON.stringify(combined)
             }
         });
+
+        // Update foto_url pada log Penyerahan Unit jika sudah ada atau buat entri terlampir
+        if (newUrls.length > 0) {
+            const lastHandoverLog = await prisma.logPerbaikan.findFirst({
+                where: { tiket_id: id, fase: "Penyerahan Unit" },
+                orderBy: { id: "desc" }
+            });
+            if (lastHandoverLog && !lastHandoverLog.foto_url) {
+                await prisma.logPerbaikan.update({
+                    where: { id: lastHandoverLog.id },
+                    data: { foto_url: newUrls[0] }
+                });
+            }
+        }
 
         return res.json({
             message: "Foto bukti serah terima berhasil diunggah",
