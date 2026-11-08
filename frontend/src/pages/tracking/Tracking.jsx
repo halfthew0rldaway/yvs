@@ -160,7 +160,7 @@ function safeParseUrls(val) {
     return [];
 }
 
-function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
+function TrackingProgress({ currentStatus, tiket, activeStepKey, onSelectStep }) {
     if (currentStatus === 'dibatalkan') {
         return (
             <div className="mb-10 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-700">
@@ -178,7 +178,7 @@ function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
             targetId: 'section-intake',
             color: 'blue',
             nodeColor: 'bg-blue-600 border-blue-200 text-white shadow-blue-500/25',
-            activeRing: 'ring-blue-100',
+            activeRing: 'ring-blue-200',
             textColor: 'text-blue-700',
             timestamp: tiket?.created_at,
         },
@@ -189,7 +189,7 @@ function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
             targetId: 'section-diagnosis',
             color: 'amber',
             nodeColor: 'bg-amber-500 border-amber-200 text-white shadow-amber-500/25',
-            activeRing: 'ring-amber-100',
+            activeRing: 'ring-amber-200',
             textColor: 'text-amber-700',
             timestamp: tiket?.diagnosis?.created_at || (tiket?.log_perbaikan?.find(l => l.fase === 'Diagnosis')?.created_at),
         },
@@ -200,7 +200,7 @@ function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
             targetId: 'section-repair',
             color: 'indigo',
             nodeColor: 'bg-indigo-600 border-indigo-200 text-white shadow-indigo-500/25',
-            activeRing: 'ring-indigo-100',
+            activeRing: 'ring-indigo-200',
             textColor: 'text-indigo-700',
             timestamp: tiket?.disetujui_at || (tiket?.log_perbaikan?.find(l => l.fase?.toLowerCase().includes('perbaikan'))?.created_at),
         },
@@ -211,7 +211,7 @@ function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
             targetId: 'section-qc',
             color: 'emerald',
             nodeColor: 'bg-emerald-600 border-emerald-200 text-white shadow-emerald-500/25',
-            activeRing: 'ring-emerald-100',
+            activeRing: 'ring-emerald-200',
             textColor: 'text-emerald-700',
             timestamp: tiket?.completed_at || (tiket?.log_perbaikan?.find(l => l.fase === 'Selesai')?.created_at),
         },
@@ -222,7 +222,7 @@ function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
             targetId: 'section-handover',
             color: 'teal',
             nodeColor: 'bg-teal-600 border-teal-200 text-white shadow-teal-500/25',
-            activeRing: 'ring-teal-100',
+            activeRing: 'ring-teal-200',
             textColor: 'text-teal-700',
             timestamp: tiket?.tgl_diambil || tiket?.invoice?.ttd_customer_at || (tiket?.log_perbaikan?.find(l => l.fase === 'Penyerahan Unit')?.created_at),
         }
@@ -232,24 +232,12 @@ function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
     if (currentStepIndex === -1) currentStepIndex = 0;
 
     const handleStepClick = (step, idx) => {
-        // Can jump if step has been passed or currently active
+        // Can view if step has been passed or currently active
         const isReached = idx <= currentStepIndex;
         if (!isReached) return;
 
-        if (step.key === 'diambil' && onWarrantyClick) {
-            onWarrantyClick();
-            return;
-        }
-
-        const el = document.getElementById(step.targetId);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-4', 'ring-blue-300', 'transition-all');
-            setTimeout(() => {
-                el.classList.remove('ring-4', 'ring-blue-300');
-            }, 1800);
-        } else if (onWarrantyClick && (step.key === 'selesai' || step.key === 'diambil')) {
-            onWarrantyClick();
+        if (onSelectStep) {
+            onSelectStep(step.key);
         }
     };
 
@@ -281,7 +269,8 @@ function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
                 
                 {steps.map((step, idx) => {
                     const isCompleted = idx <= currentStepIndex;
-                    const isActive = idx === currentStepIndex;
+                    const isSelected = activeStepKey === step.key;
+                    const isCurrentRunning = idx === currentStepIndex;
                     const timeStr = formatStepTime(step.timestamp);
 
                     return (
@@ -289,18 +278,18 @@ function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
                             key={idx} 
                             onClick={() => handleStepClick(step, idx)}
                             className={`relative z-10 flex flex-col items-center group ${
-                                isCompleted ? 'cursor-pointer' : 'cursor-default opacity-60'
+                                isCompleted ? 'cursor-pointer' : 'cursor-default opacity-50'
                             }`}
-                            title={isCompleted ? `Ketuk untuk melihat rincian tahap ${step.label}` : undefined}
+                            title={isCompleted ? `Ketuk untuk beralih ke rincian tahap ${step.label}` : undefined}
                         >
                             <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-base border-3 sm:border-4 transition-all duration-300 ${
                                 isCompleted 
                                     ? `${step.nodeColor} shadow-md` 
                                     : 'bg-white border-slate-200 text-slate-400'
-                            } ${isActive ? `ring-4 ${step.activeRing} scale-110 shadow-lg` : ''} ${
+                            } ${isSelected ? `ring-4 ${step.activeRing} scale-115 shadow-xl` : isCurrentRunning ? 'ring-2 ring-slate-300' : ''} ${
                                 isCompleted ? 'group-hover:scale-115 group-active:scale-95' : ''
                             }`}>
-                                {isCompleted && !isActive ? (
+                                {isCompleted && !isSelected ? (
                                     <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6" />
                                 ) : (
                                     idx + 1
@@ -309,7 +298,7 @@ function TrackingProgress({ currentStatus, tiket, onWarrantyClick }) {
 
                             {/* Label */}
                             <span className={`text-3xs xs:text-2xs sm:text-xs md:text-sm font-bold mt-2 whitespace-nowrap transition-colors ${
-                                isCompleted ? (isActive ? `${step.textColor} font-black` : 'text-slate-800') : 'text-slate-400'
+                                isSelected ? `${step.textColor} font-black underline decoration-2 underline-offset-4` : isCompleted ? 'text-slate-800' : 'text-slate-400'
                             }`}>
                                 {step.label}
                             </span>
@@ -980,6 +969,24 @@ function SparepartTransparencyCard({ parts = [] }) {
 
 function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
     const [t, setT] = useState(initialTicket);
+
+    // Determine initial active stage key based on ticket status
+    const getInitialStepKey = (status) => {
+        if (['selesai', 'diambil'].includes(status)) return 'handover';
+        if (status === 'dalam_perbaikan') return 'perbaikan';
+        if (['didiagnosis', 'menunggu_persetujuan', 'disetujui'].includes(status)) return 'diagnosis';
+        return 'diterima';
+    };
+
+    const [activeStepKey, setActiveStepKey] = useState(() => getInitialStepKey(initialTicket?.status));
+
+    // Keep activeStepKey in sync if status changes on refresh
+    useEffect(() => {
+        if (t?.status) {
+            // Only update if current active step isn't manually selected yet
+        }
+    }, [t?.status]);
+
     const [isWarrantyModalOpen, setIsWarrantyModalOpen] = useState(false);
     const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
     const [externalPhoto, setExternalPhoto] = useState(null);
@@ -1005,14 +1012,11 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
     // Highlight & auto-focus state for warranty card specimen
     const [isWarrantyFocused, setIsWarrantyFocused] = useState(false);
 
-    // Auto-focus helper: smoothly scrolls into view and draws attention to the warranty card
+    // Auto-focus helper: switches active stage to handover and opens warranty
     const scrollToWarranty = (openModal = false) => {
-        const el = document.getElementById("section-handover") || document.getElementById("warranty-section") || document.getElementById("warranty-card");
-        if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "center" });
-            setIsWarrantyFocused(true);
-            setTimeout(() => setIsWarrantyFocused(false), 2400);
-        }
+        setActiveStepKey("diambil");
+        setIsWarrantyFocused(true);
+        setTimeout(() => setIsWarrantyFocused(false), 2400);
         if (openModal) {
             setTimeout(() => setIsWarrantyModalOpen(true), 400);
         }
@@ -1309,17 +1313,43 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
             </div>
 
             <div className="p-6 sm:p-8 flex-1">
-                <TrackingProgress currentStatus={t.status} tiket={t} onWarrantyClick={() => scrollToWarranty(false)} />
+                <TrackingProgress 
+                    currentStatus={t.status} 
+                    tiket={t} 
+                    activeStepKey={activeStepKey}
+                    onSelectStep={(key) => setActiveStepKey(key)}
+                />
 
                 {/* Feature 7: SLA Target & Real-time Progress Countdown */}
                 {['diterima', 'didiagnosis', 'menunggu_persetujuan', 'disetujui', 'dalam_perbaikan'].includes(t.status) && (
-                    <div className="mb-8">
+                    <div className="mb-6">
                         <SlaCountdownCard tiket={t} />
                     </div>
                 )}
 
-                {/* QR Code and Warranty Section for Selesai / Diambil (Enhanced with Equal-Height Balanced Holographic Cards) */}
-                {['selesai', 'diambil'].includes(t.status) && (
+                {/* Stage Navigator Quick Header */}
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
+                    <div className="flex items-center gap-2">
+                        <span className="text-3xs sm:text-2xs font-bold uppercase tracking-wider text-slate-500">
+                            Menampilkan Tahap:
+                        </span>
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-black bg-white border border-slate-200 text-slate-800 shadow-2xs">
+                            {activeStepKey === 'diterima' && '1. Diterima & Kondisi Awal'}
+                            {activeStepKey === 'diagnosis' && '2. Hasil Diagnosis'}
+                            {activeStepKey === 'perbaikan' && '3. Proses Perbaikan & Part'}
+                            {activeStepKey === 'selesai' && '4. Selesai & Sertifikasi QC'}
+                            {activeStepKey === 'diambil' && '5. Serah Terima & Garansi'}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-3xs text-slate-400">
+                        <span>Ketuk nomor lingkaran stepper di atas untuk beralih tahap</span>
+                    </div>
+                </div>
+
+                {/* ============================================================== */}
+                {/* STAGE 5: DIAMBIL / SERAH TERIMA (Holographic Cards)           */}
+                {/* ============================================================== */}
+                {activeStepKey === 'diambil' && (
                     <div id="section-handover" className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch scroll-mt-24 rounded-2xl p-2 transition-all">
                         {/* Fast-Pass Pick-up Voucher Card */}
                         <HolographicTiltCard foilType="silver" className="p-6 sm:p-7 flex flex-col justify-between h-full">
@@ -1506,421 +1536,376 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
-                    <div className="flex flex-col h-full">
-                        <h5 className="text-slate-500 font-medium mb-2 text-sm sm:text-base">Keluhan Pelanggan</h5>
-                        <p className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed flex-1 break-words whitespace-pre-line text-sm sm:text-base">{t.keluhan}</p>
-                    </div>
-                    <div className="flex flex-col h-full">
-                        <h5 className="text-slate-500 font-medium mb-2 text-sm sm:text-base">Kelengkapan Perangkat</h5>
-                        <p className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed flex-1 break-words whitespace-pre-line text-sm sm:text-base">{t.kelengkapan || "-"}</p>
-                    </div>
-                </div>
-
-                {/* Feature 4: Structured Deposited Accessories Checklist */}
-                <AccessoriesChecklist kelengkapanDetail={t.kelengkapan_detail} kelengkapanText={null} />
-
-                {/* Feature 1: Photo & Video Media Gallery Modal & Lightbox */}
-                <PhotoGallery 
-                    fotoKondisi={t.foto_kondisi} 
-                    fotoDiagnosis={t.foto_diagnosis} 
-                    fotoSelesai={t.foto_selesai} 
-                    logPerbaikan={t.log_perbaikan} 
-                    externalPhoto={externalPhoto}
-                    onCloseExternal={() => setExternalPhoto(null)}
-                />
-
-                {/* Feature 1: 2D Visual Defect Map for Customer */}
-                {t?.defect_map && (() => {
-                    const defectMapObj = typeof t.defect_map === "string" 
-                        ? (function() { try { return JSON.parse(t.defect_map); } catch(_) { return null; } })() 
-                        : t.defect_map;
-                    const defectItems = Array.isArray(defectMapObj?.items) ? defectMapObj.items : [];
-                    return (
-                        <div className="mb-8 pt-6 border-t border-slate-100">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-blue-600 shadow-2xs shrink-0">
-                                        <PenTool className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <h5 className="font-bold text-slate-900 text-sm">Peta Cacat Fisik Unit (2D Blueprint)</h5>
-                                        <p className="text-xs text-slate-500">
-                                            {defectItems.length > 0
-                                                ? `Transparansi bengkel: ${defectItems.length} goresan/cacat fisik awal terpetakan saat unit diterima.`
-                                                : "Unit tercatat dalam kondisi fisik mulus tanpa cacat fisik eksterior."}
-                                        </p>
-                                    </div>
-                                </div>
-                                <DefectMapBadge 
-                                    value={defectMapObj} 
-                                    onClick={() => setIsDefectModalOpen(true)} 
-                                />
+                {/* ============================================================== */}
+                {/* STAGE 1: DITERIMA (Intake, Keluhan, Foto Awal, Peta Defek)   */}
+                {/* ============================================================== */}
+                {activeStepKey === 'diterima' && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 12 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        transition={{ duration: 0.2 }}
+                        className="space-y-6 mb-8"
+                    >
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="flex flex-col h-full">
+                                <h5 className="text-slate-500 font-medium mb-2 text-sm sm:text-base">Keluhan Pelanggan</h5>
+                                <p className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed flex-1 break-words whitespace-pre-line text-sm sm:text-base">{t.keluhan}</p>
+                            </div>
+                            <div className="flex flex-col h-full">
+                                <h5 className="text-slate-500 font-medium mb-2 text-sm sm:text-base">Kelengkapan Perangkat</h5>
+                                <p className="text-slate-900 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed flex-1 break-words whitespace-pre-line text-sm sm:text-base">{t.kelengkapan || "-"}</p>
                             </div>
                         </div>
-                    );
-                })()}
 
-                {/* Checklist Intake (Before / Diagnose) */}
-                {t?.checklist_intake && (() => {
-                    const intakeObj = typeof t.checklist_intake === "string"
-                        ? (function() { try { return JSON.parse(t.checklist_intake); } catch(_) { return {}; } })()
-                        : (t.checklist_intake || {});
-                    const devCat = getDeviceCategory(t?.jenis_perangkat || t?.perangkat?.jenis_perangkat);
-                    const intakeItems = getHardwareChecklistForCategory(devCat);
-                    return (
-                        <div id="section-intake" className="mb-8 pt-6 border-t border-slate-100 scroll-mt-24 rounded-2xl p-2 transition-all">
-                            <div className="flex items-center gap-2.5 mb-4">
-                                <ClipboardCheck className="w-5 h-5 text-blue-600" />
-                                <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Kondisi Awal Perangkat (Tahap 1: Diterima)</h5>
-                                <span className="text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                                    {devCat}
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 text-xs">
-                                {(intakeItems || []).map(item => {
-                                    const val = getChecklistValue(intakeObj, item.key, item.legacyKey);
-                                    const ItemIcon = item.Icon || item.icon || ClipboardCheck;
-                                    return (
-                                        <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
-                                            val ? "bg-emerald-50/60 border-emerald-200 text-emerald-800" : "bg-rose-50/60 border-rose-200 text-rose-800"
-                                        }`}>
-                                            <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-rose-500"}`} />
-                                            <div className="flex flex-col flex-1 min-w-0">
-                                                <span className={`font-bold text-3xs mb-0.5 uppercase tracking-wide ${val ? "text-emerald-600" : "text-rose-600"}`}>
-                                                    {val ? "Normal / OK" : "Bermasalah"}
-                                                </span>
-                                                <span className={`truncate sm:whitespace-normal sm:break-words font-medium ${val ? "text-slate-800" : "text-rose-700 font-semibold"}`}>{item.label}</span>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    );
-                })()}
+                        {/* Feature 4: Structured Deposited Accessories Checklist */}
+                        <AccessoriesChecklist kelengkapanDetail={t.kelengkapan_detail} kelengkapanText={null} />
 
-                {t.diagnosis && (
-                    <div id="section-diagnosis" className="mb-8 pt-6 border-t border-slate-100 scroll-mt-24 rounded-2xl p-2 transition-all">
-                        {/* Header Section with Badge */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-200/60 shadow-2xs">
-                                    <Search className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <h5 className="font-bold text-slate-900 text-sm sm:text-base">Hasil Diagnosis & Rekomendasi</h5>
-                                    <p className="text-3xs sm:text-2xs text-slate-500">Evaluasi menyeluruh perangkat dan rekomendasi tindakan teknisi</p>
-                                </div>
-                            </div>
-                            <span className="px-2.5 py-1 rounded-full text-3xs xs:text-2xs font-extrabold uppercase tracking-wide bg-amber-50 text-amber-700 border border-amber-200/80">
-                                Tahap Diagnosis
-                            </span>
-                        </div>
+                        {/* Feature 1: Photo & Video Media Gallery Modal & Lightbox */}
+                        <PhotoGallery 
+                            fotoKondisi={t.foto_kondisi} 
+                            fotoDiagnosis={t.foto_diagnosis} 
+                            fotoSelesai={t.foto_selesai} 
+                            logPerbaikan={t.log_perbaikan} 
+                            externalPhoto={externalPhoto}
+                            onCloseExternal={() => setExternalPhoto(null)}
+                        />
 
-                        {/* Balanced 2-Column Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                            {/* Card: Masalah Ditemukan */}
-                            <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all hover:border-slate-300">
-                                <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                                        <h6 className="text-xs sm:text-sm font-bold text-slate-800">Temuan Masalah / Pengecekan</h6>
-                                    </div>
-                                    <span className="text-3xs font-semibold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600">
-                                        Kondisi Fisik & Fungsi
-                                    </span>
-                                </div>
-                                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-                                    <div className="text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words space-y-1">
-                                        {t.diagnosis.masalah}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Card: Solusi / Tindakan */}
-                            <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all hover:border-slate-300">
-                                <div className="px-4 py-3 bg-emerald-50/50 border-b border-emerald-100/70 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Wrench className="w-4 h-4 text-emerald-600 shrink-0" />
-                                        <h6 className="text-xs sm:text-sm font-bold text-slate-800">Rekomendasi Solusi & Tindakan</h6>
-                                    </div>
-                                    <span className="text-3xs font-semibold px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-700">
-                                        Rencana Perbaikan
-                                    </span>
-                                </div>
-                                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-                                    <div className="text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words">
-                                        {t.diagnosis.solusi}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Estimasi Biaya Highlight Banner */}
-                            <div className="md:col-span-2 bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50/60 p-4 sm:p-5 rounded-2xl border border-blue-200/80 shadow-2xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm shrink-0">
-                                        <CreditCard className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <span className="block text-blue-900 font-bold text-xs sm:text-sm">Estimasi Biaya Awal (Jasa & Komponen)</span>
-                                        <span className="block text-3xs sm:text-2xs text-blue-600/80">Biaya estimasi standar sebelum pengerjaan dimulai</span>
-                                    </div>
-                                </div>
-                                <div className="text-left sm:text-right w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-blue-200/50">
-                                    <span className="text-blue-900 font-extrabold text-lg sm:text-xl tracking-tight">
-                                        {formatRupiah(t.diagnosis.estimasi_biaya)}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Feature 4: Interactive Customer Approval Banner */}
-                            {t.status === "menunggu_persetujuan" && (
-                                <div className="md:col-span-2 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-5 sm:p-6 shadow-md mt-4 animate-fade-in">
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                        <div className="flex items-start gap-3.5">
-                                            <div className="p-3 bg-amber-500 text-white rounded-xl shadow-md shrink-0 mt-0.5">
-                                                <Clock className="w-6 h-6 animate-pulse" />
+                        {/* Feature 1: 2D Visual Defect Map for Customer */}
+                        {t?.defect_map && (() => {
+                            const defectMapObj = typeof t.defect_map === "string" 
+                                ? (function() { try { return JSON.parse(t.defect_map); } catch(_) { return null; } })() 
+                                : t.defect_map;
+                            const defectItems = Array.isArray(defectMapObj?.items) ? defectMapObj.items : [];
+                            return (
+                                <div className="pt-2">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-blue-600 shadow-2xs shrink-0">
+                                                <PenTool className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200/90 text-amber-900 border border-amber-300">
-                                                        Tahap Konfirmasi Pelanggan
-                                                    </span>
-                                                </div>
-                                                <h4 className="font-extrabold text-slate-900 text-base sm:text-lg">
-                                                    Persetujuan Estimasi Biaya & Tindakan Perbaikan
-                                                </h4>
-                                                <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
-                                                    Pemeriksaan awal selesai! Teknisi kami siap melakukan perbaikan dengan estimasi biaya di atas. Silakan pilih persetujuan Anda:
+                                                <h5 className="font-bold text-slate-900 text-sm">Peta Cacat Fisik Unit (2D Blueprint)</h5>
+                                                <p className="text-xs text-slate-500">
+                                                    {defectItems.length > 0
+                                                        ? `Transparansi bengkel: ${defectItems.length} goresan/cacat fisik awal terpetakan saat unit diterima.`
+                                                        : "Unit tercatat dalam kondisi fisik mulus tanpa cacat fisik eksterior."}
                                                 </p>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 mt-5 pt-4 border-t border-amber-200/70">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleOpenApprovalModal("reject")}
-                                            className="px-5 py-3 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-                                        >
-                                            <X className="w-4 h-4" />
-                                            <span>Tolak & Batalkan Servis</span>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleOpenApprovalModal("approve")}
-                                            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                                        >
-                                            <Check className="w-4 h-4" />
-                                            <span>Setujui Estimasi Biaya & Kerjakan Sekarang</span>
-                                        </button>
+                                        <DefectMapBadge 
+                                            value={defectMapObj} 
+                                            onClick={() => setIsDefectModalOpen(true)} 
+                                        />
                                     </div>
                                 </div>
-                            )}
+                            );
+                        })()}
 
-                            {/* Cancellation Reason Banner */}
-                            {t.status === "dibatalkan" && (
-                                <div className="md:col-span-2 bg-rose-50 border border-rose-200 rounded-2xl p-5 mt-4 text-xs sm:text-sm text-rose-900 shadow-xs">
-                                    <div className="flex items-start gap-3">
-                                        <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                                        <div>
-                                            <h5 className="font-bold text-rose-950 text-sm">Servis Ini Telah Dibatalkan</h5>
-                                            {t.alasan_batal && (
-                                                <p className="mt-1 text-rose-800">
-                                                    <span className="font-semibold text-rose-900">Alasan:</span> {t.alasan_batal}
-                                                </p>
-                                            )}
-                                            {t.catatan_batal && (
-                                                <p className="mt-0.5 text-rose-700">{t.catatan_batal}</p>
-                                            )}
-                                            <p className="mt-2 text-rose-800 text-xs">
-                                                Unit Anda telah dirapikan kembali dan siap diambil di meja penyerahan toko kami.
-                                            </p>
-                                        </div>
+                        {/* Checklist Intake (Before / Diagnose) */}
+                        {t?.checklist_intake && (() => {
+                            const intakeObj = typeof t.checklist_intake === "string"
+                                ? (function() { try { return JSON.parse(t.checklist_intake); } catch(_) { return {}; } })()
+                                : (t.checklist_intake || {});
+                            const devCat = getDeviceCategory(t?.jenis_perangkat || t?.perangkat?.jenis_perangkat);
+                            const intakeItems = getHardwareChecklistForCategory(devCat);
+                            return (
+                                <div id="section-intake" className="pt-4 border-t border-slate-100 rounded-2xl">
+                                    <div className="flex items-center gap-2.5 mb-4">
+                                        <ClipboardCheck className="w-5 h-5 text-blue-600" />
+                                        <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Kondisi Awal Perangkat (Tahap 1: Diterima)</h5>
+                                        <span className="text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                                            {devCat}
+                                        </span>
                                     </div>
-                                </div>
-                            )}
-                            {t.invoice && (
-                                <div className="md:col-span-2">
-                                    {t.invoice.ttd_customer ? (
-                                        /* Unlocked State: Already Signed */
-                                        <div className="bg-emerald-50 p-5 sm:p-6 rounded-2xl border border-emerald-200 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
-                                            <div className="flex flex-col gap-1.5">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-emerald-700 font-bold text-sm sm:text-base">Total Biaya Akhir (Real)</span>
-                                                    <span className="inline-flex items-center gap-1 text-2xs font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-300">
-                                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                                                        Terverifikasi Digital
-                                                    </span>
-                                                </div>
-                                                <span className="text-emerald-800 font-black text-2xl">{formatRupiah(t.invoice.total_biaya)}</span>
-                                                <div className="flex items-center gap-2 text-xs text-emerald-700 mt-0.5">
-                                                    <div className="w-7 h-7 bg-white rounded-md border border-emerald-200 flex items-center justify-center overflow-hidden shrink-0 p-0.5">
-                                                        <img src={t.invoice.ttd_customer} alt="TTD" className="max-h-full max-w-full object-contain" />
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 text-xs">
+                                        {(intakeItems || []).map(item => {
+                                            const val = getChecklistValue(intakeObj, item.key, item.legacyKey);
+                                            const ItemIcon = item.Icon || item.icon || ClipboardCheck;
+                                            return (
+                                                <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
+                                                    val ? "bg-emerald-50/60 border-emerald-200 text-emerald-800" : "bg-rose-50/60 border-rose-200 text-rose-800"
+                                                }`}>
+                                                    <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-rose-500"}`} />
+                                                    <div className="flex flex-col flex-1 min-w-0">
+                                                        <span className={`font-bold text-3xs mb-0.5 uppercase tracking-wide ${val ? "text-emerald-600" : "text-rose-600"}`}>
+                                                            {val ? "Normal / OK" : "Bermasalah"}
+                                                        </span>
+                                                        <span className={`truncate sm:whitespace-normal sm:break-words font-medium ${val ? "text-slate-800" : "text-rose-700 font-semibold"}`}>{item.label}</span>
                                                     </div>
-                                                    <span>
-                                                        Telah ditandatangani oleh <strong>{t.invoice.ttd_customer_nama || t.customer_nama || "Pelanggan"}</strong>
-                                                        {t.invoice.ttd_customer_at && (
-                                                            <> pada {new Date(t.invoice.ttd_customer_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</>
-                                                        )}
-                                                    </span>
                                                 </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </motion.div>
+                )}
+
+                {/* ============================================================== */}
+                {/* STAGE 2: DIAGNOSIS (Hasil Cek, Solusi, Estimasi Biaya)        */}
+                {/* ============================================================== */}
+                {activeStepKey === 'diagnosis' && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 12 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        transition={{ duration: 0.2 }}
+                        className="space-y-6 mb-8"
+                    >
+                        {t.diagnosis ? (
+                            <div id="section-diagnosis" className="rounded-2xl">
+                                {/* Header Section with Badge */}
+                                <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-200/60 shadow-2xs">
+                                            <Search className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h5 className="font-bold text-slate-900 text-sm sm:text-base">Hasil Diagnosis & Rekomendasi</h5>
+                                            <p className="text-3xs sm:text-2xs text-slate-500">Evaluasi menyeluruh perangkat dan rekomendasi tindakan teknisi</p>
+                                        </div>
+                                    </div>
+                                    <span className="px-2.5 py-1 rounded-full text-3xs xs:text-2xs font-extrabold uppercase tracking-wide bg-amber-50 text-amber-700 border border-amber-200/80">
+                                        Tahap Diagnosis
+                                    </span>
+                                </div>
+
+                                {/* Balanced 2-Column Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                                    {/* Card: Masalah Ditemukan */}
+                                    <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all hover:border-slate-300">
+                                        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                                                <h6 className="text-xs sm:text-sm font-bold text-slate-800">Temuan Masalah / Pengecekan</h6>
                                             </div>
-                                            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-                                                <button 
-                                                    type="button"
-                                                    onClick={() => setIsInvoiceModalOpen(true)}
-                                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 rounded-xl font-bold text-sm transition-all shadow-xs shrink-0 w-full sm:w-auto cursor-pointer"
-                                                >
-                                                    <FileText className="w-4 h-4 text-emerald-600" /> Faktur Invoice
-                                                </button>
-                                                <button 
-                                                    type="button"
-                                                    onClick={() => setIsWarrantyModalOpen(true)}
-                                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-bold text-sm transition-all shadow-sm shrink-0 w-full sm:w-auto cursor-pointer"
-                                                >
-                                                    <Award className="w-4 h-4" /> Sertifikat Garansi
-                                                </button>
+                                            <span className="text-3xs font-semibold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600">
+                                                Kondisi Fisik & Fungsi
+                                            </span>
+                                        </div>
+                                        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                                            <div className="text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words space-y-1">
+                                                {t.diagnosis.masalah}
                                             </div>
                                         </div>
-                                    ) : ['selesai', 'diambil'].includes(t.status) ? (
-                                        /* Locked State: Service finished, requires Customer Signature to unlock Invoice & Warranty */
-                                        <div className="bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/70 p-5 sm:p-6 rounded-2xl border-2 border-indigo-200/90 mt-2 shadow-sm relative overflow-hidden">
-                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-                                                <div className="space-y-2">
-                                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs">
-                                                        <PenTool className="w-3.5 h-3.5" />
-                                                        Sign-to-Unlock: Serah Terima Unit
+                                    </div>
+
+                                    {/* Card: Solusi / Tindakan */}
+                                    <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all hover:border-slate-300">
+                                        <div className="px-4 py-3 bg-emerald-50/50 border-b border-emerald-100/70 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Wrench className="w-4 h-4 text-emerald-600 shrink-0" />
+                                                <h6 className="text-xs sm:text-sm font-bold text-slate-800">Rekomendasi Solusi & Tindakan</h6>
+                                            </div>
+                                            <span className="text-3xs font-semibold px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-700">
+                                                Rencana Perbaikan
+                                            </span>
+                                        </div>
+                                        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                                            <div className="text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words">
+                                                {t.diagnosis.solusi}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Estimasi Biaya Highlight Banner */}
+                                    <div className="md:col-span-2 bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50/60 p-4 sm:p-5 rounded-2xl border border-blue-200/80 shadow-2xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm shrink-0">
+                                                <CreditCard className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <span className="block text-blue-900 font-bold text-xs sm:text-sm">Estimasi Biaya Awal (Jasa & Komponen)</span>
+                                                <span className="block text-3xs sm:text-2xs text-blue-600/80">Biaya estimasi standar sebelum pengerjaan dimulai</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-left sm:text-right w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-blue-200/50">
+                                            <span className="text-blue-900 font-extrabold text-lg sm:text-xl tracking-tight">
+                                                {formatRupiah(t.diagnosis.estimasi_biaya)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Feature 4: Interactive Customer Approval Banner */}
+                                    {t.status === "menunggu_persetujuan" && (
+                                        <div className="md:col-span-2 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-5 sm:p-6 shadow-md mt-4 animate-fade-in">
+                                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                                <div className="flex items-start gap-3.5">
+                                                    <div className="p-3 bg-amber-500 text-white rounded-xl shadow-md shrink-0 mt-0.5">
+                                                        <Clock className="w-6 h-6 animate-pulse" />
                                                     </div>
                                                     <div>
-                                                        <h5 className="font-extrabold text-slate-900 text-base sm:text-lg">
-                                                            Tanda Tangani Nota untuk Membuka Dokumen & Garansi
-                                                        </h5>
-                                                        <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl leading-relaxed">
-                                                            Unit perbaikan Anda telah selesai! Silakan bubuhkan tanda tangan penerimaan secara digital langsung dari HP Anda untuk membuka <strong>Invoice Resmi</strong> dan mengaktifkan <strong>Sertifikat Garansi Digital</strong>.
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200/90 text-amber-900 border border-amber-300">
+                                                                Tahap Konfirmasi Pelanggan
+                                                            </span>
+                                                        </div>
+                                                        <h4 className="font-extrabold text-slate-900 text-base sm:text-lg">
+                                                            Persetujuan Estimasi Biaya & Tindakan Perbaikan
+                                                        </h4>
+                                                        <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                                                            Pemeriksaan awal selesai! Teknisi kami siap melakukan perbaikan dengan estimasi biaya di atas. Silakan pilih persetujuan Anda:
                                                         </p>
                                                     </div>
-                                                    <div className="pt-1 flex items-baseline gap-2">
-                                                        <span className="text-xs font-semibold text-slate-500">Total Biaya:</span>
-                                                        <span className="text-slate-900 font-black text-xl">{formatRupiah(t.invoice.total_biaya)}</span>
-                                                    </div>
                                                 </div>
+                                            </div>
 
-                                                <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setIsSignInvoiceModalOpen(true)}
-                                                        className="flex items-center justify-center gap-2 px-5 py-3.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-indigo-600/20 cursor-pointer w-full sm:w-auto"
-                                                    >
-                                                        <PenTool className="w-4 h-4" />
-                                                        Tanda Tangani & Buka Dokumen
-                                                    </button>
-                                                    <div className="flex items-center justify-center gap-1.5 text-2xs text-slate-500 font-medium">
-                                                        <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-                                                        Aman • Verifikasi 4 Digit No HP
-                                                    </div>
-                                                </div>
+                                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 mt-5 pt-4 border-t border-amber-200/70">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenApprovalModal("reject")}
+                                                    className="px-5 py-3 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                    <span>Tolak & Batalkan Servis</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenApprovalModal("approve")}
+                                                    className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                    <span>Setujui Estimasi Biaya & Kerjakan Sekarang</span>
+                                                </button>
                                             </div>
                                         </div>
-                                    ) : (
-                                        /* Pending State: Service still in progress */
-                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-slate-600 font-bold text-xs uppercase tracking-wider">Perkiraan Biaya Akhir</span>
-                                                <span className="text-slate-900 font-black text-2xl">{formatRupiah(t.invoice.total_biaya)}</span>
+                                    )}
+
+                                    {/* Cancellation Reason Banner */}
+                                    {t.status === "dibatalkan" && (
+                                        <div className="md:col-span-2 bg-rose-50 border border-rose-200 rounded-2xl p-5 mt-4 text-xs sm:text-sm text-rose-900 shadow-xs">
+                                            <div className="flex items-start gap-3">
+                                                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                                                <div>
+                                                    <h5 className="font-bold text-rose-950 text-sm">Servis Ini Telah Dibatalkan</h5>
+                                                    {t.alasan_batal && (
+                                                        <p className="mt-1 text-rose-800">
+                                                            <span className="font-semibold text-rose-900">Alasan:</span> {t.alasan_batal}
+                                                        </p>
+                                                    )}
+                                                    {t.catatan_batal && (
+                                                        <p className="mt-0.5 text-rose-700">{t.catatan_batal}</p>
+                                                    )}
+                                                    <p className="mt-2 text-rose-800 text-xs">
+                                                        Unit Anda telah dirapikan kembali dan siap diambil di meja penyerahan toko kami.
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <p className="text-xs text-slate-500 italic max-w-xs sm:text-right">
-                                                Dokumen invoice dan garansi resmi akan dapat diakses dan ditandatangani saat perbaikan telah dinyatakan selesai.
-                                            </p>
                                         </div>
                                     )}
                                 </div>
-                            )}
-                        </div>
-                    </div>
+                            </div>
+                        ) : (
+                            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-500">
+                                <Search className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                                <p className="font-semibold text-slate-700">Diagnosis Belum Selesai</p>
+                                <p className="text-xs text-slate-500 mt-1">Teknisi sedang melakukan pengecekan menyeluruh pada komponen perangkat.</p>
+                            </div>
+                        )}
+                    </motion.div>
                 )}
                 
-                {/* Feature: Yangversa Sparepart Transparency & Old Part Return SOP Card */}
-                <div id="section-repair" className="scroll-mt-24 rounded-2xl p-2 transition-all">
-                    <SparepartTransparencyCard parts={t?.penggunaan_sparepart} />
-                </div>
-
-                {/* Feature 3: Post-Service Care Tips */}
-                {['selesai', 'diambil'].includes(t?.status) && (
-                    <CareTipsCard tips={t?.tips_perawatan} />
+                {/* ============================================================== */}
+                {/* STAGE 3: DIPERBAIKI (Sparepart Transparency & Pengerjaan)     */}
+                {/* ============================================================== */}
+                {activeStepKey === 'perbaikan' && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 12 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        transition={{ duration: 0.2 }}
+                        className="space-y-6 mb-8"
+                    >
+                        <div id="section-repair" className="rounded-2xl">
+                            <SparepartTransparencyCard parts={t?.penggunaan_sparepart} />
+                        </div>
+                    </motion.div>
                 )}
 
-                {/* Checklist QC (After / Selesai) */}
-                {t?.checklist_qc && ["selesai", "diambil"].includes(t?.status) && (() => {
-                    const qcObj = typeof t.checklist_qc === "string"
-                        ? (function() { try { return JSON.parse(t.checklist_qc); } catch(_) { return {}; } })()
-                        : (t.checklist_qc || {});
-                    const devCat = getDeviceCategory(t?.jenis_perangkat || t?.perangkat?.jenis_perangkat);
-                    const qcItems = getQcChecklistForCategory(devCat);
-                    return (
-                        <div id="section-qc" className="pt-6 border-t border-slate-100 scroll-mt-24 rounded-2xl p-2 transition-all">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                                <div>
-                                    <div className="flex items-center gap-2.5">
-                                        <ClipboardCheck className="w-5 h-5 text-emerald-600" />
-                                        <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Sertifikasi Kendali Mutu (Quality Control WOW Service)</h5>
+                {/* ============================================================== */}
+                {/* STAGE 4: SELESAI (Quality Control WOW Service & Care Tips)    */}
+                {/* ============================================================== */}
+                {activeStepKey === 'selesai' && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 12 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        transition={{ duration: 0.2 }}
+                        className="space-y-6 mb-8"
+                    >
+                        {/* Checklist QC (After / Selesai) */}
+                        {t?.checklist_qc && (() => {
+                            const qcObj = typeof t.checklist_qc === "string"
+                                ? (function() { try { return JSON.parse(t.checklist_qc); } catch(_) { return {}; } })()
+                                : (t.checklist_qc || {});
+                            const devCat = getDeviceCategory(t?.jenis_perangkat || t?.perangkat?.jenis_perangkat);
+                            const qcItems = getQcChecklistForCategory(devCat);
+                            return (
+                                <div id="section-qc" className="rounded-2xl">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                                        <div>
+                                            <div className="flex items-center gap-2.5">
+                                                <ClipboardCheck className="w-5 h-5 text-emerald-600" />
+                                                <h5 className="font-semibold text-slate-900 text-sm sm:text-base">Sertifikasi Kendali Mutu (Quality Control WOW Service)</h5>
+                                            </div>
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                {qcObj.passed_qc
+                                                    ? `Perangkat telah lulus uji kelayakan ${qcItems.length} poin kendali mutu fungsional & pembersihan menyeluruh standar workshop (${devCat.toUpperCase()}).`
+                                                    : "Pemeriksaan fungsi perangkat sedang berlangsung pada tahap akhir perbaikan."}
+                                            </p>
+                                        </div>
+                                        {qcObj.passed_qc && (
+                                            <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1.5 rounded-full uppercase tracking-wider w-fit border border-emerald-300">
+                                                <Award className="w-4 h-4 text-emerald-600" /> Lulus QC Resmi
+                                            </span>
+                                        )}
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-0.5">
-                                        {qcObj.passed_qc
-                                            ? `Perangkat telah lulus uji kelayakan ${qcItems.length} poin kendali mutu fungsional & pembersihan menyeluruh standar workshop (${devCat.toUpperCase()}).`
-                                            : "Pemeriksaan fungsi perangkat sedang berlangsung pada tahap akhir perbaikan."}
-                                    </p>
-                                </div>
-                                {qcObj.passed_qc && (
-                                    <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1.5 rounded-full uppercase tracking-wider w-fit border border-emerald-300">
-                                        <Award className="w-4 h-4 text-emerald-600" /> Lulus QC Resmi
-                                    </span>
-                                )}
-                            </div>
 
-                            {qcObj.passed_qc && (
-                                <div className="mb-4 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center gap-3 text-xs text-emerald-900">
-                                    <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-                                    <div>
-                                        <span className="font-bold">Unit Lolos Standar WOW Service.</span>
-                                        <span className="opacity-90 block">
-                                            Perangkat telah dibersihkan menyeluruh dan seluruh komponen utama diuji kelayakannya sebelum diserahkan.
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                                {(qcItems || []).map(item => {
-                                    const val = getChecklistValue(qcObj, item.key, item.legacyKey);
-                                    const ItemIcon = item.Icon || item.icon || Award;
-                                    return (
-                                        <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
-                                            val ? "bg-emerald-50/60 border-emerald-200 text-emerald-950" : "bg-slate-50 border-slate-200 text-slate-400"
-                                        }`}>
-                                            <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-slate-300"}`} />
-                                            <div className="flex flex-col flex-1 min-w-0">
-                                                <span className={`font-bold text-3xs mb-0.5 uppercase tracking-wide flex items-center gap-1 ${val ? "text-emerald-700" : "text-slate-400"}`}>
-                                                    {val ? (
-                                                        <>
-                                                            <CheckCircle className="w-3 h-3 text-emerald-600 inline shrink-0" />
-                                                            <span>Normal</span>
-                                                        </>
-                                                    ) : "Belum diuji"}
+                                    {qcObj.passed_qc && (
+                                        <div className="mb-4 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center gap-3 text-xs text-emerald-900">
+                                            <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                                            <div>
+                                                <span className="font-bold">Unit Lolos Standar WOW Service.</span>
+                                                <span className="opacity-90 block">
+                                                    Perangkat telah dibersihkan menyeluruh dan seluruh komponen utama diuji kelayakannya sebelum diserahkan.
                                                 </span>
-                                                <span className={`font-semibold text-slate-800 truncate sm:whitespace-normal`}>{item.label}</span>
-                                                <p className="text-3xs text-slate-500 font-normal leading-tight mt-0.5">{item.desc}</p>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    );
-                })()}
+                                    )}
 
-                {/* Feature 6: Rating Teknisi & Rating Toko Google Maps */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                                        {(qcItems || []).map(item => {
+                                            const val = getChecklistValue(qcObj, item.key, item.legacyKey);
+                                            const ItemIcon = item.Icon || item.icon || Award;
+                                            return (
+                                                <div key={item.key} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
+                                                    val ? "bg-emerald-50/60 border-emerald-200 text-emerald-950" : "bg-slate-50 border-slate-200 text-slate-400"
+                                                }`}>
+                                                    <ItemIcon className={`w-4 h-4 shrink-0 mt-0.5 ${val ? "text-emerald-600" : "text-slate-300"}`} />
+                                                    <div className="flex flex-col flex-1 min-w-0">
+                                                        <span className={`font-bold text-3xs mb-0.5 uppercase tracking-wide flex items-center gap-1 ${val ? "text-emerald-700" : "text-slate-400"}`}>
+                                                            {val ? (
+                                                                <>
+                                                                    <CheckCircle className="w-3 h-3 text-emerald-600 inline shrink-0" />
+                                                                    <span>Normal</span>
+                                                                </>
+                                                            ) : "Belum diuji"}
+                                                        </span>
+                                                        <span className={`font-semibold text-slate-800 truncate sm:whitespace-normal`}>{item.label}</span>
+                                                        <p className="text-3xs text-slate-500 font-normal leading-tight mt-0.5">{item.desc}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
+                        {/* Feature 3: Post-Service Care Tips */}
+                        <CareTipsCard tips={t?.tips_perawatan} />
+                    </motion.div>
+                )}
+
+                {/* Rating Teknisi & Rating Toko Google Maps (Available when ticket is selesai or diambil) */}
                 {["selesai", "diambil"].includes(t.status) && (
                     <RatingSection ticket={t} />
                 )}
