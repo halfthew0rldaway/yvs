@@ -50,10 +50,11 @@ function getTicketMediaDirectory(noTiket, date = new Date()) {
  * - DIAGNOSA: Foto/video temuan teknisi saat pengecekan kerusakan
  * - PERBAIKAN: Foto/video log pengerjaan teknisi
  * - SELESAI: Foto/video hasil servis & QC akhir sebelum serah terima
+ * - HANDOVER: Foto fisik serah terima unit / tanda terima invoice kepada pelanggan
  *
  * @param {Object|string} file - Multer file object or file path string
  * @param {string} noTiket - Ticket number
- * @param {string} stage - Workflow stage ("MASUK" | "DIAGNOSA" | "PERBAIKAN" | "SELESAI")
+ * @param {string} stage - Workflow stage ("MASUK" | "DIAGNOSA" | "PERBAIKAN" | "SELESAI" | "HANDOVER")
  * @param {Date} [date] - Timestamp date
  * @returns {string|null} - Final public URL, e.g. "/uploads/tickets/2026/10/TKT-202610-001/TKT-202610-001_MASUK_20261030_134500_a1b2.mp4"
  */

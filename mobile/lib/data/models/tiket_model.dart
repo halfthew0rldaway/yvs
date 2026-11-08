@@ -224,6 +224,7 @@ class TiketModel {
   final String keluhan;
   final String? kelengkapan;
   final dynamic fotoKondisi;
+  final dynamic fotoHandover;
   final String status;
   final String? createdAt;
   final String? completedAt;
@@ -260,6 +261,7 @@ class TiketModel {
     required this.keluhan,
     this.kelengkapan,
     this.fotoKondisi,
+    this.fotoHandover,
     required this.status,
     this.createdAt,
     this.completedAt,
@@ -305,6 +307,28 @@ class TiketModel {
           if (parsed != null) return parsed;
         }
         // Single URL
+        return [str];
+      } catch (_) {
+        return [str];
+      }
+    }
+    return [];
+  }
+
+  /// Parse foto_handover which can be a JSON string, a List, or null
+  List<String> get fotoHandoverList {
+    if (fotoHandover == null) return [];
+    if (fotoHandover is List) {
+      return (fotoHandover as List).map((e) => e.toString()).toList();
+    }
+    if (fotoHandover is String) {
+      final str = fotoHandover as String;
+      if (str.isEmpty) return [];
+      try {
+        if (str.startsWith('[')) {
+          final parsed = _tryParseJsonList(str);
+          if (parsed != null) return parsed;
+        }
         return [str];
       } catch (_) {
         return [str];
@@ -396,6 +420,7 @@ class TiketModel {
       keluhan: json['keluhan']?.toString() ?? '',
       kelengkapan: json['kelengkapan']?.toString(),
       fotoKondisi: json['foto_kondisi'],
+      fotoHandover: json['foto_handover'],
       status: json['status']?.toString() ?? 'diterima',
       createdAt: json['created_at']?.toString(),
       completedAt: json['completed_at']?.toString(),

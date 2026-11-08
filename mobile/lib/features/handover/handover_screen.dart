@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
@@ -604,6 +606,8 @@ class _HandoverBottomSheet extends StatefulWidget {
 class _HandoverBottomSheetState extends State<_HandoverBottomSheet> {
   final SignatureController _sigController = SignatureController();
   final TextEditingController _signerNameController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  final List<XFile> _handoverPhotos = [];
   bool _isSubmitting = false;
   bool _isUnitChecked = true;
 
@@ -620,7 +624,51 @@ class _HandoverBottomSheetState extends State<_HandoverBottomSheet> {
     super.dispose();
   }
 
+  Future<void> _takeHandoverPhoto() async {
+    if (_handoverPhotos.length >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Maksimal 3 foto dokumentasi serah terima.'),
+          backgroundColor: AppTheme.warning,
+        ),
+      );
+      return;
+    }
+    try {
+      final picked = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        setState(() {
+          _handoverPhotos.add(picked);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal membuka kamera: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _submitHandover() async {
+    if (_handoverPhotos.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Wajib ambil minimal 1 foto dokumentasi fisik unit saat serah terima.'),
+          backgroundColor: AppTheme.warning,
+        ),
+      );
+      return;
+    }
+
     if (_sigController.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -649,7 +697,29 @@ class _HandoverBottomSheetState extends State<_HandoverBottomSheet> {
       final base64Signature = await _sigController.toBase64Png();
       final client = ApiClient();
 
-      // 1. Simpan tanda tangan customer jika invoice ada
+      // 1. Upload foto dokumentasi serah terima (HANDOVER)
+      if (_handoverPhotos.isNotEmpty) {
+        try {
+          final formData = FormData();
+          for (final photo in _handoverPhotos) {
+            formData.files.add(MapEntry(
+              'foto_handover',
+              await MultipartFile.fromFile(
+                photo.path,
+                filename: photo.name,
+              ),
+            ));
+          }
+          await client.dio.post(
+            ApiConstants.ticketFotoHandover(widget.tiket.id),
+            data: formData,
+          );
+        } catch (e) {
+          debugPrint('Upload foto handover gagal: $e');
+        }
+      }
+
+      // 2. Simpan tanda tangan customer jika invoice ada
       if (widget.tiket.invoice != null) {
         try {
           await client.dio.post(
@@ -664,10 +734,13 @@ class _HandoverBottomSheetState extends State<_HandoverBottomSheet> {
         }
       }
 
-      // 2. Update status tiket menjadi 'diambil'
+      // 3. Update status tiket menjadi 'diambil'
       await client.dio.put(
         ApiConstants.ticketDetail(widget.tiket.id),
-        data: {'status': 'diambil'},
+        data: {
+          'status': 'diambil',
+          'nama_penerima': signerName,
+        },
       );
 
       HapticFeedback.heavyImpact();
@@ -854,6 +927,108 @@ class _HandoverBottomSheetState extends State<_HandoverBottomSheet> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 14),
+
+            // Foto Bukti Serah Terima Fisik (Anti-Manipulasi)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.camera_alt_outlined, size: 16, color: AppTheme.primary),
+                    SizedBox(width: 6),
+                    Text(
+                      'Foto Bukti Serah Terima',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+                Text(
+                  '${_handoverPhotos.length}/3 Foto (Kamera)',
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.primary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Wajib foto kondisi unit menyala/siap pakai atau pelanggan menerima unit sebagai bukti sah.',
+              style: TextStyle(fontSize: 10.5, color: AppTheme.textMuted),
+            ),
+            const SizedBox(height: 8),
+
+            // Preview Foto & Tombol Ambil Foto Kamera
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ..._handoverPhotos.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final photo = entry.value;
+                    return Stack(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppTheme.border),
+                            image: DecorationImage(
+                              image: FileImage(File(photo.path)),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 2,
+                          right: 10,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _handoverPhotos.removeAt(index);
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, size: 14, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                  if (_handoverPhotos.length < 3)
+                    InkWell(
+                      onTap: _takeHandoverPhoto,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFCBD5E1), style: BorderStyle.solid),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_a_photo_outlined, size: 24, color: AppTheme.primary),
+                            SizedBox(height: 4),
+                            Text(
+                              'Foto Kamera',
+                              style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: AppTheme.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: 14),
 

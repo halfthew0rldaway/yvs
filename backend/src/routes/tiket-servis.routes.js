@@ -19,6 +19,7 @@ const {
     markUnclaimedFollowUp,
     uploadFotoSelesai,
     uploadFotoDiagnosis,
+    uploadFotoHandover,
     revisiAcc
 } = require("../controllers/tiket-servis.controller");
 
@@ -46,6 +47,7 @@ router.get("/:id", getById);
 router.post("/", authorize("admin", "frontman"), upload.array("foto_kondisi", 10), compressMedia, tiketValidation, validate, create);
 router.post("/:id/foto-selesai", authorize("admin", "teknisi"), upload.array("foto_selesai", 15), compressMedia, uploadFotoSelesai);
 router.post("/:id/foto-diagnosis", authorize("admin", "teknisi"), upload.array("foto_diagnosis", 25), compressMedia, uploadFotoDiagnosis);
+router.post("/:id/foto-handover", authorize("admin", "frontman"), upload.array("foto_handover", 5), compressMedia, uploadFotoHandover);
 router.post("/:id/claim-garansi", authorize("admin", "frontman"), createWarrantyClaim);
 router.post("/:id/reminder-garansi", authorize("admin", "frontman", "teknisi"), markWarrantyFollowUp);
 router.post("/:id/reminder-maintenance", authorize("admin", "frontman", "teknisi"), markMaintenanceFollowUp);

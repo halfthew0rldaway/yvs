@@ -129,6 +129,7 @@ class ApiConstants {
   // Invoice & Serah Terima (Handover)
   static String invoiceDetail(int id) => '/invoice/$id';
   static String invoiceCustomerSignature(int id) => '/invoice/$id/signature';
+  static String ticketFotoHandover(int id) => '/tiket-servis/$id/foto-handover';
 
   // Helpers
   static String ticketDetail(int id) => '/tiket-servis/$id';

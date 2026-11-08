@@ -96,6 +96,7 @@ async function track(req, res) {
                 foto_kondisi: t.foto_kondisi,
                 foto_diagnosis: t.foto_diagnosis || t.diagnosis?.foto_diagnosis || null,
                 foto_selesai: t.foto_selesai || null,
+                foto_handover: t.foto_handover || null,
                 defect_map: t.defect_map,
                 sla_paket: t.sla_paket,
                 target_pengecekan_at: t.target_pengecekan_at,

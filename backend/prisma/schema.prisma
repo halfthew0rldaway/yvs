@@ -80,6 +80,7 @@ model TiketServis {
   foto_kondisi   Json?    // Foto fisik saat intake tiket (maks 10)
   foto_diagnosis Json?    // Foto pemeriksaan teknis fase diagnosis (maks 25)
   foto_selesai   Json?    // Foto hasil akhir pengerjaan / QC (maks 15)
+  foto_handover  Json?    // Foto dokumentasi bukti serah terima unit / invoice (maks 5)
   status         String   @default("diterima") // diterima, didiagnosis, menunggu_persetujuan, disetujui, dalam_perbaikan, selesai, diambil, dibatalkan
   created_at     DateTime @default(now())
   completed_at   DateTime?

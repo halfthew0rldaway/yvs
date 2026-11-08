@@ -712,6 +712,9 @@ async function update(req, res) {
         if (req.body.foto_diagnosis !== undefined) {
             updateData.foto_diagnosis = typeof req.body.foto_diagnosis === 'string' ? req.body.foto_diagnosis : JSON.stringify(req.body.foto_diagnosis);
         }
+        if (req.body.foto_handover !== undefined) {
+            updateData.foto_handover = typeof req.body.foto_handover === 'string' ? req.body.foto_handover : JSON.stringify(req.body.foto_handover);
+        }
 
         const effectiveSlaPaket = sla_paket || tiket.sla_paket || "reguler";
 
@@ -801,6 +804,18 @@ async function update(req, res) {
                     tiket_id: id,
                     fase: "Pembatalan",
                     catatan: `[Tiket Dibatalkan] Alasan: ${reason}${note ? ' - ' + note : ''}${fee > 0 ? ` (Biaya Cek Batal: Rp ${fee.toLocaleString('id-ID')})` : ''}`,
+                },
+            });
+        }
+
+        // Catat log serah terima jika status diubah menjadi diambil
+        if (status === "diambil" && tiket.status !== "diambil") {
+            const signer = req.body.nama_penerima || tiket.perangkat?.customer?.nama || "Pelanggan";
+            await prisma.logPerbaikan.create({
+                data: {
+                    tiket_id: id,
+                    fase: "Penyerahan Unit",
+                    catatan: `[Handover Selesai] Unit telah resmi diserahkan kepada: ${signer}. Pelanggan membubuhkan tanda tangan serah terima dan foto verifikasi.`,
                 },
             });
         }
@@ -1451,6 +1466,49 @@ async function uploadFotoSelesai(req, res) {
     }
 }
 
+// Upload Foto Serah Terima / Handover (Maksimal 5)
+async function uploadFotoHandover(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const tiket = await prisma.tiketServis.findUnique({ where: { id } });
+        if (!tiket) {
+            return res.status(404).json({ message: "Tiket tidak ditemukan" });
+        }
+
+        let newUrls = [];
+        if (req.files && req.files.length > 0) {
+            newUrls = relocateTicketMedia(req.files, tiket.nomor_tiket, "HANDOVER");
+        }
+
+        let existing = [];
+        if (req.body.replace !== 'true' && tiket.foto_handover) {
+            try {
+                existing = typeof tiket.foto_handover === 'string' ? JSON.parse(tiket.foto_handover) : tiket.foto_handover;
+            } catch (e) {
+                existing = [];
+            }
+        }
+
+        const combined = [...existing, ...newUrls].slice(0, 5);
+
+        const updated = await prisma.tiketServis.update({
+            where: { id },
+            data: {
+                foto_handover: JSON.stringify(combined)
+            }
+        });
+
+        return res.json({
+            message: "Foto bukti serah terima berhasil diunggah",
+            foto_handover: combined,
+            data: updated
+        });
+    } catch (err) {
+        console.error("Gagal mengunggah foto serah terima:", err);
+        return res.status(500).json({ message: "Gagal mengunggah foto serah terima", error: err.message });
+    }
+}
+
 // Upload Foto Diagnosis (Maksimal 25)
 async function uploadFotoDiagnosis(req, res) {
     try {
@@ -1623,5 +1681,6 @@ module.exports = {
     markUnclaimedFollowUp,
     uploadFotoSelesai,
     uploadFotoDiagnosis,
+    uploadFotoHandover,
     revisiAcc
 };
