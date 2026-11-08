@@ -124,6 +124,172 @@ const MAINTENANCE_TIPS = {
     ]
 };
 
+function getLogPhaseConfig(fase) {
+    switch (fase) {
+        case "Diagnosis":
+            return {
+                label: "Diagnosis",
+                bg: "bg-amber-500",
+                text: "text-amber-700",
+                chipBg: "bg-amber-50 text-amber-700 border-amber-200",
+                ring: "ring-amber-200",
+                icon: "Search"
+            };
+        case "Catatan Admin":
+            return {
+                label: "Admin",
+                bg: "bg-purple-500",
+                text: "text-purple-700",
+                chipBg: "bg-purple-50 text-purple-700 border-purple-200",
+                ring: "ring-purple-200",
+                icon: "ShieldAlert"
+            };
+        case "Selesai":
+            return {
+                label: "Selesai",
+                bg: "bg-emerald-500",
+                text: "text-emerald-700",
+                chipBg: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                ring: "ring-emerald-200",
+                icon: "CheckCircle2"
+            };
+        case "Penyerahan Unit":
+            return {
+                label: "Handover",
+                bg: "bg-teal-500",
+                text: "text-teal-700",
+                chipBg: "bg-teal-50 text-teal-700 border-teal-200",
+                ring: "ring-teal-200",
+                icon: "Handshake"
+            };
+        case "Pembatalan":
+            return {
+                label: "Batal",
+                bg: "bg-rose-500",
+                text: "text-rose-700",
+                chipBg: "bg-rose-50 text-rose-700 border-rose-200",
+                ring: "ring-rose-200",
+                icon: "X"
+            };
+        case "Revisi ACC":
+            return {
+                label: "Revisi ACC",
+                bg: "bg-orange-500",
+                text: "text-orange-700",
+                chipBg: "bg-orange-50 text-orange-700 border-orange-200",
+                ring: "ring-orange-200",
+                icon: "Clock"
+            };
+        default:
+            return {
+                label: fase || "Perbaikan",
+                bg: "bg-blue-600",
+                text: "text-blue-700",
+                chipBg: "bg-blue-50 text-blue-700 border-blue-200",
+                ring: "ring-blue-200",
+                icon: "Wrench"
+            };
+    }
+}
+
+function RepairLogNodesTimeline({ logs = [], onImageClick }) {
+    const [selectedIdx, setSelectedIdx] = useState(logs.length - 1);
+    const activeLog = logs[selectedIdx] || logs[logs.length - 1];
+
+    if (!logs || logs.length === 0) return null;
+
+    return (
+        <div className="flex flex-col gap-3 py-1">
+            {/* Stepper / Horizontal Nodes Bar */}
+            <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-100 overflow-x-auto custom-scrollbar">
+                <div className="flex items-center min-w-max px-2 py-1 relative">
+                    {/* Connecting Line behind nodes */}
+                    <div className="absolute left-6 right-6 top-4 h-1 bg-slate-200 rounded-full z-0"></div>
+
+                    {logs.map((log, idx) => {
+                        const cfg = getLogPhaseConfig(log.fase);
+                        const isSelected = idx === selectedIdx;
+
+                        return (
+                            <div key={log.id || idx} className="relative z-10 flex flex-col items-center mx-3 sm:mx-4 cursor-pointer group">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedIdx(idx)}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white shadow-sm transition-all duration-200 cursor-pointer ${cfg.bg} ${
+                                        isSelected 
+                                            ? `ring-4 ${cfg.ring} scale-110 shadow-md` 
+                                            : 'opacity-75 hover:opacity-100 hover:scale-105'
+                                    }`}
+                                    title={`Klik untuk membaca log ${cfg.label} (${idx + 1})`}
+                                >
+                                    {idx + 1}
+                                </button>
+                                <span 
+                                    onClick={() => setSelectedIdx(idx)}
+                                    className={`text-3xs font-bold mt-1.5 whitespace-nowrap transition-colors ${
+                                        isSelected ? 'text-slate-900 font-extrabold' : 'text-slate-400 group-hover:text-slate-600'
+                                    }`}
+                                >
+                                    {cfg.label}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Selected Log Detail Card (Readable, Expandable & Clickable) */}
+            {activeLog && (
+                <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-100">
+                        <div className="flex items-center gap-2">
+                            <span className={`chip chip-sm font-bold border ${getLogPhaseConfig(activeLog.fase).chipBg}`}>
+                                Node #{selectedIdx + 1}: {activeLog.fase}
+                            </span>
+                        </div>
+                        <span className="text-2xs text-slate-400 font-medium">
+                            {new Date(activeLog.created_at).toLocaleDateString("id-ID", { 
+                                day: 'numeric', 
+                                month: 'short', 
+                                year: 'numeric',
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            })}
+                        </span>
+                    </div>
+
+                    {/* The Whole Log Text (Clean & Highly Readable) */}
+                    <p className="text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words select-text">
+                        {activeLog.catatan}
+                    </p>
+
+                    {/* Foto Lampiran Media (Bila Ada) */}
+                    {activeLog.foto_url && (
+                        <div className="mt-3 pt-2.5 border-t border-slate-100">
+                            <span className="text-3xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+                                Lampiran Foto ({activeLog.fase})
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => onImageClick && onImageClick(activeLog.foto_url)}
+                                className="group relative block rounded-lg overflow-hidden border border-slate-200 hover:opacity-90 transition-opacity cursor-pointer shadow-2xs"
+                                title="Klik untuk memperbesar foto"
+                            >
+                                <img
+                                    src={activeLog.foto_url}
+                                    alt={`Foto ${activeLog.fase}`}
+                                    className="h-20 sm:h-24 max-w-full object-cover rounded-lg group-hover:scale-105 transition-transform"
+                                    loading="lazy"
+                                />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function generateWarrantyWaLink(tiket) {
     if (!tiket || !tiket.perangkat?.customer) return "#";
     const customer = tiket.perangkat.customer;
@@ -2003,72 +2169,10 @@ export default function TiketServisDetail() {
                     </div>
                     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
                         {tiket.log_perbaikan?.length > 0 ? (
-                            <div className="space-y-4">
-                                {tiket.log_perbaikan.map((log, index) => {
-                                    let dotColor = "bg-blue-500";
-                                    let badgeColor = "bg-blue-100 text-blue-700 border-blue-200";
-                                    let label = log.fase || "Perbaikan";
-
-                                    if (log.fase === "Diagnosis") {
-                                        dotColor = "bg-amber-500";
-                                        badgeColor = "bg-amber-100 text-amber-700 border-amber-200";
-                                    } else if (log.fase === "Catatan Admin") {
-                                        dotColor = "bg-purple-500";
-                                        badgeColor = "bg-purple-100 text-purple-700 border-purple-200";
-                                    } else if (log.fase === "Selesai") {
-                                        dotColor = "bg-emerald-500";
-                                        badgeColor = "bg-emerald-100 text-emerald-700 border-emerald-200";
-                                    } else if (log.fase === "Penyerahan Unit") {
-                                        dotColor = "bg-teal-500";
-                                        badgeColor = "bg-teal-100 text-teal-700 border-teal-200";
-                                    } else if (log.fase === "Pembatalan") {
-                                        dotColor = "bg-rose-500";
-                                        badgeColor = "bg-rose-100 text-rose-700 border-rose-200";
-                                    } else if (log.fase === "Revisi ACC") {
-                                        dotColor = "bg-orange-500";
-                                        badgeColor = "bg-orange-100 text-orange-700 border-orange-200";
-                                    }
-
-                                    return (
-                                        <div key={log.id} className="relative pl-6 pb-4 last:pb-0">
-                                            {/* Timeline line */}
-                                            {index !== tiket.log_perbaikan.length - 1 && (
-                                                <div className="absolute left-[7px] top-6 bottom-[-8px] w-px bg-slate-200"></div>
-                                            )}
-                                            {/* Timeline dot */}
-                                            <div className={`absolute left-0 top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm ${dotColor}`}></div>
-                                            
-                                            <div className="bg-slate-50 p-2.5 sm:p-4 rounded-lg sm:rounded-xl border border-slate-100 shadow-sm text-2xs xs:text-xs sm:text-sm min-w-0">
-                                                <div className="mb-2">
-                                                    <span className={`chip chip-sm ${badgeColor}`}>{label}</span>
-                                                </div>
-                                                <p className="text-slate-800 mb-2 whitespace-pre-line break-words">{log.catatan}</p>
-                                            {log.foto_url && (
-                                                <div className="mb-3">
-                                                    <button 
-                                                        type="button" 
-                                                        onClick={() => setSelectedImage(log.foto_url)} 
-                                                        className="block w-fit max-w-full group relative rounded-lg overflow-hidden border border-slate-200 hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
-                                                        title="Klik untuk melihat foto dalam modal"
-                                                    >
-                                                        <img 
-                                                            src={log.foto_url} 
-                                                            alt="Dokumentasi Perbaikan" 
-                                                            loading="lazy"
-                                                            decoding="async"
-                                                            className="h-16 xs:h-20 max-w-full object-cover group-hover:scale-105 transition-transform"
-                                                        />
-                                                    </button>
-                                                </div>
-                                            )}
-                                            <p className="text-2xs text-slate-400 font-medium mt-2">
-                                                {new Date(log.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    );
-                                })}
-                            </div>
+                            <RepairLogNodesTimeline 
+                                logs={tiket.log_perbaikan} 
+                                onImageClick={(url) => setSelectedImage(url)} 
+                            />
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full py-8 text-center">
                                 <ClipboardList className="w-10 h-10 text-slate-200 mb-3" />

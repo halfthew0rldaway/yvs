@@ -222,6 +222,120 @@ function TrackingProgress({ currentStatus, onWarrantyClick }) {
     );
 }
 
+function TrackingRepairLogNodes({ logs = [], onPhotoClick }) {
+    const sorted = [...logs].sort((a, b) => new Date(a?.created_at || 0) - new Date(b?.created_at || 0));
+    const [selectedIdx, setSelectedIdx] = useState(sorted.length - 1);
+    const activeLog = sorted[selectedIdx] || sorted[sorted.length - 1];
+
+    if (!sorted.length) return null;
+
+    const getNodeStyle = (fase) => {
+        switch (fase) {
+            case "Diagnosis":
+                return { bg: "bg-amber-500", chip: "bg-amber-50 text-amber-700 border-amber-200", ring: "ring-amber-200", label: "Diagnosis" };
+            case "Catatan Admin":
+                return { bg: "bg-purple-500", chip: "bg-purple-50 text-purple-700 border-purple-200", ring: "ring-purple-200", label: "Admin" };
+            case "Selesai":
+                return { bg: "bg-emerald-500", chip: "bg-emerald-50 text-emerald-700 border-emerald-200", ring: "ring-emerald-200", label: "Selesai" };
+            case "Penyerahan Unit":
+                return { bg: "bg-teal-500", chip: "bg-teal-50 text-teal-700 border-teal-200", ring: "ring-teal-200", label: "Handover" };
+            case "Pembatalan":
+                return { bg: "bg-rose-500", chip: "bg-rose-50 text-rose-700 border-rose-200", ring: "ring-rose-200", label: "Batal" };
+            case "Revisi ACC":
+                return { bg: "bg-orange-500", chip: "bg-orange-50 text-orange-700 border-orange-200", ring: "ring-orange-200", label: "Revisi ACC" };
+            default:
+                return { bg: "bg-blue-600", chip: "bg-blue-50 text-blue-700 border-blue-200", ring: "ring-blue-200", label: fase || "Perbaikan" };
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            {/* Horizontal Nodes Connector */}
+            <div className="bg-slate-50/90 p-4 rounded-2xl border border-slate-200/80 overflow-x-auto custom-scrollbar">
+                <div className="flex items-center min-w-max px-2 py-2 relative">
+                    <div className="absolute left-6 right-6 top-6 h-1 bg-slate-200 rounded-full z-0"></div>
+                    {sorted.map((log, idx) => {
+                        const style = getNodeStyle(log?.fase);
+                        const isSelected = idx === selectedIdx;
+                        return (
+                            <div key={idx} className="relative z-10 flex flex-col items-center mx-3 sm:mx-4 cursor-pointer group">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedIdx(idx)}
+                                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs text-white shadow-sm transition-all duration-200 cursor-pointer ${style.bg} ${
+                                        isSelected 
+                                            ? `ring-4 ${style.ring} scale-110 shadow-md` 
+                                            : 'opacity-75 hover:opacity-100 hover:scale-105'
+                                    }`}
+                                >
+                                    {idx + 1}
+                                </button>
+                                <span 
+                                    onClick={() => setSelectedIdx(idx)}
+                                    className={`text-3xs font-bold mt-2 whitespace-nowrap transition-colors ${
+                                        isSelected ? 'text-slate-900 font-extrabold' : 'text-slate-400 group-hover:text-slate-600'
+                                    }`}
+                                >
+                                    {style.label}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Selected Node Details Card */}
+            {activeLog && (
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-100">
+                        <span className={`text-3xs uppercase font-bold px-2.5 py-1 rounded-md border ${getNodeStyle(activeLog?.fase).chip}`}>
+                            Tahap #{selectedIdx + 1}: {activeLog?.fase}
+                        </span>
+                        <span className="text-2xs text-slate-400 font-medium">
+                            {formatDateSafe(activeLog?.created_at, { 
+                                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+                            })}
+                        </span>
+                    </div>
+
+                    <p className="text-slate-800 text-sm leading-relaxed whitespace-pre-line break-words mb-3">
+                        {activeLog?.catatan}
+                    </p>
+
+                    {activeLog?.foto_url && (
+                        <div className="pt-2 border-t border-slate-100">
+                            <span className="text-3xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                                Foto Lampiran ({activeLog?.fase})
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => onPhotoClick && onPhotoClick({ 
+                                    url: activeLog.foto_url, 
+                                    label: `Tahap: ${activeLog.fase}` 
+                                })}
+                                className="group relative inline-block rounded-xl overflow-hidden border border-slate-200 shadow-2xs hover:shadow-md transition-all cursor-pointer"
+                                title="Klik untuk melihat foto dalam ukuran penuh"
+                            >
+                                <img 
+                                    src={getMediaUrl(activeLog.foto_url)} 
+                                    alt={`Foto ${activeLog.fase}`} 
+                                    loading="lazy"
+                                    className="h-28 object-cover rounded-xl group-hover:scale-105 transition-transform" 
+                                />
+                                <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-full bg-white/90 text-slate-800 flex items-center justify-center shadow-md">
+                                        <ZoomIn className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function TrackingListItem({ t, onClick }) {
     const statusInfo = STATUS_LABELS[t?.status] || {
         label: t?.status ? String(t.status).replace(/_/g, " ") : "Dalam Proses",
@@ -1680,70 +1794,10 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 <div className="pt-6 border-t border-slate-100">
                     <h5 className="font-semibold text-slate-900 mb-4">Riwayat Perbaikan</h5>
                     {t?.log_perbaikan && t.log_perbaikan.length > 0 ? (
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-3" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
-                            {[...(t.log_perbaikan || [])]
-                                .sort((a,b) => new Date(a?.created_at || 0) - new Date(b?.created_at || 0))
-                                .map((log, logIdx) => {
-                                    let badgeColor = "bg-blue-100 text-blue-700 border border-blue-200";
-                                    let label = log?.fase || "Perbaikan";
-
-                                    if (log?.fase === "Diagnosis") {
-                                        badgeColor = "bg-amber-100 text-amber-700 border border-amber-200";
-                                    } else if (log?.fase === "Catatan Admin") {
-                                        badgeColor = "bg-purple-100 text-purple-700 border border-purple-200";
-                                    } else if (log?.fase === "Selesai") {
-                                        badgeColor = "bg-emerald-100 text-emerald-700 border border-emerald-200";
-                                    } else if (log?.fase === "Penyerahan Unit") {
-                                        badgeColor = "bg-teal-100 text-teal-700 border border-teal-200";
-                                    } else if (log?.fase === "Pembatalan") {
-                                        badgeColor = "bg-rose-100 text-rose-700 border border-rose-200";
-                                    } else if (log?.fase === "Revisi ACC") {
-                                        badgeColor = "bg-orange-100 text-orange-700 border border-orange-200";
-                                    }
-                                    
-                                    return (
-                                        <div key={logIdx} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                            <div className="mb-2">
-                                                <span className={`text-3xs uppercase font-bold px-2 py-0.5 rounded-md ${badgeColor}`}>{label}</span>
-                                            </div>
-                                            <p className="text-slate-900 text-sm whitespace-pre-line mb-2 leading-relaxed">{log?.catatan}</p>
-                                            
-                                            {log?.foto_url && (
-                                                <div className="mb-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setExternalPhoto({ 
-                                                            url: log.foto_url, 
-                                                            label: `Proses: ${(log.catatan || '').substring(0, 50)}...` 
-                                                        })}
-                                                        className="group relative block rounded-xl overflow-hidden border border-slate-200 shadow-2xs hover:shadow-md transition-all cursor-pointer text-left"
-                                                        title="Klik untuk melihat foto dalam modal"
-                                                    >
-                                                        <img 
-                                                            src={getMediaUrl(log.foto_url)} 
-                                                            alt="Dokumentasi Perbaikan" 
-                                                            loading="lazy"
-                                                            decoding="async"
-                                                            className="h-24 sm:h-28 object-cover rounded-xl group-hover:scale-105 transition-transform" 
-                                                        />
-                                                        <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                            <div className="w-8 h-8 rounded-full bg-white/90 text-slate-800 flex items-center justify-center shadow-md">
-                                                                <ZoomIn className="w-4 h-4" />
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                </div>
-                                            )}
-                                            
-                                            <p className="text-xs text-slate-400 font-medium">
-                                                {formatDateSafe(log?.created_at, { 
-                                                    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                                                })}
-                                            </p>
-                                        </div>
-                                    );
-                            })}
-                        </div>
+                        <TrackingRepairLogNodes 
+                            logs={t.log_perbaikan}
+                            onPhotoClick={(item) => setExternalPhoto(item)}
+                        />
                     ) : (
                         <p className="text-sm text-slate-500 italic">Belum ada riwayat perbaikan.</p>
                     )}

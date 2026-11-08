@@ -41,6 +41,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
   bool _isActionLoading = false;
   bool _showPassword = false;
   bool _isHistoryExpanded = false;
+  int? _selectedLogNodeIndex;
 
   void _refresh() {
     ref.invalidate(ticketDetailProvider(widget.ticketId));
@@ -1654,84 +1655,154 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       ],
                     ),
                     const Divider(height: 20),
-                    if (ticket.logPerbaikan != null && ticket.logPerbaikan!.isNotEmpty)
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: ticket.logPerbaikan!.length,
-                        itemBuilder: (context, idx) {
-                          final log = ticket.logPerbaikan![idx];
-                          
-                          // Dynamic Styling Per Fase
-                          Color dotColor = AppTheme.primary;
-                          Color badgeBg = const Color(0xFFEFF6FF); // blue-50
-                          Color badgeText = const Color(0xFF1D4ED8); // blue-700
-                          Color borderColor = const Color(0xFFBFDBFE);
-                          IconData faseIcon = Icons.build_circle_outlined;
+                    if (ticket.logPerbaikan != null && ticket.logPerbaikan!.isNotEmpty) () {
+                      final logs = ticket.logPerbaikan!;
+                      final activeIdx = (_selectedLogNodeIndex != null && _selectedLogNodeIndex! < logs.length)
+                          ? _selectedLogNodeIndex!
+                          : logs.length - 1;
+                      final activeLog = logs[activeIdx];
 
-                          switch (log.fase) {
-                            case 'Diagnosis':
-                              dotColor = const Color(0xFFF59E0B); // Amber
-                              badgeBg = const Color(0xFFFFFBEB);
-                              badgeText = const Color(0xFFB45309);
-                              borderColor = const Color(0xFFFDE68A);
-                              faseIcon = Icons.search_rounded;
-                              break;
-                            case 'Catatan Admin':
-                              dotColor = const Color(0xFF8B5CF6); // Purple
-                              badgeBg = const Color(0xFFF5F3FF);
-                              badgeText = const Color(0xFF6D28D9);
-                              borderColor = const Color(0xFFDDD6FE);
-                              faseIcon = Icons.admin_panel_settings_outlined;
-                              break;
-                            case 'Selesai':
-                              dotColor = const Color(0xFF10B981); // Emerald
-                              badgeBg = const Color(0xFFECFDF5);
-                              badgeText = const Color(0xFF047857);
-                              borderColor = const Color(0xFFA7F3D0);
-                              faseIcon = Icons.check_circle_outline_rounded;
-                              break;
-                            case 'Penyerahan Unit':
-                              dotColor = const Color(0xFF0D9488); // Teal
-                              badgeBg = const Color(0xFFF0FDFA);
-                              badgeText = const Color(0xFF0F766E);
-                              borderColor = const Color(0xFF99F6E4);
-                              faseIcon = Icons.handshake_outlined;
-                              break;
-                            case 'Pembatalan':
-                              dotColor = const Color(0xFFEF4444); // Red
-                              badgeBg = const Color(0xFFFEF2F2);
-                              badgeText = const Color(0xFFB91C1C);
-                              borderColor = const Color(0xFFFECACA);
-                              faseIcon = Icons.cancel_outlined;
-                              break;
-                            case 'Revisi ACC':
-                              dotColor = const Color(0xFFEA580C); // Orange
-                              badgeBg = const Color(0xFFFFF7ED);
-                              badgeText = const Color(0xFFC2410C);
-                              borderColor = const Color(0xFFFED7AA);
-                              faseIcon = Icons.history_rounded;
-                              break;
-                            default: // Perbaikan
-                              dotColor = AppTheme.primary;
-                              badgeBg = const Color(0xFFEFF6FF);
-                              badgeText = const Color(0xFF1D4ED8);
-                              borderColor = const Color(0xFFBFDBFE);
-                              faseIcon = Icons.build_circle_outlined;
-                          }
+                      Color getNodeColor(String fase) {
+                        switch (fase) {
+                          case 'Diagnosis':
+                            return const Color(0xFFF59E0B);
+                          case 'Catatan Admin':
+                            return const Color(0xFF8B5CF6);
+                          case 'Selesai':
+                            return const Color(0xFF10B981);
+                          case 'Penyerahan Unit':
+                            return const Color(0xFF0D9488);
+                          case 'Pembatalan':
+                            return const Color(0xFFEF4444);
+                          case 'Revisi ACC':
+                            return const Color(0xFFEA580C);
+                          default:
+                            return AppTheme.primary;
+                        }
+                      }
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
+                      IconData getNodeIcon(String fase) {
+                        switch (fase) {
+                          case 'Diagnosis':
+                            return Icons.search_rounded;
+                          case 'Catatan Admin':
+                            return Icons.admin_panel_settings_outlined;
+                          case 'Selesai':
+                            return Icons.check_circle_outline_rounded;
+                          case 'Penyerahan Unit':
+                            return Icons.handshake_outlined;
+                          case 'Pembatalan':
+                            return Icons.cancel_outlined;
+                          case 'Revisi ACC':
+                            return Icons.history_rounded;
+                          default:
+                            return Icons.build_circle_outlined;
+                        }
+                      }
+
+                      final activeNodeColor = getNodeColor(activeLog.fase);
+                      final activeNodeIcon = getNodeIcon(activeLog.fase);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Horizontal Stepper Nodes Bar
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: List.generate(logs.length, (idx) {
+                                  final l = logs[idx];
+                                  final isSelected = idx == activeIdx;
+                                  final nodeColor = getNodeColor(l.fase);
+
+                                  return Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          setState(() => _selectedLogNodeIndex = idx);
+                                        },
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            AnimatedContainer(
+                                              duration: const Duration(milliseconds: 200),
+                                              width: isSelected ? 36 : 30,
+                                              height: isSelected ? 36 : 30,
+                                              decoration: BoxDecoration(
+                                                color: nodeColor,
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: isSelected ? Colors.white : Colors.transparent,
+                                                  width: isSelected ? 2.5 : 0,
+                                                ),
+                                                boxShadow: isSelected
+                                                    ? [
+                                                        BoxShadow(
+                                                          color: nodeColor.withValues(alpha: 0.4),
+                                                          blurRadius: 8,
+                                                          offset: const Offset(0, 2),
+                                                        )
+                                                      ]
+                                                    : null,
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  '${idx + 1}',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              l.fase,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                                                color: isSelected ? AppTheme.textPrimary : AppTheme.textMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (idx < logs.length - 1)
+                                        Container(
+                                          width: 28,
+                                          height: 2.5,
+                                          margin: const EdgeInsets.only(bottom: 16, left: 4, right: 4),
+                                          color: const Color(0xFFCBD5E1),
+                                        ),
+                                    ],
+                                  );
+                                }),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Active Node Detail Card (Full Text & Readable)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: AppTheme.surface,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: AppTheme.border),
                               boxShadow: const [
                                 BoxShadow(
-                                  color: Color(0x040F172A),
-                                  blurRadius: 4,
-                                  offset: Offset(0, 1),
+                                  color: Color(0x060F172A),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
                                 ),
                               ],
                             ),
@@ -1742,61 +1813,76 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: badgeBg,
+                                        color: activeNodeColor.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: borderColor),
+                                        border: Border.all(color: activeNodeColor.withValues(alpha: 0.3)),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(faseIcon, size: 12, color: badgeText),
-                                          const SizedBox(width: 4),
+                                          Icon(activeNodeIcon, size: 13, color: activeNodeColor),
+                                          const SizedBox(width: 5),
                                           Text(
-                                            log.fase,
+                                            'Tahap #${activeIdx + 1}: ${activeLog.fase}',
                                             style: TextStyle(
-                                              fontSize: 10.5,
+                                              fontSize: 11,
                                               fontWeight: FontWeight.w700,
-                                              color: badgeText,
+                                              color: activeNodeColor,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                     Text(
-                                      CurrencyFormatter.formatDate(log.createdAt),
+                                      CurrencyFormatter.formatDate(activeLog.createdAt),
                                       style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
-                                Text(log.catatan, style: const TextStyle(fontSize: 13, height: 1.35, color: AppTheme.textPrimary)),
-                                if (log.fotoUrl != null && log.fotoUrl!.isNotEmpty) ...[
-                                  const SizedBox(height: 10),
+                                const SizedBox(height: 10),
+                                Text(
+                                  activeLog.catatan,
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    height: 1.45,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                                if (activeLog.fotoUrl != null && activeLog.fotoUrl!.isNotEmpty) ...[
+                                  const SizedBox(height: 12),
+                                  const Divider(height: 1),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Lampiran Foto:',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                                  ),
+                                  const SizedBox(height: 6),
                                   InkWell(
                                     borderRadius: BorderRadius.circular(8),
                                     onTap: () {
-                                      final img = ApiConstants.resolveImageUrl(log.fotoUrl!);
-                                      ImageViewerDialog.show(context, img, title: 'Foto Progres: ${log.fase}');
+                                      final img = ApiConstants.resolveImageUrl(activeLog.fotoUrl!);
+                                      ImageViewerDialog.show(context, img, title: 'Foto Progres: ${activeLog.fase}');
                                     },
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
                                       child: CachedNetworkImage(
-                                        imageUrl: ApiConstants.resolveImageUrl(log.fotoUrl!),
-                                        width: 140,
-                                        height: 90,
+                                        imageUrl: ApiConstants.resolveImageUrl(activeLog.fotoUrl!),
+                                        width: 150,
+                                        height: 95,
                                         fit: BoxFit.cover,
-                                        placeholder: (_, __) => Container(width: 140, height: 90, color: AppTheme.borderLight),
+                                        placeholder: (_, __) => Container(width: 150, height: 95, color: AppTheme.borderLight),
                                       ),
                                     ),
                                   ),
                                 ],
                               ],
                             ),
-                          );
-                        },
-                      )
+                          ),
+                        ],
+                      );
+                    }()
                     else
                       const Text(
                         'Belum ada catatan aktivitas perbaikan.',
