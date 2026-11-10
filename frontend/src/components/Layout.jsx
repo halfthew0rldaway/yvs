@@ -375,16 +375,17 @@ export default function Layout({ children }) {
         }
     }
 
-    // Periodic maintenance recall fetch across the app (Hanya untuk Admin / Front Office)
+    // Periodic maintenance recall fetch across the app (Hanya untuk Admin / Front Office / Pimpinan)
+    const canAccessCrm = isAdmin || user?.role === "pimpinan";
     const fetchMaintenance = useCallback(async () => {
-        if (!isAdmin) return;
+        if (!canAccessCrm) return;
         try {
             const res = await api.get("/tiket-servis/maintenance/due");
             if (res.data) {
                 setMaintenanceDueData(res.data);
             }
         } catch (_) {}
-    }, [isAdmin]);
+    }, [canAccessCrm]);
 
     useEffect(() => {
         fetchMaintenance();
@@ -915,8 +916,8 @@ export default function Layout({ children }) {
                 </Suspense>
             )}
 
-            {/* Maintenance Recall Modal & Floating CRM Bot (Khusus Admin / Front Office) */}
-            {isAdmin && (
+            {/* Maintenance Recall Modal & Floating CRM Bot (Khusus Admin / Front Office / Pimpinan) */}
+            {canAccessCrm && (
                 <>
                     {isMaintenanceModalOpen && (
                         <Suspense fallback={null}>
@@ -926,7 +927,8 @@ export default function Layout({ children }) {
                             />
                         </Suspense>
                     )}
-                    {!isSidebarOpen && (
+                    {/* Floating CRM Bot: selalu aktif di desktop & tablet, hanya disembunyikan di mobile jika drawer sidebar sedang terbuka */}
+                    {!(isSidebarOpen && typeof window !== "undefined" && window.innerWidth < 1024) && (
                         <CrmFloatingBubble 
                             maintenanceDueData={maintenanceDueData}
                             onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
