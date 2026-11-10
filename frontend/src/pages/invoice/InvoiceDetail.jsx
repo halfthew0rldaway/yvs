@@ -230,9 +230,9 @@ export default function InvoiceDetail() {
     }));
 
     return (
-        <div className="space-y-4 pb-12">
-            {/* Top Navigation & Action Controls */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 no-print bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+        <div className="space-y-4 pb-12 print:space-y-0 print:pb-0 print:m-0">
+            {/* Top Navigation & Action Controls (Strictly Hidden on Print/PDF) */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 no-print print:hidden bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
                 <div className="flex items-center gap-3">
                     <Link to="/invoice" className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors shrink-0">
                         <ArrowLeft className="w-4 h-4" />
@@ -331,8 +331,8 @@ export default function InvoiceDetail() {
             <style>{`
                 @media print {
                     @page {
-                        size: A5 landscape;
-                        margin: 4mm 6mm;
+                        size: 210mm auto;
+                        margin: 3mm 5mm;
                     }
                     html, body, #root, main, .custom-scrollbar {
                         height: auto !important;
@@ -340,6 +340,9 @@ export default function InvoiceDetail() {
                         background: white !important;
                         font-size: 8.5pt !important;
                         line-height: 1.25 !important;
+                    }
+                    .no-print, [data-no-print="true"], header, nav, aside {
+                        display: none !important;
                     }
                     * {
                         -webkit-print-color-adjust: exact !important;
@@ -362,7 +365,7 @@ export default function InvoiceDetail() {
                             </span>
                         </div>
                         <p className="text-slate-600 text-3xs sm:text-2xs print:text-[7.5px] font-medium leading-snug mt-0.5">
-                            Workshop Reparasi Laptop, PC Desktop & Solusi Hardware Spesialis
+                             Workshop Reparasi Laptop, PC Desktop & Solusi Hardware Spesialis
                         </p>
                         <p className="text-slate-500 text-3xs print:text-[7px] leading-tight">
                             Jl. Raya Pekayon No. 25, Bekasi Selatan &bull; WA CS: 0812-3456-7890 &bull; www.komputerawet.com
@@ -371,13 +374,9 @@ export default function InvoiceDetail() {
 
                     {/* Title & Status */}
                     <div className="text-left sm:text-right print:text-right shrink-0">
-                        <div className="flex items-center sm:justify-end print:justify-end gap-1.5 mb-0.5">
+                        <div className="flex items-center sm:justify-end print:justify-end mb-0.5">
                             <span className="text-3xs sm:text-2xs print:text-[7.5px] font-extrabold uppercase tracking-wider text-slate-700">
                                 FAKTUR PEMBAYARAN RESMI
-                            </span>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 text-3xs print:text-[7px] font-bold uppercase">
-                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-700" />
-                                <span>Lunas</span>
                             </span>
                         </div>
                         <p className="text-base sm:text-lg print:text-sm font-mono font-black text-blue-700 leading-tight">
@@ -465,7 +464,7 @@ export default function InvoiceDetail() {
                                     Total {sparepartsList.length + 1} item tindakan jasa & suku cadang
                                 </td>
                                 <td className="py-1.5 px-2 print:py-1 print:px-1 text-right text-slate-700 uppercase tracking-wide text-2xs print:text-[7.5px]">
-                                    TOTAL LUNAS:
+                                    TOTAL BIAYA:
                                 </td>
                                 <td className="py-1.5 px-2 print:py-1 print:px-1 text-right font-black text-sm sm:text-base print:text-[10pt] text-blue-700 font-mono">
                                     {formatRupiah(invoice.total_biaya)}

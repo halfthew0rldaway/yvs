@@ -179,8 +179,8 @@ export default function InvoiceModal({
             <style>{`
                 @media print {
                     @page {
-                        size: A5 landscape;
-                        margin: 4mm 6mm;
+                        size: 210mm auto;
+                        margin: 3mm 5mm;
                     }
                     #root,
                     #root * {
@@ -320,13 +320,9 @@ export default function InvoiceModal({
 
                         {/* Title & Invoice Status Meta */}
                         <div className="text-left sm:text-right print:text-right shrink-0">
-                            <div className="flex items-center sm:justify-end print:justify-end gap-1.5 mb-0.5">
+                            <div className="flex items-center sm:justify-end print:justify-end mb-0.5">
                                 <span className="text-3xs sm:text-2xs print:text-[7.5px] font-extrabold uppercase tracking-wider text-slate-700">
                                     FAKTUR PEMBAYARAN RESMI
-                                </span>
-                                <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 text-3xs print:text-[7px] font-bold uppercase">
-                                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-700" />
-                                    <span>Lunas</span>
                                 </span>
                             </div>
                             <p className="text-base sm:text-lg print:text-sm font-mono font-black text-blue-700 leading-tight">
@@ -437,7 +433,7 @@ export default function InvoiceModal({
                                         Total {sparepartsList.length + 1} item tindakan jasa & suku cadang
                                     </td>
                                     <td className="py-1.5 px-2 print:py-1 print:px-1 text-right text-slate-700 uppercase tracking-wide text-2xs print:text-[7.5px]">
-                                        TOTAL LUNAS:
+                                        TOTAL BIAYA:
                                     </td>
                                     <td className="py-1.5 px-2 print:py-1 print:px-1 text-right font-black text-sm sm:text-base print:text-[10pt] text-blue-700 font-mono">
                                         {formatRupiah(invoice.total_biaya)}

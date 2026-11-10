@@ -69,14 +69,29 @@ export const DocumentPrintService = {
         });
 
         const imgData = canvas.toDataURL("image/jpeg", 0.95);
-        const pdf = new jsPDF(orientation, "mm", format);
 
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-
-        const contentWidth = pdfWidth - (marginMm * 2);
+        // Determine target dimensions
+        // For continuous form / half-A4 invoices: width is 210mm (landscape), height adapts tightly to content
+        const isLandscape = orientation === "landscape";
+        const standardWidth = isLandscape ? 210 : 148;
+        const contentWidth = standardWidth - (marginMm * 2);
         const contentHeight = (canvas.height * contentWidth) / canvas.width;
 
+        // Auto-fit height to content so there is zero trailing blank space/gap at the bottom
+        const fitHeight = options.fitContentHeight ?? true;
+        const pageHeight = fitHeight 
+            ? Math.max(Math.round(contentHeight + (marginMm * 2)), 45)
+            : (isLandscape ? 148 : 210);
+
+        // In jsPDF format parameter: [height, width] for landscape mode
+        const pdfFormat = isLandscape ? [pageHeight, standardWidth] : [standardWidth, pageHeight];
+        const pdf = new jsPDF({
+            orientation,
+            unit: "mm",
+            format: pdfFormat
+        });
+
+        const pdfHeight = pdf.internal.pageSize.getHeight();
         let heightLeft = contentHeight;
         let position = marginMm;
 
