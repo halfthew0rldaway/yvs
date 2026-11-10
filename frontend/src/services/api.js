@@ -17,6 +17,24 @@ const NON_CACHEABLE_ROUTES = [
     "/health"
 ];
 
+const DEFAULT_MEMORY_TTL_MS = 25000; // 25s fast in-memory cache for snappy navigation
+const memoryCache = new Map();
+const inFlightRequests = new Map();
+
+export function clearMemoryCache(pattern) {
+    if (!pattern) {
+        memoryCache.clear();
+        return;
+    }
+    for (const key of memoryCache.keys()) {
+        if (key.includes(pattern)) {
+            memoryCache.delete(key);
+        }
+    }
+}
+
+api.clearMemoryCache = clearMemoryCache;
+
 function isCacheableGet(url = "", method = "") {
     if (String(method).toLowerCase() !== "get") return false;
     return !NON_CACHEABLE_ROUTES.some(route => url.includes(route));
@@ -26,6 +44,79 @@ function getCacheKey(userId, url, params) {
     const query = params ? JSON.stringify(params) : "";
     return `u_${userId || "anon"}:${url}${query ? `?${query}` : ""}`;
 }
+
+// Intercept api.request to provide In-Flight Deduplication & Instant In-Memory SWR Caching
+const originalRequest = api.request.bind(api);
+
+api.request = function (configOrUrl, maybeConfig) {
+    let config = {};
+    if (typeof configOrUrl === "string") {
+        config = maybeConfig || {};
+        config.url = configOrUrl;
+    } else {
+        config = configOrUrl || {};
+    }
+
+    const method = String(config.method || "get").toLowerCase();
+    const url = config.url || "";
+    const user = getStoredUser();
+
+    // Only apply in-flight dedup and memory cache for cacheable GET requests
+    if (isCacheableGet(url, method)) {
+        const cacheKey = getCacheKey(user?.id, url, config.params);
+        const bypassCache = config.skipCache || config.headers?.["Cache-Control"] === "no-cache" || config.params?._t;
+
+        // 1. Instant In-Memory Cache Hit (< 25s)
+        if (!bypassCache && memoryCache.has(cacheKey)) {
+            const entry = memoryCache.get(cacheKey);
+            const age = Date.now() - entry.timestamp;
+            if (age < (config.cacheTtl || DEFAULT_MEMORY_TTL_MS)) {
+                return Promise.resolve({
+                    data: entry.data,
+                    status: entry.status,
+                    statusText: "OK (Memory Cache)",
+                    headers: { ...entry.headers, "x-yvs-cache": "memory" },
+                    config,
+                    isCached: true
+                });
+            }
+        }
+
+        // 2. In-Flight Request Deduplication: reuse identical active network promise
+        if (inFlightRequests.has(cacheKey)) {
+            return inFlightRequests.get(cacheKey);
+        }
+
+        const requestPromise = originalRequest(config)
+            .then((response) => {
+                if (response && response.status >= 200 && response.status < 300) {
+                    memoryCache.set(cacheKey, {
+                        data: response.data,
+                        status: response.status,
+                        headers: response.headers,
+                        timestamp: Date.now()
+                    });
+                }
+                return response;
+            })
+            .finally(() => {
+                inFlightRequests.delete(cacheKey);
+            });
+
+        inFlightRequests.set(cacheKey, requestPromise);
+        return requestPromise;
+    }
+
+    // Auto-clear memory cache prefix on mutations (POST, PUT, PATCH, DELETE)
+    if (["post", "put", "patch", "delete"].includes(method)) {
+        const baseRoute = url.split("?")[0].split("/").slice(0, 3).join("/");
+        if (baseRoute) {
+            clearMemoryCache(baseRoute);
+        }
+    }
+
+    return originalRequest(config);
+};
 
 // Sertakan token di setiap request & catat aktivitas
 api.interceptors.request.use((config) => {

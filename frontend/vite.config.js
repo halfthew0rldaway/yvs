@@ -115,6 +115,18 @@ export default defineConfig({
                         if (id.includes("lucide-react")) {
                             return "vendor-icons";
                         }
+                        if (id.includes("recharts") || id.includes("d3-")) {
+                            return "vendor-charts";
+                        }
+                        if (id.includes("html5-qrcode")) {
+                            return "vendor-scanner";
+                        }
+                        if (id.includes("jspdf") || id.includes("html2canvas")) {
+                            return "vendor-pdf";
+                        }
+                        if (id.includes("@capacitor")) {
+                            return "vendor-capacitor";
+                        }
                     }
                 },
             },

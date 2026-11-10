@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo, Suspense, lazy } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import useRealtimeEvent from "../hooks/useRealtime";
@@ -34,20 +34,22 @@ import {
     Bluetooth
 } from "lucide-react";
 import toast from "react-hot-toast";
-import SopModal from "./SopModal";
 import api from "../services/api";
 import CrmFloatingBubble from "./CrmFloatingBubble";
-import MaintenanceRecallModal from "./MaintenanceRecallModal";
 import ConnectivityBanner from "./ConnectivityBanner";
 import NotificationBell from "./NotificationBell";
-import CameraScannerModal from "./CameraScannerModal";
-import BluetoothModal from "./BluetoothModal";
 import UserAvatar from "./common/UserAvatar";
-import BusinessProcessFlowModal from "./common/BusinessProcessFlowModal";
 import ReloginModal from "./ReloginModal";
 import SessionWarningModal from "./SessionWarningModal";
 import { useIdleTimer } from "../hooks/useIdleTimer";
 import { isRememberMeActive } from "../utils/authStorage";
+
+// Code-split heavy modals so they are only downloaded when opened by user
+const SopModal = lazy(() => import("./SopModal"));
+const BusinessProcessFlowModal = lazy(() => import("./common/BusinessProcessFlowModal"));
+const CameraScannerModal = lazy(() => import("./CameraScannerModal"));
+const BluetoothModal = lazy(() => import("./BluetoothModal"));
+const MaintenanceRecallModal = lazy(() => import("./MaintenanceRecallModal"));
 
 // Menu Groups untuk Pimpinan / Owner / Manajerial (Pengawasan Bisnis, Keuangan, HR & Audit)
 const pimpinanNavGroups = [
@@ -473,7 +475,7 @@ export default function Layout({ children }) {
 
             {/* Sidebar (Fully Toggleable on Desktop & Mobile) */}
             <aside 
-                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] transition-all duration-300 ease-in-out print:hidden ${
+                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] transition-transform duration-250 ease-out will-change-transform lg:transition-[width,transform] print:hidden ${
                     isSidebarOpen 
                         ? "w-72 max-w-[85vw] translate-x-0 shadow-lg lg:shadow-none" 
                         : "-translate-x-full lg:translate-x-0 lg:w-0 lg:border-r-0 lg:overflow-hidden"
@@ -873,37 +875,57 @@ export default function Layout({ children }) {
                 </div>
             </nav>
 
-            {/* In-App SOP Pocket Book Modal */}
-            <SopModal isOpen={isSopModalOpen} onClose={() => setIsSopModalOpen(false)} />
+            {/* In-App SOP Pocket Book Modal (Lazy Loaded) */}
+            {isSopModalOpen && (
+                <Suspense fallback={null}>
+                    <SopModal isOpen={isSopModalOpen} onClose={() => setIsSopModalOpen(false)} />
+                </Suspense>
+            )}
 
-            {/* Interactive Business Flow / SOP Guide Modal */}
-            <BusinessProcessFlowModal 
-                isOpen={isProcessFlowModalOpen} 
-                onClose={() => setIsProcessFlowModalOpen(false)} 
-            />
+            {/* Interactive Business Flow / SOP Guide Modal (Lazy Loaded) */}
+            {isProcessFlowModalOpen && (
+                <Suspense fallback={null}>
+                    <BusinessProcessFlowModal 
+                        isOpen={isProcessFlowModalOpen} 
+                        onClose={() => setIsProcessFlowModalOpen(false)} 
+                    />
+                </Suspense>
+            )}
 
-            {/* In-Browser Camera QR & Barcode Scanner Modal */}
-            <CameraScannerModal
-                isOpen={isScannerOpen}
-                onClose={() => setIsScannerOpen(false)}
-                onScan={handleGlobalScan}
-                title="Pindai Kamera Langsung"
-                subtitle="Arahkan kamera ke QR tiket servis atau barcode fisik suku cadang"
-            />
+            {/* In-Browser Camera QR & Barcode Scanner Modal (Lazy Loaded) */}
+            {isScannerOpen && (
+                <Suspense fallback={null}>
+                    <CameraScannerModal
+                        isOpen={isScannerOpen}
+                        onClose={() => setIsScannerOpen(false)}
+                        onScan={handleGlobalScan}
+                        title="Pindai Kamera Langsung"
+                        subtitle="Arahkan kamera ke QR tiket servis atau barcode fisik suku cadang"
+                    />
+                </Suspense>
+            )}
 
-            {/* Bluetooth Diagnostics & Thermal Printer Modal */}
-            <BluetoothModal
-                isOpen={isBluetoothModalOpen}
-                onClose={() => setIsBluetoothModalOpen(false)}
-            />
+            {/* Bluetooth Diagnostics & Thermal Printer Modal (Lazy Loaded) */}
+            {isBluetoothModalOpen && (
+                <Suspense fallback={null}>
+                    <BluetoothModal
+                        isOpen={isBluetoothModalOpen}
+                        onClose={() => setIsBluetoothModalOpen(false)}
+                    />
+                </Suspense>
+            )}
 
             {/* Maintenance Recall Modal & Floating CRM Bot (Khusus Admin / Front Office) */}
             {isAdmin && (
                 <>
-                    <MaintenanceRecallModal
-                        isOpen={isMaintenanceModalOpen}
-                        onClose={() => setIsMaintenanceModalOpen(false)}
-                    />
+                    {isMaintenanceModalOpen && (
+                        <Suspense fallback={null}>
+                            <MaintenanceRecallModal
+                                isOpen={isMaintenanceModalOpen}
+                                onClose={() => setIsMaintenanceModalOpen(false)}
+                            />
+                        </Suspense>
+                    )}
                     {!isSidebarOpen && (
                         <CrmFloatingBubble 
                             maintenanceDueData={maintenanceDueData}

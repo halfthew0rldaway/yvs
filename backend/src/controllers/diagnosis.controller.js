@@ -26,27 +26,14 @@ async function create(req, res) {
             }
         }
 
-        // Pastikan pencatatan log otomatis fase Diagnosis selalu ada
-        const logDiagnosis = await prisma.logPerbaikan.findFirst({
-            where: { tiket_id: Number(tiket_id), fase: "Diagnosis" }
-        });
-        if (!logDiagnosis) {
-            const firstFoto = uploadedPhotos && uploadedPhotos.length > 0 ? uploadedPhotos[0] : null;
-            const catatanLog = req.body.catatan_diagnosis || `[Hasil Diagnosis] Masalah: ${masalah}. Rencana Tindakan: ${solusi}. Estimasi: Rp ${estimasi.toLocaleString('id-ID')}`;
-            await prisma.logPerbaikan.create({
-                data: {
-                    tiket_id: Number(tiket_id),
-                    fase: "Diagnosis",
-                    catatan: catatanLog,
-                    foto_url: firstFoto,
-                }
-            });
-        }
-
         // Cek apakah sudah ada diagnosis
         const existing = await prisma.diagnosis.findUnique({ where: { tiket_id: Number(tiket_id) } });
         if (existing) {
             return res.status(400).json({ message: "Diagnosis untuk tiket ini sudah ada" });
+        }
+
+        if (estimasi_biaya === undefined || estimasi_biaya === null || String(estimasi_biaya).trim() === "") {
+            return res.status(400).json({ message: "Estimasi biaya harus diisi" });
         }
 
         const estimasi = Number(estimasi_biaya);
@@ -87,6 +74,23 @@ async function create(req, res) {
                     foto_diagnosis: fotoDiagnosisStr || undefined
                 },
             });
+
+            // Pastikan pencatatan log otomatis fase Diagnosis selalu ada di dalam transaksi
+            const logDiagnosis = await tx.logPerbaikan.findFirst({
+                where: { tiket_id: Number(tiket_id), fase: "Diagnosis" }
+            });
+            if (!logDiagnosis) {
+                const firstFoto = uploadedPhotos && uploadedPhotos.length > 0 ? uploadedPhotos[0] : null;
+                const catatanLog = req.body.catatan_diagnosis || `[Hasil Diagnosis] Masalah: ${masalah}. Rencana Tindakan: ${solusi}. Estimasi: Rp ${estimasi.toLocaleString('id-ID')}`;
+                await tx.logPerbaikan.create({
+                    data: {
+                        tiket_id: Number(tiket_id),
+                        fase: "Diagnosis",
+                        catatan: catatanLog,
+                        foto_url: firstFoto,
+                    }
+                });
+            }
 
             return created;
         });

@@ -179,7 +179,7 @@ const TiketCard = memo(function TiketCard({ tiket, onNavigate, onSelectQr }) {
                 if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
                 onNavigate(tiket.id);
             }}
-            className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+            className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer mobile-card-row tap-press"
         >
             <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -342,13 +342,12 @@ export default function TiketServisList() {
         setScopeFilter(urlScope);
         if (urlSearch !== null && urlSearch !== undefined) {
             setSearchTerm(urlSearch);
-            fetchTikets(urlSearch, 1);
         }
         setCurrentPage(1);
     }, [searchParams]);
 
     useEffect(() => {
-        fetchTikets();
+        fetchTikets(searchTerm, currentPage);
     }, [currentPage, itemsPerPage, filter, slaFilter, sortOrder, scopeFilter]);
 
     // Real-Time SSE: Otomatis perbarui antrean tiket saat ada tiket baru atau status berubah

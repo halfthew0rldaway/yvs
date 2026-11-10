@@ -303,7 +303,7 @@ export default function InvoiceList() {
                                         if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
                                         navigate(`/invoice/${inv.id}`);
                                     }}
-                                    className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+                                    className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer mobile-card-row tap-press"
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0 flex-1">

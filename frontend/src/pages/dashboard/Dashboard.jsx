@@ -196,8 +196,8 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
             <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-5">
                 {/* Donut Chart */}
                 <div className="w-full lg:w-5/12 flex flex-col items-center">
-                    <div className="w-full h-[195px] relative flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height="100%">
+                    <div className="w-full h-[195px] min-w-0 relative flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                             <PieChart>
                                 <Pie
                                     data={chartSegments}
@@ -382,7 +382,7 @@ export default function Dashboard() {
     const isManagerialView = isPimpinanOrAdmin;
 
     const loadData = useCallback(async (isInitial = false) => {
-        if (isInitial) setLoading(true);
+        if (isInitial && !data) setLoading(true);
         try {
             const endpoint = isManagerialView ? "/dashboard/admin" : "/dashboard/teknisi";
             const res = await api.get(endpoint);
@@ -400,9 +400,9 @@ export default function Dashboard() {
         } catch (err) {
             console.error(err);
         } finally {
-            if (isInitial) setLoading(false);
+            setLoading(false);
         }
-    }, [isManagerialView]);
+    }, [isManagerialView, data]);
 
     useEffect(() => {
         loadData(true);
@@ -565,8 +565,8 @@ export default function Dashboard() {
                             </Link>
                         </div>
                         {data?.chartData?.length > 0 ? (
-                            <div className="flex-1 w-full min-h-0">
-                                <ResponsiveContainer width="100%" height="100%">
+                            <div className="flex-1 w-full min-h-[260px] min-w-0">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                     <BarChart 
                                         data={data.chartData} 
                                         margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -682,8 +682,8 @@ export default function Dashboard() {
                             </Link>
                         </div>
                         {data?.trendPendapatan?.length > 0 ? (
-                            <div className="flex-1 w-full min-h-0">
-                                <ResponsiveContainer width="100%" height="100%">
+                            <div className="flex-1 w-full min-h-[260px] min-w-0">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                     <AreaChart data={data.trendPendapatan} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="colorPendapatan" x1="0" y1="0" x2="0" y2="1">
@@ -831,8 +831,8 @@ export default function Dashboard() {
                 {data?.chartData?.length > 0 ? (
                     <div className="flex flex-col md:flex-row items-center gap-8 h-auto md:h-[300px]">
                         {/* Donut Chart */}
-                        <div className="w-full md:w-1/2 h-[250px] md:h-full flex items-center justify-center relative">
-                            <ResponsiveContainer width="100%" height="100%">
+                        <div className="w-full md:w-1/2 h-[250px] md:h-full min-w-0 flex items-center justify-center relative">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <PieChart>
                                     <Pie
                                         data={data.chartData}

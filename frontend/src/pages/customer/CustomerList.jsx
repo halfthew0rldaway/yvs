@@ -155,7 +155,7 @@ const CustomerCard = memo(function CustomerCard({
                 if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
                 onSelect(customer.id);
             }}
-            className={`p-3.5 border-b border-slate-100 last:border-b-0 active:bg-blue-50/60 transition-colors cursor-pointer ${
+            className={`p-3.5 border-b border-slate-100 last:border-b-0 active:bg-blue-50/60 transition-colors cursor-pointer mobile-card-row tap-press ${
                 isArchived ? "bg-slate-50/60" : ""
             }`}
         >

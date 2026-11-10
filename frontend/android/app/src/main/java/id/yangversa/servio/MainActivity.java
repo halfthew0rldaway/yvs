@@ -32,6 +32,7 @@ import java.io.FileOutputStream;
 public class MainActivity extends BridgeActivity {
 
     private static final String TAG = "YangversaPrinter";
+    private boolean isPrinterBridgeInitialized = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -89,7 +90,17 @@ public class MainActivity extends BridgeActivity {
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        webView.clearCache(true);
+        webSettings.setOffscreenPreRaster(true);
+        webSettings.setGeolocationEnabled(true);
+        webSettings.setAllowFileAccess(true);
+
+        // Hardware Layer Acceleration for silky smooth scrolling
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
+        if (isPrinterBridgeInitialized) {
+            return;
+        }
+        isPrinterBridgeInitialized = true;
 
         // Native Android Print & Share Bridge
         webView.addJavascriptInterface(new Object() {

@@ -5,6 +5,7 @@
 
 import { getAuthToken } from "../utils/authStorage";
 import AppConfig from "./config";
+import { clearMemoryCache } from "./api";
 
 class RealtimeService {
     constructor() {
@@ -71,6 +72,22 @@ class RealtimeService {
                     } catch (_) {
                         payload = e.data;
                     }
+
+                    // Invalidate memory cache so next query gets fresh server data
+                    if (eventName.startsWith("tiket:")) {
+                        clearMemoryCache("/tiket-servis");
+                        clearMemoryCache("/dashboard");
+                    } else if (eventName.startsWith("invoice:")) {
+                        clearMemoryCache("/invoice");
+                        clearMemoryCache("/dashboard");
+                    } else if (eventName === "dashboard:refresh") {
+                        clearMemoryCache("/dashboard");
+                    } else if (eventName.startsWith("loaner:")) {
+                        clearMemoryCache("/loaner");
+                    } else if (eventName.startsWith("rma:")) {
+                        clearMemoryCache("/rma");
+                    }
+
                     this.dispatchEvent(eventName, payload);
                 });
             });

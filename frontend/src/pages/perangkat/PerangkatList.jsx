@@ -234,7 +234,7 @@ export default function PerangkatList() {
                                             if (e.target.closest('button, a, input, select, textarea, label, [role="button"]')) return;
                                             setSelectedPerangkatId(p.id);
                                         }}
-                                        className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer"
+                                        className="p-3.5 active:bg-blue-50/60 transition-colors cursor-pointer mobile-card-row tap-press"
                                     >
                                         {/* Title row */}
                                         <div className="flex items-start justify-between gap-2">

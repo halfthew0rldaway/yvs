@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import toast from "react-hot-toast";
-import * as XLSX from "xlsx";
 import {
     Clock,
     Camera,
@@ -1081,7 +1080,7 @@ export default function AttendancePage() {
     };
 
     // Export Recap to Excel (XLSX)
-    const exportRecapExcel = () => {
+    const exportRecapExcel = async () => {
         if (!recapData || recapData.length === 0) {
             toast.error("Tidak ada data rekap untuk diekspor");
             return;
@@ -1102,6 +1101,7 @@ export default function AttendancePage() {
             "Total Entri": item.totalRecords
         }));
 
+        const XLSX = await import("xlsx");
         const ws = XLSX.utils.json_to_sheet(formatted);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Rekap Presensi");
