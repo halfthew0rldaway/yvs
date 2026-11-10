@@ -7,6 +7,8 @@
  * - Ingat Saya NON-AKTIF: Disimpan di sessionStorage (otomatis terhapus saat tab/browser ditutup)
  */
 
+import { offlineDataStore } from "../services/offlineDataStore";
+
 const TOKEN_KEY = "token";
 const USER_KEY = "user";
 const REMEMBER_ME_KEY = "yvs_remember_me";
@@ -175,6 +177,11 @@ export function updateAuthToken(newToken) {
  */
 export function clearAuthSession() {
     try {
+        const currentUser = getStoredUser();
+        if (currentUser?.id) {
+            offlineDataStore.clearUserCache(currentUser.id).catch(() => {});
+        }
+
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(REMEMBER_ME_KEY);

@@ -97,7 +97,11 @@ app.use("/api/suppliers", supplierRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
-// Health check
+// Health check endpoints
+app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: Date.now() });
+});
+
 app.get("/", (req, res) => {
     res.json({ 
         message: "Serv.io API - Running",

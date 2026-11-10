@@ -46,12 +46,14 @@ export function WorkshopSignatureStamp({
             <div className="w-full border-b border-slate-400 mt-1 mb-1"></div>
 
             {/* Baseline Name */}
-            <p className="font-bold text-slate-900 text-xs print:text-[9px] w-full truncate max-w-[160px]">
+            <p className="font-bold text-slate-900 text-xs print:text-[9px] w-full truncate max-w-[160px] leading-snug">
                 {name}
             </p>
-            <p className="text-3xs print:text-[7.5px] text-slate-400 mt-0.5">
-                Yangversa Computer
-            </p>
+            {(!name || !name.toLowerCase().includes("yangversa")) && (
+                <p className="text-3xs print:text-[7.5px] text-slate-400 mt-1 block leading-tight font-medium">
+                    Yangversa Computer
+                </p>
+            )}
         </div>
     );
 }

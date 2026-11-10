@@ -27,7 +27,7 @@ import RevisiAccModal from "../../components/RevisiAccModal";
 import CustomerDetailModal from "../../components/CustomerDetailModal";
 import PerangkatDetailModal from "../../components/PerangkatDetailModal";
 import KlaimGaransiModal from "../../components/KlaimGaransiModal";
-import { isVideo } from "../../utils/mediaUtils";
+import { isVideo, getMediaUrl } from "../../utils/mediaUtils";
 import UserAvatar from "../../components/common/UserAvatar";
 
 
@@ -1951,9 +1951,7 @@ export default function TiketServisDetail() {
                                     <p className="meta-label mb-1.5">Foto Kondisi Awal</p>
                                     <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 custom-scrollbar">
                                         {JSON.parse(tiket.foto_kondisi).map((foto, idx) => {
-                                            const imageUrl = foto.startsWith('http')
-    ? foto
-    : `/${foto.replace(/^\/+/, '')}`;
+                                            const imageUrl = getMediaUrl(foto);
                                             return (
                                                 <button 
                                                     key={idx} 
@@ -2005,7 +2003,7 @@ export default function TiketServisDetail() {
                                             </p>
                                             <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 custom-scrollbar">
                                                 {selesaiPhotos.map((foto, idx) => {
-                                                    const imageUrl = foto.startsWith('http') ? foto : `/${foto.replace(/^\/+/, '')}`;
+                                                    const imageUrl = getMediaUrl(foto);
                                                     return (
                                                         <button 
                                                             key={idx} 
@@ -2454,19 +2452,19 @@ export default function TiketServisDetail() {
 
             {/* 3. Status Actions */}
             {canUpdateStatus && filteredTransitions.length > 0 && (
-                <div className="bg-blue-50/50 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 md:p-6 shadow-sm border border-blue-100 mb-5 sm:mb-6 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
-                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0" />
-                        <h2 className="text-xs xs:text-sm sm:text-base font-bold text-blue-900 break-words">Perbarui Status Tiket</h2>
+                <div className="bg-blue-50/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 shadow-xs border border-blue-100 mb-4 sm:mb-5 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
+                        <h2 className="text-xs sm:text-sm font-bold text-blue-900 break-words">Perbarui Status Tiket</h2>
                     </div>
-                    <p className="text-2xs xs:text-xs sm:text-sm text-blue-700/80 mb-4 sm:mb-5">
+                    <p className="text-2xs sm:text-xs text-blue-700/80 mb-2.5">
                         Pilih status dari daftar di bawah ini untuk memperbarui progres perbaikan tiket.
                     </p>
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
+                    <div className="flex items-center gap-2">
                         <select
                             value={selectedStatus}
                             onChange={(e) => setSelectedStatus(e.target.value)}
-                            className="w-full sm:w-auto flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-white border border-blue-200 rounded-lg sm:rounded-xl text-2xs xs:text-xs sm:text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm min-w-0"
+                            className="flex-1 min-w-0 h-9 px-3 bg-white border border-blue-200 rounded-lg text-xs font-normal text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-2xs"
                         >
                             <option value="" disabled>Pilih Status Selanjutnya...</option>
                             {filteredTransitions.map((s) => (
@@ -2476,9 +2474,9 @@ export default function TiketServisDetail() {
                         <button
                             onClick={handleStatusChangeClick}
                             disabled={!selectedStatus}
-                            className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg sm:rounded-xl text-2xs xs:text-xs sm:text-sm font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                            className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer shrink-0 active:scale-[0.98] whitespace-nowrap"
                         >
-                            <Save className="w-4 h-4 shrink-0" />
+                            <Save className="w-3.5 h-3.5 shrink-0" />
                             <span>Simpan Status</span>
                         </button>
                     </div>
@@ -2530,26 +2528,26 @@ export default function TiketServisDetail() {
             {/* 4. Contextual Actions & Alerts */}
             {/* Unassigned Warning for Admin */}
             {isAdmin && !tiket.teknisi && tiket.status !== "selesai" && tiket.status !== "diambil" && tiket.status !== "dibatalkan" && (
-                <div className="bg-amber-50/70 border border-amber-200 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 shadow-xs mb-5 sm:mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 min-w-0">
-                    <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
-                        <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="bg-amber-50/70 border border-amber-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-xs mb-4 sm:mb-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 min-w-0">
+                    <div className="flex items-start gap-2 min-w-0">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                            <h2 className="text-2xs xs:text-xs sm:text-base font-bold text-amber-900 break-words">Perhatian: Tiket Belum Ditugaskan!</h2>
-                            <p className="text-2xs xs:text-xs sm:text-sm text-amber-700/90 mt-0.5 break-words">
-                                Tiket ini belum memiliki teknisi penanggung jawab. Pilih teknisi untuk mulai pengerjaan:
+                            <h2 className="text-xs sm:text-sm font-bold text-amber-900 break-words">Perhatian: Tiket Belum Ditugaskan!</h2>
+                            <p className="text-2xs sm:text-xs text-amber-700/90 mt-0.5 break-words">
+                                Tiket ini belum memiliki teknisi penanggung jawab. Pilih teknisi untuk mulai:
                             </p>
                         </div>
                     </div>
-                    <div className="w-full sm:w-auto flex items-center gap-2 shrink-0">
+                    <div className="w-full sm:w-auto shrink-0">
                         <select
                             value=""
                             onChange={(e) => e.target.value && handleAssignTeknisi(e.target.value)}
                             disabled={isAssigningTeknisi}
-                            className="w-full sm:w-auto text-2xs xs:text-xs font-bold px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg sm:rounded-xl shadow-xs transition-colors cursor-pointer border-none focus:ring-2 focus:ring-amber-500 min-w-0"
+                            className="w-full sm:w-auto h-9 px-3 bg-white border border-amber-300 hover:border-amber-400 text-slate-800 rounded-lg text-xs font-normal shadow-2xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/20 min-w-0"
                         >
-                            <option value="" className="bg-white text-slate-800">-- Pilih & Tugaskan Teknisi --</option>
+                            <option value="" disabled className="text-slate-400">Pilih & Tugaskan Teknisi...</option>
                             {teknisiList.map((t) => (
-                                <option key={t.id} value={t.id} className="bg-white text-slate-800">
+                                <option key={t.id} value={t.id} className="text-slate-800">
                                     {t.nama}
                                 </option>
                             ))}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import useRealtimeEvent from "../hooks/useRealtime";
@@ -30,15 +30,18 @@ import {
     ShieldAlert,
     Clock,
     HelpCircle,
-    Layers
+    Layers,
+    Bluetooth
 } from "lucide-react";
 import toast from "react-hot-toast";
 import SopModal from "./SopModal";
 import api from "../services/api";
 import CrmFloatingBubble from "./CrmFloatingBubble";
 import MaintenanceRecallModal from "./MaintenanceRecallModal";
+import ConnectivityBanner from "./ConnectivityBanner";
 import NotificationBell from "./NotificationBell";
 import CameraScannerModal from "./CameraScannerModal";
+import BluetoothModal from "./BluetoothModal";
 import UserAvatar from "./common/UserAvatar";
 import BusinessProcessFlowModal from "./common/BusinessProcessFlowModal";
 import ReloginModal from "./ReloginModal";
@@ -244,6 +247,40 @@ const frontmanNavGroups = [
     }
 ];
 
+// Standalone memoized clock so that ticking every second doesn't re-render Layout or child pages
+const LiveClock = memo(function LiveClock() {
+    const [currentTime, setCurrentTime] = useState(() => new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const dayName = currentTime.toLocaleDateString("id-ID", { weekday: "long" });
+    const dateFormatted = currentTime.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    });
+    const hours = String(currentTime.getHours()).padStart(2, "0");
+    const minutes = String(currentTime.getMinutes()).padStart(2, "0");
+    const seconds = String(currentTime.getSeconds()).padStart(2, "0");
+
+    return (
+        <div className="hidden xs:flex items-center justify-center gap-1.5 select-none shrink-0 px-1">
+            <span className="font-mono tabular-nums text-xs sm:text-base lg:text-lg font-semibold text-slate-800 tracking-tight">
+                {hours}<span className="text-slate-300">:</span>{minutes}<span className="hidden sm:inline"><span className="text-slate-300">:</span>{seconds}</span>
+            </span>
+            <span className="hidden xl:block w-px h-4 bg-slate-200"></span>
+            <span className="hidden xl:inline text-xs text-slate-500 font-medium whitespace-nowrap">
+                {dayName}, {dateFormatted}
+            </span>
+        </div>
+    );
+});
+
 export default function Layout({ children }) {
     const { 
         user, 
@@ -267,10 +304,10 @@ export default function Layout({ children }) {
     });
     const [isSopModalOpen, setIsSopModalOpen] = useState(false);
     const [isProcessFlowModalOpen, setIsProcessFlowModalOpen] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
     const [maintenanceDueData, setMaintenanceDueData] = useState({ items: [], total_due: 0, urgent_count: 0 });
     const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const [isBluetoothModalOpen, setIsBluetoothModalOpen] = useState(false);
 
     // Idle timer untuk memonitor inaktivitas user
     const {
@@ -364,24 +401,6 @@ export default function Layout({ children }) {
         fetchMaintenance();
     });
 
-    // Live ticking timer every second
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    const dayName = currentTime.toLocaleDateString("id-ID", { weekday: "long" });
-    const dateFormatted = currentTime.toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-    });
-    const hours = String(currentTime.getHours()).padStart(2, "0");
-    const minutes = String(currentTime.getMinutes()).padStart(2, "0");
-    const seconds = String(currentTime.getSeconds()).padStart(2, "0");
-    
     // Close mobile menu on route change, but retain desktop state
     useEffect(() => {
         if (typeof window !== "undefined" && window.innerWidth < 1024) {
@@ -401,9 +420,12 @@ export default function Layout({ children }) {
         return () => window.removeEventListener("resize", handleResize);
     }, [isSidebarOpen]);
 
-    const navGroups = user?.role === "pimpinan"
-        ? pimpinanNavGroups
-        : (isAdmin ? adminNavGroups : (user?.role === "frontman" ? frontmanNavGroups : teknisiNavGroups));
+    const navGroups = useMemo(() => {
+        if (user?.role === "pimpinan") return pimpinanNavGroups;
+        if (isAdmin) return adminNavGroups;
+        if (user?.role === "frontman") return frontmanNavGroups;
+        return teknisiNavGroups;
+    }, [user?.role, isAdmin]);
 
     // Collapsible Groups state: open by default for core daily groups
     const [openGroups, setOpenGroups] = useState({
@@ -451,7 +473,7 @@ export default function Layout({ children }) {
 
             {/* Sidebar (Fully Toggleable on Desktop & Mobile) */}
             <aside 
-                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col transition-all duration-300 ease-in-out print:hidden ${
+                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] transition-all duration-300 ease-in-out print:hidden ${
                     isSidebarOpen 
                         ? "w-72 max-w-[85vw] translate-x-0 shadow-lg lg:shadow-none" 
                         : "-translate-x-full lg:translate-x-0 lg:w-0 lg:border-r-0 lg:overflow-hidden"
@@ -629,7 +651,7 @@ export default function Layout({ children }) {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 print:bg-white print:overflow-visible">
                 {/* Global Top Navbar */}
-                <header className="flex items-center justify-between h-16 px-3.5 sm:px-6 bg-white border-b border-slate-200 shrink-0 print:hidden z-10 gap-2 sm:gap-4">
+                <header className="flex items-center justify-between min-h-[4rem] h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-3.5 sm:px-6 bg-white border-b border-slate-200 shrink-0 print:hidden z-10 gap-2 sm:gap-4">
                     {/* Left: Sidebar Toggle & Page Title */}
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-initial">
                         <button 
@@ -693,16 +715,8 @@ export default function Layout({ children }) {
                         </div>
                     </div>
 
-                    {/* Center: Live Clock (Optimized for Mobile) */}
-                    <div className="hidden xs:flex items-center justify-center gap-1.5 select-none shrink-0 px-1">
-                        <span className="font-mono tabular-nums text-xs sm:text-base lg:text-lg font-semibold text-slate-800 tracking-tight">
-                            {hours}<span className="text-slate-300">:</span>{minutes}<span className="hidden sm:inline"><span className="text-slate-300">:</span>{seconds}</span>
-                        </span>
-                        <span className="hidden xl:block w-px h-4 bg-slate-200"></span>
-                        <span className="hidden xl:inline text-xs text-slate-500 font-medium whitespace-nowrap">
-                            {dayName}, {dateFormatted}
-                        </span>
-                    </div>
+                    {/* Center: Live Clock (Standalone Memoized Component) */}
+                    <LiveClock />
 
                     {/* Right: Quick Action Button & Notification Bell */}
                     <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
@@ -730,6 +744,18 @@ export default function Layout({ children }) {
                             <span className="hidden sm:inline whitespace-nowrap">Scan QR</span>
                         </button>
 
+                        {/* Quick Bluetooth Diagnostics / Thermal Printer */}
+                        <button
+                            type="button"
+                            onClick={() => setIsBluetoothModalOpen(true)}
+                            className="inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-3 bg-blue-50/70 hover:bg-blue-100 text-blue-700 border border-blue-200/70 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
+                            title="Diagnostik Bluetooth & Printer Thermal"
+                            aria-label="Bluetooth"
+                        >
+                            <Bluetooth className="w-4 h-4 text-blue-600 shrink-0" />
+                            <span className="hidden sm:inline whitespace-nowrap">Bluetooth</span>
+                        </button>
+
                         <NotificationBell />
                         {isAdmin && (
                             <Link
@@ -744,8 +770,11 @@ export default function Layout({ children }) {
                     </div>
                 </header>
 
-                {/* Page Content Scroll Container (Added pb-24 for mobile bottom navigation clearance) */}
-                <div className="flex-1 overflow-auto p-3.5 sm:p-6 pb-24 lg:pb-6 print:p-0 print:overflow-visible custom-scrollbar">
+                {/* In-flow Connectivity Notice (Visible ONLY when offline, within layout flow, zero overlap) */}
+                <ConnectivityBanner />
+
+                {/* Page Content Scroll Container (With robust safe-area & mobile bottom nav clearance) */}
+                <div className="flex-1 overflow-auto p-3.5 sm:p-6 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] lg:pb-6 print:p-0 print:overflow-visible custom-scrollbar overscroll-y-contain">
                     <div className="w-full space-y-6 print:space-y-0">
                         {children}
                     </div>
@@ -758,7 +787,7 @@ export default function Layout({ children }) {
                     {/* Home / Dashboard */}
                     <Link
                         to="/dashboard"
-                        className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
+                        className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
                             location.pathname === "/dashboard" ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
                         }`}
                     >
@@ -769,7 +798,7 @@ export default function Layout({ children }) {
                     {/* Tiket Servis */}
                     <Link
                         to="/tiket-servis"
-                        className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
+                        className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
                             location.pathname.startsWith("/tiket-servis") && location.pathname !== "/tiket-servis/tambah"
                                 ? "text-blue-600 font-bold"
                                 : "text-slate-500 hover:text-slate-900 font-medium"
@@ -783,18 +812,22 @@ export default function Layout({ children }) {
                     {isAdmin ? (
                         <Link
                             to="/tiket-servis/tambah"
-                            className="flex flex-col items-center justify-center -mt-5 group"
+                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
+                                location.pathname === "/tiket-servis/tambah"
+                                    ? "text-blue-600 font-bold"
+                                    : "text-slate-500 hover:text-slate-900 font-medium"
+                            }`}
                             title="Buat Tiket Baru"
                         >
-                            <div className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-blue-500/35 border-3 border-white transition-all">
-                                <Plus className="w-6 h-6 stroke-[2.5]" />
+                            <div className="w-8 h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-xs mb-0.5">
+                                <Plus className="w-4 h-4 stroke-[2.5]" />
                             </div>
-                            <span className="text-3xs font-bold text-blue-600 mt-0.5">Baru</span>
+                            <span className="text-3xs tracking-tight font-semibold text-blue-600">Baru</span>
                         </Link>
                     ) : (
                         <Link
                             to="/sparepart"
-                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
+                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
                                 location.pathname.startsWith("/sparepart") ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
                             }`}
                         >
@@ -807,7 +840,7 @@ export default function Layout({ children }) {
                     {isAdmin ? (
                         <Link
                             to="/invoice"
-                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
+                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
                                 location.pathname.startsWith("/invoice") ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
                             }`}
                         >
@@ -817,7 +850,7 @@ export default function Layout({ children }) {
                     ) : (
                         <Link
                             to="/wiki"
-                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
+                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
                                 location.pathname.startsWith("/wiki") ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
                             }`}
                         >
@@ -830,7 +863,7 @@ export default function Layout({ children }) {
                     <button
                         type="button"
                         onClick={() => setIsSidebarOpen(true)}
-                        className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors cursor-pointer ${
+                        className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 cursor-pointer ${
                             isSidebarOpen ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
                         }`}
                     >
@@ -858,6 +891,12 @@ export default function Layout({ children }) {
                 subtitle="Arahkan kamera ke QR tiket servis atau barcode fisik suku cadang"
             />
 
+            {/* Bluetooth Diagnostics & Thermal Printer Modal */}
+            <BluetoothModal
+                isOpen={isBluetoothModalOpen}
+                onClose={() => setIsBluetoothModalOpen(false)}
+            />
+
             {/* Maintenance Recall Modal & Floating CRM Bot (Khusus Admin / Front Office) */}
             {isAdmin && (
                 <>
@@ -865,10 +904,12 @@ export default function Layout({ children }) {
                         isOpen={isMaintenanceModalOpen}
                         onClose={() => setIsMaintenanceModalOpen(false)}
                     />
-                    <CrmFloatingBubble 
-                        maintenanceDueData={maintenanceDueData}
-                        onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
-                    />
+                    {!isSidebarOpen && (
+                        <CrmFloatingBubble 
+                            maintenanceDueData={maintenanceDueData}
+                            onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
+                        />
+                    )}
                 </>
             )}
 

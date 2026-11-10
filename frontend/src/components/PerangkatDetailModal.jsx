@@ -118,45 +118,46 @@ export default function PerangkatDetailModal({ perangkatId, isOpen, onClose, onS
             <div className="modal-panel modal-surface modal-sheet-enter max-w-4xl z-10">
                 <div className="modal-grabber" />
                 {/* Header */}
-                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 bg-white flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-                            <DeviceIcon className="w-5 h-5" />
+                <div className="px-3.5 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-white flex items-center justify-between gap-2 min-w-0">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+                            <DeviceIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-base text-slate-900 leading-tight">
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                <h3 className="font-bold text-sm sm:text-base text-slate-900 leading-tight truncate">
                                     {loading ? "Memuat..." : `${perangkat?.merek || ""} ${perangkat?.model || "Detail Perangkat"}`}
                                 </h3>
                                 {perangkat?.jenis_perangkat && (
-                                    <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-slate-100 text-slate-700">
+                                    <span className="px-1.5 py-0.5 rounded text-3xs sm:text-2xs font-semibold bg-slate-100 text-slate-700 shrink-0">
                                         {perangkat.jenis_perangkat}
                                     </span>
                                 )}
                             </div>
-                            <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
-                                <span className="font-mono">SN: {perangkat?.serial_number || "Tanpa Serial Number"}</span>
-                                <span>•</span>
-                                <span>Terdaftar: {formatDate(perangkat?.created_at)}</span>
+                            <p className="text-2xs sm:text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <span className="font-mono truncate max-w-[120px] sm:max-w-none">SN: {perangkat?.serial_number || "Tanpa SN"}</span>
+                                <span className="text-slate-300">•</span>
+                                <span className="whitespace-nowrap">Terdaftar: {formatDate(perangkat?.created_at)}</span>
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         {isAdmin && perangkat && (
                             <Link
                                 to={`/perangkat/edit/${perangkat.id}${window.location.pathname ? `?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}` : ''}`}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all"
+                                className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg sm:rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer active:scale-95"
                             >
-                                <Edit2 className="w-3.5 h-3.5" />
-                                <span>Edit Unit</span>
+                                <Edit2 className="w-3.5 h-3.5 shrink-0" />
+                                <span className="whitespace-nowrap">Edit Unit</span>
                             </Link>
                         )}
                         <button
+                            type="button"
                             onClick={onClose}
-                            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg sm:rounded-xl transition-colors shrink-0 cursor-pointer active:scale-95"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                     </div>
                 </div>

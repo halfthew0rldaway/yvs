@@ -4,6 +4,7 @@
  */
 
 import { getAuthToken } from "../utils/authStorage";
+import AppConfig from "./config";
 
 class RealtimeService {
     constructor() {
@@ -29,9 +30,10 @@ class RealtimeService {
         }
 
         const token = getAuthToken();
+        const baseEndpoint = AppConfig.resolveApiUrl("realtime/events");
         const url = token 
-            ? `/api/realtime/events?token=${encodeURIComponent(token)}` 
-            : `/api/realtime/events`;
+            ? `${baseEndpoint}?token=${encodeURIComponent(token)}` 
+            : baseEndpoint;
 
         try {
             this.eventSource = new EventSource(url);

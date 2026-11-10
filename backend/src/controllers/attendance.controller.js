@@ -57,14 +57,26 @@ async function getOrCreatePolicy() {
         policy = await prisma.attendancePolicy.create({
             data: {
                 nama_kantor: "Workshop Utama Pekayon",
-                latitude: -6.260626,
-                longitude: 106.987405,
-                radius_meter: 300,
+                latitude: -6.26064,
+                longitude: 106.98744,
+                radius_meter: 500,
                 jam_masuk: "09:00",
                 toleransi_menit: 15,
                 jam_pulang: "18:00",
                 is_geofence_active: true,
                 is_selfie_required: true
+            }
+        });
+    } else if (policy.latitude < -6.265 || policy.latitude > -6.255 || policy.longitude < 106.980 || policy.radius_meter < 500) {
+        // Auto-migrate legacy coordinates (e.g. Jakasetia -6.274323) to real Pekayon workshop (-6.26064, 106.98744, 500m)
+        policy = await prisma.attendancePolicy.update({
+            where: { id: policy.id },
+            data: {
+                nama_kantor: "Workshop Utama Pekayon",
+                latitude: -6.26064,
+                longitude: 106.98744,
+                is_geofence_active: true,
+                radius_meter: 500
             }
         });
     }

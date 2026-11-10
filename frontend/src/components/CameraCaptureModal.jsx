@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { 
-    X, Camera, RefreshCw, Check, AlertCircle, Image as ImageIcon, Trash2
+    X, Camera, RefreshCw, Check, AlertCircle, Image as ImageIcon, Trash2, Smartphone
 } from "lucide-react";
+import { CameraService, isNativePlatform } from "../services/nativeServices";
 
 export default function CameraCaptureModal({
     isOpen,
@@ -191,6 +192,20 @@ export default function CameraCaptureModal({
         }
     }
 
+    async function handleNativeCapture() {
+        try {
+            const result = await CameraService.capturePhoto({ source: "CAMERA", quality: 90 });
+            if (result && result.file) {
+                onCapture(result.file);
+                toast.success(`Foto ${currentPhotos.length + 1} berhasil diambil!`);
+            }
+        } catch (err) {
+            if (!err.message?.includes("batal") && !err.message?.includes("cancelled")) {
+                toast.error(err.message || "Gagal mengambil foto dari kamera");
+            }
+        }
+    }
+
     if (!isOpen) return null;
 
     return (
@@ -285,7 +300,15 @@ export default function CameraCaptureModal({
                                 <p className="text-xs text-slate-500 max-w-sm mb-3">
                                     {cameraError}
                                 </p>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={handleNativeCapture}
+                                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                                    >
+                                        <Smartphone className="w-3.5 h-3.5" />
+                                        <span>Kamera HP (Native)</span>
+                                    </button>
                                     <button
                                         type="button"
                                         onClick={startCamera}

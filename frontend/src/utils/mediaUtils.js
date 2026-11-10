@@ -2,6 +2,8 @@
  * Utility functions for media handling, video detection, and browser-side image compression.
  */
 
+import AppConfig from "../services/config";
+
 const VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm", ".mkv", ".3gp", ".avi", ".m4v"];
 
 /**
@@ -52,11 +54,7 @@ export function getMediaUrl(media) {
         }
 
         // Relative paths: ensure /uploads prefix for all stored workshop assets
-        clean = clean.replace(/^\/+/, "");
-        if (clean.startsWith("uploads/")) {
-            return `/${clean}`;
-        }
-        return `/uploads/${clean}`;
+        return AppConfig.resolveImageUrl(clean);
     }
 
     if (media instanceof File || media instanceof Blob) {

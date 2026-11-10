@@ -195,7 +195,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                     isDraggingRef.current = false;
                 }, 120);
             }}
-            className="fixed z-[9999] select-none cursor-grab active:cursor-grabbing pointer-events-auto print:hidden right-4 sm:right-7 bottom-20 lg:bottom-7"
+            className="fixed z-35 select-none cursor-grab active:cursor-grabbing pointer-events-auto print:hidden right-4 sm:right-7 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-7"
             style={{ touchAction: "none" }}
             initial={{ opacity: 0, scale: 0.9, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -210,7 +210,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.92, y: 12 }}
                             transition={{ type: "spring", stiffness: 350, damping: 26 }}
-                            className="w-[calc(100vw-32px)] sm:w-[360px] max-w-[360px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden mb-3 flex flex-col text-left"
+                            className="w-[calc(100vw-32px)] sm:w-[360px] max-w-[360px] max-h-[75dvh] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden mb-3 flex flex-col text-left"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Card Header: Crisp, Clean White matching Servio Modals */}
@@ -425,13 +425,13 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                     }}
                     className="flex items-center gap-2 group cursor-pointer"
                 >
-                    {/* Speech Bubble Teaser (Visible when collapsed) */}
+                    {/* Speech Bubble Teaser (Visible on desktop/tablet so mobile cards aren't blocked) */}
                     {!isExpanded && (
                         <motion.div
                             initial={{ opacity: 0, x: 10, scale: 0.95 }}
                             animate={{ opacity: 1, x: 0, scale: 1 }}
                             whileHover={{ scale: 1.03 }}
-                            className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-xl border border-slate-200/90 text-xs text-slate-800 flex items-center gap-2 transition-all hover:border-blue-400 hover:shadow-2xl"
+                            className="hidden sm:flex bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-xl border border-slate-200/90 text-xs text-slate-800 items-center gap-2 transition-all hover:border-blue-400 hover:shadow-2xl"
                         >
                             <span className="flex h-2 w-2 relative shrink-0">
                                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
@@ -451,19 +451,16 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                         </motion.div>
                     )}
 
-                    {/* Pure Standalone 3D ServiBot (Zero Background Container / Box) */}
+                    {/* Pure Standalone 3D ServiBot (Compact & Non-intrusive) */}
                     <motion.div
-                        whileHover={{ scale: 1.12, rotate: [0, -4, 4, 0] }}
+                        whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                         className="relative cursor-pointer select-none filter drop-shadow-xl"
                     >
-                        {/* 3D ServiBot with Smooth Levitation Animation */}
-                        <motion.div
-                            animate={{ y: [0, -6, 0] }}
-                            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-                        >
-                            <ServiBot3D size={64} isUrgent={urgentCount > 0} />
-                        </motion.div>
+                        {/* 3D ServiBot with Smooth Levitation Animation (CSS GPU compositor) */}
+                        <div className="animate-levitate">
+                            <ServiBot3D size={44} isUrgent={urgentCount > 0} />
+                        </div>
 
                         {/* Notification Pill Badge on Robot */}
                         <div className={`absolute top-0 right-1 px-2 py-0.5 rounded-full text-2xs font-black shadow-lg border-2 border-white flex items-center gap-0.5 text-white ${

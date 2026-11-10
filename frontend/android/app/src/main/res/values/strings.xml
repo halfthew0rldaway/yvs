@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">YVS Computer</string>
+    <string name="title_activity_main">YVS Computer</string>
+    <string name="package_name">id.yangversa.servio</string>
+    <string name="custom_url_scheme">id.yangversa.servio</string>
+</resources>

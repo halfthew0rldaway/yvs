@@ -555,8 +555,8 @@ model Applicant {
 model AttendancePolicy {
   id                 Int      @id @default(autoincrement())
   nama_kantor        String   @default("Workshop Utama Pekayon") @db.VarChar(150)
-  latitude           Float    @default(-6.274323)
-  longitude          Float    @default(106.977425)
+  latitude           Float    @default(-6.26064)
+  longitude          Float    @default(106.98744)
   radius_meter       Int      @default(500)
   jam_masuk          String   @default("09:00") @db.VarChar(10)
   toleransi_menit    Int      @default(15)

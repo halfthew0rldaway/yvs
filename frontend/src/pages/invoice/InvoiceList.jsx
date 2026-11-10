@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import { Plus, FileText, Search, Printer, CheckCircle, TrendingUp, Wrench, User, X } from "lucide-react";
+import { Plus, FileText, Search, Printer, CheckCircle, TrendingUp, Wrench, User, X, Download } from "lucide-react";
 import TableContainer from "../../components/common/TableContainer";
 import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
+import { DocumentPrintService } from "../../services/documentPrintService";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
@@ -100,7 +101,14 @@ export default function InvoiceList() {
     }
 
     function handlePrintReport() {
-        window.print();
+        DocumentPrintService.printOrShareDocument("printable-invoice-report", {
+            filename: `Laporan-Omset-${startDate || 'all'}-${endDate || 'all'}.pdf`,
+            title: "Laporan Omset & Faktur - Yangversa Computer"
+        });
+    }
+
+    function handleDownloadReportPdf() {
+        DocumentPrintService.downloadPdf("printable-invoice-report", `Laporan-Omset-${startDate || 'all'}-${endDate || 'all'}.pdf`);
     }
 
     return (
@@ -413,11 +421,20 @@ export default function InvoiceList() {
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
+                                    onClick={handleDownloadReportPdf}
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 shadow-2xs"
+                                    title="Unduh Laporan Format PDF"
+                                >
+                                    <Download className="w-3.5 h-3.5 text-slate-500" />
+                                    <span>PDF</span>
+                                </button>
+                                <button
+                                    type="button"
                                     onClick={handlePrintReport}
                                     className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-xs"
                                 >
                                     <Printer className="w-4 h-4" />
-                                    <span>Cetak PDF / Print</span>
+                                    <span>Cetak Laporan</span>
                                 </button>
                                 <button
                                     type="button"
@@ -430,7 +447,7 @@ export default function InvoiceList() {
                         </div>
 
                         {/* Modal Printable Content */}
-                        <div className="p-6 overflow-y-auto space-y-6 text-slate-800">
+                        <div id="printable-invoice-report" className="p-6 overflow-y-auto space-y-6 text-slate-800">
                             {/* Kop Laporan Resmi */}
                             <div className="border-b border-slate-200 pb-4 flex justify-between items-start">
                                 <div>

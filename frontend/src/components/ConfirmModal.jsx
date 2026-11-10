@@ -58,11 +58,11 @@ export default function ConfirmModal({
 
     return (
         <div 
-            className="modal-shell z-[100] bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
             onClick={() => !loading && onCancel?.()}
         >
             <div 
-                className="modal-panel max-w-md border-slate-200 text-slate-900 animate-in zoom-in-95 duration-150"
+                className="relative w-full max-w-sm bg-white rounded-2xl p-5 sm:p-6 shadow-2xl border border-slate-200 text-slate-900 animate-in zoom-in-95 duration-150"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button */}
@@ -70,38 +70,38 @@ export default function ConfirmModal({
                     <button 
                         type="button"
                         onClick={onCancel}
-                        className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-slate-200"
+                        className="absolute top-3.5 right-3.5 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-slate-200"
                         title="Tutup (Esc)"
                     >
                         <X className="w-4 h-4" />
                     </button>
                 )}
                 
-                <div className="flex flex-col items-center text-center mt-1">
+                <div className="flex flex-col items-center text-center">
                     {/* Icon Badge */}
-                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center mb-3.5 shadow-2xs ${variantStyles.badge}`}>
-                        <IconToRender className="w-6 h-6" />
+                    <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center mb-3 shadow-2xs ${variantStyles.badge}`}>
+                        <IconToRender className="w-5 h-5" />
                     </div>
                     
                     {/* Title */}
-                    <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                         {title}
                     </h3>
 
                     {/* Message (supports multiline) */}
                     {message && (
-                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-2 whitespace-pre-line text-center">
+                        <p className="text-xs text-slate-600 leading-relaxed mt-1.5 whitespace-pre-line text-center">
                             {message}
                         </p>
                     )}
                     
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-3 w-full mt-6">
+                    <div className="flex items-center gap-2.5 w-full mt-5">
                         <button
                             type="button"
                             disabled={loading}
                             onClick={onCancel}
-                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all cursor-pointer border border-slate-200 disabled:opacity-50"
                         >
                             {cancelText}
                         </button>
@@ -109,9 +109,9 @@ export default function ConfirmModal({
                             type="button"
                             disabled={loading}
                             onClick={onConfirm}
-                            className={`flex-1 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles.confirmBtn}`}
+                            className={`flex-1 h-9 px-3 rounded-xl text-xs font-semibold shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 ${variantStyles.confirmBtn}`}
                         >
-                            {loading && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
+                            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />}
                             <span>{confirmText}</span>
                         </button>
                     </div>

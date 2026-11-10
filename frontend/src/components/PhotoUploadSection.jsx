@@ -17,6 +17,7 @@ import {
 import CameraCaptureModal from "./CameraCaptureModal";
 import MediaProcessingModal from "./MediaProcessingModal";
 import { isVideo, getMediaUrl, compressImage } from "../utils/mediaUtils";
+import { CameraService, isNativePlatform } from "../services/nativeServices";
 
 export default function PhotoUploadSection({
     label = "Dokumentasi Foto & Video Perangkat",
@@ -31,6 +32,27 @@ export default function PhotoUploadSection({
     const [previewMedia, setPreviewMedia] = useState(null);
     const [zoomScale, setZoomScale] = useState(1);
     const [isCompressing, setIsCompressing] = useState(false);
+
+    async function handleNativeCamera(source = "CAMERA") {
+        if (photos.length >= maxPhotos) {
+            toast.error(`Maksimal ${maxPhotos} media!`);
+            return;
+        }
+        try {
+            const captured = await CameraService.capturePhoto({
+                source,
+                quality: isHdMode ? 100 : 90,
+                allowEditing: false
+            });
+            if (captured && captured.file) {
+                await handleAddPhoto(captured.file);
+            }
+        } catch (err) {
+            if (!err.message?.includes("batal") && !err.message?.includes("cancelled")) {
+                toast.error(err.message || "Gagal mengambil foto dari kamera");
+            }
+        }
+    }
 
     // HD Quality toggle state (persisted in localStorage)
     const [isHdMode, setIsHdMode] = useState(() => {
@@ -360,16 +382,22 @@ export default function PhotoUploadSection({
                 )}
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-1 xs:grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2">
+                <div className={`grid ${allowVideo ? "grid-cols-3" : "grid-cols-2"} sm:flex sm:items-center gap-1.5 sm:gap-2`}>
                     <button
                         type="button"
                         disabled={disabled || isCompressing || photos.length >= maxPhotos}
-                        onClick={() => setIsCameraModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-bold transition-all shadow-sm shadow-blue-600/20 disabled:opacity-40 cursor-pointer whitespace-nowrap"
-                        title="Buka Kamera Langsung / Webcam"
+                        onClick={() => {
+                            if (isNativePlatform()) {
+                                handleNativeCamera("CAMERA");
+                            } else {
+                                setIsCameraModalOpen(true);
+                            }
+                        }}
+                        className="inline-flex items-center justify-center gap-1.5 h-9 px-2 sm:px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg sm:rounded-xl text-xs font-semibold transition-all shadow-2xs disabled:opacity-40 cursor-pointer whitespace-nowrap min-w-0"
+                        title={isNativePlatform() ? "Ambil Foto dengan Kamera Perangkat Native" : "Buka Kamera Langsung / Webcam"}
                     >
-                        <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                        <span>Foto Kamera</span>
+                        <Camera className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{isNativePlatform() ? "Kamera" : "Kamera"}</span>
                     </button>
 
                     {/* Mobile Direct Video Shutter */}
@@ -378,23 +406,29 @@ export default function PhotoUploadSection({
                             type="button"
                             disabled={disabled || isCompressing || photos.length >= maxPhotos}
                             onClick={() => nativeVideoInputRef.current?.click()}
-                            className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-bold transition-all shadow-sm shadow-purple-600/20 disabled:opacity-40 cursor-pointer whitespace-nowrap"
+                            className="inline-flex items-center justify-center gap-1.5 h-9 px-2 sm:px-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg sm:rounded-xl text-xs font-semibold transition-all shadow-2xs disabled:opacity-40 cursor-pointer whitespace-nowrap min-w-0"
                             title="Rekam Video Kerusakan / Selesai Servis"
                         >
-                            <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                            <span>Rekam Video</span>
+                            <Video className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">Video</span>
                         </button>
                     )}
 
                     <button
                         type="button"
                         disabled={disabled || isCompressing || photos.length >= maxPhotos}
-                        onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-semibold transition-all shadow-2xs disabled:opacity-40 cursor-pointer whitespace-nowrap"
-                        title="Pilih Foto atau Video dari Galeri"
+                        onClick={() => {
+                            if (isNativePlatform()) {
+                                handleNativeCamera("PHOTOS");
+                            } else {
+                                fileInputRef.current?.click();
+                            }
+                        }}
+                        className="inline-flex items-center justify-center gap-1.5 h-9 px-2 sm:px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg sm:rounded-xl text-xs font-semibold transition-all shadow-2xs disabled:opacity-40 cursor-pointer whitespace-nowrap min-w-0"
+                        title={isNativePlatform() ? "Pilih dari Galeri Foto Perangkat" : "Pilih Foto atau Video dari Berkas"}
                     >
-                        <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 shrink-0" />
-                        <span>Pilih File</span>
+                        <Upload className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span className="truncate">{isNativePlatform() ? "Galeri" : "Berkas"}</span>
                     </button>
                 </div>
             </div>

@@ -1080,23 +1080,23 @@ export default function DiagnosisForm() {
                     />
 
                     {/* Form Action Buttons */}
-                    <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-slate-100 mt-8">
+                    <div className="pt-4 border-t border-slate-100 mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                         <button
                             type="button"
                             onClick={() => navigate(`/tiket-servis/${id}`)}
-                            className="px-6 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-colors shadow-sm w-full sm:w-auto text-center cursor-pointer"
+                            className="order-3 sm:order-1 h-9 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-colors shadow-2xs w-full sm:w-auto text-xs flex items-center justify-center cursor-pointer"
                         >
                             Batal
                         </button>
 
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                        <div className="order-1 sm:order-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                             <button
                                 type="button"
                                 onClick={() => handleSave(false)}
                                 disabled={loading}
-                                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-50 cursor-pointer"
+                                className="order-2 sm:order-1 h-9 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1.5 w-full sm:w-auto disabled:opacity-50 text-xs cursor-pointer"
                             >
-                                <Save className="w-4 h-4" />
+                                <Save className="w-3.5 h-3.5" />
                                 <span>Simpan Saja (Draft)</span>
                             </button>
 
@@ -1105,12 +1105,12 @@ export default function DiagnosisForm() {
                                     type="button"
                                     onClick={() => handleSave(true)}
                                     disabled={loading}
-                                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-50 cursor-pointer"
+                                    className="order-1 sm:order-2 h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 w-full sm:w-auto disabled:opacity-50 text-xs cursor-pointer"
                                 >
                                     {loading ? (
-                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
+                                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white/20 border-t-white"></div>
                                     ) : (
-                                        <Send className="w-4 h-4" />
+                                        <Send className="w-3.5 h-3.5" />
                                     )}
                                     <span>Simpan & Naikkan ke Penawaran</span>
                                 </button>
@@ -1118,12 +1118,12 @@ export default function DiagnosisForm() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-50 cursor-pointer"
+                                    className="order-1 sm:order-2 h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 w-full sm:w-auto disabled:opacity-50 text-xs cursor-pointer"
                                 >
                                     {loading ? (
-                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
+                                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white/20 border-t-white"></div>
                                     ) : (
-                                        <CheckCircle2 className="w-4 h-4" />
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
                                     )}
                                     <span>Simpan Perubahan</span>
                                 </button>

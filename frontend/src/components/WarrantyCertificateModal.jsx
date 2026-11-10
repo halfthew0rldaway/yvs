@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Printer, ShieldCheck, Check, Award, AlertTriangle, Clock, Laptop, User, Package, Calendar, Wrench, Shield, CheckCircle2 } from "lucide-react";
+import { X, Printer, ShieldCheck, Check, Award, AlertTriangle, Clock, Laptop, User, Package, Calendar, Wrench, Shield, CheckCircle2, Download, Share2 } from "lucide-react";
 import { WorkshopSignatureStamp, DigitalSignatureToggleBar } from "./DigitalSignatureStamp";
 import { DEFAULT_WORKSHOP_SIGNATURE } from "./AdminSignatureSelectorModal";
+import { DocumentPrintService } from "../services/documentPrintService";
+import { isNativePlatform } from "../services/nativeServices";
 
 export default function WarrantyCertificateModal({
     isOpen,
@@ -98,7 +100,16 @@ export default function WarrantyCertificateModal({
     };
 
     const handlePrint = () => {
-        window.print();
+        DocumentPrintService.printOrShareDocument("warranty-certificate-document", {
+            filename: `Kartu-Garansi-${tiket?.nomor_tiket || 'YVS'}.pdf`,
+            title: `Kartu Garansi Resmi #${tiket?.nomor_tiket || ''}`,
+            text: `Kartu garansi resmi perbaikan Yangversa Computer untuk tiket #${tiket?.nomor_tiket || ''}.`,
+            preferDirectPrint: !isNativePlatform()
+        });
+    };
+
+    const handleDownloadPdf = () => {
+        DocumentPrintService.downloadPdf("warranty-certificate-document", `Kartu-Garansi-${tiket?.nomor_tiket || 'YVS'}.pdf`);
     };
 
     const modalContent = (
@@ -178,12 +189,30 @@ export default function WarrantyCertificateModal({
                         )}
                         <button
                             type="button"
+                            onClick={handleDownloadPdf}
+                            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-semibold transition-all border border-slate-200 shadow-2xs cursor-pointer"
+                            title="Unduh Dokumen PDF"
+                        >
+                            <Download className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                            <span className="hidden xs:inline">PDF</span>
+                        </button>
+                        <button
+                            type="button"
                             onClick={handlePrint}
                             className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg sm:rounded-xl text-3xs xs:text-2xs sm:text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer"
-                            title="Cetak atau Simpan PDF"
+                            title={isNativePlatform() ? "Cetak / Kirim Garansi via WhatsApp" : "Cetak atau Simpan PDF"}
                         >
-                            <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                            <span className="whitespace-nowrap">Cetak / PDF</span>
+                            {isNativePlatform() ? (
+                                <>
+                                    <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-emerald-300" />
+                                    <span className="whitespace-nowrap">Cetak / Kirim</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                                    <span className="whitespace-nowrap">Cetak / PDF</span>
+                                </>
+                            )}
                         </button>
                         <button
                             type="button"
@@ -461,12 +490,14 @@ export default function WarrantyCertificateModal({
                                                 )}
                                             </div>
                                             <div className="w-full border-b border-slate-300 my-0.5"></div>
-                                            <p className="font-bold text-slate-900 text-4xs print:text-[8px] w-full truncate max-w-[105px]">
+                                            <p className="font-bold text-slate-900 text-4xs print:text-[8px] w-full truncate max-w-[105px] leading-snug">
                                                 {effectiveInvoice.ttd_admin_nama || tiket.invoice?.ttd_admin_nama || "Yangversa Computer"}
                                             </p>
-                                            <p className="text-4xs print:text-[6.5px] text-slate-400">
-                                                Yangversa Computer
-                                            </p>
+                                            {(!effectiveInvoice.ttd_admin_nama && !tiket.invoice?.ttd_admin_nama) || (!String(effectiveInvoice.ttd_admin_nama || tiket.invoice?.ttd_admin_nama).toLowerCase().includes("yangversa")) ? (
+                                                <p className="text-4xs print:text-[6.5px] text-slate-400 mt-0.5 block leading-tight font-medium">
+                                                    Yangversa Computer
+                                                </p>
+                                            ) : null}
                                         </div>
                                     </div>
                                 </div>

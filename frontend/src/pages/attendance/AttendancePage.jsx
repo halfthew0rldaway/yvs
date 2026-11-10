@@ -32,6 +32,7 @@ import {
     Loader2
 } from "lucide-react";
 import WebcamSelfieModal from "./WebcamSelfieModal";
+import { LocationService, isNativePlatform } from "../../services/nativeServices";
 
 // Haversine formula client-side for immediate feedback
 function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
@@ -52,6 +53,11 @@ function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
 
 // Alamat fisik resmi workshop Pekayon
 const WORKSHOP_DEFAULT_ADDRESS = "Jl. Raya Pekayon No.25, RT.004/RW.001, Pekayon Jaya, Kec. Bekasi Selatan, Kota Bekasi, Jawa Barat 17148";
+const WORKSHOP_REAL_LAT = -6.26064;
+const WORKSHOP_REAL_LON = 106.98744;
+
+// Cache in-memory hasil reverse geocode agar instan (<1ms) saat koordinat berdekatan
+const geoAddressCache = new Map();
 
 // Reverse geocode koordinat GPS menjadi nama jalan dan wilayah detail (seperti watermark kamera HP)
 async function fetchRealLocationAddress(lat, lon, isInRadius) {
@@ -61,9 +67,23 @@ async function fetchRealLocationAddress(lat, lon, isInRadius) {
     if (!lat || !lon) {
         return "Lokasi tidak diketahui";
     }
+
+    // Jika dalam radius 2.5km dari workshop Pekayon (misal Jl. H. Makri, Pekayon Jaya, Naga Swalayan),
+    // selalu deteksi sebagai Pekayon Jaya, Kota Bekasi (bukan Jakasetia).
+    const distToWorkshop = calculateDistanceMeters(lat, lon, WORKSHOP_REAL_LAT, WORKSHOP_REAL_LON);
+    if (distToWorkshop <= 600) {
+        return WORKSHOP_DEFAULT_ADDRESS;
+    }
+
+    // Cache key dibulatkan ke ~100m untuk instant lookups
+    const cacheKey = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+    if (geoAddressCache.has(cacheKey)) {
+        return geoAddressCache.get(cacheKey);
+    }
+
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4500);
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
             {
@@ -75,14 +95,24 @@ async function fetchRealLocationAddress(lat, lon, isInRadius) {
         if (res.ok) {
             const data = await res.json();
             const addr = data.address || {};
-            const road = addr.road || addr.street || addr.pedestrian || addr.path || "";
+            let road = addr.road || addr.street || addr.pedestrian || addr.path || "";
             const houseNumber = addr.house_number ? `No.${addr.house_number}` : "";
             const streetLine = [road, houseNumber].filter(Boolean).join(" ");
-            const village = addr.village || addr.suburb || addr.neighbourhood || addr.quarter || "";
-            const district = addr.city_district || addr.district || addr.subdistrict || "";
+            let village = addr.village || addr.suburb || addr.neighbourhood || addr.quarter || "";
+            let district = addr.city_district || addr.district || addr.subdistrict || "";
             const city = addr.city || addr.town || addr.municipality || addr.county || "";
             const state = addr.state || "";
             const postcode = addr.postcode || "";
+
+            // Koreksi nama wilayah jika berada di sekitar Pekayon namun OSM salah menandai sebagai Jakasetia
+            if (distToWorkshop <= 3000) {
+                if (village.toLowerCase().includes("jakasetia")) {
+                    village = "Pekayon Jaya";
+                }
+                if (!district || district.toLowerCase().includes("jakasetia")) {
+                    district = "Bekasi Selatan";
+                }
+            }
 
             const parts = [
                 streetLine,
@@ -93,18 +123,22 @@ async function fetchRealLocationAddress(lat, lon, isInRadius) {
                 postcode
             ].filter(Boolean);
 
-            if (parts.length > 0) {
-                return parts.join(", ");
+            let result = parts.length > 0 ? parts.join(", ") : (data.display_name || `Pekayon Jaya, Kota Bekasi (${lat.toFixed(5)}, ${lon.toFixed(5)})`);
+            if (distToWorkshop <= 3000 && result.toLowerCase().includes("jakasetia")) {
+                result = result.replace(/Jakasetia/gi, "Pekayon Jaya");
             }
-            if (data.display_name) {
-                return data.display_name;
-            }
+            geoAddressCache.set(cacheKey, result);
+            return result;
         }
     } catch {
         // Fallback jika koneksi lambat atau offline
     }
 
-    return `Area Koordinat ${lat.toFixed(5)}, ${lon.toFixed(5)}, Bekasi, Jawa Barat`;
+    const fallbackAddr = distToWorkshop <= 3000 
+        ? `Jl. Raya Pekayon, Pekayon Jaya, Kec. Bekasi Selatan, Kota Bekasi (${lat.toFixed(5)}, ${lon.toFixed(5)})`
+        : `Area Sekitar (${lat.toFixed(5)}, ${lon.toFixed(5)})`;
+    geoAddressCache.set(cacheKey, fallbackAddr);
+    return fallbackAddr;
 }
 
 export default function AttendancePage() {
@@ -233,9 +267,9 @@ export default function AttendancePage() {
     // Policy Settings Form State
     const [policyForm, setPolicyForm] = useState({
         nama_kantor: "Workshop Utama Pekayon",
-        latitude: -6.260626,
-        longitude: 106.987405,
-        radius_meter: 300,
+        latitude: -6.26064,
+        longitude: 106.98744,
+        radius_meter: 500,
         jam_masuk: "09:00",
         toleransi_menit: 15,
         jam_pulang: "18:00",
@@ -263,6 +297,72 @@ export default function AttendancePage() {
     const fetchLocation = useCallback(() => {
         setLocationData(prev => ({ ...prev, loading: true, error: null }));
 
+        const handleSuccess = async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const acc = position.coords.accuracy;
+
+            // Koordinat resmi workshop Pekayon: Jl. Raya Pekayon No. 25 (-6.26064, 106.98744)
+            const workshopLat = (policy?.latitude && policy.latitude > -6.265 && policy.latitude < -6.255) ? policy.latitude : WORKSHOP_REAL_LAT;
+            const workshopLon = (policy?.longitude && policy.longitude > 106.980 && policy.longitude < 106.995) ? policy.longitude : WORKSHOP_REAL_LON;
+            const radius = policy?.radius_meter || 500;
+
+            const dist = calculateDistanceMeters(lat, lon, workshopLat, workshopLon);
+            // Toleransi akurasi GPS: jika akurasi GPS agak renggang (misal indoor ±20m), sertakan margin akurasi hingga 50m
+            const accuracyMargin = Math.min(Math.round(acc || 0), 50);
+            const inRadius = dist <= (radius + accuracyMargin);
+
+            const preliminaryAddress = inRadius ? WORKSHOP_DEFAULT_ADDRESS : "Mencari detail alamat real-time...";
+
+            setLocationData({
+                latitude: lat,
+                longitude: lon,
+                accuracy: acc,
+                distance: dist,
+                isInRadius: inRadius,
+                addressName: preliminaryAddress,
+                loading: false,
+                error: null
+            });
+
+            // Lakukan reverse geocoding asynchronous agar nama jalan & kecamatan detail
+            const realAddress = await fetchRealLocationAddress(lat, lon, inRadius);
+            setLocationData(prev => ({
+                ...prev,
+                addressName: realAddress
+            }));
+        };
+
+        const handleFinalError = (error) => {
+            let msg = "Gagal mendapatkan lokasi GPS.";
+            if (error?.code === 1 || error?.code === error?.PERMISSION_DENIED) {
+                msg = "Izin akses lokasi ditolak oleh browser/sistem. Harap izinkan akses lokasi di pengaturan ponsel.";
+            } else if (error?.code === 2 || error?.code === error?.POSITION_UNAVAILABLE) {
+                msg = "Sinyal GPS tidak terdeteksi. Pastikan Lokasi/GPS aktif di pengaturan ponsel Anda.";
+            } else if (error?.code === 3 || error?.code === error?.TIMEOUT) {
+                msg = "Waktu pencarian satelit GPS habis (Timeout). Pastikan GPS ponsel aktif dan coba lagi.";
+            } else if (error?.message) {
+                msg = error.message;
+            }
+            setLocationData(prev => ({
+                ...prev,
+                loading: false,
+                addressName: WORKSHOP_DEFAULT_ADDRESS,
+                error: msg
+            }));
+        };
+
+        if (isNativePlatform()) {
+            LocationService.getCurrentPosition()
+                .then(pos => {
+                    handleSuccess({ coords: pos });
+                })
+                .catch(err => {
+                    handleFinalError({ code: 2, message: err.message });
+                });
+            return;
+        }
+
         if (typeof window !== "undefined" && window.isSecureContext === false && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
             setLocationData(prev => ({
                 ...prev,
@@ -282,59 +382,6 @@ export default function AttendancePage() {
             }));
             return;
         }
-
-        const handleSuccess = async (position) => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const acc = position.coords.accuracy;
-
-            let dist = null;
-            let inRadius = true;
-
-            if (policy?.latitude && policy?.longitude) {
-                dist = calculateDistanceMeters(lat, lon, policy.latitude, policy.longitude);
-                inRadius = dist <= policy.radius_meter;
-            }
-
-            const preliminaryAddress = inRadius ? WORKSHOP_DEFAULT_ADDRESS : "Mencari alamat lokasi real...";
-
-            setLocationData({
-                latitude: lat,
-                longitude: lon,
-                accuracy: acc,
-                distance: dist,
-                isInRadius: inRadius,
-                addressName: preliminaryAddress,
-                loading: false,
-                error: null
-            });
-
-            // Jika di luar radius, lakukan reverse geocoding asynchronous agar nama jalan & kecamatan detail
-            if (!inRadius) {
-                const realAddress = await fetchRealLocationAddress(lat, lon, false);
-                setLocationData(prev => ({
-                    ...prev,
-                    addressName: realAddress
-                }));
-            }
-        };
-
-        const handleFinalError = (error) => {
-            let msg = "Gagal mendapatkan lokasi GPS.";
-            if (error.code === error.PERMISSION_DENIED) {
-                msg = "Izin akses lokasi ditolak oleh browser. Ketuk ikon gembok / pengaturan situs di bilah alamat browser lalu pilih 'Izinkan Lokasi'.";
-            } else if (error.code === error.POSITION_UNAVAILABLE) {
-                msg = "Sinyal GPS tidak terdeteksi. Pastikan Lokasi/GPS aktif di pengaturan ponsel Anda.";
-            } else if (error.code === error.TIMEOUT) {
-                msg = "Waktu pencarian satelit GPS habis (Timeout). Pastikan GPS ponsel aktif dan coba lagi.";
-            }
-            setLocationData(prev => ({
-                ...prev,
-                loading: false,
-                addressName: WORKSHOP_DEFAULT_ADDRESS,
-                error: msg
-            }));
-        };
 
         // Attempt 1: High Accuracy with 60-second cached location tolerance
         navigator.geolocation.getCurrentPosition(
@@ -362,21 +409,31 @@ export default function AttendancePage() {
         setLoadingToday(true);
         try {
             const res = await api.get("/attendance/today");
-            setPolicy(res.data.policy);
+            const rawPolicy = res.data.policy;
+            const normalizedPolicy = rawPolicy ? {
+                ...rawPolicy,
+                nama_kantor: rawPolicy.nama_kantor || "Workshop Utama Pekayon",
+                latitude: (rawPolicy.latitude && rawPolicy.latitude > -6.265 && rawPolicy.latitude < -6.255) ? rawPolicy.latitude : WORKSHOP_REAL_LAT,
+                longitude: (rawPolicy.longitude && rawPolicy.longitude > 106.980 && rawPolicy.longitude < 106.995) ? rawPolicy.longitude : WORKSHOP_REAL_LON,
+                radius_meter: rawPolicy.radius_meter || 500,
+                is_geofence_active: rawPolicy.is_geofence_active !== undefined ? rawPolicy.is_geofence_active : true
+            } : null;
+
+            setPolicy(normalizedPolicy);
             setTodayRecord(res.data.record);
             setActiveLeave(res.data.activeLeave);
 
-            if (res.data.policy) {
+            if (normalizedPolicy) {
                 setPolicyForm({
-                    nama_kantor: res.data.policy.nama_kantor || "Workshop Utama",
-                    latitude: res.data.policy.latitude,
-                    longitude: res.data.policy.longitude,
-                    radius_meter: res.data.policy.radius_meter,
-                    jam_masuk: res.data.policy.jam_masuk,
-                    toleransi_menit: res.data.policy.toleransi_menit,
-                    jam_pulang: res.data.policy.jam_pulang,
-                    is_geofence_active: res.data.policy.is_geofence_active,
-                    is_selfie_required: res.data.policy.is_selfie_required
+                    nama_kantor: normalizedPolicy.nama_kantor,
+                    latitude: normalizedPolicy.latitude,
+                    longitude: normalizedPolicy.longitude,
+                    radius_meter: normalizedPolicy.radius_meter,
+                    jam_masuk: normalizedPolicy.jam_masuk,
+                    toleransi_menit: normalizedPolicy.toleransi_menit,
+                    jam_pulang: normalizedPolicy.jam_pulang,
+                    is_geofence_active: normalizedPolicy.is_geofence_active,
+                    is_selfie_required: normalizedPolicy.is_selfie_required
                 });
             }
         } catch (err) {
@@ -559,25 +616,13 @@ export default function AttendancePage() {
         let activeLon = locationData.longitude;
         let activeAcc = locationData.accuracy;
 
-        if (navigator.geolocation && (activeLat === null || activeLon === null)) {
+        if (activeLat === null || activeLon === null) {
             try {
-                const freshPos = await new Promise((resolve) => {
-                    navigator.geolocation.getCurrentPosition(
-                        resolve,
-                        () => {
-                            navigator.geolocation.getCurrentPosition(
-                                resolve,
-                                () => resolve(null),
-                                { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
-                            );
-                        },
-                        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
-                    );
-                });
-                if (freshPos?.coords) {
-                    activeLat = freshPos.coords.latitude;
-                    activeLon = freshPos.coords.longitude;
-                    activeAcc = freshPos.coords.accuracy;
+                const freshPos = await LocationService.getCurrentPosition({ enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
+                if (freshPos) {
+                    activeLat = freshPos.latitude;
+                    activeLon = freshPos.longitude;
+                    activeAcc = freshPos.accuracy;
                 }
             } catch (_) {}
         }
@@ -639,25 +684,13 @@ export default function AttendancePage() {
         let activeLon = locationData.longitude;
         let activeAcc = locationData.accuracy;
 
-        if (navigator.geolocation && (activeLat === null || activeLon === null)) {
+        if (activeLat === null || activeLon === null) {
             try {
-                const freshPos = await new Promise((resolve) => {
-                    navigator.geolocation.getCurrentPosition(
-                        resolve,
-                        () => {
-                            navigator.geolocation.getCurrentPosition(
-                                resolve,
-                                () => resolve(null),
-                                { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
-                            );
-                        },
-                        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
-                    );
-                });
-                if (freshPos?.coords) {
-                    activeLat = freshPos.coords.latitude;
-                    activeLon = freshPos.coords.longitude;
-                    activeAcc = freshPos.coords.accuracy;
+                const freshPos = await LocationService.getCurrentPosition({ enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
+                if (freshPos) {
+                    activeLat = freshPos.latitude;
+                    activeLon = freshPos.longitude;
+                    activeAcc = freshPos.accuracy;
                 }
             } catch (_) {}
         }
@@ -1251,12 +1284,12 @@ export default function AttendancePage() {
                             </button>
                         </div>
                     )}
-                    {/* Left: GPS Geofence Status Card */}
+                    {/* Left: GPS Status Card */}
                     <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                             <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                 <MapPin className="w-4 h-4 text-blue-600" />
-                                <span>Geofencing & Lokasi GPS</span>
+                                <span>Lokasi & Presensi GPS Real-time</span>
                             </h2>
                             <button
                                 onClick={fetchLocation}
@@ -1273,19 +1306,19 @@ export default function AttendancePage() {
                             <div className="flex items-start justify-between text-xs gap-2">
                                 <span className="text-slate-500 font-semibold shrink-0">Workshop:</span>
                                 <div className="text-right">
-                                    <span className="font-bold text-slate-800 block">{policy?.nama_kantor || "Workshop Utama"}</span>
+                                    <span className="font-bold text-slate-800 block">{policy?.nama_kantor || "Workshop Utama Pekayon"}</span>
                                     <span className="text-3xs text-slate-500 block leading-tight mt-0.5">{WORKSHOP_DEFAULT_ADDRESS}</span>
                                 </div>
                             </div>
                             <div className="flex items-start justify-between text-xs gap-2 pt-1 border-t border-slate-200/60">
                                 <span className="text-slate-500 font-semibold shrink-0">Lokasi Real Anda:</span>
                                 <span className="font-bold text-slate-800 text-right text-3xs sm:text-2xs max-w-[210px] leading-tight">
-                                    {locationData.loading ? "Mencari detail lokasi..." : (locationData.addressName || "-")}
+                                    {locationData.loading ? "Mencari detail lokasi real-time..." : (locationData.addressName || "-")}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200/60">
                                 <span className="text-slate-500 font-semibold">Batas Radius:</span>
-                                <span className="font-bold text-slate-800">{policy?.radius_meter || 100} Meter</span>
+                                <span className="font-bold text-slate-800">{policy?.radius_meter || 500} Meter</span>
                             </div>
                             <div className="flex items-center justify-between text-xs">
                                 <span className="text-slate-500 font-semibold">Jarak Anda:</span>
@@ -1307,7 +1340,7 @@ export default function AttendancePage() {
                             </div>
                         </div>
 
-                        {/* Radius Verification Alert Banner */}
+                        {/* Status Verification Alert Banner */}
                         {locationData.error ? (
                             <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-2 text-xs text-rose-800">
                                 <div className="flex items-start gap-2.5">
@@ -1347,10 +1380,10 @@ export default function AttendancePage() {
                                                 ? "Lokasi Valid: Dalam Radius Workshop" 
                                                 : "Di Luar Radius Workshop (Pekayon)"}
                                         </p>
-                                        <p className="text-2xs mt-0.5">
+                                        <p className="text-2xs mt-0.5 leading-relaxed">
                                             {locationData.isInRadius
                                                 ? `Anda terdeteksi di lokasi workshop (${locationData.distance}m <= ${policy?.radius_meter || 500}m).`
-                                                : `Jarak Anda (${locationData.distance}m) melebihi batas geofence (${policy?.radius_meter || 500}m). Anda dapat menggunakan opsi Check-In Tugas Luar.`}
+                                                : `Jarak Anda (${locationData.distance}m) melebihi batas geofence (${policy?.radius_meter || 500}m). Anda wajib menggunakan opsi Check-In Tugas Luar.`}
                                         </p>
                                     </div>
                                 </div>
@@ -1566,24 +1599,26 @@ export default function AttendancePage() {
                         {/* Action Buttons Section */}
                         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-end gap-3">
                             {!todayRecord?.jam_masuk ? (
-                                policy?.is_geofence_active && (!locationData.isInRadius || locationData.loading) ? (
+                                !locationData.isInRadius ? (
                                     <button
+                                        type="button"
                                         onClick={() => {
                                             setCameraModalType("tugas-luar");
                                             setCameraModalOpen(true);
                                         }}
-                                        className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20"
+                                        className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20 active:scale-[0.98]"
                                     >
                                         <MapPin className="w-4 h-4 stroke-[2.5]" />
                                         <span>Check-In Tugas Luar (Di Luar Kantor)</span>
                                     </button>
                                 ) : (
                                     <button
+                                        type="button"
                                         onClick={() => {
                                             setCameraModalType("check-in");
                                             setCameraModalOpen(true);
                                         }}
-                                        className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-500/20"
+                                        className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-500/20 active:scale-[0.98]"
                                     >
                                         <Camera className="w-4 h-4 stroke-[2.5]" />
                                         <span>Check In Masuk Sekarang</span>
@@ -1591,11 +1626,12 @@ export default function AttendancePage() {
                                 )
                             ) : !todayRecord?.jam_pulang ? (
                                 <button
+                                    type="button"
                                     onClick={handleTriggerCheckOut}
-                                    className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-500/20"
+                                    className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-500/20 active:scale-[0.98]"
                                 >
                                     <LogOut className="w-4 h-4 stroke-[2.5]" />
-                                    <span>Check Out Pulang Sekarang</span>
+                                    <span>Presensi Pulang Sekarang</span>
                                 </button>
                             ) : (
                                 <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-4 py-2.5 rounded-xl border border-emerald-200 flex items-center gap-2">

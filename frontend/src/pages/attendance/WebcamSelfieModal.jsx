@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Camera, RefreshCw, CheckCircle2, X, AlertTriangle, MapPin, Clock, Smartphone, Upload, ShieldAlert, Info } from "lucide-react";
 import toast from "react-hot-toast";
+import { CameraService, isNativePlatform } from "../../services/nativeServices";
 
 // Helper: Draw rounded rectangle on Canvas
 function drawRoundedRect(ctx, x, y, width, height, radius, fillStyle) {
@@ -329,6 +330,52 @@ export default function WebcamSelfieModal({
     };
 
     // Fallback: Capture using Smartphone Native Camera App
+    const triggerNativeCamera = async () => {
+        if (isNativePlatform()) {
+            try {
+                const photo = await CameraService.capturePhoto({
+                    source: "CAMERA",
+                    quality: 90
+                });
+                if (photo && photo.dataUrl) {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = canvasRef.current || document.createElement("canvas");
+                        const targetDim = 720;
+                        canvas.width = targetDim;
+                        canvas.height = targetDim;
+                        const ctx = canvas.getContext("2d");
+                        if (!ctx) return;
+
+                        const srcW = img.width;
+                        const srcH = img.height;
+                        const minDim = Math.min(srcW, srcH);
+                        const sx = (srcW - minDim) / 2;
+                        const sy = (srcH - minDim) / 2;
+                        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetDim, targetDim);
+
+                        applyWatermark(ctx, targetDim, targetDim);
+                        const watermarkedUrl = canvas.toDataURL("image/jpeg", 0.90);
+                        setPreviewImage(watermarkedUrl);
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                const file = new File([blob], `selfie-${isActualTugasLuar ? "tugas-luar" : type}-${Date.now()}.jpg`, { type: "image/jpeg" });
+                                setCapturedBlob(file);
+                            }
+                        }, "image/jpeg", 0.90);
+                    };
+                    img.src = photo.dataUrl;
+                }
+            } catch (err) {
+                if (!err.message?.includes("batal") && !err.message?.includes("cancelled")) {
+                    toast.error(err.message || "Gagal mengambil foto");
+                }
+            }
+        } else {
+            nativeCameraInputRef.current?.click();
+        }
+    };
+
     const handleNativeCapture = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -477,7 +524,7 @@ export default function WebcamSelfieModal({
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => nativeCameraInputRef.current?.click()}
+                                    onClick={triggerNativeCamera}
                                     className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer inline-flex items-center justify-center gap-2"
                                 >
                                     <Smartphone className="w-4 h-4" />

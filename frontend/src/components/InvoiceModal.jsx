@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Printer, CheckCircle2, FileText } from "lucide-react";
+import { X, Printer, CheckCircle2, FileText, Download, Share2, Wrench, User, MonitorSmartphone, ShieldCheck } from "lucide-react";
 import { DEFAULT_WORKSHOP_SIGNATURE } from "./AdminSignatureSelectorModal";
+import { DocumentPrintService } from "../services/documentPrintService";
+import { isNativePlatform } from "../services/nativeServices";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
@@ -9,7 +11,7 @@ function formatRupiah(num) {
 
 /**
  * AlignedSignatureRow
- * Renders both Customer & Workshop Staff signatures side-by-side with identical dimensions.
+ * Renders both Customer & Workshop Staff signatures side-by-side with packed dimensions for half-A4 continuous form.
  */
 function AlignedSignatureRow({
     customerSignature,
@@ -18,81 +20,81 @@ function AlignedSignatureRow({
     adminSignature,
     adminName,
     isDigital = true,
-    adminRole = "Petugas Workshop • Kasir"
+    adminRole = "Kasir / Petugas Toko"
 }) {
     const activeAdminSig = isDigital ? (adminSignature || DEFAULT_WORKSHOP_SIGNATURE) : null;
     const activeCustomerSig = isDigital ? customerSignature : null;
 
     return (
-        <div className="flex items-end justify-center sm:justify-end gap-8 sm:gap-10 print:gap-8 select-none shrink-0">
+        <div className="flex items-end justify-center sm:justify-end gap-6 sm:gap-8 print:gap-6 select-none shrink-0">
             {/* Kolom Tanda Tangan Pelanggan */}
-            <div className="flex flex-col items-center justify-end text-center w-36 sm:w-44 print:w-32">
-                <p className="text-slate-600 text-xs print:text-[8px] font-semibold mb-0.5">
+            <div className="flex flex-col items-center justify-end text-center w-32 sm:w-36 print:w-28">
+                <p className="text-slate-600 text-3xs sm:text-2xs print:text-[7.5px] font-semibold mb-0.5 uppercase tracking-wide">
                     Penerima / Pelanggan
                 </p>
 
-                {/* Box Area Tanda Tangan */}
-                <div className="h-16 print:h-12 w-full flex items-center justify-center">
+                {/* Box Area Tanda Tangan (Tinggi compact untuk continuous form) */}
+                <div className="h-12 print:h-9 w-full flex items-center justify-center">
                     {activeCustomerSig ? (
                         <img 
                             src={activeCustomerSig} 
                             alt="Tanda Tangan Pelanggan" 
-                            className="max-h-14 print:max-h-11 max-w-[130px] print:max-w-[100px] object-contain"
+                            className="max-h-11 print:max-h-8 max-w-[110px] print:max-w-[85px] object-contain"
                         />
                     ) : (
-                        <div className="w-full h-full flex items-end justify-center pb-1.5 border-b border-dashed border-slate-300 print:border-none">
-                            <span className="text-3xs print:text-[7.5px] text-slate-300 print:text-slate-200 italic">
-                                {isDigital ? "[ Belum TTD Digital ]" : "[ Tanda Tangan Fisik ]"}
+                        <div className="w-full h-full flex items-end justify-center pb-1 border-b border-dashed border-slate-300 print:border-none">
+                            <span className="text-3xs print:text-[7px] text-slate-300 print:text-slate-200 italic">
+                                {isDigital ? "[ Belum TTD Digital ]" : "[ Tanda Tangan ]"}
                             </span>
                         </div>
                     )}
                 </div>
 
                 {/* Garis Dasar Tanda Tangan */}
-                <div className="w-full border-b border-slate-400 mt-0.5 mb-1"></div>
+                <div className="w-full border-b border-slate-400 mt-0.5 mb-0.5"></div>
 
                 {/* Nama Terang Pelanggan */}
-                <p className="font-bold text-slate-900 text-xs print:text-[8.5px] w-full truncate max-w-[160px]">
+                <p className="font-bold text-slate-900 text-2xs sm:text-xs print:text-[8px] w-full truncate max-w-[130px] print:max-w-[100px] leading-tight">
                     {customerName || "Pelanggan"}
                 </p>
-                <p className="text-3xs print:text-[7px] text-slate-400 font-mono mt-0.5">
+                <p className="text-3xs print:text-[6.5px] text-slate-400 font-mono">
                     {customerSignedAt 
                         ? new Date(customerSignedAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
-                        : "Pelanggan Yangversa"}
+                        : "Pelanggan YVS"}
                 </p>
             </div>
 
             {/* Kolom Tanda Tangan Petugas Workshop */}
-            <div className="flex flex-col items-center justify-end text-center w-36 sm:w-44 print:w-32">
-                <p className="text-slate-600 text-xs print:text-[8px] font-semibold mb-0.5">
+            <div className="flex flex-col items-center justify-end text-center w-32 sm:w-36 print:w-28">
+                <p className="text-slate-600 text-3xs sm:text-2xs print:text-[7.5px] font-semibold mb-0.5 uppercase tracking-wide">
                     {adminRole}
                 </p>
 
                 {/* Box Area Tanda Tangan */}
-                <div className="h-16 print:h-12 w-full flex items-center justify-center">
+                <div className="h-12 print:h-9 w-full flex items-center justify-center">
                     {activeAdminSig ? (
                         <img 
                             src={activeAdminSig} 
                             alt={`TTD ${adminName}`} 
-                            className="max-h-14 print:max-h-11 max-w-[130px] print:max-w-[100px] object-contain"
+                            className="max-h-11 print:max-h-8 max-w-[110px] print:max-w-[85px] object-contain"
                         />
                     ) : (
-                        <div className="w-full h-full flex items-end justify-center pb-1.5 border-b border-dashed border-slate-300 print:border-none">
-                            <span className="text-3xs print:text-[7.5px] text-slate-300 print:text-slate-200 italic">
-                                [ Tanda Tangan Petugas ]
+                        <div className="w-full h-full flex items-end justify-center pb-1 border-b border-dashed border-slate-300 print:border-none">
+                            <span className="text-3xs print:text-[7px] text-slate-300 print:text-slate-200 italic">
+                                [ Tanda Tangan Staf ]
                             </span>
                         </div>
                     )}
                 </div>
 
                 {/* Garis Dasar Tanda Tangan */}
-                <div className="w-full border-b border-slate-400 mt-0.5 mb-1"></div>
+                <div className="w-full border-b border-slate-400 mt-0.5 mb-0.5"></div>
 
                 {/* Nama Terang Petugas */}
-                <p className="font-bold text-slate-900 text-xs print:text-[8.5px] w-full truncate max-w-[160px]">
+                <p className="font-bold text-slate-900 text-2xs sm:text-xs print:text-[8px] w-full truncate max-w-[130px] print:max-w-[100px] leading-tight">
                     {adminName || "Yangversa Computer"}
                 </p>
-                <p className="text-3xs print:text-[7px] text-slate-400 mt-0.5">
+                <p className="text-3xs print:text-[6.5px] text-slate-400">
                     Yangversa Computer
                 </p>
             </div>
@@ -133,7 +135,6 @@ export default function InvoiceModal({
         alamat: tiket.customer_alamat || ""
     };
 
-    // Robust resolution for Device & Ticket metadata
     const jenisPerangkat = (typeof tiket.perangkat === "object" && tiket.perangkat?.jenis_perangkat) || tiket.jenis_perangkat || "Perangkat";
     const serialNumber = (typeof tiket.perangkat === "object" && tiket.perangkat?.serial_number) || tiket.serial_number || "-";
     const teknisiNama = typeof tiket.teknisi === "object" ? (tiket.teknisi?.nama || "Tim Teknisi YVS") : (tiket.teknisi || "Tim Teknisi YVS");
@@ -149,20 +150,38 @@ export default function InvoiceModal({
         jumlah: Number(p.jumlah || 1)
     }));
 
+    const invoiceNumber = `INV-${(invoice.id || 1).toString().padStart(4, '0')}`;
+    const formattedDate = new Date(invoice.created_at || tiket.created_at || Date.now()).toLocaleDateString("id-ID", { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+
     const handlePrint = () => {
-        window.print();
+        DocumentPrintService.printOrShareDocument("printable-invoice-modal-content", {
+            filename: `Faktur-${invoiceNumber}.pdf`,
+            title: `Faktur #${invoiceNumber} - Yangversa Computer`,
+            text: `Faktur resmi pembayaran perbaikan unit #${tiket.nomor_tiket} dari Workshop Yangversa Computer.`,
+            preferDirectPrint: !isNativePlatform()
+        });
+    };
+
+    const handleDownloadPdf = () => {
+        DocumentPrintService.downloadPdf("printable-invoice-modal-content", `Faktur-${invoiceNumber}.pdf`, {
+            orientation: "landscape",
+            format: "a5"
+        });
     };
 
     const modalContent = (
         <div className="modal-shell z-[9999] bg-slate-950/70 backdrop-blur-xs print:p-0 print:bg-white print:static print:inset-auto print:overflow-visible invoice-modal-overlay">
-            {/* Print Stylesheet for flawless 1-page A4 Portrait printing without background bleed */}
+            {/* Print Stylesheet for flawless 1-page A5 Landscape / Half-A4 Continuous Form Dot Matrix Printing */}
             <style>{`
                 @media print {
                     @page {
-                        size: A4 portrait;
-                        margin: 8mm 10mm;
+                        size: A5 landscape;
+                        margin: 4mm 6mm;
                     }
-                    /* Completely remove root and its 4000px height from the print layout */
                     #root,
                     #root * {
                         display: none !important;
@@ -179,6 +198,8 @@ export default function InvoiceModal({
                         overflow: visible !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
+                        font-size: 8.5pt !important;
+                        line-height: 1.25 !important;
                     }
                     .invoice-modal-overlay {
                         position: static !important;
@@ -212,20 +233,26 @@ export default function InvoiceModal({
                 }
             `}</style>
 
-            <div className="modal-panel max-w-4xl z-10 print:max-h-none print:h-auto print:rounded-none print:border-none print:shadow-none printable-invoice-modal">
+            <div className="modal-panel max-w-5xl z-10 print:max-h-none print:h-auto print:rounded-none print:border-none print:shadow-none printable-invoice-modal">
                 <div className="modal-grabber no-print" />
+
                 {/* Modal Top Header (Screen Only) */}
-                <div className="no-print px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0">
+                <div className="no-print px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 rounded-xl bg-blue-100 text-blue-700">
-                            <FileText className="w-5 h-5" />
+                            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-tight">
-                                Faktur Tagihan & Pembayaran Resmi
-                            </h3>
-                            <p className="text-2xs sm:text-xs text-slate-500 font-mono">
-                                No. Tiket: {tiket.nomor_tiket} &bull; INV-{(invoice.id || 1).toString().padStart(4, '0')}
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
+                                    Faktur Tagihan & Pembayaran (Format Horizontal • Setengah A4)
+                                </h3>
+                                <span className="hidden sm:inline-flex px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-3xs font-semibold">
+                                    Continuous Form Ready
+                                </span>
+                            </div>
+                            <p className="text-3xs sm:text-2xs text-slate-500 font-mono mt-0.5">
+                                No. Tiket: {tiket.nomor_tiket} &bull; {invoiceNumber}
                             </p>
                         </div>
                     </div>
@@ -233,17 +260,36 @@ export default function InvoiceModal({
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
-                            onClick={handlePrint}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
-                            title="Cetak lembar invoice resmi format A4 (1 Halaman)"
+                            onClick={handleDownloadPdf}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all border border-slate-200 shadow-2xs cursor-pointer active:scale-95"
+                            title="Unduh Salinan Dokumen PDF Landscape Langsung"
                         >
-                            <Printer className="w-4 h-4" />
-                            <span>Cetak Faktur</span>
+                            <Download className="w-3.5 h-3.5 text-slate-500" />
+                            <span className="hidden sm:inline">Unduh PDF A5</span>
+                            <span className="sm:hidden">PDF</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handlePrint}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                            title={isNativePlatform() ? "Cetak / Kirim Faktur via WhatsApp" : "Cetak Faktur (Printer Continuous Form / PDF)"}
+                        >
+                            {isNativePlatform() ? (
+                                <>
+                                    <Share2 className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span>Cetak / Kirim</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Printer className="w-3.5 h-3.5" />
+                                    <span>Cetak Faktur</span>
+                                </>
+                            )}
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
                             title="Tutup Modal"
                         >
                             <X className="w-5 h-5" />
@@ -251,129 +297,149 @@ export default function InvoiceModal({
                     </div>
                 </div>
 
-                {/* Printable Document Body (Clean, compact A4 layout) */}
-                <div className="p-5 sm:p-8 md:p-10 overflow-y-auto custom-scrollbar print:overflow-visible print:p-0 print:text-[10px] print:leading-snug">
-                    {/* Official Workshop Header */}
-                    <div className="flex flex-col sm:flex-row print:flex-row justify-between items-start gap-4 border-b-2 border-slate-900 pb-4 print:pb-2.5">
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-2xl print:text-lg font-black text-slate-900 tracking-tight">KOMPUTERAWET.COM</h2>
-                                <span className="text-xs print:text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                                    Yangversa Computer
+                {/* Printable Document Body: Horizontal, packed, compact styling */}
+                <div id="printable-invoice-modal-content" className="p-4 sm:p-6 overflow-y-auto custom-scrollbar print:overflow-visible print:p-0 print:text-[8.5pt] print:leading-tight">
+                    {/* Official Workshop Header Bar */}
+                    <div className="flex flex-col sm:flex-row print:flex-row justify-between items-start sm:items-center print:items-center gap-2 border-b-2 border-slate-900 pb-2.5 print:pb-1.5">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h2 className="text-lg sm:text-xl print:text-base font-black text-slate-900 tracking-tight font-mono">
+                                    KOMPUTERAWET.COM
+                                </h2>
+                                <span className="text-3xs print:text-[7px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 font-mono">
+                                    YANGVERSA COMPUTER
                                 </span>
                             </div>
-                            <p className="text-slate-600 text-xs print:text-[9px] mt-0.5 font-medium">
-                                Pusat Servis Laptop, PC Desktop & Pengadaan Suku Cadang
+                            <p className="text-slate-600 text-3xs sm:text-2xs print:text-[7.5px] font-medium leading-snug mt-0.5">
+                                Workshop Reparasi Laptop, PC Desktop & Solusi Hardware Spesialis
                             </p>
-                            <p className="text-slate-500 text-xs print:text-[8px] mt-0.5">
-                                Workshop Yangversa &bull; WhatsApp CS: 0812-3456-7890 &bull; www.komputerawet.com
+                            <p className="text-slate-500 text-3xs print:text-[7px] leading-tight">
+                                Jl. Raya Pekayon No. 25, Bekasi Selatan &bull; WA CS: 0812-3456-7890 &bull; www.komputerawet.com
                             </p>
                         </div>
+
+                        {/* Title & Invoice Status Meta */}
                         <div className="text-left sm:text-right print:text-right shrink-0">
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 mb-1">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 print:w-3 print:h-3" />
-                                <span className="text-xs print:text-[9px] font-bold uppercase tracking-wider">Lunas</span>
+                            <div className="flex items-center sm:justify-end print:justify-end gap-1.5 mb-0.5">
+                                <span className="text-3xs sm:text-2xs print:text-[7.5px] font-extrabold uppercase tracking-wider text-slate-700">
+                                    FAKTUR PEMBAYARAN RESMI
+                                </span>
+                                <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 text-3xs print:text-[7px] font-bold uppercase">
+                                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-700" />
+                                    <span>Lunas</span>
+                                </span>
                             </div>
-                            <p className="text-2xs print:text-[8px] font-semibold text-slate-500 uppercase tracking-wide">Faktur Pembayaran #</p>
-                            <p className="text-lg print:text-base font-mono font-bold text-slate-900 leading-tight">
-                                INV-{(invoice.id || 1).toString().padStart(4, '0')}
+                            <p className="text-base sm:text-lg print:text-sm font-mono font-black text-blue-700 leading-tight">
+                                {invoiceNumber}
                             </p>
-                            <p className="text-2xs print:text-[8px] text-slate-500 mt-0.5">
-                                Tanggal: {new Date(invoice.created_at || tiket.created_at || Date.now()).toLocaleDateString("id-ID", { year: 'numeric', month: 'long', day: 'numeric' })}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Customer & Unit Metadata */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 print:gap-3 py-4 print:py-2.5 border-b border-slate-200 text-xs print:text-[9px]">
-                        <div>
-                            <p className="font-semibold text-slate-400 uppercase tracking-wider mb-1 text-2xs print:text-[8px]">
-                                Ditagihkan Kepada:
-                            </p>
-                            <h3 className="text-base print:text-xs font-bold text-slate-900 leading-snug">{customer.nama}</h3>
-                            <p className="text-slate-600 font-mono mt-0.5">{customer.nomor_telepon}</p>
-                            <p className="text-slate-600 text-xs print:text-[8.5px] mt-0.5 max-w-sm">
-                                {customer.alamat || "Alamat tidak dicantumkan"}
-                            </p>
-                        </div>
-                        <div className="sm:text-right print:text-right">
-                            <p className="font-semibold text-slate-400 uppercase tracking-wider mb-1 text-2xs print:text-[8px]">
-                                Data Perangkat & Tiket:
-                            </p>
-                            <p className="font-bold text-slate-900 text-sm print:text-xs leading-snug">
-                                {jenisPerangkat} &bull; {namaPerangkatLengkap}
-                            </p>
-                            <p className="text-slate-600 mt-0.5">
-                                Serial Number: <span className="font-mono">{serialNumber}</span>
-                            </p>
-                            <p className="text-slate-600 mt-0.5">
-                                No. Tiket: <strong className="font-mono text-slate-900">{tiket.nomor_tiket}</strong>
-                            </p>
-                            <p className="text-slate-600 mt-0.5">
-                                Teknisi: <span className="font-medium text-slate-800">{teknisiNama}</span>
+                            <p className="text-3xs print:text-[7px] text-slate-500 font-mono">
+                                No. Tiket: <strong className="text-slate-800">{tiket.nomor_tiket}</strong> &bull; Tanggal: {formattedDate}
                             </p>
                         </div>
                     </div>
 
-                    {/* Problem & Diagnosis Summary */}
-                    <div className="py-2.5 print:py-1.5 border-b border-slate-200 bg-slate-50/70 print:bg-slate-50/50 px-4 print:px-2.5 rounded-xl my-3 print:my-2 text-xs print:text-[9px]">
-                        <p className="font-bold text-slate-500 uppercase tracking-wider mb-1 text-3xs print:text-[7.5px]">
-                            Ringkasan Pekerjaan Servis:
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 print:gap-2">
-                            <div>
-                                <span className="font-semibold text-slate-700">Keluhan Awal:</span>
-                                <p className="text-slate-600 mt-0.5 leading-relaxed">{tiket.keluhan || "-"}</p>
-                            </div>
-                            {tiket.diagnosis && (
-                                <div>
-                                    <span className="font-semibold text-slate-700">Tindakan / Solusi Teknis:</span>
-                                    <p className="text-slate-600 mt-0.5 leading-relaxed">{tiket.diagnosis.solusi || "-"}</p>
-                                </div>
-                            )}
+                    {/* Metadata Strip: 3 Compact Columns (Packed & High Information Density) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 print:grid-cols-3 gap-2 py-2 print:py-1.5 border-b border-slate-200 text-3xs sm:text-2xs print:text-[7.5px] bg-slate-50/70 print:bg-slate-50/30 rounded-lg px-3 print:px-2 mt-2 print:mt-1">
+                        {/* Data Pelanggan */}
+                        <div className="space-y-0.5">
+                            <span className="text-slate-400 font-bold uppercase tracking-wider block text-3xs print:text-[6.5px]">
+                                Data Pelanggan
+                            </span>
+                            <p className="font-bold text-slate-900 truncate">
+                                {customer.nama || "Pelanggan"}
+                            </p>
+                            <p className="text-slate-600 font-mono">
+                                {customer.nomor_telepon || "-"}
+                            </p>
+                            <p className="text-slate-500 truncate">
+                                {customer.alamat || "Bekasi & Sekitarnya"}
+                            </p>
+                        </div>
+
+                        {/* Data Perangkat */}
+                        <div className="space-y-0.5">
+                            <span className="text-slate-400 font-bold uppercase tracking-wider block text-3xs print:text-[6.5px]">
+                                Data Perangkat
+                            </span>
+                            <p className="font-bold text-slate-900 truncate">
+                                {namaPerangkatLengkap}
+                            </p>
+                            <p className="text-slate-600">
+                                Kategori: <span className="font-medium text-slate-800">{jenisPerangkat}</span>
+                            </p>
+                            <p className="text-slate-600 font-mono">
+                                S/N: <span className="font-medium text-slate-800">{serialNumber}</span>
+                            </p>
+                        </div>
+
+                        {/* Petugas & Layanan */}
+                        <div className="space-y-0.5">
+                            <span className="text-slate-400 font-bold uppercase tracking-wider block text-3xs print:text-[6.5px]">
+                                Layanan & Petugas
+                            </span>
+                            <p className="text-slate-800">
+                                Teknisi PIC: <strong className="text-slate-900">{teknisiNama}</strong>
+                            </p>
+                            <p className="text-slate-800">
+                                Paket SLA: <strong className="text-blue-700 uppercase font-mono">{tiket.sla_paket || "Reguler"}</strong>
+                            </p>
+                            <p className="text-slate-500 font-mono">
+                                Masuk: {new Date(tiket.created_at || Date.now()).toLocaleDateString('id-ID')}
+                            </p>
                         </div>
                     </div>
 
-                    {/* Cost Breakdown Table */}
-                    <div className="py-2 overflow-x-auto print:overflow-visible">
-                        <table className="w-full text-left text-xs print:text-[9px]">
+                    {/* Responsive Items Table: Tight padding & compact line heights */}
+                    <div className="mt-2 print:mt-1.5 overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-3xs sm:text-2xs print:text-[7.5px]">
                             <thead>
-                                <tr className="border-b-2 border-slate-200 text-slate-900 font-bold">
-                                    <th className="py-2 print:py-1">Deskripsi Item / Jasa</th>
-                                    <th className="py-2 print:py-1 text-right">Harga Satuan</th>
-                                    <th className="py-2 print:py-1 text-center">Qty</th>
-                                    <th className="py-2 print:py-1 text-right">Subtotal</th>
+                                <tr className="border-b-2 border-slate-300 bg-slate-100/80 text-slate-800 font-bold uppercase tracking-wider">
+                                    <th className="py-1 px-2 print:py-0.5 print:px-1 w-8 text-center">#</th>
+                                    <th className="py-1 px-2 print:py-0.5 print:px-1">Deskripsi Item / Tindakan Jasa</th>
+                                    <th className="py-1 px-2 print:py-0.5 print:px-1 text-center w-28">Kategori</th>
+                                    <th className="py-1 px-2 print:py-0.5 print:px-1 text-right w-28">Harga Satuan</th>
+                                    <th className="py-1 px-2 print:py-0.5 print:px-1 text-center w-12">Qty</th>
+                                    <th className="py-1 px-2 print:py-0.5 print:px-1 text-right w-32">Subtotal</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                <tr>
-                                    <td className="py-2 print:py-1 text-slate-800">
-                                        <span className="font-bold block">Biaya Jasa Servis & Penanganan</span>
-                                        <span className="text-slate-500 text-3xs print:text-[7.5px]">Tindakan teknis reparasi, instalasi & pengujian fungsi</span>
+                            <tbody className="divide-y divide-slate-150">
+                                {/* Baris 1: Biaya Jasa Servis */}
+                                <tr className="hover:bg-slate-50/50">
+                                    <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-center text-slate-400 font-mono">1</td>
+                                    <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-slate-900">
+                                        <span className="font-bold block leading-tight">Biaya Jasa Servis & Penanganan Teknis</span>
+                                        <span className="text-3xs print:text-[6.5px] text-slate-500">Tindakan teknis reparasi, solder/reballing, instalasi & pengujian fungsi perangkat</span>
                                     </td>
-                                    <td className="py-2 print:py-1 text-right text-slate-600 font-mono">{formatRupiah(invoice.biaya_jasa)}</td>
-                                    <td className="py-2 print:py-1 text-center text-slate-600">1</td>
-                                    <td className="py-2 print:py-1 text-right font-bold text-slate-900 font-mono">{formatRupiah(invoice.biaya_jasa)}</td>
+                                    <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-center text-slate-600 font-medium">Jasa Servis</td>
+                                    <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-right text-slate-600 font-mono">{formatRupiah(invoice.biaya_jasa)}</td>
+                                    <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-center text-slate-700 font-mono font-medium">1</td>
+                                    <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-right font-bold text-slate-900 font-mono">{formatRupiah(invoice.biaya_jasa)}</td>
                                 </tr>
                                 
+                                {/* Baris 2..N: Suku Cadang Terpakai */}
                                 {sparepartsList.map((p, index) => (
-                                    <tr key={index}>
-                                        <td className="py-2 print:py-1 text-slate-800">
-                                            <span className="font-bold block">{p.nama}</span>
-                                            <span className="text-slate-500 text-3xs print:text-[7.5px]">Suku cadang / Sparepart resmi ({p.kategori})</span>
+                                    <tr key={index} className="hover:bg-slate-50/50">
+                                        <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-center text-slate-400 font-mono">{index + 2}</td>
+                                        <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-slate-900">
+                                            <span className="font-bold block leading-tight">{p.nama}</span>
+                                            <span className="text-3xs print:text-[6.5px] text-slate-500">Suku cadang / komponen pengganti resmi</span>
                                         </td>
-                                        <td className="py-2 print:py-1 text-right text-slate-600 font-mono">{formatRupiah(p.harga)}</td>
-                                        <td className="py-2 print:py-1 text-center text-slate-600">{p.jumlah}</td>
-                                        <td className="py-2 print:py-1 text-right font-bold text-slate-900 font-mono">{formatRupiah(p.harga * p.jumlah)}</td>
+                                        <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-center text-slate-600">{p.kategori}</td>
+                                        <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-right text-slate-600 font-mono">{formatRupiah(p.harga)}</td>
+                                        <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-center text-slate-700 font-mono font-medium">{p.jumlah}</td>
+                                        <td className="py-1.5 px-2 print:py-0.5 print:px-1 text-right font-bold text-slate-900 font-mono">{formatRupiah(p.harga * p.jumlah)}</td>
                                     </tr>
                                 ))}
                             </tbody>
                             <tfoot>
-                                <tr className="border-t-2 border-slate-300">
-                                    <td colSpan="3" className="py-2.5 print:py-1.5 text-right font-bold text-slate-700 uppercase tracking-wider text-xs print:text-[9px]">
-                                        Total Tagihan Lunas
+                                <tr className="border-t-2 border-slate-400 bg-slate-50/60 font-bold">
+                                    <td colSpan="4" className="py-1.5 px-2 print:py-1 print:px-1 text-slate-600 text-3xs print:text-[7px]">
+                                        Total {sparepartsList.length + 1} item tindakan jasa & suku cadang
                                     </td>
-                                    <td className="py-2.5 print:py-1.5 text-right font-black text-base print:text-xs text-blue-700 font-mono">
+                                    <td className="py-1.5 px-2 print:py-1 print:px-1 text-right text-slate-700 uppercase tracking-wide text-2xs print:text-[7.5px]">
+                                        TOTAL LUNAS:
+                                    </td>
+                                    <td className="py-1.5 px-2 print:py-1 print:px-1 text-right font-black text-sm sm:text-base print:text-[10pt] text-blue-700 font-mono">
                                         {formatRupiah(invoice.total_biaya)}
                                     </td>
                                 </tr>
@@ -381,13 +447,19 @@ export default function InvoiceModal({
                         </table>
                     </div>
 
-                    {/* Footer / Signature */}
-                    <div className="pt-3 print:pt-2 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-end gap-4 text-xs print:text-[8px]">
-                        <div className="max-w-xs">
-                            <p className="font-semibold text-slate-700">Masa Garansi Servis: {tiket.durasi_garansi || "1 Bulan"}</p>
-                            <p className="text-slate-500 mt-0.5">Berlaku untuk perbaikan dan komponen yang sama sesuai rincian nota di atas.</p>
-                            <p className="text-slate-400 mt-1 text-3xs print:text-[7px]">Dokumen ini merupakan bukti pembayaran resmi yang sah dari Yangversa Computer.</p>
+                    {/* Footer & Dual Digital Signature Bar (Compact Horizontal Bottom) */}
+                    <div className="mt-2.5 print:mt-2 pt-2 border-t border-slate-200 flex flex-col sm:flex-row print:flex-row justify-between items-end gap-3 text-3xs sm:text-2xs print:text-[7px]">
+                        <div className="max-w-md text-slate-600 leading-snug">
+                            <div className="flex items-center gap-1.5 font-bold text-slate-900 mb-0.5">
+                                <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                <span>Masa Garansi Servis: <span className="text-blue-700">{tiket.durasi_garansi || "1 Bulan"}</span></span>
+                            </div>
+                            <p className="text-slate-500 text-3xs print:text-[6.5px]">
+                                Garansi berlaku untuk kerusakan & komponen pengganti yang sama. Nota ini merupakan bukti pembayaran sah dan tanda serah terima resmi Yangversa Computer.
+                            </p>
                         </div>
+
+                        {/* Dual Signatures */}
                         <AlignedSignatureRow
                             customerSignature={invoice?.ttd_customer}
                             customerName={invoice?.ttd_customer_nama || customer.nama}
@@ -395,7 +467,7 @@ export default function InvoiceModal({
                             adminSignature={invoice?.ttd_admin || DEFAULT_WORKSHOP_SIGNATURE}
                             adminName={invoice?.ttd_admin_nama && invoice?.ttd_admin_nama !== "Admin" ? invoice.ttd_admin_nama : "Yangversa Computer"}
                             isDigital={true}
-                            adminRole="Petugas Workshop • Kasir"
+                            adminRole="Kasir / Petugas Toko"
                         />
                     </div>
                 </div>

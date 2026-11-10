@@ -1,0 +1,23 @@
+# Cline & Roo-Cline Rules for Yangversa ERP
+
+## 1. Project Initialization & Context Retention
+- **Memory Bank First**: At the start of every task or conversation, you MUST read the files in `memory-bank/` (starting with `projectbrief.md` and `activeContext.md`) and the root `AGENTS.md`.
+- **Update Memory Bank**: Before completing a significant task, update `memory-bank/activeContext.md` and `memory-bank/progress.md`. If architectural patterns or tech choices change, update `systemPatterns.md` or `techContext.md`.
+
+## 2. Efficient Semantic Code Navigation (Serena MCP)
+- Use Serena MCP tools (`find_symbol`, `find_referencing_symbols`, `get_symbols_overview`, `read_memory`) for locating definitions, finding call sites, and inspecting structure.
+- **NEVER** run recursive grep or blanket read commands on massive directory trees (`node_modules/`, `dist/`, `.serena/cache/`, `android/build/`).
+- Only open and read source files that are directly relevant to the current task.
+
+## 3. Architecture & Code Integrity
+- **Preserve Existing Architecture**:
+  - Backend is strictly CommonJS (`require` / `module.exports`).
+  - Frontend is strictly ES Modules (`import` / `export`).
+  - All frontend API calls must route through `src/services/api.js`.
+  - Maintain the staging API target: `https://staging.101.32.127.55.sslip.io/api`.
+- **Do Not Break UI/UX**:
+  - Preserve all existing styling, modal sheet transitions, Tailwind utility classes, and glassmorphic designs.
+  - Never replace components with generic placeholders or simplified stubs.
+- **Capacitor Mobile Safety**:
+  - Never register PWA Service Workers in the Capacitor native app. Service workers in Android WebView break native API fetch requests.
+  - For printing, always use `DocumentPrintService.printOrShareDocument()`.

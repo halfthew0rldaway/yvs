@@ -4,6 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
@@ -11,6 +18,7 @@
     width: 100%;
     max-width: 100vw;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
@@ -20,6 +28,7 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -36,13 +45,38 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Prevent iOS Safari auto-zoom when tapping inputs (iOS zooms if font < 16px) */
-  @media (max-width: 768px) {
-    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-    select,
-    textarea {
-      font-size: 16px !important;
+  /* Standardized Form Typography & Normalized Inputs */
+  input, select, textarea {
+    font-size: 0.75rem !important; /* 12px on mobile */
+    line-height: 1.2rem !important;
+  }
+  @media (min-width: 640px) {
+    input, select, textarea {
+      font-size: 0.875rem !important; /* 14px on tablets/desktop */
+      line-height: 1.25rem !important;
     }
+  }
+
+  /* Dropdown option items */
+  select option {
+    font-size: 0.75rem !important; /* 12px on mobile */
+    padding: 6px 10px;
+    background-color: #ffffff;
+    color: #1e293b;
+  }
+  @media (min-width: 640px) {
+    select option {
+      font-size: 0.875rem !important;
+      padding: 8px 12px;
+    }
+  }
+}
+
+/* Eliminate sluggish backdrop blur shader on mobile GPUs for silky 60fps scrolling */
+@media (max-width: 1024px) {
+  .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl, .backdrop-blur-xs, .backdrop-blur-sm {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
 
@@ -56,14 +90,15 @@
      Height uses `dvh` so iOS Safari address bars never clip it.
      ============================================================ */
   .modal-shell {
-    @apply fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6;
+    @apply fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 16px));
   }
 
   .modal-panel {
     @apply relative w-full bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col;
-    @apply rounded-t-3xl sm:rounded-2xl;
-    @apply max-h-[92dvh] sm:max-h-[92vh];
-    @apply mb-0 sm:my-auto;
+    @apply rounded-2xl sm:rounded-3xl;
+    @apply max-h-[88dvh] sm:max-h-[92vh];
+    @apply my-auto;
   }
 
   /* Drag-handle affordance shown only on the mobile bottom sheet */
@@ -83,6 +118,12 @@
   }
   .modal-footer {
     @apply px-4 sm:px-6 py-3.5 sm:py-4 border-t border-slate-100 shrink-0;
+    padding-bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
+  }
+  @media (min-width: 640px) {
+    .modal-footer {
+      padding-bottom: 1rem;
+    }
   }
 
   /* Standardized responsive card padding (replaces bare `p-6`) */
@@ -205,6 +246,33 @@
   /* Standardized Table Typography */
   .table-header {
     @apply sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm text-slate-500 uppercase tracking-wider text-2xs font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0];
+  }
+
+  /* Standard Normalized Button Dimensions & Active Tactile Feedback */
+  .btn-base {
+    @apply inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-100 select-none cursor-pointer leading-tight;
+    @apply h-9 sm:h-10 px-3.5 sm:px-4 text-xs sm:text-sm;
+    @apply active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn-base bg-blue-600 hover:bg-blue-700 text-white shadow-xs active:bg-blue-800;
+  }
+  .btn-secondary {
+    @apply btn-base bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs;
+  }
+  .btn-danger {
+    @apply btn-base bg-rose-600 hover:bg-rose-700 text-white shadow-xs active:bg-rose-800;
+  }
+
+  /* Standardized Form Inputs with Normalized Compact Height */
+  .input-base {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 placeholder-slate-400;
+    @apply h-9 sm:h-10 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20;
+  }
+
+  /* Instant Touch Scale Feedback */
+  .touch-feedback {
+    @apply active:scale-[0.98] transition-transform duration-75;
   }
 }
 
