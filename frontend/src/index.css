@@ -16,6 +16,8 @@
     width: 100%;
     max-width: 100vw;
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     touch-action: manipulation;
   }
   body {
@@ -26,6 +28,8 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     overscroll-behavior-y: none;
   }
   h1, h2, h3, h4, h5, h6 {
@@ -33,9 +37,11 @@
     letter-spacing: -0.015em;
   }
 
-  /* Prevent 300ms mobile touch delay */
+  /* Prevent 300ms mobile touch delay and disable font boosting */
   button, a, [role="button"], input[type="button"], input[type="submit"] {
     touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   /* Smooth momentum scrolling on mobile devices */
@@ -45,8 +51,10 @@
 
   /* Standardized Form Typography & Normalized Inputs */
   input, select, textarea {
-    font-size: 0.75rem !important; /* 12px on mobile */
-    line-height: 1.2rem !important;
+    font-size: 0.8125rem !important; /* 13px normalized across web & mobile */
+    line-height: 1.25rem !important;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   @media (min-width: 640px) {
     input, select, textarea {
@@ -55,9 +63,20 @@
     }
   }
 
+  /* Normalized Clean Select dropdown styling across all browsers */
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.65rem center;
+    background-repeat: no-repeat;
+    background-size: 1.15rem 1.15rem;
+    padding-right: 2.25rem !important;
+  }
+
   /* Dropdown option items */
   select option {
-    font-size: 0.75rem !important; /* 12px on mobile */
+    font-size: 0.8125rem !important; /* 13px on mobile */
     padding: 6px 10px;
     background-color: #ffffff;
     color: #1e293b;
@@ -88,7 +107,7 @@
      Height uses `dvh` so iOS Safari address bars never clip it.
      ============================================================ */
   .modal-shell {
-    @apply fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6;
+    @apply fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 md:p-6;
     padding-bottom: max(1rem, env(safe-area-inset-bottom, 16px));
   }
 

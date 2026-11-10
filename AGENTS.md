@@ -49,6 +49,7 @@ The system is organized as a high-cohesion, multi-tier application:
 - **Security & Networking:** `helmet`, `cors`, `compression`, `express-rate-limit`, `express-validator`
 - **File Uploads:** `multer` storing into `backend/uploads/`
 - **PDF & Formatting:** Dynamic HTML-to-Canvas / Print Spooling adapters
+- **Testing Engine:** Node.js native test runner (`node --test`), fast in-memory execution, zero heavy dependencies
 
 ### Frontend (`/frontend`)
 - **Runtime & Bundler:** Vite `^6.4.3` (ES Modules: `import` / `export`)
@@ -72,10 +73,19 @@ The system is organized as a high-cohesion, multi-tier application:
 │   ├── project.yml              <-- Project definition (LSP TypeScript enabled)
 │   └── memories/                <-- Semantic project knowledge graph (mem:core, etc.)
 │
+├── docs/                        <-- Quality assurance & system documentation
+│   └── testing/                 <-- Test suites, test scenarios & verification reports
+│       ├── black-box-test-cases.md
+│       ├── white-box-test-cases.md
+│       ├── test-summary.md
+│       └── test-execution-report.md
+│
 ├── backend/                     <-- Express.js API & Prisma
 │   ├── prisma/
 │   │   └── schema.prisma        <-- 25+ models database schema
 │   ├── scripts/                 <-- Database normalization, seeding & maintenance
+│   ├── tests/                   <-- Automated unit test suites (node --test)
+│   │   └── unit/                <-- 36 automated unit tests across 6 domain suites
 │   ├── src/
 │   │   ├── app.js               <-- Express entrypoint & middleware pipeline
 │   │   ├── config/              <-- Database & system configuration
@@ -130,6 +140,28 @@ The system is organized as a high-cohesion, multi-tier application:
    - Accent Warning: `#f59e0b` / Amber
    - Maintain consistent border styling (`border-slate-200`, `rounded-xl`, `shadow-2xs`).
    - Never degrade, break, or unnecessarily alter existing UI layouts, modal transitions, or responsive behavior.
+
+5. **Modal Architecture & Mobile Responsiveness Invariants**:
+   - **Modal Shell & Stacking**: All modals must use `.modal-shell` with `z-[100]`. Critical security modals (e.g. `ReloginModal`, `SessionWarningModal`) use `z-[9998]` / `z-[9999]`.
+   - **Scrollable Form Rule**: Any modal containing forms must be structured with:
+     1. Pinned header: `<div className="modal-header shrink-0 ...">`
+     2. Form shell: `<form className="flex flex-col flex-1 min-h-0 overflow-hidden">`
+     3. Scrollable body: `<div className="modal-body overflow-y-auto flex-1 custom-scrollbar">`
+     4. Pinned footer: `<div className="modal-footer shrink-0 ...">`
+     Never place bare unconstrained forms inside `.modal-panel` without `overflow-y-auto`, or fields will get clipped on mobile viewports.
+   - **Z-Index Layering Hierarchy**:
+     - System Modals / Overlays: `z-[100]` to `z-[9999]`
+     - Floating CRM Bot: `z-[35]`
+     - Mobile Bottom Navigation: `z-30`
+     - Global Header / App Bar: `z-10`
+   - **Mobile Web Typography Normalization**:
+     - `-webkit-text-size-adjust: 100%` and `text-size-adjust: 100%` on `html`, `body`, inputs, and buttons to prevent mobile Chrome's text auto-inflation (font boosting) from bloating UI elements.
+     - Standard inputs: `0.8125rem` (13px) on mobile, `0.875rem` (14px) on desktop.
+     - Dropdown `<select>`: normalized with `appearance: none`, SVG chevron background, and `padding-right: 2.25rem !important` to prevent text collision.
+
+6. **Continuous Form & Dot Matrix Printing Standards**:
+   - Official invoice layouts are packed horizontally (`80mm` / half A4 continuous form format) for fast dot matrix continuous feeding without excessive white space.
+   - BPBS intake receipts are designed for horizontal A5 format.
 
 ---
 
@@ -192,3 +224,31 @@ To maximize speed, maintain context, and avoid breaking production code:
    - Respect established mobile Capacitor patterns and web styling conventions.
 4. **Synchronize Documentation**:
    - When introducing or altering business models, routes, or workflows, update `AGENTS.md`, `memory-bank/activeContext.md`, and `memory-bank/progress.md`.
+
+---
+
+## 8. Testing & Quality Assurance
+
+The codebase includes comprehensive White Box & Black Box test coverage designed for rapid manual and automated execution:
+
+### Automated Unit Test Suites (`backend/tests/unit/`)
+Tests run using the native Node.js test runner with zero extra dependencies:
+```bash
+# Run all unit tests
+cd backend && node --test tests/unit/*.test.js
+```
+
+Covered Domain Test Suites (36/36 passing):
+1. **`WB-AUT`**: JWT authentication validation, expiry codes, tampered signatures, and RBAC inheritance (`admin`, `teknisi`, `pimpinan`).
+2. **`WB-DIA`**: Technician diagnosis input sanitization, non-negative cost enforcement, and error-free `LogPerbaikan` note formatting.
+3. **`WB-FIN`**: Multi-item sparepart summation, negative service fee prevention, DP / discount calculations, and remaining balance clamps.
+4. **`WB-GEO`**: Haversine distance math, exact 500m geofence checks, anti-spoofing accuracy buffers (capped at 200m), and late check-in detection at 09:16 WIB.
+5. **`WB-SEC`**: Null-byte stripping, whitespace trimming, Indonesian phone normalization (`+62` -> `08...`), and uppercase formatting for ticket numbers.
+6. **`WB-SLA`**: Priority vs regular SLA target scheduling, warranty period math (30d, 1m, 1y), and overdue / paused status detection.
+7. **`WB-STA`**: Ticket service state machine transitions, role gatekeeping, QC prerequisites for handover, and active loaner blocking.
+
+### Specification & Planning Deliverables (`docs/testing/`)
+- **`white-box-test-cases.md`**: 55 white-box test specifications covering backend controllers, services, middleware, and business logic.
+- **`black-box-test-cases.md`**: 50 black-box scenarios covering customer journey, device intake, diagnosis, repair, invoicing, offline mode, and usability.
+- **`test-summary.md`**: High-level module coverage, critical paths, risk analysis, and regression checklists.
+- **`test-execution-report.md`**: Detailed execution log, pass/fail results, and verification benchmarks.

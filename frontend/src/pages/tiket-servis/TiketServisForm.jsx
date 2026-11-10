@@ -1360,195 +1360,198 @@ export default function TiketServisForm() {
 
             {/* Quick Registration Modal: Pelanggan & Perangkat Baru */}
             {isQuickAddOpen && (
-                <div className="modal-shell bg-slate-900/60 backdrop-blur-xs">
+                <div className="modal-shell z-[100] bg-slate-900/60 backdrop-blur-xs">
                     <div className="modal-panel max-w-lg">
                         <div className="modal-grabber" />
                         {/* Header */}
-                        <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 gap-2">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl border border-blue-200">
-                                    <Plus className="w-5 h-5 text-blue-600" />
+                        <div className="modal-header flex items-center justify-between bg-slate-50/80 gap-2 shrink-0">
+                            <div className="flex items-center gap-2.5 sm:gap-3">
+                                <div className="p-2 sm:p-2.5 bg-blue-100 text-blue-700 rounded-xl border border-blue-200 shrink-0">
+                                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-900 text-base">Registrasi Kilat Unit & Pelanggan</h3>
-                                    <p className="text-xs text-slate-500 mt-0.5">Daftarkan pemilik dan perangkat langsung tanpa keluar halaman</p>
+                                    <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-tight">Registrasi Kilat Unit & Pelanggan</h3>
+                                    <p className="text-2xs sm:text-xs text-slate-500 mt-0.5 leading-snug">Daftarkan pemilik dan perangkat langsung tanpa keluar halaman</p>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setIsQuickAddOpen(false)}
-                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer shrink-0"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        {/* Form Body */}
-                        <form onSubmit={handleQuickRegister} className="p-6 space-y-4 text-xs">
-                            {/* Switch Mode: Pelanggan Baru vs Pelanggan Terdaftar */}
-                            <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200">
-                                <button
-                                    type="button"
-                                    onClick={() => setQuickIsExistingCustomer(false)}
-                                    className={`flex-1 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
-                                        !quickIsExistingCustomer ? "bg-white text-blue-700 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-                                    }`}
-                                >
-                                    + Pelanggan Baru (Walk-In)
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setQuickIsExistingCustomer(true)}
-                                    className={`flex-1 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
-                                        quickIsExistingCustomer ? "bg-white text-blue-700 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-                                    }`}
-                                >
-                                    Pelanggan Terdaftar
-                                </button>
-                            </div>
-
-                            {/* Section A: Customer Details */}
-                            {!quickIsExistingCustomer ? (
-                                <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-3">
-                                    <div className="flex items-center gap-1.5 font-bold text-slate-800 text-2xs uppercase tracking-wider pb-1 border-b border-slate-200/60">
-                                        <User className="w-3.5 h-3.5 text-blue-600" />
-                                        <span>Identitas Pelanggan</span>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
-                                            <input
-                                                type="text"
-                                                value={quickForm.nama}
-                                                onChange={(e) => setQuickForm({ ...quickForm, nama: e.target.value })}
-                                                placeholder="Nama pelanggan..."
-                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                                required={!quickIsExistingCustomer}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block font-semibold text-slate-700 mb-1">No. WhatsApp *</label>
-                                            <input
-                                                type="text"
-                                                value={quickForm.nomor_telepon}
-                                                onChange={(e) => setQuickForm({ ...quickForm, nomor_telepon: e.target.value })}
-                                                placeholder="Contoh: 081234567890"
-                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                                required={!quickIsExistingCustomer}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block font-semibold text-slate-700 mb-1">Tipe Kepribadian (Gaya Komunikasi)</label>
-                                        <select
-                                            value={quickForm.tipe_kepribadian}
-                                            onChange={(e) => setQuickForm({ ...quickForm, tipe_kepribadian: e.target.value })}
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 font-medium"
-                                        >
-                                            <option value="Netral">Netral (Standar Ramah & Terstruktur)</option>
-                                            <option value="Koleris">Koleris (Tegas, Lugas, Target Solusi Cepat)</option>
-                                            <option value="Sanguinis">Sanguinis (Ekspresif, Ramah, Komunikasi Hangat)</option>
-                                            <option value="Plegmatis">Plegmatis (Tenang, Sabar, Mengutamakan Rasa Aman)</option>
-                                            <option value="Melankolis">Melankolis (Kritis, Teliti, Penjelasan Teknis Rinci)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-2">
-                                    <label className="block font-semibold text-slate-700">Pilih Pelanggan Terdaftar *</label>
-                                    <select
-                                        value={selectedExistingCustId}
-                                        onChange={(e) => setSelectedExistingCustId(e.target.value)}
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 font-semibold"
-                                        required={quickIsExistingCustomer}
+                        {/* Form Container (flex-col, full height constraint) */}
+                        <form onSubmit={handleQuickRegister} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                            {/* Scrollable Modal Body */}
+                            <div className="modal-body space-y-3.5 sm:space-y-4">
+                                {/* Switch Mode: Pelanggan Baru vs Pelanggan Terdaftar */}
+                                <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200 shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setQuickIsExistingCustomer(false)}
+                                        className={`flex-1 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                                            !quickIsExistingCustomer ? "bg-white text-blue-700 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                                        }`}
                                     >
-                                        <option value="">-- Pilih Pelanggan --</option>
-                                        {existingCustomers.map(c => (
-                                            <option key={c.id} value={c.id}>
-                                                {c.nama} ({c.nomor_telepon})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-
-                            {/* Section B: Device Details */}
-                            <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-3">
-                                <div className="flex items-center gap-1.5 font-bold text-slate-800 text-2xs uppercase tracking-wider pb-1 border-b border-slate-200/60">
-                                    <Laptop className="w-3.5 h-3.5 text-indigo-600" />
-                                    <span>Data Perangkat Baru</span>
+                                        + Pelanggan Baru (Walk-In)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setQuickIsExistingCustomer(true)}
+                                        className={`flex-1 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                                            quickIsExistingCustomer ? "bg-white text-blue-700 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                                        }`}
+                                    >
+                                        Pelanggan Terdaftar
+                                    </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block font-semibold text-slate-700 mb-1">Kategori Perangkat *</label>
+                                {/* Section A: Customer Details */}
+                                {!quickIsExistingCustomer ? (
+                                    <div className="p-3.5 sm:p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-3">
+                                        <div className="flex items-center gap-1.5 font-bold text-slate-800 text-2xs uppercase tracking-wider pb-1 border-b border-slate-200/60">
+                                            <User className="w-3.5 h-3.5 text-blue-600" />
+                                            <span>Identitas Pelanggan</span>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-2xs sm:text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
+                                                <input
+                                                    type="text"
+                                                    value={quickForm.nama}
+                                                    onChange={(e) => setQuickForm({ ...quickForm, nama: e.target.value })}
+                                                    placeholder="Nama pelanggan..."
+                                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors"
+                                                    required={!quickIsExistingCustomer}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-2xs sm:text-xs font-semibold text-slate-700 mb-1">No. WhatsApp *</label>
+                                                <input
+                                                    type="text"
+                                                    value={quickForm.nomor_telepon}
+                                                    onChange={(e) => setQuickForm({ ...quickForm, nomor_telepon: e.target.value })}
+                                                    placeholder="Contoh: 081234567890"
+                                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors"
+                                                    required={!quickIsExistingCustomer}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-2xs sm:text-xs font-semibold text-slate-700 mb-1">Tipe Kepribadian (Gaya Komunikasi)</label>
+                                            <select
+                                                value={quickForm.tipe_kepribadian}
+                                                onChange={(e) => setQuickForm({ ...quickForm, tipe_kepribadian: e.target.value })}
+                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-500 font-medium cursor-pointer"
+                                            >
+                                                <option value="Netral">Netral (Standar Ramah & Terstruktur)</option>
+                                                <option value="Koleris">Koleris (Tegas, Lugas, Target Solusi Cepat)</option>
+                                                <option value="Sanguinis">Sanguinis (Ekspresif, Ramah, Komunikasi Hangat)</option>
+                                                <option value="Plegmatis">Plegmatis (Tenang, Sabar, Mengutamakan Rasa Aman)</option>
+                                                <option value="Melankolis">Melankolis (Kritis, Teliti, Penjelasan Teknis Rinci)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-3.5 sm:p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-2">
+                                        <label className="block text-2xs sm:text-xs font-semibold text-slate-700">Pilih Pelanggan Terdaftar *</label>
                                         <select
-                                            value={quickForm.jenis_perangkat}
-                                            onChange={(e) => setQuickForm({ ...quickForm, jenis_perangkat: e.target.value })}
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 font-semibold"
-                                            required
+                                            value={selectedExistingCustId}
+                                            onChange={(e) => setSelectedExistingCustId(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-500 font-semibold cursor-pointer"
+                                            required={quickIsExistingCustomer}
                                         >
-                                            {DEVICE_CATEGORIES.map(cat => (
-                                                <option key={cat} value={cat}>{cat}</option>
+                                            <option value="">-- Pilih Pelanggan --</option>
+                                            {existingCustomers.map(c => (
+                                                <option key={c.id} value={c.id}>
+                                                    {c.nama} ({c.nomor_telepon})
+                                                </option>
                                             ))}
                                         </select>
                                     </div>
+                                )}
 
-                                    <div>
-                                        <label className="block font-semibold text-slate-700 mb-1">Merek Perangkat *</label>
-                                        <input
-                                            type="text"
-                                            value={quickForm.merek}
-                                            onChange={(e) => setQuickForm({ ...quickForm, merek: e.target.value })}
-                                            placeholder="Contoh: Asus, Lenovo, HP..."
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                            required
-                                        />
+                                {/* Section B: Device Details */}
+                                <div className="p-3.5 sm:p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-3">
+                                    <div className="flex items-center gap-1.5 font-bold text-slate-800 text-2xs uppercase tracking-wider pb-1 border-b border-slate-200/60">
+                                        <Laptop className="w-3.5 h-3.5 text-indigo-600" />
+                                        <span>Data Perangkat Baru</span>
                                     </div>
-                                </div>
 
-                                {/* Quick Brand Suggestion Chips */}
-                                <div className="flex items-center gap-1 flex-wrap">
-                                    <span className="text-3xs text-slate-400 font-medium mr-1">Rekomendasi:</span>
-                                    {POPULAR_BRANDS.map(brand => (
-                                        <button
-                                            key={brand}
-                                            type="button"
-                                            onClick={() => setQuickForm({ ...quickForm, merek: brand })}
-                                            className="px-2 py-0.5 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-3xs font-semibold text-slate-600 transition-colors cursor-pointer"
-                                        >
-                                            {brand}
-                                        </button>
-                                    ))}
-                                </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-2xs sm:text-xs font-semibold text-slate-700 mb-1">Kategori Perangkat *</label>
+                                            <select
+                                                value={quickForm.jenis_perangkat}
+                                                onChange={(e) => setQuickForm({ ...quickForm, jenis_perangkat: e.target.value })}
+                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-500 font-semibold cursor-pointer"
+                                                required
+                                            >
+                                                {DEVICE_CATEGORIES.map(cat => (
+                                                    <option key={cat} value={cat}>{cat}</option>
+                                                ))}
+                                            </select>
+                                        </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block font-semibold text-slate-700 mb-1">Tipe / Model Perangkat *</label>
-                                        <input
-                                            type="text"
-                                            value={quickForm.model}
-                                            onChange={(e) => setQuickForm({ ...quickForm, model: e.target.value })}
-                                            placeholder="Contoh: Vivobook A1404, TUF F15..."
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 font-semibold text-slate-800"
-                                            required
-                                        />
+                                        <div>
+                                            <label className="block text-2xs sm:text-xs font-semibold text-slate-700 mb-1">Merek Perangkat *</label>
+                                            <input
+                                                type="text"
+                                                value={quickForm.merek}
+                                                onChange={(e) => setQuickForm({ ...quickForm, merek: e.target.value })}
+                                                placeholder="Contoh: Asus, Lenovo, HP..."
+                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors"
+                                                required
+                                            />
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="block font-semibold text-slate-700 mb-1">Nomor Seri / Serial No (Opsional)</label>
-                                        <input
-                                            type="text"
-                                            value={quickForm.serial_number}
-                                            onChange={(e) => setQuickForm({ ...quickForm, serial_number: e.target.value })}
-                                            placeholder="Serial number casing..."
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                        />
+
+                                    {/* Quick Brand Suggestion Chips */}
+                                    <div className="flex items-center gap-1 flex-wrap">
+                                        <span className="text-3xs text-slate-400 font-medium mr-1">Rekomendasi:</span>
+                                        {POPULAR_BRANDS.map(brand => (
+                                            <button
+                                                key={brand}
+                                                type="button"
+                                                onClick={() => setQuickForm({ ...quickForm, merek: brand })}
+                                                className="px-2 py-0.5 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-3xs font-semibold text-slate-600 transition-colors cursor-pointer"
+                                            >
+                                                {brand}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-2xs sm:text-xs font-semibold text-slate-700 mb-1">Tipe / Model Perangkat *</label>
+                                            <input
+                                                type="text"
+                                                value={quickForm.model}
+                                                onChange={(e) => setQuickForm({ ...quickForm, model: e.target.value })}
+                                                placeholder="Contoh: Vivobook A1404, TUF F15..."
+                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 font-semibold text-slate-800 transition-colors"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-2xs sm:text-xs font-semibold text-slate-700 mb-1">Nomor Seri / Serial No (Opsional)</label>
+                                            <input
+                                                type="text"
+                                                value={quickForm.serial_number}
+                                                onChange={(e) => setQuickForm({ ...quickForm, serial_number: e.target.value })}
+                                                placeholder="Serial number casing..."
+                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Footer Buttons */}
-                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                            {/* Sticky Modal Footer Buttons */}
+                            <div className="modal-footer bg-slate-50/90 flex items-center justify-end gap-2 shrink-0">
                                 <button
                                     type="button"
                                     onClick={() => setIsQuickAddOpen(false)}
