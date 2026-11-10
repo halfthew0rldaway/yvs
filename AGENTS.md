@@ -154,10 +154,11 @@ The system is organized as a high-cohesion, multi-tier application:
      - Floating CRM Bot: `z-[35]`
      - Mobile Bottom Navigation: `z-30`
      - Global Header / App Bar: `z-10`
-   - **Mobile Web Typography Normalization**:
+   - **Mobile Web Typography & Select Normalization**:
      - `-webkit-text-size-adjust: 100%` and `text-size-adjust: 100%` on `html`, `body`, inputs, and buttons to prevent mobile Chrome's text auto-inflation (font boosting) from bloating UI elements.
      - Standard inputs: `0.8125rem` (13px) on mobile, `0.875rem` (14px) on desktop.
-     - Dropdown `<select>`: normalized with `appearance: none`, SVG chevron background, and `padding-right: 2.25rem !important` to prevent text collision.
+     - Standard buttons: `.btn-base`, `.btn-primary`, `.btn-secondary`, `.btn-danger` set to `h-8.5 sm:h-9 px-3 sm:px-3.5 text-xs` to stay proportional with 13px inputs.
+     - **PWA Custom Dropdown (`CustomSelect`)**: Replaces native Android OS-level `<select>` radio dialogs with a modern Bottom Sheet Picker on mobile (< 640px) and animated popover on desktop, featuring live search and active indicators.
 
 6. **Continuous Form & Dot Matrix Printing Standards**:
    - Official invoice layouts are packed horizontally (`80mm` / half A4 continuous form format) for fast dot matrix continuous feeding without excessive white space.
