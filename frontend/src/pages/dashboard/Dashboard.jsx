@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import useRealtimeEvent from "../../hooks/useRealtime";
@@ -196,8 +196,8 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
             <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-5">
                 {/* Donut Chart */}
                 <div className="w-full lg:w-5/12 flex flex-col items-center">
-                    <div className="w-full h-[195px] min-w-0 relative flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                    <div className="w-full h-[195px] relative flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={chartSegments}
@@ -208,6 +208,9 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                                     paddingAngle={hasData ? 3 : 0}
                                     dataKey="value"
                                     stroke="none"
+                                    isAnimationActive={true}
+                                    animationDuration={800}
+                                    animationEasing="ease-out"
                                     className={hasData ? "cursor-pointer" : ""}
                                     onClick={(e) => e && handleSliceClick(e)}
                                 >
@@ -380,9 +383,10 @@ export default function Dashboard() {
     const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
 
     const isManagerialView = isPimpinanOrAdmin;
+    const hasLoadedRef = useRef(false);
 
     const loadData = useCallback(async (isInitial = false) => {
-        if (isInitial && !data) setLoading(true);
+        if (isInitial && !hasLoadedRef.current) setLoading(true);
         try {
             const endpoint = isManagerialView ? "/dashboard/admin" : "/dashboard/teknisi";
             const res = await api.get(endpoint);
@@ -397,12 +401,13 @@ export default function Dashboard() {
             }
             
             setData(res.data);
+            hasLoadedRef.current = true;
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
         }
-    }, [isManagerialView, data]);
+    }, [isManagerialView]);
 
     useEffect(() => {
         loadData(true);
@@ -565,8 +570,8 @@ export default function Dashboard() {
                             </Link>
                         </div>
                         {data?.chartData?.length > 0 ? (
-                            <div className="flex-1 w-full min-h-[260px] min-w-0">
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                            <div className="flex-1 w-full min-h-[260px]">
+                                <ResponsiveContainer width="100%" height="100%">
                                     <BarChart 
                                         data={data.chartData} 
                                         margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -597,7 +602,15 @@ export default function Dashboard() {
                                             dx={-10} 
                                         />
                                         <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                                        <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={38} className="cursor-pointer">
+                                        <Bar 
+                                            dataKey="value" 
+                                            radius={[4, 4, 0, 0]} 
+                                            barSize={38} 
+                                            className="cursor-pointer"
+                                            isAnimationActive={true}
+                                            animationDuration={800}
+                                            animationEasing="ease-out"
+                                        >
                                             {data.chartData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.fillColor} className="hover:opacity-80 transition-opacity cursor-pointer" />
                                             ))}
@@ -682,8 +695,8 @@ export default function Dashboard() {
                             </Link>
                         </div>
                         {data?.trendPendapatan?.length > 0 ? (
-                            <div className="flex-1 w-full min-h-[260px] min-w-0">
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                            <div className="flex-1 w-full min-h-[260px]">
+                                <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={data.trendPendapatan} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="colorPendapatan" x1="0" y1="0" x2="0" y2="1">
@@ -699,7 +712,18 @@ export default function Dashboard() {
                                             contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
                                             labelStyle={{ fontWeight: 600, color: '#334155' }}
                                         />
-                                        <Area type="monotone" dataKey="pendapatan" stroke="#3b82f6" strokeWidth={2.5} fill="url(#colorPendapatan)" dot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                        <Area 
+                                            type="monotone" 
+                                            dataKey="pendapatan" 
+                                            stroke="#3b82f6" 
+                                            strokeWidth={2.5} 
+                                            fill="url(#colorPendapatan)" 
+                                            dot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} 
+                                            activeDot={{ r: 6 }} 
+                                            isAnimationActive={true}
+                                            animationDuration={800}
+                                            animationEasing="ease-out"
+                                        />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
@@ -831,8 +855,8 @@ export default function Dashboard() {
                 {data?.chartData?.length > 0 ? (
                     <div className="flex flex-col md:flex-row items-center gap-8 h-auto md:h-[300px]">
                         {/* Donut Chart */}
-                        <div className="w-full md:w-1/2 h-[250px] md:h-full min-w-0 flex items-center justify-center relative">
-                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                        <div className="w-full md:w-1/2 h-[250px] md:h-full flex items-center justify-center relative">
+                            <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
                                         data={data.chartData}
@@ -843,6 +867,9 @@ export default function Dashboard() {
                                         paddingAngle={4}
                                         dataKey="value"
                                         stroke="none"
+                                        isAnimationActive={true}
+                                        animationDuration={800}
+                                        animationEasing="ease-out"
                                         className="cursor-pointer"
                                         onClick={(e) => {
                                             if (e && e.name) {
