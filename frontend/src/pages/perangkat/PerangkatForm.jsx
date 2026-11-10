@@ -544,23 +544,23 @@ export default function PerangkatForm() {
                 </div>
 
                 {/* Form Buttons */}
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t border-slate-100">
+                <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-6">
                     <button
                         type="button"
                         onClick={() => returnUrl ? navigate(returnUrl) : navigate("/perangkat")}
-                        className="px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-colors shadow-2xs w-full sm:w-auto text-center text-sm cursor-pointer"
+                        className="btn-secondary h-9 px-4 text-xs"
                     >
                         Batal
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-50 text-sm cursor-pointer"
+                        className="btn-primary h-9 px-4 text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
                     >
                         {loading ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
+                            <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white/20 border-t-white"></div>
                         ) : (
-                            <Save className="w-4 h-4" />
+                            <Save className="w-3.5 h-3.5" />
                         )}
                         <span>{loading ? "Menyimpan..." : isEdit ? "Perbarui Perangkat" : "Simpan Perangkat"}</span>
                     </button>

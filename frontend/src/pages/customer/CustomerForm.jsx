@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { ArrowLeft, Save, User, Phone, MapPin, Smile, Sparkles, ShieldAlert, AlertTriangle, CheckCircle2, X } from "lucide-react";
+import CustomSelect from "../../components/common/CustomSelect";
 
 export default function CustomerForm() {
     const { id } = useParams();
@@ -194,20 +195,21 @@ export default function CustomerForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                <Smile className="w-4 h-4 text-slate-400" />
+                                <Smile className="w-3.5 h-3.5 text-slate-400" />
                                 Tipe Kepribadian Pelanggan
                             </label>
-                            <select
+                            <CustomSelect
                                 value={form.tipe_kepribadian}
                                 onChange={(e) => setForm({ ...form, tipe_kepribadian: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                label="Pilih Tipe Kepribadian Pelanggan"
+                                icon={Smile}
                             >
                                 <option value="Netral">Netral (Standar / Belum Teridentifikasi)</option>
                                 <option value="Koleris">Koleris (Tegas, To The Point, Fokus Solusi Cepat)</option>
                                 <option value="Sanguinis">Sanguinis (Ramah, Ceria, Antusias, Suka Cerita)</option>
                                 <option value="Plegmatis">Plegmatis (Tenang, Sabar, Butuh Kenyamanan & Kepastian)</option>
                                 <option value="Melankolis">Melankolis (Rinci, Teliti, Kritis, Paham Teknis)</option>
-                            </select>
+                            </CustomSelect>
                             <p className="text-2xs text-slate-500 mt-1.5 leading-relaxed">
                                 {form.tipe_kepribadian === "Koleris" && "Panduan: Beri respon cepat, padat, fokus solusi & kepastian estimasi waktu."}
                                 {form.tipe_kepribadian === "Sanguinis" && "Panduan: Beri sambutan hangat, antusias, apresiasi, dan gaya bahasa ramah bersahabat."}
@@ -224,7 +226,7 @@ export default function CustomerForm() {
                             <textarea
                                 value={form.catatan_khusus}
                                 onChange={(e) => setForm({ ...form, catatan_khusus: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none shadow-sm"
+                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none shadow-2xs"
                                 rows={3}
                                 placeholder="Contoh: Sangat menjaga privasi data kantor, minta nota dicetak fisik, hanya bisa dihubungi WA malam hari..."
                             />
@@ -232,23 +234,23 @@ export default function CustomerForm() {
                     </div>
                 </div>
 
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100 mt-8">
+                <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-6">
                     <button
                         type="button"
                         onClick={() => returnUrl ? navigate(returnUrl) : navigate("/customer")}
-                        className="px-6 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-colors shadow-sm w-full sm:w-auto text-center cursor-pointer"
+                        className="btn-secondary h-9 px-4 text-xs"
                     >
                         Batal
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-50 cursor-pointer"
+                        className="btn-primary h-9 px-4 text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
                     >
                         {loading ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
+                            <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white/20 border-t-white"></div>
                         ) : (
-                            <Save className="w-4 h-4" />
+                            <Save className="w-3.5 h-3.5" />
                         )}
                         <span>{loading ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Simpan Data"}</span>
                     </button>

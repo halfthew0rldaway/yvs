@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { ArrowLeft, Save, FileCheck, DollarSign, Info } from "lucide-react";
+import CustomSelect from "../../components/common/CustomSelect";
 
 export default function InvoiceForm() {
     const navigate = useNavigate();
@@ -90,10 +91,12 @@ export default function InvoiceForm() {
                         <FileCheck className="w-4 h-4 text-slate-400" />
                         Tiket Servis Selesai <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <CustomSelect
                         value={form.tiket_id}
                         onChange={(e) => setForm({ ...form, tiket_id: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                        label="Pilih Tiket Servis Selesai"
+                        placeholder="-- Cari / Pilih Tiket Servis --"
+                        searchable
                         required
                     >
                         <option value="">Pilih Tiket</option>
@@ -102,7 +105,7 @@ export default function InvoiceForm() {
                                 {t.nomor_tiket} - {t.perangkat?.customer?.nama} ({t.perangkat?.merek} {t.perangkat?.model})
                             </option>
                         ))}
-                    </select>
+                    </CustomSelect>
                     {tikets.length === 0 && (
                         <div className="flex items-center gap-1.5 mt-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-lg text-sm">
                             <Info className="w-4 h-4" />
@@ -166,25 +169,25 @@ export default function InvoiceForm() {
                     </div>
                 )}
 
-                <div className="flex items-center gap-3 pt-4 border-t border-slate-100 mt-8">
+                <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-6">
                     <button
                         type="button"
                         onClick={() => navigate("/invoice")}
-                        className="px-6 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-colors shadow-sm w-full sm:w-auto text-center"
+                        className="btn-secondary h-9 px-4 text-xs"
                     >
                         Batal
                     </button>
                     <button
                         type="submit"
                         disabled={loading || tikets.length === 0}
-                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-50"
+                        className="btn-primary h-9 px-4 text-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
                     >
                         {loading ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
+                            <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white/20 border-t-white"></div>
                         ) : (
-                            <Save className="w-4 h-4" />
+                            <Save className="w-3.5 h-3.5" />
                         )}
-                        <span>{loading ? "Menyimpan..." : "Buat Invoice"}</span>
+                        <span>{loading ? "Menerbitkan..." : "Terbitkan Invoice"}</span>
                     </button>
                 </div>
             </form>

@@ -299,7 +299,7 @@ export default function ManageCustomerBadgesModal({
                                 onClose();
                             }}
                             disabled={isSaving}
-                            className="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs disabled:opacity-50 active:scale-95"
+                            className="btn-secondary h-8.5 px-3.5 text-xs"
                         >
                             Batal
                         </button>
@@ -310,7 +310,7 @@ export default function ManageCustomerBadgesModal({
                                 handleSave();
                             }}
                             disabled={isSaving}
-                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/25 cursor-pointer disabled:opacity-50 active:scale-95"
+                            className="btn-primary h-8.5 px-4 text-xs inline-flex items-center gap-1.5"
                         >
                             <span>{isSaving ? "Menyimpan..." : "Simpan Badge"}</span>
                         </button>

@@ -23,6 +23,7 @@ import {
     ChevronRight
 } from "lucide-react";
 import TableContainer from "../../components/common/TableContainer";
+import CustomSelect from "../../components/common/CustomSelect";
 import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
@@ -840,31 +841,31 @@ export default function UserList() {
 
                             <div>
                                 <label className="block text-xs font-semibold text-slate-700 mb-1">Role / Peran</label>
-                                <select
+                                <CustomSelect
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    label="Pilih Role / Peran Karyawan"
                                 >
                                     <option value="teknisi">Teknisi (Operasional Perbaikan)</option>
                                     <option value="frontman">Frontman (Service Advisor & Kasir)</option>
                                     <option value="admin">Admin (Akses Full Manajerial)</option>
-                                </select>
+                                </CustomSelect>
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50"
+                                    className="btn-secondary h-8.5 px-3.5 text-xs"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm disabled:opacity-50"
+                                    className="btn-primary h-8.5 px-4 text-xs"
                                 >
-                                    {submitting ? "Simpan..." : "Simpan Perubahan"}
+                                    {submitting ? "Menyimpan..." : "Simpan Perubahan"}
                                 </button>
                             </div>
                         </form>

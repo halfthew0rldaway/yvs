@@ -6,6 +6,9 @@ export default {
             screens: {
                 xs: '375px',
             },
+            spacing: {
+                '8.5': '2.125rem', // 34px
+            },
             boxShadow: {
                 // Ultra-subtle lift used by compact buttons/cards (shadow-2xs)
                 '2xs': '0 1px 2px 0 rgb(0 0 0 / 0.04)',
