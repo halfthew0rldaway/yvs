@@ -82,6 +82,7 @@ app.use("/api/brand", brandRoutes);
 app.use("/api/diagnosis", diagnosisRoutes);
 app.use("/api/log-perbaikan", logPerbaikanRoutes);
 app.use("/api/invoice", invoiceRoutes);
+app.use("/api/invoices", invoiceRoutes);
 app.use("/api/tracking", trackingRoutes);
 app.use("/api/repair-wiki", repairWikiRoutes);
 app.use("/api/notifications", notificationRoutes);

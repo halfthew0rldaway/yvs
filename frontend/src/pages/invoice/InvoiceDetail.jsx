@@ -123,7 +123,7 @@ export default function InvoiceDetail() {
     useEffect(() => {
         const fetchInvoice = async () => {
             try {
-                const response = await api.get(`/invoices/${id}`);
+                const response = await api.get(`/invoice/${id}`);
                 setInvoice(response.data);
             } catch (err) {
                 console.error("Gagal memuat invoice:", err);
@@ -156,7 +156,7 @@ export default function InvoiceDetail() {
     const handleSaveCustomerSignature = async (signatureData, signerName) => {
         setSavingSignature(true);
         try {
-            const response = await api.post(`/invoices/${id}/signature`, {
+            const response = await api.post(`/invoice/${id}/signature`, {
                 ttd_customer: signatureData,
                 ttd_customer_nama: signerName
             });
@@ -173,7 +173,7 @@ export default function InvoiceDetail() {
 
     const handleSelectAdminSignature = async (selectedSignature, selectedName) => {
         try {
-            const response = await api.post(`/invoices/${id}/admin-signature`, {
+            const response = await api.post(`/invoice/${id}/admin-signature`, {
                 signature: selectedSignature,
                 signer_nama: selectedName
             });
@@ -203,7 +203,7 @@ export default function InvoiceDetail() {
                 <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h2 className="text-lg font-bold text-slate-800">Faktur Tidak Ditemukan</h2>
                 <p className="text-slate-500 text-xs mt-1 mb-6">Data faktur yang Anda cari mungkin telah dipindahkan atau ID tidak valid.</p>
-                <Link to="/invoices" className="btn-secondary text-xs inline-flex items-center gap-2">
+                <Link to="/invoice" className="btn-secondary text-xs inline-flex items-center gap-2">
                     <ArrowLeft className="w-4 h-4" /> Kembali ke Daftar Invoice
                 </Link>
             </div>
@@ -234,7 +234,7 @@ export default function InvoiceDetail() {
             {/* Top Navigation & Action Controls */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 no-print bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
                 <div className="flex items-center gap-3">
-                    <Link to="/invoices" className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors shrink-0">
+                    <Link to="/invoice" className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors shrink-0">
                         <ArrowLeft className="w-4 h-4" />
                     </Link>
                     <div>
