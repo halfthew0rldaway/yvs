@@ -109,6 +109,30 @@ async function main() {
             console.log(`✅ [INIT] Data aman (${userCount} staf/pengguna ditemukan). Seeding dilewati.`);
         }
 
+        // 3b. Hapus akun fiktif H. Bambang (Owner Utama) dari database jika masih ada
+        try {
+            const fictionalOwners = await prisma.user.findMany({
+                where: {
+                    OR: [
+                        { username: "owner" },
+                        { email: "owner@workshop.com" },
+                        { nama: { contains: "Bambang Yangversa" } }
+                    ]
+                }
+            });
+            for (const fo of fictionalOwners) {
+                console.log(`🧹 [INIT] Menghapus akun fiktif '${fo.nama}' (ID: ${fo.id}, ${fo.email})...`);
+                await prisma.activityLog.deleteMany({ where: { user_id: fo.id } }).catch(() => {});
+                await prisma.notification.deleteMany({ where: { OR: [{ recipient_id: fo.id }, { sender_id: fo.id }] } }).catch(() => {});
+                await prisma.attendanceRecord.deleteMany({ where: { user_id: fo.id } }).catch(() => {});
+                await prisma.leaveRequest.deleteMany({ where: { user_id: fo.id } }).catch(() => {});
+                await prisma.user.delete({ where: { id: fo.id } }).catch(() => {});
+                console.log(`✅ [INIT] Akun owner fiktif '${fo.nama}' berhasil dibersihkan dari database.`);
+            }
+        } catch (cleanErr) {
+            console.warn("⚠️ [INIT] Pembersihan akun fiktif dilewati:", cleanErr.message);
+        }
+
         // 4. Pastikan akun Owner (Arni & Vivero) selalu ada dan sinkron di environment staging
         const isStaging = process.env.APP_ENV === "staging" || 
                           process.env.DATABASE_URL?.includes("yvs_staging") || 

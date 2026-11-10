@@ -23,6 +23,30 @@ async function syncOwnerUsers() {
     const arniPasswordRaw = process.env.STAGING_OWNER_ARNI_PASSWORD || defaultFallbackPassword;
     const viveroPasswordRaw = process.env.STAGING_OWNER_VIVERO_PASSWORD || defaultFallbackPassword;
 
+    // 0. Hapus akun fiktif H. Bambang (Owner Utama) jika ada di database
+    try {
+        const fictionalOwners = await prisma.user.findMany({
+            where: {
+                OR: [
+                    { username: "owner" },
+                    { email: "owner@workshop.com" },
+                    { nama: { contains: "Bambang Yangversa" } }
+                ]
+            }
+        });
+        for (const fo of fictionalOwners) {
+            console.log(`🧹 [STAGING-OWNER] Menghapus akun fiktif '${fo.nama}' (ID: ${fo.id}, ${fo.email})...`);
+            await prisma.activityLog.deleteMany({ where: { user_id: fo.id } }).catch(() => {});
+            await prisma.notification.deleteMany({ where: { OR: [{ recipient_id: fo.id }, { sender_id: fo.id }] } }).catch(() => {});
+            await prisma.attendanceRecord.deleteMany({ where: { user_id: fo.id } }).catch(() => {});
+            await prisma.leaveRequest.deleteMany({ where: { user_id: fo.id } }).catch(() => {});
+            await prisma.user.delete({ where: { id: fo.id } }).catch(() => {});
+            console.log(`✅ [STAGING-OWNER] Akun fiktif '${fo.nama}' berhasil dihapus dari database.`);
+        }
+    } catch (cleanErr) {
+        console.warn("⚠️ [STAGING-OWNER] Peringatan saat pembersihan akun fiktif:", cleanErr.message);
+    }
+
     const owners = [
         {
             username: "arni",

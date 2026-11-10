@@ -28,8 +28,8 @@ async function login(req, res) {
             { email: { startsWith: `${cleanId}@` } }
         ];
 
-        if (cleanId === "pimpinan" || cleanId === "superadmin" || cleanId === "bambang" || cleanId === "owner") {
-            orConditions.push({ username: "owner" }, { email: "owner@workshop.com" });
+        if (cleanId === "pimpinan" || cleanId === "superadmin") {
+            orConditions.push({ username: "arni" }, { email: "arni@workshop.com" });
         }
         if (cleanId === "arni" || cleanId === "owner2" || cleanId === "arni.owner") {
             orConditions.push({ username: "arni" }, { email: "arni@workshop.com" }, { email: "arni.owner@workshop.com" });

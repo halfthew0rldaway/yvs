@@ -56,8 +56,7 @@ export default function Login() {
             // Pemetaan email fallback untuk memastikan kompatibilitas penuh dengan akun demo / akun lama database
             const demoEmailMap = {
                 admin: "admin@workshop.com",
-                owner: "owner@workshop.com",
-                pimpinan: "owner@workshop.com",
+                pimpinan: "arni@workshop.com",
                 manajer: "manajer@workshop.com",
                 arni: "arni@workshop.com",
                 vivero: "vivero@workshop.com",
@@ -294,18 +293,10 @@ export default function Login() {
                         <div className="grid grid-cols-2 gap-1.5">
                             <button
                                 type="button"
-                                onClick={() => handleSelectDemoAccount("owner")}
-                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
-                            >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Utama (H. Bambang)</span>
-                                <span className="block font-mono text-3xs text-blue-600 truncate">owner</span>
-                            </button>
-                            <button
-                                type="button"
                                 onClick={() => handleSelectDemoAccount("arni", "ownerArni2026!")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Staging (Ibu Arni)</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner (Ibu Arni)</span>
                                 <span className="block font-mono text-3xs text-blue-600 truncate">arni</span>
                             </button>
                             <button
@@ -313,7 +304,7 @@ export default function Login() {
                                 onClick={() => handleSelectDemoAccount("vivero", "ownerVivero2026!")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Staging (Bpk. Vivero)</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner (Bpk. Vivero)</span>
                                 <span className="block font-mono text-3xs text-blue-600 truncate">vivero</span>
                             </button>
                             <button
@@ -331,6 +322,14 @@ export default function Login() {
                             >
                                 <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Admin Operasional</span>
                                 <span className="block font-mono text-3xs text-slate-400 truncate">admin</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleSelectDemoAccount("siti")}
+                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
+                            >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Service Advisor (Siti)</span>
+                                <span className="block font-mono text-3xs text-slate-400 truncate">siti</span>
                             </button>
                             <button
                                 type="button"
