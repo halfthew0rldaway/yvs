@@ -558,8 +558,8 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
                     {/* Charts Section */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col min-h-[280px] h-[300px] sm:h-[350px] lg:h-[380px]">
-                        <div className="flex items-center justify-between mb-3.5">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col lg:h-[390px]">
+                        <div className="flex items-center justify-between mb-3.5 shrink-0">
                             <div>
                                 <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Distribusi Status Tiket</h2>
                                 <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Klik salah satu bar untuk melihat daftar tiket terkait</p>
@@ -570,11 +570,11 @@ export default function Dashboard() {
                             </Link>
                         </div>
                         {data?.chartData?.length > 0 ? (
-                            <div className="flex-1 w-full min-h-[260px]">
+                            <div className="w-full h-[260px] sm:h-[280px] lg:flex-1">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart 
                                         data={data.chartData} 
-                                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                                        margin={{ top: 10, right: 10, left: -20, bottom: 12 }}
                                         onClick={(e) => {
                                             if (e && e.activePayload && e.activePayload.length > 0) {
                                                 const clicked = e.activePayload[0].payload;
@@ -605,7 +605,7 @@ export default function Dashboard() {
                                         <Bar 
                                             dataKey="value" 
                                             radius={[4, 4, 0, 0]} 
-                                            barSize={38} 
+                                            maxBarSize={38}
                                             className="cursor-pointer"
                                             isAnimationActive={true}
                                             animationDuration={800}
@@ -626,8 +626,8 @@ export default function Dashboard() {
                     </div>
 
                     {/* Sparepart hampir habis */}
-                    <div className="lg:col-span-1 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col min-h-[260px] h-[300px] sm:h-[350px] lg:h-[380px]">
-                        <div className="flex items-center justify-between mb-3.5">
+                    <div className="lg:col-span-1 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col h-[320px] sm:h-[350px] lg:h-[390px]">
+                        <div className="flex items-center justify-between mb-3.5 shrink-0">
                             <div className="flex items-center gap-2">
                                 <AlertTriangle className="w-5 h-5 text-amber-500" />
                                 <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Stok Menipis</h2>
@@ -683,8 +683,8 @@ export default function Dashboard() {
                 {/* Row 3: Tren Pendapatan + Avg Waktu + Top Kerusakan */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
                     {/* Tren Pendapatan Bulanan - Area Chart */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col min-h-[240px] h-[260px] sm:h-[300px] lg:h-[350px]">
-                        <div className="flex items-center justify-between mb-3">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/90 flex flex-col lg:h-[360px]">
+                        <div className="flex items-center justify-between mb-3 shrink-0">
                             <div className="flex items-center gap-2">
                                 <TrendingUp className="w-5 h-5 text-blue-600" />
                                 <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Tren Pendapatan 6 Bulan</h2>
@@ -695,9 +695,9 @@ export default function Dashboard() {
                             </Link>
                         </div>
                         {data?.trendPendapatan?.length > 0 ? (
-                            <div className="flex-1 w-full min-h-[260px]">
+                            <div className="w-full h-[240px] sm:h-[260px] lg:flex-1">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={data.trendPendapatan} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                                    <AreaChart data={data.trendPendapatan} margin={{ top: 10, right: 10, left: -10, bottom: 8 }}>
                                         <defs>
                                             <linearGradient id="colorPendapatan" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
