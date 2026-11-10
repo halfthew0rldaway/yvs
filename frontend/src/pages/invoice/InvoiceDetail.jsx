@@ -230,27 +230,18 @@ export default function InvoiceDetail() {
     }));
 
     return (
-        <div className="space-y-4 pb-12 print:space-y-0 print:pb-0 print:m-0">
-            {/* Top Navigation & Action Controls (Strictly Hidden on Print/PDF) */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 no-print print:hidden bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-                <div className="flex items-center gap-3">
-                    <Link to="/invoice" className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors shrink-0">
-                        <ArrowLeft className="w-4 h-4" />
-                    </Link>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Dokumen Faktur Servis</h1>
-                            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-3xs font-semibold">
-                                Format Horizontal • Setengah A4
-                            </span>
-                        </div>
-                        <p className="text-2xs sm:text-xs text-slate-500 mt-0.5">
-                            Faktur resmi pembayaran perbaikan unit #{tiket.nomor_tiket} &bull; Continuous Form Ready
-                        </p>
-                    </div>
-                </div>
+        <div className="space-y-3 pb-12 print:space-y-0 print:pb-0 print:m-0">
+            {/* Top Minimal Action Bar (Clean, no clutter, no-print) */}
+            <div className="no-print print:hidden flex flex-wrap items-center justify-between gap-2.5 pb-1">
+                <Link 
+                    to="/invoice" 
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold border border-slate-200 shadow-2xs transition-colors shrink-0"
+                >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Daftar Invoice</span>
+                </Link>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                     <DigitalSignatureToggleBar
                         isDigital={isDigitalSignature}
                         onToggle={toggleDigitalSignature}
@@ -261,7 +252,7 @@ export default function InvoiceDetail() {
                     <button
                         type="button"
                         onClick={() => setIsSignatureModalOpen(true)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs select-none ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs select-none ${
                             invoice?.ttd_customer
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 font-bold"
                                 : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 font-bold"
@@ -284,7 +275,7 @@ export default function InvoiceDetail() {
                     <button
                         type="button"
                         onClick={() => setIsWarrantyModalOpen(true)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+                        className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
                         title="Buka Kartu Garansi Digital Resmi"
                     >
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -294,11 +285,11 @@ export default function InvoiceDetail() {
                     <button
                         type="button"
                         onClick={() => DocumentPrintService.downloadPdf("printable-invoice-detail", `Faktur-${invoiceNumber}.pdf`, { orientation: "landscape", format: "a5" })}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs font-semibold transition-all border border-slate-200 shadow-2xs cursor-pointer"
-                        title="Unduh Salinan Dokumen PDF Landscape A5"
+                        className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white hover:bg-slate-100 active:scale-95 text-slate-700 rounded-xl text-xs font-semibold transition-all border border-slate-200 shadow-2xs cursor-pointer"
+                        title="Unduh Salinan Dokumen PDF Landscape"
                     >
                         <Download className="w-3.5 h-3.5 shrink-0 text-slate-500" />
-                        <span>PDF A5</span>
+                        <span>PDF</span>
                     </button>
 
                     <button
@@ -309,17 +300,17 @@ export default function InvoiceDetail() {
                             text: `Faktur resmi pembayaran perbaikan unit #${tiket?.nomor_tiket || ''} dari Yangversa Computer.`,
                             preferDirectPrint: !isNativePlatform()
                         })}
-                        className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
                         title={isNativePlatform() ? "Cetak / Kirim Faktur via WhatsApp" : "Cetak Faktur (Printer Continuous Form / PDF)"}
                     >
                         {isNativePlatform() ? (
                             <>
-                                <Share2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                                <Share2 className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
                                 <span>Cetak / Kirim</span>
                             </>
                         ) : (
                             <>
-                                <Printer className="w-4 h-4 shrink-0" />
+                                <Printer className="w-3.5 h-3.5 shrink-0" />
                                 <span>Cetak Faktur</span>
                             </>
                         )}
@@ -327,15 +318,16 @@ export default function InvoiceDetail() {
                 </div>
             </div>
 
-            {/* Injected Print Stylesheet for A5 Landscape Continuous Form */}
+            {/* Injected Print Stylesheet for Half-A4 Continuous Form */}
             <style>{`
                 @media print {
                     @page {
-                        size: 210mm auto;
-                        margin: 3mm 5mm;
+                        size: 210mm 140mm;
+                        margin: 4mm 6mm;
                     }
                     html, body, #root, main, .custom-scrollbar {
                         height: auto !important;
+                        min-height: 0 !important;
                         overflow: visible !important;
                         background: white !important;
                         font-size: 8.5pt !important;

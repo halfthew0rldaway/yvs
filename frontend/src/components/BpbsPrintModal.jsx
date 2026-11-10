@@ -56,8 +56,8 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
             <style>{`
                 @media print {
                     @page {
-                        size: 210mm auto;
-                        margin: 3mm 5mm;
+                        size: 210mm 140mm;
+                        margin: 4mm 6mm;
                     }
                     #root,
                     #root * {

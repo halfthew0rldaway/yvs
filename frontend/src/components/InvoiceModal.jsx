@@ -179,8 +179,8 @@ export default function InvoiceModal({
             <style>{`
                 @media print {
                     @page {
-                        size: 210mm auto;
-                        margin: 3mm 5mm;
+                        size: 210mm 140mm;
+                        margin: 4mm 6mm;
                     }
                     #root,
                     #root * {
@@ -243,16 +243,11 @@ export default function InvoiceModal({
                             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
                         <div>
-                            <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
-                                    Faktur Tagihan & Pembayaran (Format Horizontal • Setengah A4)
-                                </h3>
-                                <span className="hidden sm:inline-flex px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-3xs font-semibold">
-                                    Continuous Form Ready
-                                </span>
-                            </div>
+                            <h3 className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
+                                Faktur Pembayaran #{invoiceNumber}
+                            </h3>
                             <p className="text-3xs sm:text-2xs text-slate-500 font-mono mt-0.5">
-                                No. Tiket: {tiket.nomor_tiket} &bull; {invoiceNumber}
+                                No. Tiket: {tiket.nomor_tiket}
                             </p>
                         </div>
                     </div>
