@@ -31,6 +31,7 @@
 - Staging push now builds the PWA and a debug Capacitor APK from one commit, uploads the APK plus metadata to a read-only VPS mount, and exposes `/download` from login. The APK link is shown only after metadata is present. Without a persistent keystore, each CI debug APK requires uninstall/reinstall; do not describe it as an in-place update.
 - Sidebar badges now count unread notifications with module links and the QR intake queue. QR registrations update via permission-filtered realtime events; the review list uses 50-item pages, search within loaded entries, and responsive cards in a bounded scroll area.
 - Mobile UI audit: the hidden sidebar now leaves an actionable count on the header/menu toggle while the notification bell stays visible. Header quick controls are compact on phones, notification popovers are viewport-bounded, memo dialogs portal above bottom navigation, list cards remain active through tablet widths, and shared modals respect dynamic viewport height in landscape. Attendance tabs and floating CRM control were compacted for narrow screens.
+- Mobile form typography uses a shared 13px label/control baseline, 11px helper text, and 40px controls/custom select triggers. Long hints stack below labels on narrow screens in customer, device, and ticket forms.
 
 ## Next Steps
 - Apply the modular RBAC Prisma migration and run `npm run seed:rbac` in each environment before deploying the permission-aware backend.

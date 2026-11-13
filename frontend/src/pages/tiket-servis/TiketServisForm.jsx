@@ -1104,7 +1104,7 @@ export default function TiketServisForm() {
                 </div>}
 
                 <div>
-                    <div className="flex justify-between items-end mb-2">
+                    <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-end sm:justify-between">
                         <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                             <MessageSquare className="w-4 h-4 text-slate-400" />
                             Keluhan <span className="text-red-500">*</span>
@@ -1122,7 +1122,7 @@ export default function TiketServisForm() {
                 </div>
 
                 <div>
-                    <div className="flex justify-between items-end mb-2">
+                    <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-end sm:justify-between">
                         <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                             <Package className="w-4 h-4 text-slate-400" />
                             Kelengkapan Perangkat

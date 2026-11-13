@@ -126,10 +126,10 @@ export default function CustomerForm() {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-6">
+            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 md:p-8 space-y-6">
                 <div>
-                    <div className="flex justify-between items-end mb-2">
-                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-end sm:justify-between">
+                        <label className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-700">
                             <User className="w-4 h-4 text-slate-400" />
                             Nama Lengkap <span className="text-red-500">*</span>
                         </label>
@@ -139,15 +139,15 @@ export default function CustomerForm() {
                         type="text"
                         value={form.nama}
                         onChange={(e) => setForm({ ...form, nama: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                        className="w-full min-h-10 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
                         placeholder="Contoh: Budi Santoso"
                         required
                     />
                 </div>
 
                 <div>
-                    <div className="flex justify-between items-end mb-2">
-                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-end sm:justify-between">
+                        <label className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-700">
                             <Phone className="w-4 h-4 text-slate-400" />
                             Nomor Telepon <span className="text-red-500">*</span>
                         </label>
@@ -157,15 +157,15 @@ export default function CustomerForm() {
                         type="text"
                         value={form.nomor_telepon}
                         onChange={(e) => setForm({ ...form, nomor_telepon: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                        className="w-full min-h-10 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
                         placeholder="Contoh: 081234567890"
                         required
                     />
                 </div>
 
                 <div>
-                    <div className="flex justify-between items-end mb-2">
-                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-end sm:justify-between">
+                        <label className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-700">
                             <MapPin className="w-4 h-4 text-slate-400" />
                             Alamat
                         </label>
@@ -174,14 +174,14 @@ export default function CustomerForm() {
                     <textarea
                         value={form.alamat}
                         onChange={(e) => setForm({ ...form, alamat: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all resize-none placeholder:text-slate-400"
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all resize-none placeholder:text-slate-400"
                         rows={2}
                         placeholder="Detail alamat domisili pelanggan..."
                     />
                 </div>
 
                 {/* Profiling Karakter & Komunikasi Pelanggan */}
-                <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="bg-slate-50/80 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
                         <div className="flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-indigo-600" />
@@ -194,7 +194,7 @@ export default function CustomerForm() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                            <label className="block text-[13px] sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
                                 <Smile className="w-3.5 h-3.5 text-slate-400" />
                                 Tipe Kepribadian Pelanggan
                             </label>
@@ -220,7 +220,7 @@ export default function CustomerForm() {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                            <label className="block text-[13px] sm:text-sm font-semibold text-slate-700 mb-1.5">
                                 Catatan Khusus Pelanggan
                             </label>
                             <textarea

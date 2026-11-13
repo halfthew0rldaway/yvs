@@ -453,7 +453,7 @@ export default function PerangkatForm() {
                 {/* 3. DETAIL SPESIFIKASI: MEREK & MODEL */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-slate-100">
                     <div>
-                        <div className="flex justify-between items-end mb-2">
+                        <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-end sm:justify-between">
                             <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                 <Box className="w-4 h-4 text-blue-600" />
                                 Merek Perangkat <span className="text-red-500">*</span>
@@ -499,7 +499,7 @@ export default function PerangkatForm() {
                     </div>
 
                     <div>
-                        <div className="flex justify-between items-end mb-2">
+                        <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-end sm:justify-between">
                             <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                 <MonitorSmartphone className="w-4 h-4 text-blue-600" />
                                 Model / Seri Spesifik <span className="text-red-500">*</span>
@@ -523,7 +523,7 @@ export default function PerangkatForm() {
                 {/* 4. SERIAL NUMBER & CATATAN */}
                 <div className="pt-2 border-t border-slate-100">
                     <div className="max-w-md">
-                        <div className="flex justify-between items-end mb-2">
+                        <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-end sm:justify-between">
                             <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                 <Hash className="w-4 h-4 text-blue-600" />
                                 Serial Number (S/N)

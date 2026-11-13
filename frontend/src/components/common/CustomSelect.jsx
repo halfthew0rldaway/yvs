@@ -131,7 +131,7 @@ export default function CustomSelect({
                 type="button"
                 disabled={disabled}
                 onClick={() => setIsOpen(prev => !prev)}
-                className={`w-full min-h-[38px] sm:min-h-[40px] px-3 py-2 bg-white border rounded-xl text-left flex items-center justify-between gap-2 transition-all cursor-pointer select-none ${
+                className={`w-full min-h-10 px-3 py-2 bg-white border rounded-xl text-left flex items-center justify-between gap-2 transition-all cursor-pointer select-none ${
                     disabled 
                         ? "opacity-50 cursor-not-allowed bg-slate-50 border-slate-200" 
                         : isOpen 
@@ -245,7 +245,7 @@ export default function CustomSelect({
                                             type="button"
                                             disabled={opt.disabled}
                                             onClick={() => handleSelect(opt)}
-                                            className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between gap-2.5 transition-colors cursor-pointer text-xs active:bg-blue-50 ${
+                                            className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between gap-2.5 transition-colors cursor-pointer text-[13px] sm:text-sm active:bg-blue-50 ${
                                                 opt.disabled
                                                     ? "opacity-40 cursor-not-allowed bg-slate-50"
                                                     : isSelected

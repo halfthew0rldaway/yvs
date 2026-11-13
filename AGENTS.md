@@ -157,8 +157,8 @@ The system is organized as a high-cohesion, multi-tier application:
      - Global Header / App Bar: `z-10`
    - **Mobile Web Typography & Select Normalization**:
      - `-webkit-text-size-adjust: 100%` and `text-size-adjust: 100%` on `html`, `body`, inputs, and buttons to prevent mobile Chrome's text auto-inflation (font boosting) from bloating UI elements.
-     - Standard inputs: `0.8125rem` (13px) on mobile, `0.875rem` (14px) on desktop.
-     - Standard buttons: `.btn-base`, `.btn-primary`, `.btn-secondary`, `.btn-danger` set to `h-8.5 sm:h-9 px-3 sm:px-3.5 text-xs` to stay proportional with 13px inputs.
+     - Standard mobile form labels and control text: `0.8125rem` (13px); supporting hints: `0.6875rem` (11px). Controls and custom select triggers have a 40px minimum height. Desktop control text remains `0.875rem` (14px).
+     - Standard mobile button text is 13px; shared button and field classes keep heights and spacing proportional. Place long field hints below labels on narrow screens to prevent collisions.
      - **PWA Custom Dropdown (`CustomSelect`)**: Replaces native Android OS-level `<select>` radio dialogs with a modern Bottom Sheet Picker on mobile (< 640px) and animated popover on desktop, featuring live search and active indicators.
    - **Small-screen layout audit**: Keep the notification bell visible when the sidebar is closed and show actionable module counts on the sidebar toggle. The mobile header keeps secondary Bluetooth controls in the drawer to preserve title and notification space. Dense list modules use cards below 1024px and tables at larger widths. Modal panels are constrained by dynamic viewport height and shell padding; their headers and footers remain usable in short landscape viewports. The notification memo dialog portals to the document modal layer.
 
