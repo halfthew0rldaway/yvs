@@ -1,4 +1,5 @@
 const prisma = require("../config/database");
+const { broadcast } = require("../utils/sse");
 const {
     normalizePhone, normalizeName, normalizeText, normalizeBrand,
     normalizeDeviceType, normalizeSerialNumber
@@ -50,6 +51,7 @@ async function submit(req, res) {
                 submitted_at: new Date()
             }
         });
+        broadcast("registration:updated");
         return res.status(201).json({ message: "Data berhasil dikirim. Petugas akan memeriksa data Anda sebelum menyimpannya sebagai pelanggan dan perangkat." });
     } catch (error) {
         if (error.code === "P2002") {
@@ -62,12 +64,18 @@ async function submit(req, res) {
 
 async function pending(req, res) {
     try {
-        const rows = await prisma.customerRegistration.findMany({
-            where: { status: { in: ["pending", "accepted"] }, submitted_at: { not: null }, ticket_id: null },
+        const where = { status: { in: ["pending", "accepted"] }, submitted_at: { not: null }, ticket_id: null };
+        const offset = Math.max(0, Math.min(10000, Number.parseInt(req.query.offset, 10) || 0));
+        const limit = Math.max(1, Math.min(500, Number.parseInt(req.query.limit, 10) || 50));
+        const [rows, total] = await prisma.$transaction([
+            prisma.customerRegistration.findMany({
+            where,
             select: registrationSelect,
-            orderBy: { submitted_at: "desc" }, take: 100
-        });
-        res.set("Cache-Control", "no-store").json(rows);
+            orderBy: [{ submitted_at: "desc" }, { id: "desc" }], skip: offset, take: limit
+            }),
+            prisma.customerRegistration.count({ where })
+        ]);
+        res.set("Cache-Control", "no-store").json({ rows, total });
     } catch (error) {
         console.error("Could not list customer registrations", error);
         res.status(500).json({ message: "Gagal memuat pendaftaran" });
@@ -132,6 +140,7 @@ async function accept(req, res) {
                 select: registrationSelect
             });
         });
+        broadcast("registration:updated");
         return res.json(result);
     } catch (error) {
         if (error.status) return res.status(error.status).json({ message: error.message });
@@ -149,6 +158,7 @@ async function reject(req, res) {
             data: { status: "rejected", pending_phone: null, reviewed_at: new Date(), reviewed_by: req.user.id }
         });
         if (!result.count) return res.status(409).json({ message: "Pendaftaran sudah diproses atau tidak ditemukan" });
+        broadcast("registration:updated");
         return res.json({ message: "Pendaftaran ditolak" });
     } catch (error) {
         return res.status(500).json({ message: "Gagal menolak pendaftaran" });

@@ -15,6 +15,7 @@
 - [x] **Staging Startup Safety**: Replaced automatic destructive schema sync with a no-data-loss sync, added RBAC seeding after owner bootstrap, stopped forced demo seeding, and preserved existing owner passwords on routine deploys.
 - [x] **Mobile Android App (Capacitor 7)**: Android 16 compatibility, native camera, native GPS, native print spooler, official YVS adaptive icons and splash screens.
 - [x] **Staging App Distribution**: Added `/download`, login entry point, staged APK file serving, and a CI build from the same source commit as the PWA. Android builds currently use temporary debug signatures and require reinstall between deployments.
+- [x] **Sidebar Action Badges & QR Queue Layout**: Added route-aware unread-notification badges, intake registration counts and direct QR link, realtime count refresh, and paginated mobile-first QR review cards.
 - [x] **AI Workflow & Context Retention**: Serena semantic symbol index, Cline Memory Bank, root `AGENTS.md`, and agent rules.
 - [x] **QA & Test Architecture**: Comprehensive White Box (55 scenarios) and Black Box (50 scenarios) test documentation under `docs/testing/`, and 36 automated unit tests passing across 6 suites under `backend/tests/unit/`.
 - [x] **Continuous Form & Half-A4 (A5 Landscape) Redesign**: Redesigned `InvoiceModal`, `InvoiceDetail`, and `BpbsPrintModal` with packed, responsive, high-density layouts optimized for continuous form dot-matrix printers (210mm x 148mm) without vertical white space waste.

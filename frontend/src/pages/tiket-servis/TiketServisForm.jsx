@@ -17,6 +17,7 @@ import PhotoUploadSection from "../../components/PhotoUploadSection";
 import MediaProcessingModal from "../../components/MediaProcessingModal";
 import { getDeviceIcon, getDeviceCategory } from "../../utils/checklistItems";
 import CustomSelect from "../../components/common/CustomSelect";
+import useRealtimeEvent from "../../hooks/useRealtime";
 
 const POPULAR_BRANDS = ["ASUS", "Lenovo", "HP", "Acer", "Dell", "Apple", "Canon", "Epson", "Brother", "Samsung", "MSI", "Sony", "Toshiba"];
 const DEVICE_CATEGORIES = ["Laptop", "Printer", "Desktop PC", "Smartphone", "Penyimpanan (HDD/SSD)", "Konsol Game", "Lainnya"];
@@ -109,6 +110,10 @@ export default function TiketServisForm() {
     const [fetching, setFetching] = useState(true);
     const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
     const [pendingRegistrations, setPendingRegistrations] = useState([]);
+    const [registrationTotal, setRegistrationTotal] = useState(0);
+    const [loadedRegistrationCount, setLoadedRegistrationCount] = useState(0);
+    const [registrationSearch, setRegistrationSearch] = useState("");
+    const [loadingMoreRegistrations, setLoadingMoreRegistrations] = useState(false);
     const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
     const [reviewingRegistrationId, setReviewingRegistrationId] = useState(null);
     const [serialByRegistration, setSerialByRegistration] = useState({});
@@ -151,10 +156,31 @@ export default function TiketServisForm() {
 
     async function refreshRegistrations() {
         try {
-            const { data } = await api.get("/customer-registration/pending", { skipCache: true });
-            setPendingRegistrations(data || []);
+            const { data } = await api.get(`/customer-registration/pending?limit=${Math.max(50, Math.min(500, pendingRegistrations.length))}`, { skipCache: true });
+            setPendingRegistrations(data?.rows || []);
+            setLoadedRegistrationCount(data?.rows?.length || 0);
+            setRegistrationTotal(data?.total || 0);
         } catch { /* Ticket intake remains usable when the list cannot load. */ }
     }
+
+    async function loadMoreRegistrations() {
+        setLoadingMoreRegistrations(true);
+        try {
+            const { data } = await api.get(`/customer-registration/pending?offset=${loadedRegistrationCount}`, { skipCache: true });
+            setPendingRegistrations(prev => [...prev, ...(data?.rows || []).filter(row => !prev.some(item => item.id === row.id))]);
+            setLoadedRegistrationCount(prev => prev + (data?.rows?.length || 0));
+            setRegistrationTotal(data?.total || 0);
+        } catch { toast.error("Gagal memuat pendaftaran berikutnya"); }
+        finally { setLoadingMoreRegistrations(false); }
+    }
+
+    useRealtimeEvent("registration:updated", refreshRegistrations);
+
+    useEffect(() => {
+        if (window.location.hash === "#pendaftaran-qr") {
+            document.getElementById("pendaftaran-qr")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [pendingRegistrations.length]);
 
     async function selectRegistration(row) {
         setReviewingRegistrationId(row.id);
@@ -187,7 +213,7 @@ export default function TiketServisForm() {
         setReviewingRegistrationId(row.id);
         try {
             await api.post(`/customer-registration/pending/${row.id}/reject`);
-            setPendingRegistrations(prev => prev.filter(item => item.id !== row.id));
+            await refreshRegistrations();
             toast.success("Pendaftaran ditolak");
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal menolak pendaftaran");
@@ -214,6 +240,13 @@ export default function TiketServisForm() {
         if (!registrationParam || fetching || !pendingRegistrations.length) return;
         const row = pendingRegistrations.find(item => item.id === Number(registrationParam));
         if (row?.status === "accepted" && selectedRegistrationId !== row.id) selectRegistration(row);
+    }, [registrationParam, fetching, pendingRegistrations]);
+
+    useEffect(() => {
+        if (!registrationParam || fetching || pendingRegistrations.some(item => item.id === Number(registrationParam))) return;
+        api.get(`/customer-registration/pending/${encodeURIComponent(registrationParam)}`, { skipCache: true })
+            .then(({ data }) => setPendingRegistrations(prev => prev.some(item => item.id === data.id) ? prev : [data, ...prev]))
+            .catch(() => {});
     }, [registrationParam, fetching, pendingRegistrations]);
 
     useEffect(() => {
@@ -595,26 +628,35 @@ export default function TiketServisForm() {
                 </div>
             </div>
 
-            <section className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 sm:p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div><h2 className="text-sm font-bold text-slate-900">Pendaftaran dari QR</h2><p className="mt-0.5 text-xs text-slate-600">Untuk pelanggan baru yang mengisi data sendiri. Petugas tetap memeriksa unit dan membuat tiket.</p></div>
-                    <div className="flex gap-2"><button type="button" onClick={refreshRegistrations} className="btn-secondary text-xs">Muat ulang</button><button type="button" onClick={() => setRegistrationModalOpen(true)} className="btn-primary inline-flex items-center gap-1.5 text-xs"><QrCode size={15} /> Tampilkan QR</button></div>
+            <section id="pendaftaran-qr" className="scroll-mt-6 min-w-0 rounded-2xl border border-blue-100 bg-blue-50/50 p-3 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0"><h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">Pendaftaran dari QR {registrationTotal > 0 && <span className="rounded-full bg-blue-600 px-2 py-0.5 text-2xs font-bold text-white">{registrationTotal}</span>}</h2><p className="mt-0.5 text-xs leading-5 text-slate-600">Data yang pelanggan isi sendiri. Periksa unit dan data sebelum membuat tiket.</p></div>
+                    <div className="flex w-full gap-2 sm:w-auto sm:shrink-0"><button type="button" onClick={refreshRegistrations} className="btn-secondary flex-1 text-xs sm:flex-none">Muat ulang</button><button type="button" onClick={() => setRegistrationModalOpen(true)} className="btn-primary inline-flex flex-1 items-center justify-center gap-1.5 text-xs sm:flex-none"><QrCode size={15} /> Tampilkan QR</button></div>
                 </div>
-                {pendingRegistrations.length > 0 && <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                    {pendingRegistrations.map(row => <div key={row.id} className={`rounded-xl border p-3 text-left ${selectedRegistrationId === row.id ? "border-blue-500 bg-white ring-2 ring-blue-100" : "border-slate-200 bg-white"}`}>
-                        <span className="block text-sm font-bold text-slate-900">{row.nama} · {row.merek} {row.model}</span>
-                        <span className="mt-1 block text-xs text-slate-600">{row.nomor_telepon} · {row.alamat}</span>
-                        <span className="mt-1 block text-xs text-slate-600">{row.jenis_perangkat}{row.serial_number ? ` · SN ${row.serial_number}` : ""}</span>
-                        <span className="mt-2 block text-xs text-slate-700">Keluhan: {row.keluhan}</span>
-                        {row.harapan && <span className="mt-1 block text-xs text-blue-700">Harapan: {row.harapan}</span>}
-                        {row.status === "pending" && <label className="mt-3 block text-xs font-semibold text-slate-700">Nomor seri (diisi petugas saat memeriksa unit)
-                            <input type="text" maxLength={100} autoComplete="off" value={serialByRegistration[row.id] || ""} onChange={(e) => setSerialByRegistration(prev => ({ ...prev, [row.id]: e.target.value }))} placeholder="Opsional jika belum terlihat" className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-blue-500" />
-                        </label>}
-                        <div className="mt-3 flex flex-wrap gap-2">
-                            <button type="button" disabled={reviewingRegistrationId === row.id} onClick={() => selectRegistration(row)} className="btn-primary text-xs disabled:opacity-60">{row.status === "pending" ? "Terima & gunakan" : "Gunakan untuk tiket"}</button>
-                            {row.status === "pending" && <button type="button" disabled={reviewingRegistrationId === row.id} onClick={() => rejectRegistration(row)} className="btn-secondary text-xs disabled:opacity-60">Tolak</button>}
+                {registrationTotal > 0 && <div className="mt-4">
+                    <label htmlFor="registration-search" className="sr-only">Cari pendaftaran yang dimuat</label>
+                    <input id="registration-search" type="search" value={registrationSearch} onChange={event => setRegistrationSearch(event.target.value)} placeholder="Cari nama, telepon, atau perangkat yang dimuat" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 sm:max-w-md" />
+                    <div className="mt-2 text-xs text-slate-500">Menampilkan {pendingRegistrations.length} dari {registrationTotal} pendaftaran</div>
+                    <div className="mt-3 max-h-[min(65vh,680px)] overflow-y-auto overscroll-contain pr-1 custom-scrollbar">
+                        <div className="grid min-w-0 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+                            {pendingRegistrations.filter(row => `${row.nama} ${row.nomor_telepon} ${row.merek} ${row.model}`.toLowerCase().includes(registrationSearch.trim().toLowerCase())).map(row => <article key={row.id} className={`flex min-w-0 flex-col rounded-xl border p-3 sm:p-4 ${selectedRegistrationId === row.id ? "border-blue-500 bg-white ring-2 ring-blue-100" : "border-slate-200 bg-white"}`}>
+                                <div className="flex min-w-0 items-start justify-between gap-2"><h3 className="min-w-0 break-words text-sm font-bold text-slate-900">{row.nama}</h3><span className={`shrink-0 rounded-full px-2 py-0.5 text-2xs font-semibold ${row.status === "pending" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{row.status === "pending" ? "Perlu diperiksa" : "Siap dibuat tiket"}</span></div>
+                                <p className="mt-2 break-words text-xs text-slate-600">{row.nomor_telepon} · {row.alamat}</p>
+                                <p className="mt-2 break-words text-xs font-medium text-slate-700">{row.jenis_perangkat} · {row.merek} {row.model}{row.serial_number ? ` · SN ${row.serial_number}` : ""}</p>
+                                <p className="mt-2 break-words text-xs leading-5 text-slate-700"><span className="font-semibold">Keluhan:</span> {row.keluhan}</p>
+                                {row.harapan && <p className="mt-1 break-words text-xs leading-5 text-blue-700"><span className="font-semibold">Harapan:</span> {row.harapan}</p>}
+                                {row.status === "pending" && <label className="mt-3 block text-xs font-semibold text-slate-700">Nomor seri (diisi petugas saat memeriksa unit)
+                                    <input type="text" maxLength={100} autoComplete="off" value={serialByRegistration[row.id] || ""} onChange={(e) => setSerialByRegistration(prev => ({ ...prev, [row.id]: e.target.value }))} placeholder="Opsional jika belum terlihat" className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-blue-500" />
+                                </label>}
+                                <div className="mt-auto flex flex-col gap-2 pt-4 sm:flex-row sm:flex-wrap">
+                                    <button type="button" disabled={reviewingRegistrationId === row.id} onClick={() => selectRegistration(row)} className="btn-primary w-full text-xs disabled:opacity-60 sm:w-auto">{row.status === "pending" ? "Terima & gunakan" : "Gunakan untuk tiket"}</button>
+                                    {row.status === "pending" && <button type="button" disabled={reviewingRegistrationId === row.id} onClick={() => rejectRegistration(row)} className="btn-secondary w-full text-xs disabled:opacity-60 sm:w-auto">Tolak</button>}
+                                </div>
+                            </article>)}
                         </div>
-                    </div>)}
+                        {!pendingRegistrations.some(row => `${row.nama} ${row.nomor_telepon} ${row.merek} ${row.model}`.toLowerCase().includes(registrationSearch.trim().toLowerCase())) && <p className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-center text-xs text-slate-500">Tidak ada hasil pada pendaftaran yang sudah dimuat.</p>}
+                    </div>
+                    {pendingRegistrations.length < registrationTotal && <button type="button" disabled={loadingMoreRegistrations} onClick={loadMoreRegistrations} className="btn-secondary mt-3 w-full text-xs disabled:opacity-60 sm:w-auto">{loadingMoreRegistrations ? "Memuat…" : "Muat 50 berikutnya"}</button>}
                 </div>}
             </section>
 

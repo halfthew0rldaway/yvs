@@ -1,5 +1,33 @@
 const prisma = require("../config/database");
 const { broadcast } = require("../utils/sse");
+const { hasPermission } = require("../services/authorization.service");
+
+const sidebarPaths = ["/tiket-servis", "/perangkat", "/customer", "/loaner", "/sparepart", "/rma", "/supplier", "/invoice", "/retensi", "/attendance", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/dashboard"];
+
+async function getSidebarCounts(req, res) {
+    try {
+        const unread = await prisma.notification.groupBy({
+            by: ["link"],
+            where: { is_read: false, ...recipientScope(req), reads: { none: { user_id: req.user.id } }, link: { not: null } },
+            _count: { _all: true }
+        });
+        const counts = {};
+        for (const row of unread) {
+            if (!row.link?.startsWith("/") || row.link.startsWith("//")) continue;
+            const path = sidebarPaths.find(path => row.link === path || row.link.startsWith(`${path}/`) || row.link.startsWith(`${path}?`));
+            if (path) counts[path] = (counts[path] || 0) + row._count._all;
+        }
+        let registrations = 0;
+        if (hasPermission(req.authorization, "tickets.intake")) {
+            registrations = await prisma.customerRegistration.count({ where: { status: { in: ["pending", "accepted"] }, submitted_at: { not: null }, ticket_id: null } });
+            counts["/tiket-servis"] = (counts["/tiket-servis"] || 0) + registrations;
+        }
+        res.set("Cache-Control", "no-store").json({ counts, registrations });
+    } catch (error) {
+        console.error("Could not load sidebar counts", error);
+        res.status(500).json({ message: "Gagal memuat jumlah notifikasi menu" });
+    }
+}
 
 function recipientScope(req) {
     const roleSlugs = req.authorization?.roles?.map(role => role.slug) || [];
@@ -154,6 +182,7 @@ async function sendMemo(req, res) {
 }
 
 module.exports = {
+    getSidebarCounts,
     getRecipientRoles,
     getNotifications,
     getUnreadCount,

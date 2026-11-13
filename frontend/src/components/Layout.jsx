@@ -311,6 +311,27 @@ export default function Layout({ children }) {
     const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [isBluetoothModalOpen, setIsBluetoothModalOpen] = useState(false);
+    const [sidebarCounts, setSidebarCounts] = useState({});
+    const [registrationCount, setRegistrationCount] = useState(0);
+
+    const refreshSidebarCounts = useCallback(async () => {
+        try {
+            const { data } = await api.get("/notifications/sidebar-counts", { skipCache: true });
+            setSidebarCounts(data?.counts || {});
+            setRegistrationCount(data?.registrations || 0);
+        } catch { /* The menu remains usable when counts are unavailable. */ }
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (document.visibilityState === "visible") refreshSidebarCounts();
+        }, 60000);
+        const onFocus = () => refreshSidebarCounts();
+        window.addEventListener("focus", onFocus);
+        return () => { clearInterval(interval); window.removeEventListener("focus", onFocus); };
+    }, [refreshSidebarCounts]);
+
+    useRealtimeEvent(["registration:updated", "notification:new", "notification:updated"], refreshSidebarCounts);
 
     // Idle timer untuk memonitor inaktivitas user
     const {
@@ -417,7 +438,8 @@ export default function Layout({ children }) {
         if (typeof window !== "undefined" && window.innerWidth < 1024) {
             setIsSidebarOpen(false);
         }
-    }, [location.pathname]);
+        refreshSidebarCounts();
+    }, [location.pathname, refreshSidebarCounts]);
 
     // Handle resize adjustments
     useEffect(() => {
@@ -555,7 +577,8 @@ export default function Layout({ children }) {
                                         }`}
                                     >
                                         <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-500"}`} />
-                                        <span>{item.label}</span>
+                                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                                        {sidebarCounts[item.path] > 0 && <span className="shrink-0 rounded-full bg-rose-600 px-1.5 py-0.5 text-3xs font-bold tabular-nums text-white" aria-label={`${sidebarCounts[item.path]} perlu perhatian`}>{sidebarCounts[item.path] > 99 ? "99+" : sidebarCounts[item.path]}</span>}
                                     </Link>
                                 );
                             });
@@ -565,6 +588,7 @@ export default function Layout({ children }) {
                         const GroupIcon = group.icon;
                         const isOpen = openGroups[group.id] !== false;
                         const hasActiveChild = group.items.some(item => location.pathname.startsWith(item.path));
+                        const groupCount = group.items.reduce((total, item) => total + (sidebarCounts[item.path] || 0), 0);
 
                         return (
                             <div key={group.id} className="pt-2">
@@ -577,11 +601,12 @@ export default function Layout({ children }) {
                                             : "text-slate-400 hover:text-slate-700 hover:bg-slate-100/60"
                                     }`}
                                 >
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex min-w-0 items-center gap-2">
                                         <GroupIcon className={`w-3.5 h-3.5 ${hasActiveChild ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`} />
-                                        <span>{group.label}</span>
+                                        <span className="truncate">{group.label}</span>
                                     </div>
-                                    <div className="text-slate-400 group-hover:text-slate-600 transition-transform">
+                                    <div className="flex shrink-0 items-center gap-1.5 text-slate-400 group-hover:text-slate-600 transition-transform">
+                                        {groupCount > 0 && <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-3xs font-bold tabular-nums text-white">{groupCount > 99 ? "99+" : groupCount}</span>}
                                         {isOpen ? (
                                             <ChevronDown className="w-3.5 h-3.5" />
                                         ) : (
@@ -596,8 +621,8 @@ export default function Layout({ children }) {
                                             const Icon = item.icon;
                                             const isActive = location.pathname.startsWith(item.path);
                                             return (
+                                                <React.Fragment key={item.path}>
                                                 <Link
-                                                    key={item.path}
                                                     to={item.path}
                                                     className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                                                         isActive
@@ -606,8 +631,16 @@ export default function Layout({ children }) {
                                                     }`}
                                                 >
                                                     <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
-                                                    <span className="truncate">{item.label}</span>
+                                                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                                                    {sidebarCounts[item.path] > 0 && <span className="shrink-0 rounded-full bg-rose-600 px-1.5 py-0.5 text-3xs font-bold tabular-nums text-white" aria-label={`${sidebarCounts[item.path]} perlu perhatian`}>{sidebarCounts[item.path] > 99 ? "99+" : sidebarCounts[item.path]}</span>}
                                                 </Link>
+                                                {item.path === "/tiket-servis" && registrationCount > 0 && hasPermission("tickets.intake") && (
+                                                    <Link to="/tiket-servis/tambah#pendaftaran-qr" className="ml-6 flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50">
+                                                        <span className="truncate">Periksa pendaftaran QR</span>
+                                                        <span className="shrink-0 rounded-full bg-blue-600 px-1.5 py-0.5 text-3xs font-bold text-white">{registrationCount > 99 ? "99+" : registrationCount}</span>
+                                                    </Link>
+                                                )}
+                                                </React.Fragment>
                                             );
                                         })}
                                     </div>

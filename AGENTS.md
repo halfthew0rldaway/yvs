@@ -246,6 +246,10 @@ The technician picker is available only with `tickets.assign`; an intake-only ro
 - `/download` checks the build metadata before showing the APK link. The PWA follows the deployed web build and supports browser installation. The native Capacitor app requires a new APK for code changes.
 - Staging APKs use the GitHub runner's temporary debug signing key. Users must uninstall a previous build before installing a newly deployed APK; locally stored unsynced data is lost. A persistent private signing key and signed release build are required before offering in-place APK updates or a production release.
 
+### Sidebar Action Badges and QR Intake Queue
+- Authenticated `/notifications/sidebar-counts` groups unread linked notifications by module route and adds the count of QR registrations awaiting review or ticket creation for staff with `tickets.intake`. Sidebar and collapsed group badges use these counts; a QR sublink opens the new-ticket review section. Counts refresh on realtime events, navigation, focus, and a visible-tab interval.
+- The QR review list loads 50 registrations at a time with an explicit load-more control. Mobile-first cards wrap long text, allow search through loaded entries, and remain in a bounded scroll area for large queues. Public submissions and review actions emit `registration:updated` only to intake-authorized realtime clients.
+
 ---
 
 ## 7. Guidelines for AI Agents

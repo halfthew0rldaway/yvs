@@ -94,6 +94,7 @@ async function broadcast(event, data = {}, filter = null) {
             if (event.startsWith("invoice:") && !hasPermission(auth, "invoices.view")) continue;
             if (event.startsWith("loaner:") && !hasPermission(auth, "loaners.view")) continue;
             if (event.startsWith("rma:") && !hasPermission(auth, "suppliers.view")) continue;
+            if (event === "registration:updated" && !hasPermission(auth, "tickets.intake")) continue;
             if (event === "dashboard:refresh" && !hasPermission(auth, "dashboard.view")) continue;
             if (event === "notification:new") {
                 if (data.user_id && data.user_id !== auth.id) continue;
