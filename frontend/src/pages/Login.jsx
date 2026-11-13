@@ -279,18 +279,14 @@ export default function Login() {
                                 onClick={() => handleSelectDemoAccount("arni", "ownerArni2026!")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Staging (Ibu Arni)</span>
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner (Ibu Arni)</span>
-                                <span className="block font-mono text-3xs text-blue-600 truncate">arni</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Super Admin 1</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleSelectDemoAccount("vivero", "ownerVivero2026!")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Staging (Bpk. Vivero)</span>
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner (Bpk. Vivero)</span>
-                                <span className="block font-mono text-3xs text-blue-600 truncate">vivero</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Super Admin 2</span>
                             </button>
                             <button
                                 type="button"
@@ -298,23 +294,20 @@ export default function Login() {
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
                                 <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Admin Operasional</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">admin</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleSelectDemoAccount("siti")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Service Advisor (Siti)</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">siti</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Service Advisor</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleSelectDemoAccount("teknisi1")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi 1 (Budi)</span>
-                                <span className="block font-mono text-3xs text-slate-400 truncate">teknisi1</span>
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Teknisi</span>
                             </button>
                         </div>
                         <div className="mt-2 pt-2 border-t border-slate-200/70 text-3xs text-slate-400">
