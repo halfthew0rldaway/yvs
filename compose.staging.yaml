@@ -65,6 +65,8 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    volumes:
+      - ./apk-downloads:/usr/share/nginx/html/downloads:ro
     expose:
       - "80"
     mem_limit: 192m

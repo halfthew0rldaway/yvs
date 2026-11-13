@@ -46,6 +46,7 @@ presentation/
 # Mobile local build artifacts (APK/IPA) - never push binaries to git
 *.apk
 *.aab
+apk-downloads/
 fluttermobile/
 pwamobile/
 mobile/dist/

@@ -35,6 +35,7 @@ The system is organized as a high-cohesion, multi-tier application:
 - **Staging API Endpoint:** `https://staging.101.32.127.55.sslip.io/api`
 - **Staging Web App:** `https://staging.101.32.127.55.sslip.io/dashboard`
 - **Capacitor Mobile Package ID:** `id.yangversa.servio`
+- **Staging App Download:** `/download` on the staging web origin; the login page links to it.
 - **Database Engine:** MySQL via Prisma (`backend/prisma/schema.prisma`)
 
 ---
@@ -239,6 +240,11 @@ The technician picker is available only with `tickets.assign`; an intake-only ro
 - Run `backend/scripts/seed-rbac.js` after registering new capability codes. It adds newly introduced defaults once and preserves later Super Admin edits, revocations, user-role assignments, and Super Admin designations. The initial designation requires `SUPER_ADMIN_EMAIL` when none exists.
 - Staging startup uses a no-data-loss Prisma schema sync because its database predates migration history, then seeds RBAC after owner bootstrap. Startup fails if schema sync or RBAC bootstrap fails. Routine staging deploys preserve existing owner passwords; rotation requires `ROTATE_STAGING_OWNER_PASSWORDS=true`.
 - The realtime stream requires authentication and checks current database grants before delivering each event. Notification recipients use assigned role slugs or a user ID, and memo recipients come from the role table.
+
+### Staging Android and PWA Distribution
+- A push to `staging` builds the web/PWA and a Capacitor Android debug APK from the same commit in GitHub Actions. The deploy job copies `servio-staging.apk` and its build metadata into the VPS `apk-downloads/` directory, mounted read-only into the frontend Nginx container at `/downloads/`. Missing files return 404 rather than the SPA page.
+- `/download` checks the build metadata before showing the APK link. The PWA follows the deployed web build and supports browser installation. The native Capacitor app requires a new APK for code changes.
+- Staging APKs use the GitHub runner's temporary debug signing key. Users must uninstall a previous build before installing a newly deployed APK; locally stored unsynced data is lost. A persistent private signing key and signed release build are required before offering in-place APK updates or a production release.
 
 ---
 

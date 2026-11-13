@@ -11,6 +11,7 @@ import { landingRouteFor } from "./utils/landingRoute";
 
 // Lazy-loaded route pages with automatic chunk refresh retry on new deployments
 const Login = lazyWithRetry(() => import("./pages/Login"));
+const DownloadApp = lazyWithRetry(() => import("./pages/DownloadApp"));
 const Profile = lazyWithRetry(() => import("./pages/Profile"));
 const Dashboard = lazyWithRetry(() => import("./pages/dashboard/Dashboard"));
 const CustomerList = lazyWithRetry(() => import("./pages/customer/CustomerList"));
@@ -148,6 +149,7 @@ export default function App() {
             <Suspense fallback={<PageLoader />}>
                 <Routes>
                     <Route path="/login" element={<Login />} />
+                    <Route path="/download" element={<DownloadApp />} />
                     <Route path="/tracking" element={<Tracking />} />
                     <Route path="/tracking/register" element={<CustomerRegistration />} />
 

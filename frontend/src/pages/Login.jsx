@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
+import { useNavigate, Navigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import api from "../services/api";
 import { getRememberedUsername, setRememberedUsername } from "../utils/authStorage";
 import { landingRouteFor } from "../utils/landingRoute";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
-import { Eye, EyeOff, Lock, User, Wrench, Shield, CheckCircle2, ArrowRight, ShieldCheck, Clock, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Wrench, Shield, CheckCircle2, ArrowRight, ShieldCheck, Clock, AlertCircle, Download } from "lucide-react";
+import AppConfig from "../services/config";
 
 export default function Login() {
     const { user, login } = useAuth();
@@ -328,6 +329,13 @@ export default function Login() {
                             Kata sandi default: <span className="font-mono text-slate-600 font-semibold">password123</span>
                         </div>
                     </motion.div>
+                    {!AppConfig.isNative && (
+                        <motion.div variants={itemVariants} className="mt-4 text-center">
+                            <Link to="/download" className="inline-flex items-center gap-2 text-xs font-semibold text-blue-600 hover:text-blue-700">
+                                <Download size={14} /> Unduh aplikasi Android / pasang PWA
+                            </Link>
+                        </motion.div>
+                    )}
                 </motion.div>
 
                 {/* Footer text */}

@@ -13,6 +13,49 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android 35 platform
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Build current staging APK
+        working-directory: frontend
+        env:
+          SERVIO_VERSION_CODE: ${{ github.run_number }}
+        run: |
+          npm ci
+          npm run build
+          npx cap sync android
+          cd android
+          ./gradlew assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/servio-staging.apk"
+          node -e 'const fs=require("fs"); fs.writeFileSync(process.env.GITHUB_WORKSPACE+"/servio-staging.json", JSON.stringify({commit:process.env.GITHUB_SHA,build:new Date().toISOString(),versionCode:Number(process.env.SERVIO_VERSION_CODE)})+"\n")'
+
+      - name: Upload APK to staging VPS
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: "servio-staging.apk,servio-staging.json"
+          target: "/tmp/yvs-staging-apk-${{ github.run_id }}"
+
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -37,6 +80,11 @@ jobs:
             echo "📥 Mengambil perubahan terbaru dari branch staging..."
             git fetch origin staging
             git reset --hard origin/staging
+
+            mkdir -p apk-downloads
+            install -m 0644 "/tmp/yvs-staging-apk-${{ github.run_id }}/servio-staging.apk" apk-downloads/servio-staging.apk
+            install -m 0644 "/tmp/yvs-staging-apk-${{ github.run_id }}/servio-staging.json" apk-downloads/servio-staging.json
+            rm -rf "/tmp/yvs-staging-apk-${{ github.run_id }}"
 
             # Pastikan network gateway bersama aktif
             docker network inspect yvs_gateway_net >/dev/null 2>&1 || docker network create yvs_gateway_net
@@ -71,6 +119,9 @@ jobs:
 
             echo "📋 Log inisialisasi backend staging:"
             docker compose -f compose.staging.yaml --env-file .env.staging logs backend --tail 20
+
+            docker exec yvs-staging-frontend test -s /usr/share/nginx/html/downloads/servio-staging.apk
+            docker exec yvs-staging-frontend test -s /usr/share/nginx/html/downloads/servio-staging.json
 
             # Reload Caddy Gateway jika aktif
             if docker ps --format '{{.Names}}' | grep -q "caddy-gateway"; then

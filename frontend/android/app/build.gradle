@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+def servioVersionCode = (System.getenv('SERVIO_VERSION_CODE') ?: '1').toInteger()
 
 android {
     namespace "id.yangversa.servio"
@@ -7,8 +8,8 @@ android {
         applicationId "id.yangversa.servio"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode servioVersionCode
+        versionName "1.0.${servioVersionCode}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

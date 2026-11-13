@@ -28,6 +28,7 @@
 - Keep Serena MCP configured via stdio with `--context ide --project /run/media/bleu/DATA/dev/yvs` for zero-idle overhead.
 - Maintain IndexedDB offline caching with strict staging fallback.
 - Retain official YVS brand styling across mobile launcher icons.
+- Staging push now builds the PWA and a debug Capacitor APK from one commit, uploads the APK plus metadata to a read-only VPS mount, and exposes `/download` from login. The APK link is shown only after metadata is present. Without a persistent keystore, each CI debug APK requires uninstall/reinstall; do not describe it as an in-place update.
 
 ## Next Steps
 - Apply the modular RBAC Prisma migration and run `npm run seed:rbac` in each environment before deploying the permission-aware backend.
