@@ -46,7 +46,7 @@ const STATUS_LABELS = {
 
 // Memoized Table Row Component
 const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
-    const { isAdmin } = useAuth();
+    const { hasPermission } = useAuth();
     return (
         <tr 
             onClick={(e) => {
@@ -144,7 +144,7 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
                             <span>Revisi</span>
                         </span>
                     )}
-                    {isAdmin && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
+                    {hasPermission("crm.view") && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0" title={`Masa Garansi Tersisa ${tiket.warranty_status.sisaHari} Hari`}>
                             <Clock className="w-3 h-3 text-amber-700" />
                             <span>H-{tiket.warranty_status.sisaHari}</span>
@@ -171,7 +171,7 @@ const TiketRow = memo(function TiketRow({ tiket, onNavigate, onSelectQr }) {
 /* Mobile Card View (< sm) for the ticket queue                        */
 /* ------------------------------------------------------------------ */
 const TiketCard = memo(function TiketCard({ tiket, onNavigate, onSelectQr }) {
-    const { isAdmin } = useAuth();
+    const { hasPermission } = useAuth();
     const perangkatLabel = `${tiket.perangkat?.merek || ""} ${tiket.perangkat?.model || ""}`.trim();
     return (
         <div
@@ -236,7 +236,7 @@ const TiketCard = memo(function TiketCard({ tiket, onNavigate, onSelectQr }) {
                         <span>Revisi</span>
                     </span>
                 )}
-                {isAdmin && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
+                {hasPermission("crm.view") && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0">
                         <Clock className="w-3 h-3 text-amber-700" />
                         <span>H-{tiket.warranty_status.sisaHari}</span>
@@ -275,7 +275,9 @@ const TiketCard = memo(function TiketCard({ tiket, onNavigate, onSelectQr }) {
 
 export default function TiketServisList() {
     const navigate = useNavigate();
-    const { isAdmin, isTeknisi, user } = useAuth();
+    const { user, hasPermission } = useAuth();
+    const canViewAllTickets = hasPermission("tickets.view_all");
+    const canIntake = hasPermission("tickets.intake");
     const [searchParams, setSearchParams] = useSearchParams();
     const [tikets, setTikets] = useState([]);
     const [filter, setFilter] = useState(() => searchParams.get("status") || "");
@@ -382,7 +384,7 @@ export default function TiketServisList() {
                 params.search = targetSearch.trim();
             }
 
-            if (!isAdmin && scopeFilter === "my" && user?.id) {
+            if (!canViewAllTickets && scopeFilter === "my" && user?.id) {
                 params.teknisi_id = user.id;
             }
 
@@ -401,7 +403,7 @@ export default function TiketServisList() {
             } else if (Array.isArray(res.data)) {
                 // Client-side fallback if server returned raw array
                 let filtered = res.data;
-                if (!isAdmin && scopeFilter === "my") {
+                if (!canViewAllTickets && scopeFilter === "my") {
                     filtered = filtered.filter(t => t.teknisi?.id === user?.id);
                 }
                 if (filter === "garansi_expiring") {
@@ -468,7 +470,7 @@ export default function TiketServisList() {
                     <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Tiket Servis</h1>
                     <p className="text-xs sm:text-sm text-slate-500 mt-1">Kelola tiket perbaikan perangkat pelanggan</p>
                 </div>
-                {isAdmin && (
+                {canIntake && (
                     <div className="flex items-center gap-2.5 shrink-0">
                         <Link
                             to="/tiket-servis/tambah"
@@ -577,7 +579,7 @@ export default function TiketServisList() {
                                 Tiket Aktif
                             </button>
                             {Object.entries(STATUS_LABELS).map(([key, val]) => {
-                                const showBadge = key === "diterima" && unassignedCount > 0 && !isAdmin;
+                                const showBadge = key === "diterima" && unassignedCount > 0 && !canViewAllTickets;
                                 const isActive = filter === key;
                                 return (
                                     <button
@@ -660,7 +662,7 @@ export default function TiketServisList() {
                                 </button>
 
                                 {/* Garansi H-3 CRM (Khusus Admin / CS) */}
-                                {isAdmin && (
+                                {hasPermission("crm.view") && (
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -718,7 +720,7 @@ export default function TiketServisList() {
                         </div>
 
                         {/* Technician Scope Tabs (Technicians Only) */}
-                        {!isAdmin && (
+                        {!canViewAllTickets && (
                             <div className="flex items-center p-0.5 bg-slate-200/70 rounded-lg border border-slate-200/60 text-xs shrink-0 self-start sm:self-auto sm:ml-auto">
                                 <button
                                     type="button"
@@ -783,7 +785,7 @@ export default function TiketServisList() {
                                 ? "Tidak ada tiket yang cocok dengan filter atau kata kunci pencarian Anda." 
                                 : "Belum ada tiket servis yang dibuat di bengkel."
                         }
-                        actionLabel={hasActiveFilters ? "Reset Filter" : (isAdmin ? "Buat Tiket Baru" : undefined)}
+                        actionLabel={hasActiveFilters ? "Reset Filter" : (canIntake ? "Buat Tiket Baru" : undefined)}
                         onAction={hasActiveFilters ? handleResetAllFilters : () => navigate("/tiket-servis/tambah")}
                     />
                 ) : (

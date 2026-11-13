@@ -28,6 +28,7 @@ import {
     ChevronRight,
     QrCode,
     ShieldAlert,
+    KeyRound,
     Clock,
     HelpCircle,
     Layers,
@@ -287,7 +288,7 @@ export default function Layout({ children }) {
     const { 
         user, 
         logout, 
-        isAdmin, 
+        hasPermission,
         login, 
         isSessionLocked, 
         lockReason, 
@@ -365,18 +366,25 @@ export default function Layout({ children }) {
             }
         } catch (_) {}
 
-        toast.success(`Berhasil memindai: ${cleanCode}`);
-
         // Smart route heuristics
         if (location.pathname.startsWith("/sparepart") || cleanCode.startsWith("PRT-") || cleanCode.startsWith("SP-") || cleanCode.startsWith("SKU-")) {
+            if (!hasPermission("inventory.view")) {
+                toast.error("Anda tidak memiliki akses ke katalog sparepart.");
+                return;
+            }
             navigate(`/sparepart?search=${encodeURIComponent(cleanCode)}`);
         } else {
+            if (!hasPermission("tickets.view")) {
+                toast.error("Anda tidak memiliki akses ke tiket servis.");
+                return;
+            }
             navigate(`/tiket-servis?search=${encodeURIComponent(cleanCode)}`);
         }
+        toast.success(`Berhasil memindai: ${cleanCode}`);
     }
 
     // Periodic maintenance recall fetch across the app (Hanya untuk Admin / Front Office / Pimpinan)
-    const canAccessCrm = isAdmin || user?.role === "pimpinan";
+    const canAccessCrm = hasPermission("crm.view");
     const fetchMaintenance = useCallback(async () => {
         if (!canAccessCrm) return;
         try {
@@ -424,11 +432,32 @@ export default function Layout({ children }) {
     }, [isSidebarOpen]);
 
     const navGroups = useMemo(() => {
-        if (user?.role === "pimpinan") return pimpinanNavGroups;
-        if (isAdmin) return adminNavGroups;
-        if (user?.role === "frontman") return frontmanNavGroups;
-        return teknisiNavGroups;
-    }, [user?.role, isAdmin]);
+        const permissionForPath = {
+            "/dashboard": "dashboard.view", "/tiket-servis": "tickets.view", "/perangkat": "devices.view",
+            "/customer": "customers.view", "/loaner": "loaners.view", "/sparepart": "inventory.view",
+            "/rma": "suppliers.view", "/supplier": "suppliers.view", "/invoice": "invoices.view",
+            "/retensi": "crm.view", "/attendance": "attendance.self", "/wiki": "wiki.view",
+            "/recruitment": "recruitment.view", "/users": "roles.manage", "/database": "system.database",
+            "/audit-log": "audit.view", "/roles": "roles.manage"
+        };
+        const groups = adminNavGroups.map(group => ({ ...group, items: group.items.filter(item => item.path === "/users" ? user?.is_super_admin : item.path === "/attendance" ? ["attendance.self", "attendance.review", "attendance.adjust", "attendance.policy"].some(hasPermission) : hasPermission(permissionForPath[item.path])) })).filter(group => group.items.length);
+        if (user?.is_super_admin) {
+            const system = groups.find(group => group.id === "sistem");
+            if (system) system.items.push({ path: "/roles", label: "Peran & Hak Akses", icon: KeyRound });
+        }
+        return groups;
+    }, [hasPermission, user?.is_super_admin]);
+
+    const mobileNavItems = useMemo(() => {
+        const available = navGroups.flatMap(group => group.items);
+        if (hasPermission("tickets.intake")) {
+            available.push({ path: "/tiket-servis/tambah", label: "Baru", icon: Plus });
+        }
+        const byPath = new Map(available.map(item => [item.path, item]));
+        const preferred = ["/dashboard", "/tiket-servis", "/tiket-servis/tambah", "/invoice", "/sparepart", "/wiki"];
+        const ordered = [...preferred.map(path => byPath.get(path)).filter(Boolean), ...available];
+        return ordered.filter((item, index) => ordered.findIndex(candidate => candidate.path === item.path) === index).slice(0, 4);
+    }, [navGroups, hasPermission]);
 
     // Collapsible Groups state: open by default for core daily groups
     const [openGroups, setOpenGroups] = useState({
@@ -627,7 +656,7 @@ export default function Layout({ children }) {
                             <div className="flex-1 min-w-0">
                                 <p className="font-bold text-slate-900 text-xs truncate">{user?.nama}</p>
                                 <p className="text-2xs text-slate-500 capitalize truncate">
-                                    {user?.role === "pimpinan" ? "Owner / Manajerial" : user?.role}
+                                    {user?.roles?.map(role => role.name).join(", ") || user?.role}
                                 </p>
                             </div>
                         </div>
@@ -736,7 +765,7 @@ export default function Layout({ children }) {
                         </button>
 
                         {/* Quick Camera QR / Barcode Scanner */}
-                        <button
+                        {(hasPermission("tickets.view") || hasPermission("inventory.view")) && <button
                             type="button"
                             onClick={() => setIsScannerOpen(true)}
                             className="inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
@@ -745,7 +774,7 @@ export default function Layout({ children }) {
                         >
                             <QrCode className="w-4 h-4 text-blue-600 shrink-0" />
                             <span className="hidden sm:inline whitespace-nowrap">Scan QR</span>
-                        </button>
+                        </button>}
 
                         {/* Quick Bluetooth Diagnostics / Thermal Printer */}
                         <button
@@ -760,7 +789,7 @@ export default function Layout({ children }) {
                         </button>
 
                         <NotificationBell />
-                        {isAdmin && (
+                        {hasPermission("tickets.intake") && (
                             <Link
                                 to="/tiket-servis/tambah"
                                 className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 sm:px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all shadow-xs shrink-0 whitespace-nowrap"
@@ -787,80 +816,21 @@ export default function Layout({ children }) {
             {/* Mobile Bottom Navigation Bar (Screens < 1024px) */}
             <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 z-30 lg:hidden safe-bottom-nav shadow-[0_-4px_20px_rgba(0,0,0,0.04)] print:hidden">
                 <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
-                    {/* Home / Dashboard */}
-                    <Link
-                        to="/dashboard"
-                        className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
-                            location.pathname === "/dashboard" ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
-                        }`}
-                    >
-                        <LayoutDashboard className="w-5 h-5 mb-0.5" />
-                        <span className="text-3xs tracking-tight">Home</span>
-                    </Link>
-
-                    {/* Tiket Servis */}
-                    <Link
-                        to="/tiket-servis"
-                        className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
-                            location.pathname.startsWith("/tiket-servis") && location.pathname !== "/tiket-servis/tambah"
-                                ? "text-blue-600 font-bold"
-                                : "text-slate-500 hover:text-slate-900 font-medium"
-                        }`}
-                    >
-                        <Ticket className="w-5 h-5 mb-0.5" />
-                        <span className="text-3xs tracking-tight">Tiket</span>
-                    </Link>
-
-                    {/* Center Action: + Tiket Baru (Admin) or Sparepart (Teknisi) */}
-                    {isAdmin ? (
-                        <Link
-                            to="/tiket-servis/tambah"
-                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
-                                location.pathname === "/tiket-servis/tambah"
-                                    ? "text-blue-600 font-bold"
-                                    : "text-slate-500 hover:text-slate-900 font-medium"
-                            }`}
-                            title="Buat Tiket Baru"
+                    {mobileNavItems.map(item => {
+                        const Icon = item.icon;
+                        const isNew = item.path === "/tiket-servis/tambah";
+                        const active = isNew ? location.pathname === item.path : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+                        const label = { "/dashboard": "Home", "/tiket-servis": "Tiket", "/sparepart": "Sparepart", "/wiki": "SOP Wiki", "/invoice": "Invoice" }[item.path] || item.label;
+                        return <Link
+                            key={item.path}
+                            to={item.path}
+                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${active ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"}`}
+                            title={item.label}
                         >
-                            <div className="w-8 h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-xs mb-0.5">
-                                <Plus className="w-4 h-4 stroke-[2.5]" />
-                            </div>
-                            <span className="text-3xs tracking-tight font-semibold text-blue-600">Baru</span>
-                        </Link>
-                    ) : (
-                        <Link
-                            to="/sparepart"
-                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
-                                location.pathname.startsWith("/sparepart") ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
-                            }`}
-                        >
-                            <Wrench className="w-5 h-5 mb-0.5" />
-                            <span className="text-3xs tracking-tight">Sparepart</span>
-                        </Link>
-                    )}
-
-                    {/* Kasir / Invoice (Admin) vs SOP & Wiki (Teknisi) */}
-                    {isAdmin ? (
-                        <Link
-                            to="/invoice"
-                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
-                                location.pathname.startsWith("/invoice") ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
-                            }`}
-                        >
-                            <FileText className="w-5 h-5 mb-0.5" />
-                            <span className="text-3xs tracking-tight">Invoice</span>
-                        </Link>
-                    ) : (
-                        <Link
-                            to="/wiki"
-                            className={`flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 duration-75 ${
-                                location.pathname.startsWith("/wiki") ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
-                            }`}
-                        >
-                            <BookOpen className="w-5 h-5 mb-0.5" />
-                            <span className="text-3xs tracking-tight">SOP Wiki</span>
-                        </Link>
-                    )}
+                            {isNew ? <div className="w-8 h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-xs mb-0.5"><Icon className="w-4 h-4 stroke-[2.5]" /></div> : <Icon className="w-5 h-5 mb-0.5" />}
+                            <span className={`text-3xs tracking-tight ${isNew ? "font-semibold text-blue-600" : ""}`}>{label}</span>
+                        </Link>;
+                    })}
 
                     {/* Menu Drawer Toggle */}
                     <button

@@ -53,7 +53,8 @@ const DIFFICULTY_MAP = {
 };
 
 export default function RepairWikiList() {
-    const { user, isAdmin } = useAuth();
+    const { user, hasPermission } = useAuth();
+        const isAdmin = hasPermission("wiki.manage");
     
     // Top-Level Mode: "sop" or "wiki"
     const [mainTab, setMainTab] = useState("sop"); // "sop" | "wiki"
@@ -570,7 +571,7 @@ export default function RepairWikiList() {
                 isOpen={Boolean(activeWikiDetail)}
                 onClose={() => setActiveWikiDetail(null)}
                 wiki={activeWikiDetail}
-                canModify={isAdmin || user?.id === activeWikiDetail?.user_id}
+                canModify={isAdmin}
                 onEdit={(wiki) => {
                     setActiveWikiDetail(null);
                     setWikiToEdit(wiki);

@@ -757,9 +757,9 @@ export default function AuditLogList() {
             {/* Modal Detail Log Audit */}
             {selectedLog && (
                 <div className="modal-shell bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-                    <div className="modal-panel max-w-lg space-y-3 sm:space-y-4">
+                    <div className="modal-panel max-w-lg h-auto max-h-[88dvh] z-10">
                         <div className="modal-grabber" />
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div className="modal-header flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
                                     <ShieldAlert className="w-4 h-4" />
@@ -778,7 +778,7 @@ export default function AuditLogList() {
                             </button>
                         </div>
 
-                        <div className="space-y-3 text-xs">
+                        <div className="modal-body space-y-3 text-xs">
                             <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/60">
                                 <div>
                                     <span className="text-2xs font-semibold text-slate-400 uppercase tracking-wider block">Waktu Kejadian</span>
@@ -830,7 +830,7 @@ export default function AuditLogList() {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                        <div className="modal-footer">
                             <button
                                 type="button"
                                 onClick={handleCopyDetail}

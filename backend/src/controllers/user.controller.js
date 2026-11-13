@@ -56,7 +56,7 @@ async function getAllUsers(req, res) {
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
 
         const where = {};
-        if (role) where.role = role;
+        if (role) where.user_roles = { some: { role: { slug: role } } };
         if (search) {
             where.OR = [
                 { nama: { contains: search } },
@@ -71,6 +71,8 @@ async function getAllUsers(req, res) {
             username: true,
             email: true,
             role: true,
+            is_super_admin: true,
+            user_roles: { select: { role: { select: { id: true, name: true, slug: true } } } },
             foto_profile: true,
             created_at: true,
             tiket_servis: {
@@ -121,7 +123,7 @@ async function getAllUsers(req, res) {
 async function getTechnicianPerformance(req, res) {
     try {
         const teknisis = await prisma.user.findMany({
-            where: { role: "teknisi" },
+            where: { user_roles: { some: { role: { permissions: { some: { permission: { code: "tickets.diagnosis" } } } } } } },
             select: {
                 id: true,
                 nama: true,
@@ -348,7 +350,7 @@ async function getSingleTechnicianPerformanceDetail(req, res) {
 // Menambah user baru (Admin)
 async function createUser(req, res) {
     try {
-        const { nama, username, email, password, role } = req.body;
+        const { nama, username, email, password, role, roleIds = [] } = req.body;
 
         if (!nama || !password) {
             return res.status(400).json({ message: "Nama dan password wajib diisi" });
@@ -374,14 +376,28 @@ async function createUser(req, res) {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        if (!Array.isArray(roleIds)) {
+            return res.status(400).json({ message: "roleIds harus berupa array" });
+        }
+        const selectedRoles = roleIds.length
+            ? await prisma.role.findMany({ where: { id: { in: roleIds.map(Number) } } })
+            : await prisma.role.findMany({ where: { slug: cleanRole } });
+        if (!selectedRoles.length) {
+            return res.status(400).json({ message: "Pilih minimal satu peran yang valid" });
+        }
+        if (selectedRoles.length !== new Set(roleIds.map(Number)).size && roleIds.length) {
+            return res.status(400).json({ message: "Satu atau lebih peran tidak ditemukan" });
+        }
+
         const user = await prisma.user.create({
             data: {
                 nama: cleanNama,
                 username: cleanUsername,
                 email: cleanEmail,
                 password: hashedPassword,
-                role: cleanRole,
-                foto_profile: req.body.foto_profile || null
+                role: selectedRoles[0].slug,
+                foto_profile: req.body.foto_profile || null,
+                user_roles: { create: selectedRoles.map(selectedRole => ({ role_id: selectedRole.id })) }
             },
             select: {
                 id: true,
@@ -404,7 +420,7 @@ async function createUser(req, res) {
 async function updateUser(req, res) {
     try {
         const id = Number(req.params.id);
-        const { nama, username, email, password, role, foto_profile } = req.body;
+        const { nama, username, email, password, role, foto_profile, currentPassword } = req.body;
 
         const user = await prisma.user.findUnique({ where: { id } });
         if (!user) {
@@ -430,19 +446,23 @@ async function updateUser(req, res) {
             }
         }
 
-        if (id === req.user.id && cleanRole && cleanRole !== "admin") {
-            return res.status(400).json({ message: "Anda tidak dapat menurunkan hak akses peran akun Anda sendiri" });
-        }
-
         const updateData = {
             nama: cleanNama || user.nama,
             username: cleanUsername || user.username,
             email: cleanEmail || user.email,
-            role: cleanRole || user.role,
+            role: user.role,
             ...(foto_profile !== undefined && { foto_profile })
         };
 
         if (password && password.trim() !== "") {
+            if (user.is_super_admin && id !== req.user.id) {
+                return res.status(403).json({ message: "Kata sandi Super Admin lain hanya dapat diubah oleh pemilik akun melalui profil" });
+            }
+            const actor = await prisma.user.findUnique({ where: { id: req.user.id }, select: { password: true } });
+            if (!actor || !currentPassword || !await bcrypt.compare(currentPassword, actor.password)) {
+                return res.status(403).json({ message: "Konfirmasi kata sandi Super Admin Anda diperlukan" });
+            }
+            if (password.length < 6) return res.status(400).json({ message: "Password baru minimal 6 karakter" });
             updateData.password = await bcrypt.hash(password, 10);
         }
 
@@ -466,38 +486,97 @@ async function updateUser(req, res) {
     }
 }
 
-// Menghapus user (Admin)
-async function deleteUser(req, res) {
+async function updateUserRoles(req, res) {
     try {
         const id = Number(req.params.id);
-
-        if (id === req.user.id) {
-            return res.status(400).json({ message: "Anda tidak dapat menghapus akun Anda sendiri" });
-        }
-
+        const { roleIds } = req.body;
+        if (!Array.isArray(roleIds) || !roleIds.length) return res.status(400).json({ message: "Pilih minimal satu peran" });
         const user = await prisma.user.findUnique({ where: { id } });
-        if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+        const uniqueRoleIds = [...new Set(roleIds.map(Number))];
+        const roles = await prisma.role.findMany({ where: { id: { in: uniqueRoleIds } } });
+        if (roles.length !== uniqueRoleIds.length) return res.status(400).json({ message: "Satu atau lebih peran tidak ditemukan" });
+        const primaryRole = roles.find(role => role.id === uniqueRoleIds[0]);
+        await prisma.$transaction([
+            prisma.userRole.deleteMany({ where: { user_id: id } }),
+            prisma.userRole.createMany({ data: uniqueRoleIds.map(role_id => ({ user_id: id, role_id })) }),
+            prisma.user.update({ where: { id }, data: { role: primaryRole.slug, auth_version: { increment: 1 } } })
+        ]);
+        return res.json({ message: "Peran pengguna berhasil diperbarui" });
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal memperbarui peran pengguna", error: error.message });
+    }
+}
+
+async function setSuperAdmin(req, res) {
+    const targetId = Number(req.params.id);
+    const { enabled, currentPassword } = req.body || {};
+    if (!Number.isInteger(targetId) || targetId < 1 || typeof enabled !== "boolean" || typeof currentPassword !== "string" || !currentPassword) {
+        return res.status(400).json({ message: "ID, status Super Admin, dan kata sandi Anda wajib diisi" });
+    }
+    try {
+        const actor = await prisma.user.findUnique({ where: { id: req.user.id }, select: { id: true, nama: true, password: true } });
+        if (!actor || !await bcrypt.compare(currentPassword, actor.password)) {
+            return res.status(403).json({ message: "Kata sandi Anda tidak sesuai" });
         }
 
-        // Cek apakah teknisi masih memiliki tiket servis yang sedang aktif ditangani
-        const activeTickets = await prisma.tiketServis.findFirst({
-            where: {
-                teknisi_id: id,
-                status: { notIn: ["selesai", "diambil", "dibatalkan"] }
+        const result = await prisma.$transaction(async tx => {
+            // Serialize changes to the designated administrators so concurrent
+            // demotions cannot remove the final Super Admin.
+            const administrators = await tx.$queryRaw`SELECT id FROM User WHERE is_super_admin = 1 FOR UPDATE`;
+            if (!administrators.some(row => Number(row.id) === actor.id)) {
+                const error = new Error("Hak Super Admin Anda telah dicabut"); error.status = 403; throw error;
             }
+            const target = await tx.user.findUnique({ where: { id: targetId }, select: { id: true, nama: true, username: true, is_super_admin: true } });
+            if (!target) { const error = new Error("User tidak ditemukan"); error.status = 404; throw error; }
+            if (target.is_super_admin === enabled) return { target, changed: false };
+            if (!enabled && administrators.length <= 1) {
+                const error = new Error("Super Admin terakhir tidak dapat dicabut"); error.status = 409; throw error;
+            }
+            const updated = await tx.user.update({ where: { id: targetId }, data: { is_super_admin: enabled, auth_version: { increment: 1 } }, select: { id: true, nama: true, username: true, is_super_admin: true } });
+            await tx.activityLog.create({ data: {
+                user_id: actor.id,
+                user_nama: actor.nama,
+                action: `${enabled ? "Menetapkan" : "Mencabut"} Super Admin untuk ${updated.nama} (@${updated.username || updated.id})`,
+                entity: "user"
+            } });
+            return { target: updated, changed: true };
         });
-        if (activeTickets) {
-            return res.status(400).json({
-                message: "Teknisi ini sedang menangani tiket servis aktif. Alihkan tiket ke teknisi lain terlebih dahulu sebelum menghapus akun."
+        return res.json({ message: result.changed ? "Status Super Admin berhasil diperbarui" : "Status Super Admin tidak berubah", data: result.target });
+    } catch (error) {
+        return res.status(error.status || 500).json({ message: error.status ? error.message : "Gagal memperbarui status Super Admin" });
+    }
+}
+
+// Menghapus user (Admin)
+async function deleteUser(req, res) {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "ID user tidak valid" });
+    if (id === req.user.id) return res.status(400).json({ message: "Anda tidak dapat menghapus akun Anda sendiri" });
+    try {
+        await prisma.$transaction(async tx => {
+            const administrators = await tx.$queryRaw`SELECT id FROM User WHERE is_super_admin = 1 FOR UPDATE`;
+            if (!administrators.some(row => Number(row.id) === req.user.id)) {
+                const error = new Error("Hak Super Admin Anda telah dicabut"); error.status = 403; throw error;
+            }
+            const user = await tx.user.findUnique({ where: { id }, select: { id: true, nama: true, is_super_admin: true } });
+            if (!user) { const error = new Error("User tidak ditemukan"); error.status = 404; throw error; }
+            if (user.is_super_admin && administrators.length <= 1) {
+                const error = new Error("Super Admin terakhir tidak dapat dihapus. Tetapkan Super Admin lain terlebih dahulu."); error.status = 409; throw error;
+            }
+            const activeTicket = await tx.tiketServis.findFirst({
+                where: { teknisi_id: id, status: { notIn: ["selesai", "diambil", "dibatalkan"] } },
+                select: { id: true }
             });
-        }
-
-        await prisma.user.delete({ where: { id } });
-
+            if (activeTicket) {
+                const error = new Error("Teknisi ini sedang menangani tiket servis aktif. Alihkan tiket ke teknisi lain terlebih dahulu sebelum menghapus akun."); error.status = 409; throw error;
+            }
+            await tx.user.delete({ where: { id } });
+            await tx.activityLog.create({ data: { user_id: req.user.id, user_nama: req.user.nama || req.user.username || "Super Admin", action: `Menghapus akun ${user.nama} (ID ${id})`, entity: "user" } });
+        });
         return res.json({ message: "User berhasil dihapus" });
     } catch (error) {
-        return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
+        return res.status(error.status || 500).json({ message: error.status ? error.message : "Terjadi kesalahan", ...(!error.status && { error: error.message }) });
     }
 }
 
@@ -538,6 +617,8 @@ module.exports = {
     getSingleTechnicianPerformanceDetail,
     createUser,
     updateUser,
+    updateUserRoles,
+    setSuperAdmin,
     deleteUser,
     uploadUserPhoto
 };

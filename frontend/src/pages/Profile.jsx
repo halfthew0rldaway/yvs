@@ -163,7 +163,7 @@ export default function Profile() {
         }
     };
 
-    const isAdmin = user?.role === "admin";
+    const isSuperAdmin = user?.is_super_admin;
 
     return (
         <div className="w-full space-y-6">
@@ -271,12 +271,12 @@ export default function Profile() {
                         </p>
 
                         <div className={`inline-flex items-center gap-1.5 px-3 py-1 mt-3 rounded-full text-xs font-semibold border ${
-                            isAdmin 
+                            isSuperAdmin
                                 ? "bg-indigo-50 text-indigo-700 border-indigo-200" 
                                 : "bg-blue-50 text-blue-700 border-blue-200"
                         }`}>
-                            {isAdmin ? <ShieldCheck className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
-                            <span className="capitalize">{user?.role}</span>
+                            {isSuperAdmin ? <ShieldCheck className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
+                            <span className="capitalize">{user?.roles?.map(role => role.name).join(", ") || user?.role}</span>
                         </div>
                     </div>
 

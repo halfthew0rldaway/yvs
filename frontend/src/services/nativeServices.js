@@ -8,6 +8,8 @@ import { App as CapApp } from "@capacitor/app";
 import { Share } from "@capacitor/share";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import toast from "react-hot-toast";
+import { getStoredUser } from "../utils/authStorage";
+import { landingRouteFor } from "../utils/landingRoute";
 
 export const isNativePlatform = () => Capacitor.isNativePlatform();
 
@@ -395,7 +397,8 @@ export const DeviceService = {
                 }
 
                 // If browser history has items, navigate back
-                if (canGoBack && window.location.pathname !== "/dashboard" && window.location.pathname !== "/login") {
+                const landingPath = landingRouteFor(getStoredUser());
+                if (canGoBack && window.location.pathname !== landingPath && window.location.pathname !== "/login") {
                     window.history.back();
                     return;
                 }

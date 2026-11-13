@@ -1,15 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/user.controller");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requireSuperAdmin } = require("../middleware/auth");
 const { uploadAvatar } = require("../middleware/upload");
 
-router.get("/", authenticate, authorize("admin", "pimpinan"), userController.getAllUsers);
-router.get("/performance", authenticate, authorize("admin", "pimpinan"), userController.getTechnicianPerformance);
-router.get("/performance/:id", authenticate, authorize("admin", "pimpinan"), userController.getSingleTechnicianPerformanceDetail);
-router.post("/", authenticate, authorize("admin"), userController.createUser);
-router.put("/:id", authenticate, authorize("admin"), userController.updateUser);
-router.put("/:id/photo", authenticate, authorize("admin"), uploadAvatar.single("foto_profile"), userController.uploadUserPhoto);
-router.delete("/:id", authenticate, authorize("admin"), userController.deleteUser);
+router.use(authenticate, requireSuperAdmin);
+router.get("/", userController.getAllUsers);
+router.get("/performance", userController.getTechnicianPerformance);
+router.get("/performance/:id", userController.getSingleTechnicianPerformanceDetail);
+router.post("/", userController.createUser);
+router.put("/:id", userController.updateUser);
+router.put("/:id/roles", userController.updateUserRoles);
+router.put("/:id/super-admin", userController.setSuperAdmin);
+router.put("/:id/photo", uploadAvatar.single("foto_profile"), userController.uploadUserPhoto);
+router.delete("/:id", userController.deleteUser);
 
 module.exports = router;

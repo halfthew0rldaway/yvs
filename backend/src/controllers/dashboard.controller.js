@@ -405,7 +405,7 @@ async function teknisiDashboard(req, res) {
 async function teknisiList(req, res) {
     try {
         const teknisis = await prisma.user.findMany({
-            where: { role: "teknisi" },
+            where: { user_roles: { some: { role: { permissions: { some: { permission: { code: "tickets.diagnosis" } } } } } } },
             select: { id: true, nama: true, email: true, foto_profile: true },
         });
 

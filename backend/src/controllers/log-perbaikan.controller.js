@@ -1,5 +1,6 @@
 const prisma = require("../config/database");
 const { relocateTicketMedia } = require("../services/mediaStorage");
+const { hasPermission } = require("../services/authorization.service");
 
 // Mencatat aktivitas perbaikan
 async function create(req, res) {
@@ -21,7 +22,11 @@ async function create(req, res) {
             return res.status(400).json({ message: "Tiket harus ditugaskan ke teknisi terlebih dahulu sebelum log dapat ditambahkan" });
         }
 
-        if (req.user.role === "teknisi" && tiket.teknisi_id !== req.user.id) {
+        if (["selesai", "diambil", "dibatalkan"].includes(tiket.status)) {
+            return res.status(409).json({ message: "Tiket sudah ditutup. Catatan perbaikan tidak dapat ditambahkan" });
+        }
+
+        if (!hasPermission(req.authorization, "tickets.view_all") && tiket.teknisi_id !== req.user.id) {
             return res.status(403).json({ message: "Anda tidak berhak menambahkan log pada tiket ini" });
         }
 
@@ -45,6 +50,13 @@ async function create(req, res) {
 // Mengambil log perbaikan berdasarkan tiket ID
 async function getByTiketId(req, res) {
     try {
+        const tiket = await prisma.tiketServis.findUnique({ where: { id: Number(req.params.id) }, select: { teknisi_id: true, status: true } });
+        if (!tiket) return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
+        if (!hasPermission(req.authorization, "tickets.view_all")) {
+            const isMine = tiket.teknisi_id === req.user.id;
+            const isOpenPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
+            if (!isMine && !isOpenPool) return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini" });
+        }
         const logs = await prisma.logPerbaikan.findMany({
             where: { tiket_id: Number(req.params.id) },
             orderBy: { created_at: "desc" },

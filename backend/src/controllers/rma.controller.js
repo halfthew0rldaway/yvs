@@ -274,20 +274,27 @@ async function create(req, res) {
             }
         });
 
-        // Notifikasi ke role admin jika diajukan oleh teknisi
-        if (req.user.role === "teknisi") {
-            await prisma.notification.create({
-                data: {
-                    recipient_role: "admin",
-                    sender_id: req.user.id,
-                    sender_nama: req.user.nama,
-                    tipe: "restock_sparepart",
-                    judul: `Klaim RMA Sparepart Baru: ${rma.nomor_rma}`,
-                    pesan: `Teknisi ${req.user.nama} mengajukan retur garansi sparepart "${sparepart.nama}" ke distributor "${rma.supplier_nama}". Alasan: ${rma.alasan_rusak}`,
-                    link: "/rma"
-                }
-            });
-        }
+        const managers = await prisma.user.findMany({
+            where: {
+                id: { not: req.user.id },
+                OR: [
+                    { is_super_admin: true },
+                    { user_roles: { some: { role: { permissions: { some: { permission: { code: "suppliers.manage" } } } } } } }
+                ]
+            },
+            select: { id: true }
+        });
+        if (managers.length) await prisma.notification.createMany({
+            data: managers.map(manager => ({
+                user_id: manager.id,
+                sender_id: req.user.id,
+                sender_nama: req.user.nama,
+                tipe: "restock_sparepart",
+                judul: `Klaim RMA Sparepart Baru: ${rma.nomor_rma}`,
+                pesan: `${req.user.nama} mengajukan retur garansi sparepart "${sparepart.nama}" ke distributor "${rma.supplier_nama}". Alasan: ${rma.alasan_rusak}`,
+                link: "/rma"
+            }))
+        });
 
         res.status(201).json(rma);
     } catch (err) {

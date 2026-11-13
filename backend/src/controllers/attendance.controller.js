@@ -554,10 +554,10 @@ async function getDailyAll(req, res) {
         const targetDate = tanggal ? getTodayDate(new Date(tanggal)) : getTodayDate();
         const policy = await getOrCreatePolicy();
 
-        // Ambil semua staf operasional aktif (admin & teknisi, exclude pimpinan/owner)
+        // Only staff without an explicit attendance exemption are monitored.
         const users = await prisma.user.findMany({
             where: {
-                role: { not: "pimpinan" }
+                user_roles: { none: { role: { permissions: { some: { permission: { code: "attendance.exempt" } } } } } }
             },
             select: {
                 id: true,
@@ -649,7 +649,7 @@ async function getMonthlyRecap(req, res) {
 
         const users = await prisma.user.findMany({
             where: {
-                role: { not: "pimpinan" }
+                user_roles: { none: { role: { permissions: { some: { permission: { code: "attendance.exempt" } } } } } }
             },
             select: { id: true, nama: true, email: true, role: true, foto_profile: true },
             orderBy: [{ role: "asc" }, { nama: "asc" }]
@@ -717,6 +717,19 @@ async function getMonthlyRecap(req, res) {
         });
     } catch (error) {
         return res.status(500).json({ message: "Gagal memuat rekap bulanan", error: error.message });
+    }
+}
+
+async function getAdjustmentStaff(req, res) {
+    try {
+        const staff = await prisma.user.findMany({
+            where: { user_roles: { none: { role: { permissions: { some: { permission: { code: "attendance.exempt" } } } } } } },
+            select: { id: true, nama: true },
+            orderBy: { nama: "asc" }
+        });
+        return res.json(staff);
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal memuat daftar staf" });
     }
 }
 
@@ -950,7 +963,7 @@ async function adjustAttendanceBulk(req, res) {
 async function getLeaves(req, res) {
     try {
         const userId = req.user.id;
-        const isAdmin = req.user.role === "admin" || req.user.role === "pimpinan";
+        const isAdmin = req.authorization?.is_super_admin || req.authorization?.permissions?.includes("attendance.review");
 
         const where = {};
         if (!isAdmin) {
@@ -1203,6 +1216,7 @@ module.exports = {
     getDailyAll,
     getMonthlyRecap,
     adjustAttendance,
+    getAdjustmentStaff,
     adjustAttendanceBulk,
     getLeaves,
     createLeave,

@@ -1,28 +1,42 @@
 const prisma = require("../config/database");
 const { broadcast } = require("../utils/sse");
 
+function recipientScope(req) {
+    const roleSlugs = req.authorization?.roles?.map(role => role.slug) || [];
+    return { OR: [
+        { user_id: req.user.id },
+        { user_id: null, recipient_role: { in: roleSlugs } },
+        { user_id: null, recipient_role: null }
+    ] };
+}
+
+async function getRecipientRoles(req, res) {
+    try {
+        const roles = await prisma.role.findMany({ select: { name: true, slug: true }, orderBy: { name: "asc" } });
+        return res.json(roles);
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal memuat peran penerima" });
+    }
+}
+
 // Mengambil daftar notifikasi untuk user yang sedang login
 async function getNotifications(req, res) {
     try {
-        const userId = req.user.id;
-        const userRole = req.user.role;
-
         const notifications = await prisma.notification.findMany({
-            where: {
-                OR: [
-                    { user_id: userId },
-                    { recipient_role: userRole },
-                    { recipient_role: null }
-                ]
-            },
+            where: recipientScope(req),
             orderBy: { created_at: "desc" },
-            take: 40
+            take: 40,
+            include: { reads: { where: { user_id: req.user.id }, select: { user_id: true } } }
+        });
+        const unreadCount = await prisma.notification.count({
+            where: { ...recipientScope(req), is_read: false, reads: { none: { user_id: req.user.id } } }
         });
 
-        const unreadCount = notifications.filter(n => !n.is_read).length;
-
         return res.json({
-            notifications,
+            notifications: notifications.map(({ reads, ...notification }) => ({
+                ...notification,
+                is_read: notification.is_read || reads.length > 0
+            })),
             unreadCount
         });
     } catch (error) {
@@ -33,17 +47,11 @@ async function getNotifications(req, res) {
 // Mengambil jumlah notifikasi belum dibaca
 async function getUnreadCount(req, res) {
     try {
-        const userId = req.user.id;
-        const userRole = req.user.role;
-
         const unreadCount = await prisma.notification.count({
             where: {
                 is_read: false,
-                OR: [
-                    { user_id: userId },
-                    { recipient_role: userRole },
-                    { recipient_role: null }
-                ]
+                ...recipientScope(req),
+                reads: { none: { user_id: req.user.id } }
             }
         });
 
@@ -57,10 +65,13 @@ async function getUnreadCount(req, res) {
 async function markAsRead(req, res) {
     try {
         const { id } = req.params;
-        const notification = await prisma.notification.update({
-            where: { id: Number(id) },
-            data: { is_read: true }
+        const visible = await prisma.notification.findFirst({ where: { id: Number(id), ...recipientScope(req) } });
+        if (!visible) return res.status(404).json({ message: "Notifikasi tidak ditemukan" });
+        await prisma.notificationRead.createMany({
+            data: [{ notification_id: visible.id, user_id: req.user.id }],
+            skipDuplicates: true
         });
+        const notification = { ...visible, is_read: true };
 
         broadcast("notification:updated", { id: notification.id, is_read: true });
         return res.json({ message: "Notifikasi telah dibaca", notification });
@@ -72,19 +83,17 @@ async function markAsRead(req, res) {
 // Menandai seluruh notifikasi user sebagai sudah dibaca
 async function markAllAsRead(req, res) {
     try {
-        const userId = req.user.id;
-        const userRole = req.user.role;
-
-        await prisma.notification.updateMany({
+        const unread = await prisma.notification.findMany({
             where: {
                 is_read: false,
-                OR: [
-                    { user_id: userId },
-                    { recipient_role: userRole },
-                    { recipient_role: null }
-                ]
+                ...recipientScope(req),
+                reads: { none: { user_id: req.user.id } }
             },
-            data: { is_read: true }
+            select: { id: true }
+        });
+        if (unread.length) await prisma.notificationRead.createMany({
+            data: unread.map(notification => ({ notification_id: notification.id, user_id: req.user.id })),
+            skipDuplicates: true
         });
 
         broadcast("notification:updated", { all: true });
@@ -102,13 +111,17 @@ async function sendMemo(req, res) {
         if (!judul || !pesan) {
             return res.status(400).json({ message: "Judul dan pesan memo wajib diisi" });
         }
+        if (!recipient_role && !user_id) return res.status(400).json({ message: "Pilih penerima memo" });
+        if (recipient_role && !await prisma.role.findUnique({ where: { slug: recipient_role } })) {
+            return res.status(400).json({ message: "Peran penerima tidak ditemukan" });
+        }
 
         const senderNama = req.user.nama;
         const senderId = req.user.id;
 
         const notif = await prisma.notification.create({
             data: {
-                recipient_role: recipient_role || (req.user.role === "teknisi" ? "admin" : "teknisi"),
+                recipient_role: recipient_role || null,
                 user_id: user_id ? Number(user_id) : null,
                 sender_id: senderId,
                 sender_nama: senderNama,
@@ -141,6 +154,7 @@ async function sendMemo(req, res) {
 }
 
 module.exports = {
+    getRecipientRoles,
     getNotifications,
     getUnreadCount,
     markAsRead,

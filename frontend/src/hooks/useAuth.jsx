@@ -7,6 +7,8 @@ import {
     updateStoredUser,
     clearAuthSession
 } from "../utils/authStorage";
+import api from "../services/api";
+import { offlineDataStore } from "../services/offlineDataStore";
 
 const AuthContext = createContext(null);
 
@@ -45,11 +47,43 @@ export function AuthProvider({ children }) {
     }, []);
 
     const updateUser = useCallback((updatedData) => {
+        const previous = getStoredUser();
         const merged = updateStoredUser(updatedData);
         if (merged) {
+            const revoked = previous?.id === merged.id && (
+                (previous.is_super_admin && !merged.is_super_admin) ||
+                (Array.isArray(previous.permissions) && previous.permissions.some(permission => !merged.permissions?.includes(permission)))
+            );
+            if (revoked) {
+                api.clearMemoryCache();
+                offlineDataStore.clearUserCache(merged.id).catch(() => {});
+            }
             setUser(merged);
         }
     }, []);
+
+    useEffect(() => {
+        if (!token) return;
+        let active = true;
+        const refreshAccess = async () => {
+            if (document.visibilityState !== "visible") return;
+            try {
+                const response = await api.get("/auth/me", { skipCache: true });
+                if (active) updateUser(response.data);
+            } catch (_) { /* API interceptor handles expired sessions; route guard fails closed. */ }
+        };
+        window.addEventListener("focus", refreshAccess);
+        window.addEventListener("yvs:online", refreshAccess);
+        document.addEventListener("visibilitychange", refreshAccess);
+        const interval = window.setInterval(refreshAccess, 60000);
+        return () => {
+            active = false;
+            window.removeEventListener("focus", refreshAccess);
+            window.removeEventListener("yvs:online", refreshAccess);
+            document.removeEventListener("visibilitychange", refreshAccess);
+            window.clearInterval(interval);
+        };
+    }, [token, updateUser]);
 
     // Sinkronisasi status login/logout antar-tab browser via Storage Event
     useEffect(() => {
@@ -95,12 +129,7 @@ export function AuthProvider({ children }) {
         lockReason,
         lockSession,
         unlockSession,
-        isAdmin: user?.role === "admin",
-        isPimpinan: user?.role === "pimpinan",
-        isPimpinanOrAdmin: user?.role === "admin" || user?.role === "pimpinan",
-        isFrontman: user?.role === "frontman",
-        isTeknisi: user?.role === "teknisi",
-        canHandleFrontdesk: user?.role === "admin" || user?.role === "pimpinan" || user?.role === "frontman"
+        hasPermission: (permission) => Boolean(user?.is_super_admin || user?.permissions?.includes(permission))
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -124,12 +153,7 @@ export function useAuth() {
             lockReason: "idle",
             lockSession: () => {},
             unlockSession: () => {},
-            isAdmin: storedUser?.role === "admin",
-            isPimpinan: storedUser?.role === "pimpinan",
-            isPimpinanOrAdmin: storedUser?.role === "admin" || storedUser?.role === "pimpinan",
-            isFrontman: storedUser?.role === "frontman",
-            isTeknisi: storedUser?.role === "teknisi",
-            canHandleFrontdesk: storedUser?.role === "admin" || storedUser?.role === "pimpinan" || storedUser?.role === "frontman"
+            hasPermission: (permission) => Boolean(storedUser?.is_super_admin || storedUser?.permissions?.includes(permission))
         };
     }
     return context;

@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const { getAll, create, update, getById, getReport, saveCustomerSignature, saveAdminSignature } = require("../controllers/invoice.controller");
 
 const router = express.Router();
@@ -13,12 +13,12 @@ const invoiceValidation = [
     body("biaya_jasa").isNumeric().withMessage("Biaya jasa harus berupa angka"),
 ];
 
-router.get("/report", authorize("admin", "pimpinan"), getReport);
-router.get("/", authorize("admin", "frontman", "teknisi"), getAll);
-router.get("/:id", authorize("admin", "frontman", "teknisi"), getById);
-router.post("/", authorize("admin", "frontman"), invoiceValidation, validate, create);
-router.put("/:id", authorize("admin", "frontman"), update);
-router.post("/:id/signature", authorize("admin", "frontman", "teknisi"), saveCustomerSignature);
-router.post("/:id/admin-signature", authorize("admin", "frontman", "teknisi"), saveAdminSignature);
+router.get("/report", requirePermission("invoices.report"), getReport);
+router.get("/", requirePermission("invoices.view"), getAll);
+router.get("/:id", requirePermission("invoices.view"), getById);
+router.post("/", requirePermission("invoices.manage"), invoiceValidation, validate, create);
+router.put("/:id", requirePermission("invoices.manage"), update);
+router.post("/:id/signature", requirePermission("invoices.manage"), saveCustomerSignature);
+router.post("/:id/admin-signature", requirePermission("invoices.manage"), saveAdminSignature);
 
 module.exports = router;

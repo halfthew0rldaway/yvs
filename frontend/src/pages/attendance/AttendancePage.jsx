@@ -141,10 +141,15 @@ async function fetchRealLocationAddress(lat, lon, isInRadius) {
 }
 
 export default function AttendancePage() {
-    const { user, isAdmin, isPimpinan, isPimpinanOrAdmin } = useAuth();
+    const { user, hasPermission } = useAuth();
+    const isAttendanceExempt = user?.permissions?.includes("attendance.exempt");
+    const isPimpinanOrAdmin = hasPermission("attendance.review");
+    const canSelfAttend = hasPermission("attendance.self");
+    const canAdjust = hasPermission("attendance.adjust");
+    const canEditPolicy = hasPermission("attendance.policy");
 
     // Active View Tab: 'today' | 'history' | 'leaves' | 'monitoring' | 'policy'
-    const [activeTab, setActiveTab] = useState(user?.role === "pimpinan" ? "monitoring" : "today");
+    const [activeTab, setActiveTab] = useState(() => canSelfAttend ? "today" : isPimpinanOrAdmin ? "monitoring" : canEditPolicy ? "policy" : "adjust");
 
     // Live Clock State
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -223,6 +228,9 @@ export default function AttendancePage() {
     // Admin Adjustment Modal State
     const [adjustModalOpen, setAdjustModalOpen] = useState(false);
     const [isSubmittingAdjust, setIsSubmittingAdjust] = useState(false);
+    const [adjustStaff, setAdjustStaff] = useState([]);
+    const [adjustStaffId, setAdjustStaffId] = useState("");
+    const [adjustDate, setAdjustDate] = useState(new Date().toISOString().split("T")[0]);
     const [adjustForm, setAdjustForm] = useState({
         record_id: null,
         user_id: null,
@@ -407,8 +415,8 @@ export default function AttendancePage() {
     const loadTodayStatus = useCallback(async () => {
         setLoadingToday(true);
         try {
-            const res = await api.get("/attendance/today");
-            const rawPolicy = res.data.policy;
+            const res = await api.get(canSelfAttend ? "/attendance/today" : "/attendance/policy");
+            const rawPolicy = canSelfAttend ? res.data.policy : res.data;
             const normalizedPolicy = rawPolicy ? {
                 ...rawPolicy,
                 nama_kantor: rawPolicy.nama_kantor || "Workshop Utama Pekayon",
@@ -419,8 +427,8 @@ export default function AttendancePage() {
             } : null;
 
             setPolicy(normalizedPolicy);
-            setTodayRecord(res.data.record);
-            setActiveLeave(res.data.activeLeave);
+            setTodayRecord(canSelfAttend ? res.data.record : null);
+            setActiveLeave(canSelfAttend ? res.data.activeLeave : null);
 
             if (normalizedPolicy) {
                 setPolicyForm({
@@ -441,17 +449,17 @@ export default function AttendancePage() {
         } finally {
             setLoadingToday(false);
         }
-    }, []);
+    }, [canSelfAttend]);
 
     useEffect(() => {
         loadTodayStatus();
     }, [loadTodayStatus]);
 
     useEffect(() => {
-        if (policy) {
+        if (policy && canSelfAttend) {
             fetchLocation();
         }
-    }, [policy, fetchLocation]);
+    }, [policy, canSelfAttend, fetchLocation]);
 
     // 4. Load Personal History
     const loadMyHistory = useCallback(async () => {
@@ -510,6 +518,12 @@ export default function AttendancePage() {
             loadDailyAll();
         }
     }, [activeTab, filterDailyDate, isPimpinanOrAdmin, loadDailyAll]);
+
+    useEffect(() => {
+        if (activeTab !== "adjust" || !canAdjust) return;
+        api.get("/attendance/adjust-staff").then(({ data }) => setAdjustStaff(data || []))
+            .catch(() => toast.error("Gagal memuat daftar staf untuk koreksi"));
+    }, [activeTab, canAdjust]);
 
     // 7. Load Monthly Recap (Admin)
     const loadMonthlyRecap = useCallback(async () => {
@@ -864,7 +878,7 @@ export default function AttendancePage() {
             const res = await api.post("/attendance/adjust", payload);
             toast.success(res.data.message || "Presensi berhasil dikoreksi");
             setAdjustModalOpen(false);
-            loadDailyAll();
+            if (isPimpinanOrAdmin) loadDailyAll();
             if (activeTab === "recap") loadMonthlyRecap();
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal mengoreksi presensi");
@@ -1170,6 +1184,7 @@ export default function AttendancePage() {
 
                 {/* Tab Navigation Navigation Pill */}
                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-4 mt-2 border-t border-slate-100">
+                    {canSelfAttend && <>
                     <button
                         onClick={() => setActiveTab("today")}
                         className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
@@ -1205,6 +1220,15 @@ export default function AttendancePage() {
                         <FileText className="w-3.5 h-3.5 stroke-[2.5]" />
                         <span>Pengajuan Izin & Cuti</span>
                     </button>
+                    </>}
+
+                    {canAdjust && <button
+                        onClick={() => setActiveTab("adjust")}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeTab === "adjust" ? "bg-blue-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
+                    >
+                        <Sliders className="w-3.5 h-3.5" />
+                        <span>Koreksi Presensi</span>
+                    </button>}
 
                     {isPimpinanOrAdmin && (
                         <>
@@ -1236,8 +1260,10 @@ export default function AttendancePage() {
                                 <Users className="w-3.5 h-3.5 stroke-[2.5]" />
                                 <span>Monitoring Tim (Payroll)</span>
                             </button>
+                        </>
+                    )}
 
-                            <button
+                    {canEditPolicy && <button
                                 onClick={() => setActiveTab("policy")}
                                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
                                     activeTab === "policy"
@@ -1247,17 +1273,45 @@ export default function AttendancePage() {
                             >
                                 <Settings className="w-3.5 h-3.5 stroke-[2.5]" />
                                 <span>Kebijakan & Lokasi</span>
-                            </button>
-                        </>
-                    )}
+                            </button>}
                 </div>
             </div>
+
+            {activeTab === "adjust" && canAdjust && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-4">
+                    <div>
+                        <h2 className="text-sm font-bold text-slate-900">Koreksi Presensi Staf</h2>
+                        <p className="text-xs text-slate-500 mt-1">Pilih staf dan tanggal. Setiap koreksi memerlukan alasan dan dicatat di audit log.</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3 items-end">
+                        <label className="block text-xs font-semibold text-slate-700">
+                            Staf
+                            <select value={adjustStaffId} onChange={event => setAdjustStaffId(event.target.value)} className="mt-1.5 w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs text-slate-800">
+                                <option value="">Pilih staf</option>
+                                {adjustStaff.map(staff => <option key={staff.id} value={staff.id}>{staff.nama}</option>)}
+                            </select>
+                        </label>
+                        <label className="block text-xs font-semibold text-slate-700">
+                            Tanggal
+                            <input type="date" value={adjustDate} onChange={event => setAdjustDate(event.target.value)} className="mt-1.5 w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800" />
+                        </label>
+                        <button type="button" disabled={!adjustStaffId || !adjustDate} onClick={() => {
+                            const staff = adjustStaff.find(item => String(item.id) === adjustStaffId);
+                            if (!staff) return;
+                            setAdjustForm({ record_id: null, user_id: staff.id, userName: staff.nama, userRole: "", tanggal: adjustDate, jam_masuk: "", jam_pulang: "", status: "hadir", alasan_adjustment: "" });
+                            setAdjustModalOpen(true);
+                        }} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold">
+                            Buka Koreksi
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* TAB 1: PRESENSI HARI INI */}
             {activeTab === "today" && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
                     {/* Role Manajerial / Owner Exemption Banner */}
-                    {isPimpinan && (
+                    {isAttendanceExempt && (
                         <div className="lg:col-span-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 border border-blue-200/90 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
                                 <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shrink-0">
@@ -1920,7 +1974,7 @@ export default function AttendancePage() {
                         </div>
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             {/* Tombol Cepat Pemicu Bulk Action Massal */}
-                            {dailyData.list?.length > 0 && (
+                            {canAdjust && dailyData.list?.length > 0 && (
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -1992,7 +2046,7 @@ export default function AttendancePage() {
                     </div>
 
                     {/* Bulk Selection Quick Action Floating Toolbar */}
-                    {selectedUserIds.length > 0 && (
+                    {canAdjust && selectedUserIds.length > 0 && (
                         <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 font-extrabold text-xs shrink-0 shadow-2xs">
@@ -2085,7 +2139,7 @@ export default function AttendancePage() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 border-b border-slate-200 text-3xs font-extrabold uppercase tracking-wider text-slate-500">
-                                        <th className="py-3 px-3 w-10 text-center">
+                                        {canAdjust && <th className="py-3 px-3 w-10 text-center">
                                             <input
                                                 type="checkbox"
                                                 checked={dailyData.list?.length > 0 && selectedUserIds.length === dailyData.list?.length}
@@ -2093,7 +2147,7 @@ export default function AttendancePage() {
                                                 className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                 title="Pilih / Batal Pilih Semua Karyawan"
                                             />
-                                        </th>
+                                        </th>}
                                         <th className="py-3 px-4">Karyawan</th>
                                         <th className="py-3 px-4">Jabatan</th>
                                         <th className="py-3 px-4">Jam Masuk</th>
@@ -2101,7 +2155,7 @@ export default function AttendancePage() {
                                         <th className="py-3 px-4">Jarak GPS</th>
                                         <th className="py-3 px-4">Status</th>
                                         <th className="py-3 px-4">Foto Selfie</th>
-                                        <th className="py-3 px-4 text-center">Aksi Koreksi</th>
+                                        {canAdjust && <th className="py-3 px-4 text-center">Aksi Koreksi</th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 text-xs">
@@ -2120,14 +2174,14 @@ export default function AttendancePage() {
                                     ) : (
                                         dailyData.list?.map(row => (
                                             <tr key={row.user.id} className={`hover:bg-slate-50/70 transition-colors ${selectedUserIds.includes(row.user.id) ? "bg-blue-50/30" : ""}`}>
-                                                <td className="py-3 px-3 text-center">
+                                                {canAdjust && <td className="py-3 px-3 text-center">
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedUserIds.includes(row.user.id)}
                                                         onChange={() => handleToggleSelectUser(row.user.id)}
                                                         className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                     />
-                                                </td>
+                                                </td>}
                                                 <td className="py-3 px-4 font-bold text-slate-800">
                                                     {row.user.nama}
                                                     <span className="block text-3xs font-normal text-slate-400">{row.user.email}</span>
@@ -2175,7 +2229,7 @@ export default function AttendancePage() {
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td className="py-3 px-4 text-center">
+                                                {canAdjust && <td className="py-3 px-4 text-center">
                                                     <div className="flex items-center justify-center gap-1.5 flex-nowrap">
                                                         {/* Quick Action 1: Auto Hadir */}
                                                         <button
@@ -2240,7 +2294,7 @@ export default function AttendancePage() {
                                                             <Sliders className="w-3.5 h-3.5" />
                                                         </button>
                                                     </div>
-                                                </td>
+                                                </td>}
                                             </tr>
                                         ))
                                     )}
@@ -2347,7 +2401,7 @@ export default function AttendancePage() {
             )}
 
             {/* TAB 5: KEBIJAKAN & PENGATURAN GEOFENCE (ADMIN) */}
-            {activeTab === "policy" && isPimpinanOrAdmin && (
+            {activeTab === "policy" && canEditPolicy && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
                     {/* Left: Main Configuration Form (8 cols) */}
                     <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">

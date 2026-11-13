@@ -58,7 +58,8 @@ const STATUS_BADGES = {
 };
 
 export default function RecruitmentDashboard() {
-    const { user, isAdmin } = useAuth();
+    const { user, hasPermission } = useAuth();
+        const isAdmin = hasPermission("recruitment.manage");
     const navigate = useNavigate();
 
     // Main Tab: "pipeline" or "jobs"

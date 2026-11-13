@@ -1,5 +1,5 @@
 const express = require("express");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const {
     getAll,
     getSuggestions,
@@ -14,13 +14,13 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.get("/suggestions", getSuggestions);
-router.get("/", getAll);
-router.get("/:id", getById);
-router.post("/from-tiket/:tiketId", authorize("admin", "teknisi"), createFromTicket);
-router.post("/", authorize("admin", "teknisi"), create);
-router.put("/:id", authorize("admin", "teknisi"), update);
-router.delete("/:id", authorize("admin", "teknisi"), remove);
+router.get("/suggestions", requirePermission("wiki.view"), getSuggestions);
+router.get("/", requirePermission("wiki.view"), getAll);
+router.get("/:id", requirePermission("wiki.view"), getById);
+router.post("/from-tiket/:tiketId", requirePermission("wiki.manage"), createFromTicket);
+router.post("/", requirePermission("wiki.manage"), create);
+router.put("/:id", requirePermission("wiki.manage"), update);
+router.delete("/:id", requirePermission("wiki.manage"), remove);
 
 module.exports = router;
 

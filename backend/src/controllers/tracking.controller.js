@@ -263,7 +263,7 @@ async function respondDiagnosisApproval(req, res) {
             });
 
             // Notifikasi ke teknisi & admin
-            await prisma.notification.create({
+            const notification = await prisma.notification.create({
                 data: {
                     recipient_role: "teknisi",
                     user_id: tiket.teknisi_id || undefined,
@@ -276,7 +276,7 @@ async function respondDiagnosisApproval(req, res) {
             });
 
             broadcast("tiket:updated", { id: tiket.id, nomor_tiket: tiket.nomor_tiket, status: "disetujui" });
-            broadcast("notification:new", { judul: `Penawaran Disetujui: ${tiket.nomor_tiket}` });
+            broadcast("notification:new", notification);
             broadcast("dashboard:refresh");
 
             return res.json({
@@ -305,7 +305,7 @@ async function respondDiagnosisApproval(req, res) {
             });
 
             // Notifikasi ke admin
-            await prisma.notification.create({
+            const notification = await prisma.notification.create({
                 data: {
                     recipient_role: "admin",
                     sender_nama: tiket.perangkat?.customer?.nama || "Pelanggan",
@@ -317,7 +317,7 @@ async function respondDiagnosisApproval(req, res) {
             });
 
             broadcast("tiket:updated", { id: tiket.id, nomor_tiket: tiket.nomor_tiket, status: "dibatalkan" });
-            broadcast("notification:new", { judul: `Penawaran Ditolak: ${tiket.nomor_tiket}` });
+            broadcast("notification:new", notification);
             broadcast("dashboard:refresh");
 
             return res.json({

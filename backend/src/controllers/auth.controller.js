@@ -6,6 +6,64 @@ const fs = require("fs");
 const prisma = require("../config/database");
 const { recordActivity } = require("../services/activityLog.service");
 const { normalizeEmail, normalizeName } = require("../utils/normalize");
+const { getAuthorization } = require("../services/authorization.service");
+
+async function serializeAuthUser(user) {
+    const authorization = await getAuthorization(user.id);
+    return {
+        id: user.id,
+        nama: user.nama,
+        username: user.username || (user.email ? user.email.split("@")[0] : `user${user.id}`),
+        email: user.email,
+        role: user.role,
+        foto_profile: user.foto_profile || null,
+        is_super_admin: Boolean(authorization?.is_super_admin),
+        roles: authorization?.roles || [],
+        permissions: authorization?.permissions || []
+    };
+}
+
+async function findLoginUser(identifier, client = prisma) {
+    const cleanId = identifier.toLowerCase();
+    // Exact identity always wins. Legacy aliases must never shadow a custom username.
+    const exactUsername = await client.user.findUnique({ where: { username: cleanId } });
+    if (exactUsername) return exactUsername;
+    const exactEmail = await client.user.findUnique({ where: { email: cleanId } });
+    if (exactEmail) return exactEmail;
+    if (!cleanId.includes("@")) {
+        const workshopEmail = await client.user.findUnique({ where: { email: `${cleanId}@workshop.com` } });
+        if (workshopEmail) return workshopEmail;
+    }
+
+    const aliases = {
+        pimpinan: ["arni", "vivero"], superadmin: ["arni", "vivero"],
+        arni: ["arni"], owner2: ["arni"], "arni.owner": ["arni"],
+        vivero: ["vivero"], owner3: ["vivero"], "vivero.owner": ["vivero"],
+        manajer: ["manajer"], maryam: ["manajer"], admin: ["admin"],
+        teknisi1: ["teknisi1"], budi: ["teknisi1"]
+    };
+    for (const username of aliases[cleanId] || []) {
+        const user = await client.user.findUnique({ where: { username } });
+        if (user) return user;
+    }
+    const aliasEmails = {
+        pimpinan: ["arni@workshop.com", "vivero@workshop.com"],
+        superadmin: ["arni@workshop.com", "vivero@workshop.com"],
+        arni: ["arni@workshop.com", "arni.owner@workshop.com"],
+        owner2: ["arni@workshop.com", "arni.owner@workshop.com"],
+        "arni.owner": ["arni@workshop.com", "arni.owner@workshop.com"],
+        vivero: ["vivero@workshop.com"], owner3: ["vivero@workshop.com"],
+        "vivero.owner": ["vivero@workshop.com"],
+        manajer: ["manajer@workshop.com"], maryam: ["manajer@workshop.com"],
+        admin: ["admin@workshop.com"], teknisi1: ["teknisi1@workshop.com"],
+        budi: ["teknisi1@workshop.com"]
+    };
+    for (const email of aliasEmails[cleanId] || []) {
+        const user = await client.user.findUnique({ where: { email } });
+        if (user) return user;
+    }
+    return null;
+}
 
 // Login (Utama: Username, tetap mendukung Email sebagai alternatif)
 async function login(req, res) {
@@ -18,40 +76,7 @@ async function login(req, res) {
         }
 
         const cleanId = identifier.toLowerCase();
-        const emailFallback = cleanId.includes("@") ? cleanId : `${cleanId}@workshop.com`;
-
-        // Cari berdasarkan username ATAU email (mendukung alias praktis owner/pimpinan/superadmin/admin/teknisi)
-        const orConditions = [
-            { username: cleanId },
-            { email: cleanId },
-            { email: emailFallback },
-            { email: { startsWith: `${cleanId}@` } }
-        ];
-
-        if (cleanId === "pimpinan" || cleanId === "superadmin") {
-            orConditions.push({ username: "arni" }, { email: "arni@workshop.com" });
-        }
-        if (cleanId === "arni" || cleanId === "owner2" || cleanId === "arni.owner") {
-            orConditions.push({ username: "arni" }, { email: "arni@workshop.com" }, { email: "arni.owner@workshop.com" });
-        }
-        if (cleanId === "vivero" || cleanId === "owner3" || cleanId === "vivero.owner") {
-            orConditions.push({ username: "vivero" }, { email: "vivero@workshop.com" }, { email: "vivero.owner@workshop.com" });
-        }
-        if (cleanId === "manajer" || cleanId === "maryam") {
-            orConditions.push({ username: "manajer" }, { email: "manajer@workshop.com" });
-        }
-        if (cleanId === "admin") {
-            orConditions.push({ email: "admin@workshop.com" });
-        }
-        if (cleanId === "teknisi1" || cleanId === "budi") {
-            orConditions.push({ username: "teknisi1" }, { email: "teknisi1@workshop.com" });
-        }
-
-        const user = await prisma.user.findFirst({
-            where: {
-                OR: orConditions
-            }
-        });
+        const user = await findLoginUser(identifier);
 
         if (!user) {
             return res.status(401).json({ message: "Username atau password salah" });
@@ -98,14 +123,7 @@ async function login(req, res) {
             token,
             rememberMe: Boolean(rememberMe),
             expiresIn,
-            user: {
-                id: user.id,
-                nama: user.nama,
-                username: resolvedUsername,
-                email: user.email,
-                role: user.role,
-                foto_profile: user.foto_profile || null
-            },
+            user: await serializeAuthUser({ ...user, username: resolvedUsername }),
         });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
@@ -139,10 +157,7 @@ async function refreshSession(req, res) {
             token,
             rememberMe: Boolean(rememberMe),
             expiresIn,
-            user: {
-                ...user,
-                username: resolvedUsername
-            },
+            user: await serializeAuthUser({ ...user, username: resolvedUsername }),
         });
     } catch (error) {
         return res.status(500).json({ message: "Gagal memperbarui sesi", error: error.message });
@@ -174,10 +189,7 @@ async function me(req, res) {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
-        return res.json({
-            ...user,
-            username: user.username || (user.email ? user.email.split("@")[0] : `user${user.id}`)
-        });
+        return res.json(await serializeAuthUser(user));
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
     }
@@ -327,4 +339,4 @@ async function removeProfilePhoto(req, res) {
     }
 }
 
-module.exports = { login, logout, refreshSession, me, updateProfile, uploadProfilePhoto, removeProfilePhoto };
+module.exports = { login, logout, refreshSession, me, updateProfile, uploadProfilePhoto, removeProfilePhoto, findLoginUser };

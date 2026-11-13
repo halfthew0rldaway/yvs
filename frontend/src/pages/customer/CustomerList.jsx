@@ -2,6 +2,7 @@ import toast from 'react-hot-toast';
 import { useState, useEffect, useCallback, useTransition, useDeferredValue, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
 import { Search, Plus, Edit2, Trash2, Users, Eye, MonitorSmartphone, X, Award, Filter, ArrowUpDown, RotateCcw, Archive } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import CustomerDetailModal from "../../components/CustomerDetailModal";
@@ -22,6 +23,7 @@ const CustomerRow = memo(function CustomerRow({
     onSelect, 
     onDelete, 
     onRestore,
+    canManage,
     onCustomerUpdated 
 }) {
     const personality = PERSONALITY_TYPES[customer.tipe_kepribadian] || PERSONALITY_TYPES["Netral"];
@@ -102,14 +104,14 @@ const CustomerRow = memo(function CustomerRow({
                     >
                         <Eye className="w-4 h-4" />
                     </button>
-                    <Link
+                    {canManage && <Link
                         to={`/customer/edit/${customer.id}`}
                         className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                         title="Edit"
                     >
                         <Edit2 className="w-4 h-4" />
-                    </Link>
-                    {isArchived ? (
+                    </Link>}
+                    {canManage && (isArchived ? (
                         <button
                             type="button"
                             onClick={() => onRestore(customer)}
@@ -127,7 +129,7 @@ const CustomerRow = memo(function CustomerRow({
                         >
                             <Trash2 className="w-4 h-4" />
                         </button>
-                    )}
+                    ))}
                 </div>
             </td>
         </tr>
@@ -143,6 +145,7 @@ const CustomerCard = memo(function CustomerCard({
     onSelect,
     onDelete,
     onRestore,
+    canManage,
     onCustomerUpdated
 }) {
     const personality = PERSONALITY_TYPES[customer.tipe_kepribadian] || PERSONALITY_TYPES["Netral"];
@@ -217,14 +220,14 @@ const CustomerCard = memo(function CustomerCard({
                 >
                     <Eye className="w-4 h-4" />
                 </button>
-                <Link
+                {canManage && <Link
                     to={`/customer/edit/${customer.id}`}
                     className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                     title="Edit"
                 >
                     <Edit2 className="w-4 h-4" />
-                </Link>
-                {isArchived ? (
+                </Link>}
+                {canManage && (isArchived ? (
                     <button
                         type="button"
                         onClick={() => onRestore(customer)}
@@ -242,7 +245,7 @@ const CustomerCard = memo(function CustomerCard({
                     >
                         <Trash2 className="w-4 h-4" />
                     </button>
-                )}
+                ))}
             </div>
         </div>
     );
@@ -251,6 +254,8 @@ const CustomerCard = memo(function CustomerCard({
 
 
 export default function CustomerList() {
+    const { hasPermission } = useAuth();
+    const canManage = hasPermission("customers.manage");
     const navigate = useNavigate();
     const [customers, setCustomers] = useState([]);
     const [search, setSearch] = useState("");
@@ -413,13 +418,13 @@ export default function CustomerList() {
                         <Award className="w-4 h-4 text-amber-500" />
                         <span>Panduan Badge</span>
                     </button>
-                    <Link
+                    {canManage && <Link
                         to="/customer/tambah"
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm shrink-0"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Tambah Pelanggan</span>
-                    </Link>
+                    </Link>}
                 </div>
             </div>
 
@@ -676,8 +681,8 @@ export default function CustomerList() {
                                 ? "Tidak ditemukan pelanggan yang cocok dengan kriteria pencarian dan filter yang dipilih."
                                 : "Belum ada data pelanggan yang terdaftar di sistem bengkel."
                         }
-                        actionLabel={hasActiveFilters ? "Reset Semua Filter" : "Tambah Pelanggan Baru"}
-                        onAction={hasActiveFilters ? handleResetAllFilters : () => navigate("/customer/tambah")}
+                        actionLabel={hasActiveFilters ? "Reset Semua Filter" : canManage ? "Tambah Pelanggan Baru" : undefined}
+                        onAction={hasActiveFilters ? handleResetAllFilters : canManage ? () => navigate("/customer/tambah") : undefined}
                     />
                 ) : (
                     <>
@@ -691,6 +696,7 @@ export default function CustomerList() {
                                     onSelect={handleSelectCustomer}
                                     onDelete={handleDeleteClick}
                                     onRestore={handleRestoreClick}
+                                    canManage={canManage}
                                     onCustomerUpdated={handleCustomerUpdated}
                                 />
                             ))}
@@ -719,6 +725,7 @@ export default function CustomerList() {
                                         onSelect={handleSelectCustomer}
                                         onDelete={handleDeleteClick}
                                         onRestore={handleRestoreClick}
+                                        canManage={canManage}
                                         onCustomerUpdated={handleCustomerUpdated}
                                     />
                                 ))}

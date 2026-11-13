@@ -347,11 +347,6 @@ async function remove(req, res) {
             return res.status(404).json({ message: "Entri wiki tidak ditemukan" });
         }
 
-        // RBAC: Hanya admin atau pembuat yang boleh menghapus
-        if (req.user.role !== "admin" && existing.user_id !== req.user.id) {
-            return res.status(403).json({ message: "Akses ditolak: Anda tidak memiliki hak menghapus entri wiki ini" });
-        }
-
         await prisma.repairWiki.delete({ where: { id } });
 
         await prisma.activityLog.create({

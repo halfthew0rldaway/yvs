@@ -47,7 +47,7 @@ function getDeviceIcon(jenis) {
 
 export default function CustomerDetailModal({ customerId, isOpen, onClose, onSelectPerangkat, onCustomerUpdated }) {
     const navigate = useNavigate();
-    const { isAdmin } = useAuth();
+    const { hasPermission } = useAuth();
     const [customer, setCustomer] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("perangkat"); // "perangkat" | "riwayat" | "profil"
@@ -130,7 +130,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                         variant="icon-only" 
                                         size="normal" 
                                         showGuideButton={true}
-                                        allowManage={isAdmin}
+                                        allowManage={hasPermission("devices.manage")}
                                         onCustomerUpdated={(updated) => {
                                             setCustomer(prev => ({ ...prev, ...updated }));
                                             if (onCustomerUpdated) onCustomerUpdated(updated);
@@ -146,7 +146,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        {isAdmin && customer && customer.is_active === false && (
+                        {hasPermission("customers.manage") && customer && customer.is_active === false && (
                             <button
                                 type="button"
                                 onClick={async () => {
@@ -165,7 +165,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                 <span>Aktifkan Pelanggan</span>
                             </button>
                         )}
-                        {isAdmin && customer && (
+                        {hasPermission("customers.manage") && customer && (
                             <Link
                                 to={`/customer/edit/${customer.id}${window.location.pathname ? `?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}` : ''}`}
                                 className="hidden xs:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all"
@@ -503,7 +503,7 @@ export default function CustomerDetailModal({ customerId, isOpen, onClose, onSel
                                                                             >
                                                                                 Detail
                                                                             </Link>
-                                                                            {isAdmin && isDueMaintenance && (
+                                                                            {hasPermission("crm.view") && isDueMaintenance && (
                                                                                 <button
                                                                                     type="button"
                                                                                     onClick={() => {

@@ -2,11 +2,17 @@ const prisma = require("../config/database");
 const { getWarrantyStatus } = require("../utils/tiket");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 const { normalizeBrand, normalizeDeviceType, normalizeSerialNumber, normalizeText } = require("../utils/normalize");
+const { hasPermission } = require("../services/authorization.service");
 
 // Mengambil seluruh data perangkat
 async function getAll(req, res) {
     try {
         const { customer_id, jenis_perangkat, search, exclude_ongoing } = req.query;
+        const canViewTickets = hasPermission(req.authorization, "tickets.view");
+        const ticketScope = hasPermission(req.authorization, "tickets.view_all") ? {} : { OR: [
+            { teknisi_id: req.user.id },
+            { teknisi_id: null, status: { notIn: ["selesai", "diambil", "dibatalkan"] } }
+        ] };
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
 
         const where = {};
@@ -36,14 +42,13 @@ async function getAll(req, res) {
 
         const include = { 
             customer: true,
-            _count: {
-                select: { tiket_servis: true }
-            },
-            tiket_servis: {
+            _count: canViewTickets ? { select: { tiket_servis: { where: ticketScope } } } : false,
+            tiket_servis: canViewTickets ? {
+                where: ticketScope,
                 select: { id: true, nomor_tiket: true, status: true, created_at: true },
                 orderBy: { id: "desc" },
                 take: 5
-            }
+            } : false
         };
 
         if (!isPaginated) {
@@ -76,6 +81,12 @@ async function getAll(req, res) {
 async function getById(req, res) {
     try {
         const id = Number(req.params.id);
+        const canViewTickets = hasPermission(req.authorization, "tickets.view");
+        const canViewAllTickets = hasPermission(req.authorization, "tickets.view_all");
+        const ticketScope = canViewAllTickets ? {} : { OR: [
+            { teknisi_id: req.user.id },
+            { teknisi_id: null, status: { notIn: ["selesai", "diambil", "dibatalkan"] } }
+        ] };
         const perangkat = await prisma.perangkat.findUnique({
             where: { id },
             include: { 
@@ -90,15 +101,16 @@ async function getById(req, res) {
                         }
                     }
                 }, 
-                tiket_servis: {
+                tiket_servis: canViewTickets ? {
+                    where: ticketScope,
                     include: {
                         teknisi: { select: { id: true, nama: true } },
                         diagnosis: true,
                         penggunaan_sparepart: { include: { sparepart: true } },
-                        invoice: true
+                        invoice: hasPermission(req.authorization, "invoices.view")
                     },
                     orderBy: { created_at: "desc" }
-                }
+                } : false
             },
         });
 
@@ -106,7 +118,7 @@ async function getById(req, res) {
             return res.status(404).json({ message: "Perangkat tidak ditemukan" });
         }
 
-        const tiketWithWarranty = perangkat.tiket_servis.map(t => ({
+        const tiketWithWarranty = (perangkat.tiket_servis || []).map(t => ({
             ...t,
             warranty_status: getWarrantyStatus(t)
         }));

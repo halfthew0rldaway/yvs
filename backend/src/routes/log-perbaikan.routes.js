@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const { upload, compressMedia } = require("../middleware/upload");
 const { create, getByTiketId } = require("../controllers/log-perbaikan.controller");
 
@@ -14,7 +14,7 @@ const logValidation = [
     body("catatan").notEmpty().withMessage("Catatan wajib diisi"),
 ];
 
-router.post("/", authorize("teknisi", "admin"), upload.single("foto"), compressMedia, logValidation, validate, create);
-router.get("/:id", getByTiketId);
+router.post("/", requirePermission("tickets.repair"), upload.single("foto"), compressMedia, logValidation, validate, create);
+router.get("/:id", requirePermission("tickets.view"), getByTiketId);
 
 module.exports = router;

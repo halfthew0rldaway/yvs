@@ -32,7 +32,8 @@ import {
 } from "lucide-react";
 
 export default function DatabaseManagement() {
-    const { user, isAdmin } = useAuth();
+    const { user, hasPermission } = useAuth();
+    const canMaintain = hasPermission("system.database_maintain");
     const [stats, setStats] = useState(null);
     const [loadingStats, setLoadingStats] = useState(true);
 
@@ -323,7 +324,7 @@ export default function DatabaseManagement() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
-                    <button
+                    {canMaintain && <button
                         type="button"
                         onClick={handleNormalize}
                         disabled={isNormalizing}
@@ -332,8 +333,8 @@ export default function DatabaseManagement() {
                     >
                         <ShieldCheck className={`w-3.5 h-3.5 ${isNormalizing ? "animate-spin" : ""}`} />
                         <span>{isNormalizing ? "Menormalisasi..." : "Normalisasi & Rapihkan Data"}</span>
-                    </button>
-                    <button
+                    </button>}
+                    {user?.is_super_admin && <button
                         type="button"
                         onClick={handleSeedDummy}
                         disabled={isSeeding}
@@ -342,7 +343,7 @@ export default function DatabaseManagement() {
                     >
                         <Sparkles className={`w-3.5 h-3.5 ${isSeeding ? "animate-spin" : ""}`} />
                         <span>{isSeeding ? "Menyuntikkan Data..." : "+ Tambah Data Dummy Realistis"}</span>
-                    </button>
+                    </button>}
                     <button
                         type="button"
                         onClick={fetchStats}
@@ -699,7 +700,7 @@ export default function DatabaseManagement() {
             </div>
 
             {/* Bottom Maintenance / Housekeeping Card */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {canMaintain && <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
                     <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl border border-amber-200 shrink-0">
                         <AlertTriangle className="w-5 h-5" />
@@ -720,10 +721,10 @@ export default function DatabaseManagement() {
                     <Trash2 className="w-4 h-4" />
                     <span>Bersihkan Log Lama</span>
                 </button>
-            </div>
+            </div>}
 
             {/* Confirmation Modal for Cleanup */}
-            {isCleanupModalOpen && (
+            {canMaintain && isCleanupModalOpen && (
                 <div className="modal-shell modal-backdrop bg-slate-900/60 backdrop-blur-xs" onClick={() => setIsCleanupModalOpen(false)}>
                     <div className="modal-panel max-w-md p-5 sm:p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-grabber" />

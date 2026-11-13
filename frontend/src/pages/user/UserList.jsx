@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
 import { toast } from "react-hot-toast";
 import {
     Users,
@@ -33,8 +34,11 @@ import TechnicianPerformanceModal from "../../components/TechnicianPerformanceMo
 import ConfirmModal from "../../components/ConfirmModal";
 
 export default function UserList() {
+    const { user: currentUser } = useAuth();
+    const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [performance, setPerformance] = useState([]);
+    const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("users"); // 'users' | 'performance'
     const [searchTerm, setSearchTerm] = useState("");
@@ -53,18 +57,25 @@ export default function UserList() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [userToDelete, setUserToDelete] = useState(null);
     const [isDeletingUser, setIsDeletingUser] = useState(false);
+    const [superAdminTarget, setSuperAdminTarget] = useState(null);
+    const [superAdminPassword, setSuperAdminPassword] = useState("");
+    const [superAdminConfirm, setSuperAdminConfirm] = useState("");
+    const [isUpdatingSuperAdmin, setIsUpdatingSuperAdmin] = useState(false);
     const [formData, setFormData] = useState({
         nama: "",
         username: "",
         email: "",
         password: "",
-        role: "teknisi"
+        currentPassword: "",
+        role: "teknisi",
+        roleIds: []
     });
     const [submitting, setSubmitting] = useState(false);
 
     // Reset Password Modal
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const [newPassword, setNewPassword] = useState("");
+    const [resetCurrentPassword, setResetCurrentPassword] = useState("");
 
     // Photo Adjuster Modal
     const [adjustPhotoSrc, setAdjustPhotoSrc] = useState(null);
@@ -84,10 +95,12 @@ export default function UserList() {
             if (roleFilter) params.role = roleFilter;
             if (targetSearch.trim()) params.search = targetSearch.trim();
 
-            const [usersRes, perfRes] = await Promise.all([
+            const [usersRes, perfRes, rolesRes] = await Promise.all([
                 api.get("/users", { params }),
-                api.get("/users/performance")
+                api.get("/users/performance"),
+                api.get("/roles")
             ]);
+            setRoles(rolesRes.data || []);
 
             if (usersRes.data && usersRes.data.pagination) {
                 setUsers(usersRes.data.data);
@@ -95,7 +108,7 @@ export default function UserList() {
                 setTotalPages(usersRes.data.pagination.totalPages);
             } else if (Array.isArray(usersRes.data)) {
                 let filtered = usersRes.data;
-                if (roleFilter) filtered = filtered.filter(u => u.role === roleFilter);
+                if (roleFilter) filtered = filtered.filter(u => u.user_roles?.some(item => item.role.slug === roleFilter));
                 if (targetSearch.trim()) {
                     const q = targetSearch.toLowerCase();
                     filtered = filtered.filter(u => u.nama.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
@@ -119,7 +132,7 @@ export default function UserList() {
     function handleOpenCreateModal() {
         setModalMode("create");
         setSelectedUser(null);
-        setFormData({ nama: "", username: "", email: "", password: "", role: "teknisi" });
+        setFormData({ nama: "", username: "", email: "", password: "", currentPassword: "", role: "teknisi", roleIds: [] });
         setIsModalOpen(true);
     }
 
@@ -131,7 +144,9 @@ export default function UserList() {
             username: user.username || "",
             email: user.email,
             password: "",
-            role: user.role
+            currentPassword: "",
+            role: user.role,
+            roleIds: user.user_roles?.map(item => item.role.id) || []
         });
         setIsModalOpen(true);
     }
@@ -139,7 +154,14 @@ export default function UserList() {
     function handleOpenResetModal(user) {
         setSelectedUser(user);
         setNewPassword("");
+        setResetCurrentPassword("");
         setIsResetModalOpen(true);
+    }
+
+    function closeResetModal() {
+        setIsResetModalOpen(false);
+        setNewPassword("");
+        setResetCurrentPassword("");
     }
 
     async function handleSubmit(e) {
@@ -161,6 +183,7 @@ export default function UserList() {
                 toast.success(res.data.message || "User berhasil ditambahkan");
             } else {
                 const res = await api.put(`/users/${selectedUser.id}`, formData);
+                await api.put(`/users/${selectedUser.id}/roles`, { roleIds: formData.roleIds });
                 toast.success(res.data.message || "User berhasil diperbarui");
             }
             setIsModalOpen(false);
@@ -181,9 +204,9 @@ export default function UserList() {
 
         setSubmitting(true);
         try {
-            const res = await api.put(`/users/${selectedUser.id}`, { password: newPassword });
+            const res = await api.put(`/users/${selectedUser.id}`, { password: newPassword, currentPassword: resetCurrentPassword });
             toast.success("Password berhasil direset!");
-            setIsResetModalOpen(false);
+            closeResetModal();
         } catch (err) {
             toast.error(err.response?.data?.message || "Gagal mereset password");
         } finally {
@@ -230,15 +253,47 @@ export default function UserList() {
         }
     }
 
+    async function handleSuperAdminChange(e) {
+        e.preventDefault();
+        if (!superAdminTarget || superAdminConfirm !== (superAdminTarget.username || String(superAdminTarget.id)) || !superAdminPassword) return;
+        setIsUpdatingSuperAdmin(true);
+        try {
+            const enabled = !superAdminTarget.is_super_admin;
+            await api.put(`/users/${superAdminTarget.id}/super-admin`, { enabled, currentPassword: superAdminPassword });
+            toast.success(enabled ? "Super Admin baru telah ditetapkan" : "Akses Super Admin telah dicabut");
+            setSuperAdminTarget(null);
+            setSuperAdminPassword("");
+            setSuperAdminConfirm("");
+            setIsModalOpen(false);
+            if (!enabled && superAdminTarget.id === currentUser?.id) {
+                navigate("/", { replace: true });
+            } else {
+                fetchData();
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Gagal mengubah Super Admin");
+        } finally {
+            setIsUpdatingSuperAdmin(false);
+        }
+    }
+
+    function closeSuperAdminDialog() {
+        setSuperAdminTarget(null);
+        setSuperAdminPassword("");
+        setSuperAdminConfirm("");
+    }
+
     // Derived Statistics
     const totalUsersCount = users.length;
-    const adminCount = users.filter(u => u.role === "admin").length;
-    const teknisiCount = users.filter(u => u.role === "teknisi").length;
+    const userHasCapability = (user, code) => user.user_roles?.some(({ role }) =>
+        roles.find(available => available.id === role.id)?.permissions?.some(permission => permission.code === code));
+    const adminCount = users.filter(u => u.is_super_admin).length;
+    const teknisiCount = users.filter(u => userHasCapability(u, "tickets.diagnosis")).length;
     const topPerformer = performance.length > 0 ? performance[0] : null;
 
     // Filtered Users
     const filteredUsers = users.filter(u => {
-        if (roleFilter && u.role !== roleFilter) return false;
+        if (roleFilter && !u.user_roles?.some(item => item.role.slug === roleFilter)) return false;
         if (searchTerm.trim()) {
             const term = searchTerm.toLowerCase();
             return u.nama.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
@@ -284,7 +339,7 @@ export default function UserList() {
                         <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div>
-                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Admin System</p>
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Super Admin</p>
                         <p className="text-2xl font-bold text-slate-900 mt-0.5">{adminCount}</p>
                     </div>
                 </div>
@@ -366,30 +421,12 @@ export default function UserList() {
                             >
                                 Semua Role
                             </button>
-                            <button
-                                onClick={() => setRoleFilter("admin")}
+                            {roles.map(role => <button key={role.id}
+                                onClick={() => setRoleFilter(role.slug)}
                                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
-                                    roleFilter === "admin" ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-600 border-slate-200"
+                                    roleFilter === role.slug ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-200"
                                 }`}
-                            >
-                                Admin
-                            </button>
-                            <button
-                                onClick={() => setRoleFilter("frontman")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
-                                    roleFilter === "frontman" ? "bg-amber-600 text-white border-amber-600" : "bg-white text-slate-600 border-slate-200"
-                                }`}
-                            >
-                                Frontman
-                            </button>
-                            <button
-                                onClick={() => setRoleFilter("teknisi")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
-                                    roleFilter === "teknisi" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-200"
-                                }`}
-                            >
-                                Teknisi
-                            </button>
+                            >{role.name}</button>)}
                         </div>
                     </div>
 
@@ -446,7 +483,7 @@ export default function UserList() {
                                                             : "bg-blue-50 text-blue-700 border-blue-200"
                                                     }`}>
                                                         {u.role === "admin" ? <ShieldCheck className="w-3 h-3" /> : u.role === "frontman" ? <UserCheck className="w-3 h-3" /> : <Wrench className="w-3 h-3" />}
-                                                        <span className="capitalize">{u.role === "frontman" ? "Frontman" : u.role}</span>
+                                                        <span className="capitalize">{u.user_roles?.map(item => item.role.name).join(", ") || u.role}</span>
                                                     </span>
                                                 </div>
                                                 <span className="font-mono text-3xs text-blue-600 block truncate">@{u.username || (u.email ? u.email.split("@")[0] : `user${u.id}`)}</span>
@@ -456,7 +493,7 @@ export default function UserList() {
 
                                         {/* Stats row */}
                                         <div className="mt-2 pt-2 border-t border-slate-100/80 text-3xs text-slate-600">
-                                            {u.role === "teknisi" ? (
+                                            {userHasCapability(u, "tickets.diagnosis") ? (
                                                 <div className="flex items-center gap-1.5 flex-wrap">
                                                     <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-medium">
                                                         Assigned: {u.stats?.totalAssigned || 0}
@@ -474,7 +511,7 @@ export default function UserList() {
                                                         <ChevronRight className="w-3 h-3 text-emerald-600" />
                                                     </button>
                                                 </div>
-                                            ) : u.role === "frontman" ? (
+                                            ) : userHasCapability(u, "tickets.intake") ? (
                                                 <span className="text-amber-700 font-medium">Service Advisor & Kasir</span>
                                             ) : (
                                                 <span className="text-slate-400 italic">Administrator</span>
@@ -494,14 +531,14 @@ export default function UserList() {
                                                 >
                                                     <UserCheck className="w-4 h-4" />
                                                 </Link>
-                                                <button
+                                                {(!u.is_super_admin || u.id === currentUser?.id) && <button
                                                     type="button"
                                                     onClick={() => handleOpenResetModal(u)}
                                                     title="Reset Password"
                                                     className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                                                 >
                                                     <Key className="w-4 h-4" />
-                                                </button>
+                                                </button>}
                                                 <button
                                                     type="button"
                                                     onClick={() => handleOpenEditModal(u)}
@@ -565,11 +602,11 @@ export default function UserList() {
                                                         : "bg-blue-50 text-blue-700 border-blue-200"
                                                 }`}>
                                                     {u.role === "admin" ? <ShieldCheck className="w-3.5 h-3.5" /> : u.role === "frontman" ? <UserCheck className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
-                                                    <span className="capitalize">{u.role === "frontman" ? "Frontman" : u.role}</span>
+                                                    <span className="capitalize">{u.user_roles?.map(item => item.role.name).join(", ") || u.role}</span>
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-xs text-slate-600">
-                                                {u.role === "teknisi" ? (
+                                                {userHasCapability(u, "tickets.diagnosis") ? (
                                                     <div className="flex items-center gap-2">
                                                         <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-medium">
                                                             Assigned: {u.stats?.totalAssigned || 0}
@@ -587,7 +624,7 @@ export default function UserList() {
                                                             <ChevronRight className="w-3 h-3 text-emerald-600" />
                                                         </button>
                                                     </div>
-                                                ) : u.role === "frontman" ? (
+                                                ) : userHasCapability(u, "tickets.intake") ? (
                                                     <span className="text-amber-700 font-medium">Service Advisor & Kasir</span>
                                                 ) : (
                                                     <span className="text-slate-400 italic">Administrator</span>
@@ -605,14 +642,14 @@ export default function UserList() {
                                                     >
                                                         <UserCheck className="w-4 h-4" />
                                                     </Link>
-                                                    <button
+                                                    {(!u.is_super_admin || u.id === currentUser?.id) && <button
                                                         type="button"
                                                         onClick={() => handleOpenResetModal(u)}
                                                         title="Reset Password"
                                                         className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                                                     >
                                                         <Key className="w-4 h-4" />
-                                                    </button>
+                                                    </button>}
                                                     <button
                                                         type="button"
                                                         onClick={() => handleOpenEditModal(u)}
@@ -835,22 +872,43 @@ export default function UserList() {
                                     placeholder="••••••••"
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    disabled={modalMode === "edit" && selectedUser?.is_super_admin && selectedUser.id !== currentUser?.id}
                                     className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                 />
+                                {modalMode === "edit" && selectedUser?.is_super_admin && selectedUser.id !== currentUser?.id && <p className="text-2xs text-slate-500 mt-1">Super Admin lain mengubah kata sandinya sendiri melalui Profil.</p>}
                             </div>
+
+                            {modalMode === "edit" && formData.password && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Konfirmasi kata sandi Super Admin Anda</label>
+                                    <input type="password" required value={formData.currentPassword} onChange={e => setFormData({ ...formData, currentPassword: e.target.value })} autoComplete="current-password" className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm" />
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-xs font-semibold text-slate-700 mb-1">Role / Peran</label>
-                                <CustomSelect
-                                    value={formData.role}
-                                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                    label="Pilih Role / Peran Karyawan"
-                                >
-                                    <option value="teknisi">Teknisi (Operasional Perbaikan)</option>
-                                    <option value="frontman">Frontman (Service Advisor & Kasir)</option>
-                                    <option value="admin">Admin (Akses Full Manajerial)</option>
-                                </CustomSelect>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-xl border border-slate-200 p-3">
+                                    {roles.map(role => <label key={role.id} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                                        <input type="checkbox" checked={formData.roleIds.includes(role.id)} onChange={() => {
+                                            const roleIds = formData.roleIds.includes(role.id) ? formData.roleIds.filter(id => id !== role.id) : [...formData.roleIds, role.id];
+                                            setFormData({ ...formData, roleIds, role: roles.find(item => item.id === roleIds[0])?.slug || "teknisi" });
+                                        }} />
+                                        {role.name}
+                                    </label>)}
+                                </div>
                             </div>
+
+                            {modalMode === "edit" && selectedUser && (
+                                <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-3 flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-xs font-bold text-indigo-900">Akses Super Admin: {selectedUser.is_super_admin ? "Aktif" : "Tidak aktif"}</p>
+                                        <p className="text-2xs text-indigo-700 mt-0.5">Terpisah dari peran biasa. Simpan perubahan akun sebelum mengubah akses ini.</p>
+                                    </div>
+                                    <button type="button" onClick={() => { setIsModalOpen(false); setSuperAdminTarget(selectedUser); }} className="shrink-0 px-3 py-2 rounded-lg bg-white border border-indigo-200 text-indigo-700 text-xs font-semibold">
+                                        {selectedUser.is_super_admin ? "Cabut akses" : "Tetapkan"}
+                                    </button>
+                                </div>
+                            )}
 
                             <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
                                 <button
@@ -874,6 +932,41 @@ export default function UserList() {
                 </div>
             )}
 
+            {superAdminTarget && (
+                <div className="modal-shell z-[100] bg-slate-900/50 backdrop-blur-sm">
+                    <div className="modal-panel max-w-md max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden">
+                        <div className="modal-header shrink-0 flex items-center justify-between gap-3 p-4 border-b border-slate-200">
+                            <div>
+                                <h3 className="text-base font-bold text-slate-900">{superAdminTarget.is_super_admin ? "Cabut Super Admin" : "Tetapkan Super Admin"}</h3>
+                                <p className="text-xs text-slate-500">{superAdminTarget.nama} (@{superAdminTarget.username || superAdminTarget.id})</p>
+                            </div>
+                            <button type="button" disabled={isUpdatingSuperAdmin} onClick={closeSuperAdminDialog} aria-label="Tutup" className="text-slate-500"><X className="w-5 h-5" /></button>
+                        </div>
+                        <form onSubmit={handleSuperAdminChange} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                            <div className="modal-body overflow-y-auto flex-1 custom-scrollbar p-4 space-y-4">
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                    {superAdminTarget.is_super_admin
+                                        ? "Akses akan dicabut segera. Super Admin terakhir tidak dapat dicabut."
+                                        : "Akun ini akan langsung dapat mengelola pengguna, peran, dan seluruh modul. Pastikan pemilik akun berhasil login sebelum mencabut akses Super Admin lama."}
+                                </p>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Ketik username target untuk konfirmasi</label>
+                                    <input value={superAdminConfirm} onChange={e => setSuperAdminConfirm(e.target.value)} placeholder={superAdminTarget.username || String(superAdminTarget.id)} autoComplete="off" className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm" required />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Kata sandi Super Admin Anda</label>
+                                    <input type="password" value={superAdminPassword} onChange={e => setSuperAdminPassword(e.target.value)} autoComplete="current-password" className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm" required />
+                                </div>
+                            </div>
+                            <div className="modal-footer shrink-0 p-4 border-t border-slate-200 flex justify-end gap-2">
+                                <button type="button" onClick={closeSuperAdminDialog} disabled={isUpdatingSuperAdmin} className="btn-secondary h-9 px-3 text-xs">Batal</button>
+                                <button type="submit" disabled={isUpdatingSuperAdmin || superAdminConfirm !== (superAdminTarget.username || String(superAdminTarget.id)) || !superAdminPassword} className="btn-primary h-9 px-3 text-xs disabled:opacity-50">{isUpdatingSuperAdmin ? "Menyimpan..." : superAdminTarget.is_super_admin ? "Cabut akses" : "Tetapkan Super Admin"}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* RESET PASSWORD MODAL */}
             {isResetModalOpen && (
                 <div className="modal-shell z-50 bg-slate-900/40 backdrop-blur-sm">
@@ -882,7 +975,7 @@ export default function UserList() {
                         <div className="modal-body-tight">
                         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                             <h3 className="text-base font-bold text-slate-900">Reset Password User</h3>
-                            <button onClick={() => setIsResetModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                            <button onClick={closeResetModal} className="text-slate-400 hover:text-slate-600">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -905,10 +998,15 @@ export default function UserList() {
                                 />
                             </div>
 
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">Kata sandi Super Admin Anda</label>
+                                <input type="password" required value={resetCurrentPassword} onChange={e => setResetCurrentPassword(e.target.value)} autoComplete="current-password" className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm" />
+                            </div>
+
                             <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                                 <button
                                     type="button"
-                                    onClick={() => setIsResetModalOpen(false)}
+                                    onClick={closeResetModal}
                                     className="px-4 py-2.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50"
                                 >
                                     Batal

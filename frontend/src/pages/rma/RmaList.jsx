@@ -51,7 +51,8 @@ const RMA_STATUS_CONFIG = {
 };
 
 export default function RmaList() {
-    const { isAdmin, isTeknisi, user } = useAuth();
+    const { user, hasPermission } = useAuth();
+        const isAdmin = hasPermission("suppliers.manage");
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 

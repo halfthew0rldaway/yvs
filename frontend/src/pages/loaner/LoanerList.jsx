@@ -49,7 +49,8 @@ function generateLoanWaLink(customer, loanerDevice, record) {
 }
 
 export default function LoanerList() {
-    const { isAdmin, isTeknisi, user } = useAuth();
+    const { user, hasPermission } = useAuth();
+        const isAdmin = hasPermission("loaners.manage");
     const [searchParams] = useSearchParams();
     
     // Main View Tab: "devices" (Unit Pool) | "records" (Histori & Pinjaman Aktif)

@@ -2,13 +2,14 @@
  * Offline Data Store (IndexedDB Engine)
  * 
  * Provides robust, asynchronous, high-capacity client-side caching for PWA & Capacitor.
- * Supports Stale-While-Revalidate (SWR), user-scoped data isolation, and safe offline queueing.
+ * Supports Stale-While-Revalidate (SWR), user-scoped data isolation, and local drafts.
  */
 
 const DB_NAME = "yvs_offline_cache_v1";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const CACHE_STORE = "api_cache";
 const QUEUE_STORE = "sync_queue";
+const DRAFT_STORE = "local_drafts";
 
 // Default TTL for cached GET requests: 48 hours for offline capability
 const DEFAULT_TTL_MS = 48 * 60 * 60 * 1000;
@@ -41,6 +42,11 @@ function getDB() {
                 const queueStore = db.createObjectStore(QUEUE_STORE, { keyPath: "id" });
                 queueStore.createIndex("status", "status", { unique: false });
                 queueStore.createIndex("created_at", "created_at", { unique: false });
+            }
+
+            if (!db.objectStoreNames.contains(DRAFT_STORE)) {
+                const draftStore = db.createObjectStore(DRAFT_STORE, { keyPath: "id" });
+                draftStore.createIndex("user_id", "user_id", { unique: false });
             }
         };
 
@@ -178,35 +184,75 @@ export const offlineDataStore = {
     async clearUserCache(userId) {
         try {
             const db = await getDB();
-            return new Promise((resolve) => {
-                const tx = db.transaction(CACHE_STORE, "readwrite");
-                const store = tx.objectStore(CACHE_STORE);
-
-                if (!userId) {
-                    const req = store.clear();
-                    req.onsuccess = () => resolve(true);
-                    req.onerror = () => resolve(false);
-                    return;
-                }
-
-                const index = store.index("user_id");
-                const req = index.openCursor(IDBKeyRange.only(String(userId)));
-
-                req.onsuccess = (e) => {
-                    const cursor = e.target.result;
-                    if (cursor) {
-                        cursor.delete();
-                        cursor.continue();
+            return new Promise(resolve => {
+                const tx = db.transaction([CACHE_STORE, DRAFT_STORE, QUEUE_STORE], "readwrite");
+                // Legacy queue entries predate user ownership metadata. Never
+                // carry them across logout or a permission change.
+                tx.objectStore(QUEUE_STORE).clear();
+                for (const name of [CACHE_STORE, DRAFT_STORE]) {
+                    const store = tx.objectStore(name);
+                    if (!userId) {
+                        store.clear();
                     } else {
-                        resolve(true);
+                        const cursor = store.index("user_id").openCursor(IDBKeyRange.only(String(userId)));
+                        cursor.onsuccess = event => {
+                            const row = event.target.result;
+                            if (row) { row.delete(); row.continue(); }
+                        };
                     }
-                };
-
-                req.onerror = () => resolve(false);
+                }
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+                tx.onabort = () => resolve(false);
             });
         } catch {
             return false;
         }
+    },
+
+    async getDraft(userId, kind, entityId) {
+        if (!userId || !kind || !entityId) return null;
+        try {
+            const db = await getDB();
+            const id = `${userId}:${kind}:${entityId}`;
+            return await new Promise(resolve => {
+                const req = db.transaction(DRAFT_STORE, "readonly").objectStore(DRAFT_STORE).get(id);
+                req.onsuccess = () => resolve(req.result?.expires_at > Date.now() ? req.result : null);
+                req.onerror = () => resolve(null);
+            });
+        } catch { return null; }
+    },
+
+    async setDraft(userId, kind, entityId, text) {
+        if (!userId || !kind || !entityId || typeof text !== "string" || text.length > 10000) return false;
+        try {
+            const db = await getDB();
+            return await new Promise(resolve => {
+                const tx = db.transaction(DRAFT_STORE, "readwrite");
+                tx.objectStore(DRAFT_STORE).put({
+                    id: `${userId}:${kind}:${entityId}`,
+                    user_id: String(userId), kind, entity_id: String(entityId), text,
+                    updated_at: Date.now(), expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000
+                });
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+                tx.onabort = () => resolve(false);
+            });
+        } catch { return false; }
+    },
+
+    async deleteDraft(userId, kind, entityId) {
+        if (!userId || !kind || !entityId) return false;
+        try {
+            const db = await getDB();
+            return await new Promise(resolve => {
+                const tx = db.transaction(DRAFT_STORE, "readwrite");
+                tx.objectStore(DRAFT_STORE).delete(`${userId}:${kind}:${entityId}`);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+                tx.onabort = () => resolve(false);
+            });
+        } catch { return false; }
     },
 
     /**

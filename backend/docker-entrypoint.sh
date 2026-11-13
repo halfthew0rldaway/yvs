@@ -4,7 +4,7 @@ set -e
 echo "🚀 [ENTRYPOINT] Memulai inisialisasi kontainer backend Serv.io..."
 
 # Jalankan inisialisasi skema & verifikasi database via node
-node scripts/docker-init.js || true
+node scripts/docker-init.js
 
 echo "🚀 [ENTRYPOINT] Menjalankan perintah utama: $@"
 exec "$@"

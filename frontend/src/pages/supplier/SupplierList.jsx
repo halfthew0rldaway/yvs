@@ -27,7 +27,8 @@ import SupplierModal from "./SupplierModal";
 import ConfirmModal from "../../components/ConfirmModal";
 
 export default function SupplierList() {
-    const { isAdmin } = useAuth();
+    const { hasPermission } = useAuth();
+        const isAdmin = hasPermission("suppliers.manage");
 
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(true);

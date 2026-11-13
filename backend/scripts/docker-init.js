@@ -24,14 +24,11 @@ async function main() {
         process.exit(1);
     }
 
-    // 2. Otomatis sinkronkan skema Prisma (tambah kolom/tabel baru tanpa intervensi manual)
-    console.log("📦 [INIT] Sinkronisasi skema database (prisma db push)...");
-    try {
-        execSync("npx prisma db push --accept-data-loss --skip-generate", { stdio: "inherit" });
-        console.log("✅ [INIT] Skema database berhasil disinkronkan.");
-    } catch (err) {
-        console.error("⚠️ [INIT] Peringatan: Prisma db push mengalami kendala:", err.message);
-    }
+    // Staging predates Prisma migration history. Apply the schema without
+    // permitting destructive changes; stop startup if it cannot be applied.
+    console.log("📦 [INIT] Sinkronisasi skema database (tanpa kehilangan data)...");
+    execSync("npx prisma db push --skip-generate", { stdio: "inherit" });
+    console.log("✅ [INIT] Skema database berhasil disinkronkan.");
 
     // 2b. Verifikasi & pastikan kolom custom_badges & is_revisi_acc tersedia
     try {
@@ -103,7 +100,7 @@ async function main() {
         const userCount = await prisma.user.count();
         if (userCount === 0) {
             console.log("🌱 [INIT] Database masih kosong (0 user). Menjalankan inisialisasi awal (seed)...");
-            execSync("node seed.js", { stdio: "inherit", env: { ...process.env, FORCE_SEED: "true" } });
+            execSync("node seed.js", { stdio: "inherit" });
             console.log("✅ [INIT] Seeding inisial selesai.");
         } else {
             console.log(`✅ [INIT] Data aman (${userCount} staf/pengguna ditemukan). Seeding dilewati.`);
@@ -146,8 +143,19 @@ async function main() {
                 console.warn("⚠️ [INIT] Peringatan: Sinkronisasi akun Owner staging dilewati:", ownerErr.message);
             }
         }
+
+        // Seed capabilities after owner bootstrap. The seed preserves edited
+        // role grants and existing Super Admin designations on later deploys.
+        if (isStaging) {
+            console.log("🔐 [INIT] Menyelaraskan katalog permission dan role staging...");
+            execSync("node scripts/seed-rbac.js", {
+                stdio: "inherit",
+                env: { ...process.env, SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL || "arni@workshop.com" }
+            });
+        }
     } catch (err) {
-        console.warn("⚠️ [INIT] Pengecekan data pengguna dilewati:", err.message);
+        console.error("❌ [INIT] Inisialisasi pengguna dan izin gagal:", err.message);
+        throw err;
     } finally {
         await prisma.$disconnect();
     }
@@ -157,6 +165,6 @@ async function main() {
 
 main().catch((err) => {
     console.error("❌ [INIT] Terjadi kesalahan fatal:", err);
-    process.exit(0); // Jangan crash container agar express tetap bisa menyajikan error atau logs
+    process.exit(1);
 });
 

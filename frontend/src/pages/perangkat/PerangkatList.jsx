@@ -2,6 +2,7 @@ import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
 import { Plus, Edit2, Trash2, MonitorSmartphone, Search, Filter, History, User, Eye, X, RotateCcw } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 import CustomerDetailModal from "../../components/CustomerDetailModal";
@@ -12,6 +13,8 @@ import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
 
 export default function PerangkatList() {
+    const { hasPermission } = useAuth();
+    const canManage = hasPermission("devices.manage");
     const navigate = useNavigate();
     const [perangkats, setPerangkats] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -115,13 +118,13 @@ export default function PerangkatList() {
                     <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Data Perangkat</h1>
                     <p className="text-xs sm:text-sm text-slate-500 mt-1">Daftar perangkat beserta riwayat & rekam medis servis</p>
                 </div>
-                <Link
+                {canManage && <Link
                     to="/perangkat/tambah"
                     className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm shrink-0"
                 >
                     <Plus className="w-4 h-4" />
                     <span>Tambah Perangkat</span>
-                </Link>
+                </Link>}
             </div>
 
             {/* Filter & Search Bar */}
@@ -216,8 +219,8 @@ export default function PerangkatList() {
                                 ? "Tidak ada perangkat yang cocok dengan filter atau kata kunci pencarian."
                                 : "Belum ada data perangkat yang terdaftar di sistem."
                         }
-                        actionLabel={searchQuery || jenisFilter ? "Reset Filter" : "Tambah Perangkat Baru"}
-                        onAction={searchQuery || jenisFilter ? handleResetFilters : () => navigate("/perangkat/tambah")}
+                        actionLabel={searchQuery || jenisFilter ? "Reset Filter" : canManage ? "Tambah Perangkat Baru" : undefined}
+                        onAction={searchQuery || jenisFilter ? handleResetFilters : canManage ? () => navigate("/perangkat/tambah") : undefined}
                     />
                 ) : (
                     <>
@@ -291,21 +294,21 @@ export default function PerangkatList() {
                                                 >
                                                     <Eye className="w-4 h-4" />
                                                 </button>
-                                                <Link
+                                                {canManage && <Link
                                                     to={`/perangkat/edit/${p.id}`}
                                                     className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Edit Perangkat"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
-                                                </Link>
-                                                <button
+                                                </Link>}
+                                                {canManage && <button
                                                     type="button"
                                                     onClick={() => handleDeleteClick(p)}
                                                     className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Hapus"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                </button>}
                                             </div>
                                         </div>
                                     </div>
@@ -393,21 +396,21 @@ export default function PerangkatList() {
                                                 >
                                                     <Eye className="w-4 h-4" />
                                                 </button>
-                                                <Link
+                                                {canManage && <Link
                                                     to={`/perangkat/edit/${p.id}`}
                                                     className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Edit Perangkat"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
-                                                </Link>
-                                                <button
+                                                </Link>}
+                                                {canManage && <button
                                                     type="button"
                                                     onClick={() => handleDeleteClick(p)}
                                                     className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Hapus"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                </button>}
                                             </div>
                                         </td>
                                     </tr>

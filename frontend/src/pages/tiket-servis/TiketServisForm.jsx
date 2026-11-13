@@ -2,13 +2,15 @@ import toast from 'react-hot-toast';
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
 import { 
     ArrowLeft, Save, MonitorSmartphone, User, MessageSquare, Package, Camera, 
     KeyRound, Lock, Eye, EyeOff, ShieldCheck, Shield, AlertTriangle, 
     Sparkles, Smile, History, HardDrive, CheckCircle2, Clock, Zap, Laptop,
     Search, Filter, Plus, Phone, RotateCcw, X, Check, ChevronRight, Printer, Box,
-    Tag, CornerDownLeft, UserPlus
+    Tag, CornerDownLeft, UserPlus, QrCode
 } from "lucide-react";
+import CustomerRegistrationInviteModal from "../../components/CustomerRegistrationInviteModal";
 import DefectMapperModal from "../../components/DefectMapperModal";
 import { SLA_PENGECEKAN_PACKAGES } from "../../components/SlaBadge";
 import PhotoUploadSection from "../../components/PhotoUploadSection";
@@ -65,8 +67,11 @@ function HighlightText({ text, query }) {
 
 export default function TiketServisForm() {
     const navigate = useNavigate();
+    const { hasPermission } = useAuth();
+    const canAssign = hasPermission("tickets.assign");
     const [searchParams] = useSearchParams();
     const perangkatParam = searchParams.get("perangkat_id");
+    const registrationParam = searchParams.get("registration_id");
 
     const [form, setForm] = useState({ 
         perangkat_id: perangkatParam || "", 
@@ -102,6 +107,11 @@ export default function TiketServisForm() {
         totalBytes: 0
     });
     const [fetching, setFetching] = useState(true);
+    const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
+    const [pendingRegistrations, setPendingRegistrations] = useState([]);
+    const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
+    const [reviewingRegistrationId, setReviewingRegistrationId] = useState(null);
+    const [serialByRegistration, setSerialByRegistration] = useState({});
 
     const [selectedPerangkatDetail, setSelectedPerangkatDetail] = useState(null);
     const [loadingPerangkatDetail, setLoadingPerangkatDetail] = useState(false);
@@ -139,10 +149,56 @@ export default function TiketServisForm() {
     });
     const [savingQuick, setSavingQuick] = useState(false);
 
+    async function refreshRegistrations() {
+        try {
+            const { data } = await api.get("/customer-registration/pending", { skipCache: true });
+            setPendingRegistrations(data || []);
+        } catch { /* Ticket intake remains usable when the list cannot load. */ }
+    }
+
+    async function selectRegistration(row) {
+        setReviewingRegistrationId(row.id);
+        let accepted = row;
+        try {
+            if (row.status === "pending") {
+                const { data } = await api.post(`/customer-registration/pending/${row.id}/accept`, {
+                    serial_number: serialByRegistration[row.id] || ""
+                });
+                accepted = data;
+                setPendingRegistrations(prev => prev.map(item => item.id === row.id ? data : item));
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal menerima pendaftaran");
+            setReviewingRegistrationId(null);
+            return;
+        }
+        setReviewingRegistrationId(null);
+        if (!accepted.perangkat) return;
+        const device = { ...accepted.perangkat, customer: accepted.customer, tiket_servis: [] };
+        setPerangkats(prev => prev.some(p => Number(p.id) === device.id) ? prev : [device, ...prev]);
+        setForm(prev => ({ ...prev, perangkat_id: device.id, keluhan: accepted.keluhan || "" }));
+        setSelectedRegistrationId(accepted.id);
+        setSearchQuery("");
+        toast.success("Data pendaftaran dipilih. Periksa unit dan keluhan sebelum membuat tiket.");
+    }
+
+    async function rejectRegistration(row) {
+        if (!window.confirm(`Tolak pendaftaran dari ${row.nama}? Data ini tidak akan masuk ke pelanggan atau perangkat.`)) return;
+        setReviewingRegistrationId(row.id);
+        try {
+            await api.post(`/customer-registration/pending/${row.id}/reject`);
+            setPendingRegistrations(prev => prev.filter(item => item.id !== row.id));
+            toast.success("Pendaftaran ditolak");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Gagal menolak pendaftaran");
+        } finally { setReviewingRegistrationId(null); }
+    }
+
     useEffect(() => {
+        refreshRegistrations();
         Promise.all([
             api.get("/perangkat?exclude_ongoing=true"), 
-            api.get("/dashboard/teknisi-list"),
+            canAssign ? api.get("/dashboard/teknisi-list") : Promise.resolve({ data: [] }),
             api.get("/customer")
         ])
             .then(([perangkatRes, teknisiRes, customerRes]) => {
@@ -152,7 +208,13 @@ export default function TiketServisForm() {
             })
             .catch(() => toast.error("Gagal memuat data"))
             .finally(() => setFetching(false));
-    }, []);
+    }, [canAssign]);
+
+    useEffect(() => {
+        if (!registrationParam || fetching || !pendingRegistrations.length) return;
+        const row = pendingRegistrations.find(item => item.id === Number(registrationParam));
+        if (row?.status === "accepted" && selectedRegistrationId !== row.id) selectRegistration(row);
+    }, [registrationParam, fetching, pendingRegistrations]);
 
     useEffect(() => {
         if (!form.perangkat_id) {
@@ -254,6 +316,7 @@ export default function TiketServisForm() {
                 return exists ? prev : [newPerangkat, ...prev];
             });
             setForm(prev => ({ ...prev, perangkat_id: newPerangkat.id }));
+            setSelectedRegistrationId(null);
             setIsQuickAddOpen(false);
             setSearchQuery("");
             toast.success("Pelanggan & perangkat siap dan langsung terpilih!");
@@ -297,6 +360,7 @@ export default function TiketServisForm() {
             formData.append("perangkat_id", form.perangkat_id);
             if (form.teknisi_id) formData.append("teknisi_id", form.teknisi_id);
             formData.append("keluhan", form.keluhan);
+            if (selectedRegistrationId) formData.append("registration_id", selectedRegistrationId);
             if (form.kelengkapan) formData.append("kelengkapan", form.kelengkapan);
             formData.append("tipe_kunci", form.tipe_kunci);
             if (form.password_perangkat) formData.append("password_perangkat", form.password_perangkat);
@@ -349,8 +413,8 @@ export default function TiketServisForm() {
             }
 
             toast.success("Tiket servis berhasil dibuat!");
-            if (res.data?.id) {
-                navigate(`/tiket-servis/${res.data.id}`);
+            if (res.data?.data?.id) {
+                navigate(`/tiket-servis/${res.data.data.id}`);
             } else {
                 navigate("/tiket-servis");
             }
@@ -495,6 +559,7 @@ export default function TiketServisForm() {
             if (filteredPerangkats.length > 0) {
                 const topItem = filteredPerangkats[0];
                 setForm(prev => ({ ...prev, perangkat_id: topItem.id }));
+                setSelectedRegistrationId(null);
                 setSearchQuery("");
                 toast.success(`Unit ${topItem.merek} ${topItem.model} (${topItem.customer?.nama}) terpilih!`);
             } else if (searchQuery.trim().length >= 3) {
@@ -529,6 +594,29 @@ export default function TiketServisForm() {
                     <p className="text-xs sm:text-sm text-slate-500 mt-1">Mulai proses perbaikan baru</p>
                 </div>
             </div>
+
+            <section className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 sm:p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div><h2 className="text-sm font-bold text-slate-900">Pendaftaran dari QR</h2><p className="mt-0.5 text-xs text-slate-600">Untuk pelanggan baru yang mengisi data sendiri. Petugas tetap memeriksa unit dan membuat tiket.</p></div>
+                    <div className="flex gap-2"><button type="button" onClick={refreshRegistrations} className="btn-secondary text-xs">Muat ulang</button><button type="button" onClick={() => setRegistrationModalOpen(true)} className="btn-primary inline-flex items-center gap-1.5 text-xs"><QrCode size={15} /> Tampilkan QR</button></div>
+                </div>
+                {pendingRegistrations.length > 0 && <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    {pendingRegistrations.map(row => <div key={row.id} className={`rounded-xl border p-3 text-left ${selectedRegistrationId === row.id ? "border-blue-500 bg-white ring-2 ring-blue-100" : "border-slate-200 bg-white"}`}>
+                        <span className="block text-sm font-bold text-slate-900">{row.nama} · {row.merek} {row.model}</span>
+                        <span className="mt-1 block text-xs text-slate-600">{row.nomor_telepon} · {row.alamat}</span>
+                        <span className="mt-1 block text-xs text-slate-600">{row.jenis_perangkat}{row.serial_number ? ` · SN ${row.serial_number}` : ""}</span>
+                        <span className="mt-2 block text-xs text-slate-700">Keluhan: {row.keluhan}</span>
+                        {row.harapan && <span className="mt-1 block text-xs text-blue-700">Harapan: {row.harapan}</span>}
+                        {row.status === "pending" && <label className="mt-3 block text-xs font-semibold text-slate-700">Nomor seri (diisi petugas saat memeriksa unit)
+                            <input type="text" maxLength={100} autoComplete="off" value={serialByRegistration[row.id] || ""} onChange={(e) => setSerialByRegistration(prev => ({ ...prev, [row.id]: e.target.value }))} placeholder="Opsional jika belum terlihat" className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-blue-500" />
+                        </label>}
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <button type="button" disabled={reviewingRegistrationId === row.id} onClick={() => selectRegistration(row)} className="btn-primary text-xs disabled:opacity-60">{row.status === "pending" ? "Terima & gunakan" : "Gunakan untuk tiket"}</button>
+                            {row.status === "pending" && <button type="button" disabled={reviewingRegistrationId === row.id} onClick={() => rejectRegistration(row)} className="btn-secondary text-xs disabled:opacity-60">Tolak</button>}
+                        </div>
+                    </div>)}
+                </div>}
+            </section>
 
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-6">
                 <div>
@@ -598,7 +686,7 @@ export default function TiketServisForm() {
 
                                 <button
                                     type="button"
-                                    onClick={() => setForm({ ...form, perangkat_id: "" })}
+                                    onClick={() => { setForm({ ...form, perangkat_id: "" }); setSelectedRegistrationId(null); }}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition-all shadow-2xs self-end sm:self-center shrink-0 cursor-pointer"
                                 >
                                     <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
@@ -792,6 +880,7 @@ export default function TiketServisForm() {
                                                 key={p.id}
                                                 onClick={() => {
                                                     setForm({ ...form, perangkat_id: p.id });
+                                                    setSelectedRegistrationId(null);
                                                     setSearchQuery("");
                                                 }}
                                                 className={`group p-3 bg-white hover:bg-blue-50/60 border rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 shadow-2xs ${
@@ -951,7 +1040,7 @@ export default function TiketServisForm() {
                     )}
                 </div>
 
-                <div>
+                {canAssign && <div>
                     <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5 text-slate-400" />
                         Teknisi Penanggung Jawab
@@ -970,7 +1059,7 @@ export default function TiketServisForm() {
                             </option>
                         ))}
                     </CustomSelect>
-                </div>
+                </div>}
 
                 <div>
                     <div className="flex justify-between items-end mb-2">
@@ -1360,6 +1449,8 @@ export default function TiketServisForm() {
                 onChange={setDefectMap}
                 title="Tandai Cacat Fisik Perangkat (2D Defect Map)"
             />
+
+            <CustomerRegistrationInviteModal isOpen={registrationModalOpen} onClose={() => setRegistrationModalOpen(false)} onSubmitted={refreshRegistrations} />
 
             {/* Quick Registration Modal: Pelanggan & Perangkat Baru */}
             {isQuickAddOpen && (

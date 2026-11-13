@@ -8,6 +8,7 @@
         "start": "node src/app.js",
         "seed": "node seed.js",
         "seed:append": "node scripts/append_realistic_dummy.js",
+        "seed:rbac": "node scripts/seed-rbac.js",
         "db:normalize": "node scripts/normalize_database.js",
         "db:push": "npx prisma db push",
         "db:generate": "npx prisma generate",

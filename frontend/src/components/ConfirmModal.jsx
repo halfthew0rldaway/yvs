@@ -58,7 +58,7 @@ export default function ConfirmModal({
 
     return (
         <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
             onClick={() => !loading && onCancel?.()}
         >
             <div 

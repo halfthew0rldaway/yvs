@@ -305,7 +305,8 @@ Apabila ada kendala dalam pengambilan, mohon konfirmasikan kepada kami. Terima k
 export default function TiketServisDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { isAdmin, isTeknisi, user } = useAuth();
+    const { user, hasPermission } = useAuth();
+    const canAssign = hasPermission("tickets.assign");
     const [tiket, setTiket] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedStatus, setSelectedStatus] = useState("");
@@ -515,10 +516,10 @@ export default function TiketServisDetail() {
     useEffect(() => {
         fetchTiket();
         api.get("/sparepart").then((res) => setSpareparts(res.data)).catch(() => { });
-        if (isAdmin) {
+        if (canAssign) {
             api.get("/dashboard/teknisi-list").then((res) => setTeknisiList(res.data || [])).catch(() => { });
         }
-    }, [id, isAdmin]);
+    }, [id, canAssign]);
 
     async function handleAssignTeknisi(newTeknisiId) {
         try {
@@ -613,7 +614,7 @@ export default function TiketServisDetail() {
                 payload.target_selesai_at = target.toISOString();
             }
 
-            if (catatanAdmin && isAdmin) {
+            if (catatanAdmin && hasPermission("tickets.approval")) {
                 payload.catatan_admin = catatanAdmin;
             }
 
@@ -640,7 +641,7 @@ export default function TiketServisDetail() {
         }
 
         // Intercept jika transisi ke disetujui atau dalam_perbaikan dan belum di-ACC pelanggan (khusus Admin)
-        if ((targetStatus === "disetujui" || targetStatus === "dalam_perbaikan") && !tiket.disetujui_at && isAdmin) {
+        if ((targetStatus === "disetujui" || targetStatus === "dalam_perbaikan") && !tiket.disetujui_at && hasPermission("tickets.approval")) {
             handleOpenAccModal(targetStatus);
             return;
         }
@@ -727,7 +728,7 @@ export default function TiketServisDetail() {
                 kategori_perbaikan: kategoriPerbaikan,
                 durasi_garansi: durasiGaransi
             };
-            if (catatanAdmin && isAdmin) {
+            if (catatanAdmin && hasPermission("tickets.approval")) {
                 payload.catatan_admin = catatanAdmin;
             }
             await api.put(`/tiket-servis/${id}`, payload);
@@ -742,11 +743,6 @@ export default function TiketServisDetail() {
     async function handleTakeOver() {
         if (!user) return;
         try {
-            await api.put(`/tiket-servis/${id}`, { 
-                teknisi_id: user.id,
-                status: "didiagnosis"
-            });
-            toast.success("Berhasil mengambil alih tiket! Status tiket kini: Didiagnosis");
             const payload = { 
                 teknisi_id: user.id
             };
@@ -956,7 +952,7 @@ export default function TiketServisDetail() {
                 durasi_garansi: durasiGaransi,
                 checklist_qc: finalQc
             };
-            if (catatanAdmin && isAdmin) {
+            if (catatanAdmin && hasPermission("tickets.approval")) {
                 payload.catatan_admin = catatanAdmin;
             }
 
@@ -1100,29 +1096,15 @@ export default function TiketServisDetail() {
     
     // Admin bisa mengubah semua status kapan saja.
     // Teknisi hanya bisa mengubah status JIKA tiket tersebut sudah di-assign kepadanya atau belum di-assign.
-    const isAssignedToMe = isTeknisi && (
+    const isAssignedToMe = (
         Number(tiket.teknisi?.id) === Number(user?.id) || 
         Number(tiket.teknisi_id) === Number(user?.id) ||
         !tiket.teknisi_id
     );
-    const canUpdateStatus = isAdmin || isAssignedToMe;
-
-    // Hak Akses Staging Teknisi:
-    // 1. Diterima -> Didiagnosis (via Ambil Alih)
-    // 2. Didiagnosis -> Menunggu Persetujuan (selesaikan diagnosa & teruskan penawaran ke admin)
-    // 3. Disetujui -> Dalam Perbaikan (teknisi mulai eksekusi setelah di-ACC)
-    // 4. Dalam Perbaikan -> Selesai (teknisi verifikasi QC & selesaikan perbaikan)
-    let filteredTransitions = allowedTransitions;
-    if (isTeknisi && !isAdmin) {
-        const teknisiAllowedTransitions = {
-            diterima: ["didiagnosis"],
-            didiagnosis: ["menunggu_persetujuan"],
-            disetujui: ["dalam_perbaikan"],
-            dalam_perbaikan: ["selesai"],
-        };
-        const allowedCurrent = teknisiAllowedTransitions[tiket.status] || [];
-        filteredTransitions = allowedTransitions.filter(s => allowedCurrent.includes(s));
-    }
+    const canActOnTicket = hasPermission("tickets.view_all") || isAssignedToMe;
+    const stagePermission = { didiagnosis: "tickets.diagnosis", menunggu_persetujuan: "tickets.diagnosis", disetujui: "tickets.approval", dalam_perbaikan: "tickets.repair", selesai: "tickets.qc", diambil: "tickets.handover", dibatalkan: "tickets.cancel" };
+    const filteredTransitions = allowedTransitions.filter(status => canActOnTicket && hasPermission(stagePermission[status]));
+    const canUpdateStatus = filteredTransitions.length > 0;
 
     const activeLoan = tiket.peminjaman_loaner?.find(p => p.status === "aktif");
 
@@ -1174,7 +1156,7 @@ export default function TiketServisDetail() {
                     </button>
 
                     {/* Komunikasi Pelanggan */}
-                    {isAdmin && (
+                    {hasPermission("crm.view") && (
                         <button
                             type="button"
                             onClick={() => setIsSopWaModalOpen(true)}
@@ -1190,7 +1172,7 @@ export default function TiketServisDetail() {
                     <div className="hidden sm:block h-6 w-px bg-slate-200 shrink-0 mx-0.5" />
 
                     {/* Aksi Destruktif (Batalkan Tiket) */}
-                    {isAdmin && ["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui"].includes(tiket.status) && (
+                    {canActOnTicket && hasPermission("tickets.cancel") && ["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui"].includes(tiket.status) && (
                         <button
                             type="button"
                             onClick={() => setIsCancelModalOpen(true)}
@@ -1204,7 +1186,7 @@ export default function TiketServisDetail() {
                     )}
 
                     {/* Stage Action: Klaim & Ambil Alih Tiket (Unassigned Active Ticket) */}
-                    {isTeknisi && !tiket.teknisi && !["selesai", "diambil", "dibatalkan"].includes(tiket.status) && (
+                    {hasPermission("tickets.claim") && !tiket.teknisi && !["selesai", "diambil", "dibatalkan"].includes(tiket.status) && (
                         <button
                             type="button"
                             onClick={() => setIsTakeOverModalOpen(true)}
@@ -1217,7 +1199,7 @@ export default function TiketServisDetail() {
                     )}
 
                     {/* Stage Action: Didiagnosis -> Penawaran */}
-                    {tiket.status === "didiagnosis" && (isAdmin || isAssignedToMe) && (
+                    {tiket.status === "didiagnosis" && canActOnTicket && hasPermission("tickets.diagnosis") && (
                         tiket.diagnosis ? (
                             <button
                                 type="button"
@@ -1241,7 +1223,7 @@ export default function TiketServisDetail() {
                     )}
 
                     {/* Stage Info: Menunggu Persetujuan (Teknisi) */}
-                    {tiket.status === "menunggu_persetujuan" && isTeknisi && (
+                    {tiket.status === "menunggu_persetujuan" && hasPermission("tickets.diagnosis") && (
                         <div className="chip px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-amber-50 text-amber-800 border-amber-200 gap-1.5 shrink-0">
                             <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 shrink-0" />
                             <span>Menunggu ACC Pelanggan</span>
@@ -1249,7 +1231,7 @@ export default function TiketServisDetail() {
                     )}
 
                     {/* Stage Action: Menunggu Persetujuan (Admin ACC) */}
-                    {tiket.status === "menunggu_persetujuan" && isAdmin && (
+                    {tiket.status === "menunggu_persetujuan" && canActOnTicket && hasPermission("tickets.approval") && (
                         <button
                             type="button"
                             onClick={() => handleOpenAccModal("disetujui")}
@@ -1262,7 +1244,7 @@ export default function TiketServisDetail() {
                     )}
 
                     {/* Stage Action: Disetujui (Mulai Perbaikan) */}
-                    {tiket.status === "disetujui" && (isAdmin || isAssignedToMe) && (
+                    {tiket.status === "disetujui" && canActOnTicket && hasPermission("tickets.repair") && (
                         <button
                             type="button"
                             onClick={() => handleOpenStatusModal("dalam_perbaikan")}
@@ -1275,7 +1257,7 @@ export default function TiketServisDetail() {
                     )}
 
                     {/* Stage Action: Dalam Perbaikan (Selesaikan / QC) */}
-                    {tiket.status === "dalam_perbaikan" && (isAdmin || isAssignedToMe) && (
+                    {tiket.status === "dalam_perbaikan" && canActOnTicket && hasPermission("tickets.qc") && (
                         <button
                             type="button"
                             onClick={() => handleOpenStatusModal("selesai")}
@@ -1305,7 +1287,7 @@ export default function TiketServisDetail() {
                                     <span>1x Pernah Revisi ACC</span>
                                 </div>
                             ) : (
-                                isAdmin && (
+                                hasPermission("tickets.approval") && (
                                     <button
                                         type="button"
                                         onClick={() => setIsRevisiAccModalOpen(true)}
@@ -1328,8 +1310,8 @@ export default function TiketServisDetail() {
             {/* Feature 7: SLA Express Queue & Countdown Alert */}
             <SlaCountdownCard 
                 tiket={tiket} 
-                onAccClick={isAdmin ? () => handleOpenAccModal("disetujui") : undefined}
-                onEditSla={isAdmin && ["disetujui", "dalam_perbaikan"].includes(tiket?.status) ? () => handleOpenAccModal(tiket?.status) : undefined}
+                onAccClick={hasPermission("tickets.approval") ? () => handleOpenAccModal("disetujui") : undefined}
+                onEditSla={hasPermission("tickets.approval") && ["disetujui", "dalam_perbaikan"].includes(tiket?.status) ? () => handleOpenAccModal(tiket?.status) : undefined}
             />
 
             {/* Safety Alert: Unit Pinjaman Cadangan Belum Dikembalikan */}
@@ -1519,7 +1501,7 @@ export default function TiketServisDetail() {
                                                 <User className="w-3 h-3" />
                                                 <span>Profil</span>
                                             </button>
-                                            {isAdmin && (
+                                            {hasPermission("customers.manage") && (
                                                 <Link
                                                     to={`/customer/edit/${tiket.perangkat.customer.id}?returnUrl=/tiket-servis/${id}`}
                                                     className="mini-btn text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200"
@@ -1551,7 +1533,7 @@ export default function TiketServisDetail() {
                                             variant="icon-only" 
                                             size="normal" 
                                             showGuideButton={true}
-                                            allowManage={isAdmin}
+                                            allowManage={hasPermission("customers.manage")}
                                             onCustomerUpdated={(updated) => {
                                                 setTiket(prev => ({
                                                     ...prev,
@@ -1619,7 +1601,7 @@ export default function TiketServisDetail() {
                                                 <MonitorSmartphone className="w-3 h-3" />
                                                 <span>Detail Unit</span>
                                             </button>
-                                            {isAdmin && (
+                                            {hasPermission("devices.manage") && (
                                                 <Link
                                                     to={`/perangkat/edit/${tiket.perangkat.id}?returnUrl=/tiket-servis/${id}`}
                                                     className="mini-btn text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200"
@@ -1676,7 +1658,7 @@ export default function TiketServisDetail() {
                                         onClick={() => setIsDefectModalOpen(true)}
                                         className="mini-btn text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 self-start xs:self-auto cursor-pointer"
                                     >
-                                        {(isAdmin || isAssignedToMe) && !isLocked ? "Buka / Edit Peta" : "Lihat Blueprint"}
+                                        {(hasPermission("tickets.intake") || (hasPermission("tickets.repair") && isAssignedToMe)) && !isLocked ? "Buka / Edit Peta" : "Lihat Blueprint"}
                                     </button>
                                 </div>
                             </div>
@@ -1697,7 +1679,7 @@ export default function TiketServisDetail() {
                                         <span className="text-2xs text-slate-400 font-medium flex items-center gap-1 shrink-0">
                                             <Lock className="w-3 h-3 text-slate-400" /> Terkunci
                                         </span>
-                                    ) : isAdmin && !isEditingVault && (
+                                    ) : hasPermission("tickets.intake") && !isEditingVault && (
                                         <button 
                                             onClick={() => {
                                                 setVaultTipeKunci(tiket.tipe_kunci || "Tidak Ada");
@@ -1839,7 +1821,7 @@ export default function TiketServisDetail() {
                                 ) : (
                                     <div className="flex items-center justify-between gap-2 p-2.5 bg-slate-50 rounded-lg sm:rounded-xl border border-slate-100 text-2xs xs:text-xs">
                                         <span className="text-slate-500">Pelanggan belum meminjam unit cadangan.</span>
-                                        {isAdmin && (
+                                        {hasPermission("loaners.manage") && (
                                             <Link
                                                 to={`/loaner?action=new&tiket_id=${tiket.id}`}
                                                 className="mini-btn text-blue-600 hover:text-blue-800 border border-transparent hover:border-blue-200 shrink-0"
@@ -1908,7 +1890,7 @@ export default function TiketServisDetail() {
                             <Wrench className="meta-icon text-slate-400" />
                             <div className="flex-1 min-w-0">
                                 <p className="meta-label mb-1">Teknisi Penanggung Jawab</p>
-                                {isAdmin ? (
+                                {canAssign ? (
                                     <div className="space-y-1.5">
                                         <select
                                             value={tiket.teknisi_id || ""}
@@ -1943,6 +1925,7 @@ export default function TiketServisDetail() {
                             <div className="flex-1 min-w-0">
                                 <p className="meta-label mb-1">Keluhan Pelanggan</p>
                                 <p className="text-slate-800 text-2xs xs:text-xs sm:text-sm bg-slate-50 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-100 mt-1 whitespace-pre-line break-words">{tiket.keluhan}</p>
+                                {tiket.harapan_pelanggan && <p className="mt-2 text-2xs xs:text-xs sm:text-sm text-blue-800 bg-blue-50 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-blue-100 whitespace-pre-line break-words"><span className="font-semibold">Harapan pelanggan: </span>{tiket.harapan_pelanggan}</p>}
                             </div>
                         </div>
                         {tiket.foto_kondisi && JSON.parse(tiket.foto_kondisi).length > 0 && (
@@ -2111,7 +2094,7 @@ export default function TiketServisDetail() {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            {(isAdmin || isAssignedToMe) && !["selesai", "diambil", "dibatalkan"].includes(tiket.status) && (
+                            {canActOnTicket && hasPermission("tickets.diagnosis") && !["selesai", "diambil", "dibatalkan"].includes(tiket.status) && (
                                 <Link
                                     to={`/tiket-servis/${id}/diagnosis`}
                                     className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-2xs font-bold transition-colors cursor-pointer"
@@ -2184,7 +2167,7 @@ export default function TiketServisDetail() {
             )}
 
             {/* Diagnosis Form Action */}
-            {(isAdmin || (isTeknisi && isAssignedToMe)) && ["diterima", "didiagnosis"].includes(tiket.status) && !tiket.diagnosis && (
+            {canActOnTicket && hasPermission("tickets.diagnosis") && ["diterima", "didiagnosis"].includes(tiket.status) && !tiket.diagnosis && (
                 <Link
                     to={`/tiket-servis/${id}/diagnosis`}
                     className="flex flex-col items-center justify-center text-center p-5 sm:p-8 bg-amber-50/50 border-2 border-dashed border-amber-200 rounded-xl sm:rounded-2xl text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all group mb-5 sm:mb-6"
@@ -2235,7 +2218,7 @@ export default function TiketServisDetail() {
                                                         >
                                                             <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                         </Link>
-                                                        {(isTeknisi || isAdmin) && tiket.status === "dalam_perbaikan" && (
+                                                        {hasPermission("inventory.use") && canActOnTicket && tiket.status === "dalam_perbaikan" && (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleRemoveSparepartUsage(ps.id)}
@@ -2304,7 +2287,7 @@ export default function TiketServisDetail() {
                                 <p className="text-2xs text-slate-500 mb-3 break-words">
                                     SOP Transparansi Toko: Seluruh komponen lama yang diganti wajib ditunjukkan dan diserahkan kembali kepada pelanggan saat serah terima unit, kecuali jika pelanggan menitipkannya untuk dibuang.
                                 </p>
-                                {(isAdmin || isAssignedToMe) && ["dalam_perbaikan", "selesai"].includes(tiket.status) ? (
+                                {(hasPermission("tickets.repair") && canActOnTicket) && ["dalam_perbaikan", "selesai"].includes(tiket.status) ? (
                                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                         <select
                                             value={partBekasStatus}
@@ -2343,7 +2326,7 @@ export default function TiketServisDetail() {
                         )}
 
                         {/* Form tambah sparepart */}
-                        {(isTeknisi || isAdmin) && tiket.status === "dalam_perbaikan" && (
+                        {hasPermission("inventory.use") && canActOnTicket && tiket.status === "dalam_perbaikan" && (
                             <div className="bg-indigo-50/30 p-3 sm:p-5 rounded-lg sm:rounded-xl border border-indigo-100 shrink-0 mt-auto min-w-0">
                                 <h3 className="text-2xs xs:text-xs sm:text-sm font-bold text-indigo-900 mb-2.5 sm:mb-3">Tambah Penggunaan Suku Cadang</h3>
                                 <form onSubmit={handleUseSparepart} className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
@@ -2482,7 +2465,7 @@ export default function TiketServisDetail() {
                         </button>
                     </div>
 
-                    {isAdmin && (selectedStatus === "dalam_perbaikan" || selectedStatus === "disetujui") && (
+                    {hasPermission("tickets.approval") && (selectedStatus === "dalam_perbaikan" || selectedStatus === "disetujui") && (
                         <div className="mt-3.5 sm:mt-4 pt-3.5 sm:pt-4 border-t border-blue-100">
                             <label className="block text-2xs xs:text-xs sm:text-sm font-semibold text-blue-900 mb-1.5 sm:mb-2">
                                 Catatan Khusus untuk Teknisi (Opsional)
@@ -2500,7 +2483,7 @@ export default function TiketServisDetail() {
             )}
 
             {/* Revisi ACC Banner Action for Admin */}
-            {isAdmin && !tiket.is_revisi_acc && tiket.status === "selesai" && (
+            {hasPermission("tickets.approval") && !tiket.is_revisi_acc && tiket.status === "selesai" && (
                 <div className="bg-rose-50/70 border border-rose-200 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 shadow-sm mb-5 sm:mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 min-w-0">
                     <div className="flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                         <div className="p-2 sm:p-2.5 bg-rose-100 text-rose-700 border border-rose-200 rounded-lg sm:rounded-xl shrink-0">
@@ -2528,7 +2511,7 @@ export default function TiketServisDetail() {
 
             {/* 4. Contextual Actions & Alerts */}
             {/* Unassigned Warning for Admin */}
-            {isAdmin && !tiket.teknisi && tiket.status !== "selesai" && tiket.status !== "diambil" && tiket.status !== "dibatalkan" && (
+            {hasPermission("tickets.assign") && !tiket.teknisi && tiket.status !== "selesai" && tiket.status !== "diambil" && tiket.status !== "dibatalkan" && (
                 <div className="bg-amber-50/70 border border-amber-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-xs mb-4 sm:mb-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 min-w-0">
                     <div className="flex items-start gap-2 min-w-0">
                         <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
@@ -2558,7 +2541,7 @@ export default function TiketServisDetail() {
             )}
 
             {/* Reminder Section */}
-            {isAdmin && tiket.status === "selesai" && getReminderDue(tiket) && (
+            {hasPermission("crm.view") && tiket.status === "selesai" && getReminderDue(tiket) && (
                 <div className="bg-red-50/50 border border-red-200 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 md:p-6 shadow-sm mb-5 sm:mb-6 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
                         <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
@@ -2583,7 +2566,7 @@ export default function TiketServisDetail() {
             )}
 
             {/* Feature 2.2: CRM & Notifikasi Pengingat Garansi (H-3 Expiry Follow-up) - Khusus Admin / CS */}
-            {isAdmin && tiket.status === "diambil" && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
+            {hasPermission("crm.view") && tiket.status === "diambil" && tiket.warranty_status?.status === "aktif" && tiket.warranty_status?.sisaHari <= 7 && tiket.warranty_status?.sisaHari >= 0 && (
                 <div className="bg-amber-50 border-2 border-amber-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 md:p-6 shadow-sm mb-5 sm:mb-6 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-3 border-b border-amber-200">
                         <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
@@ -2710,7 +2693,7 @@ export default function TiketServisDetail() {
                     </div>
 
                     {/* Konfigurasi Garansi (Khusus Admin) */}
-                    {isAdmin && (
+                    {hasPermission("tickets.handover") && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5 pt-3 border-t border-slate-200/50">
                             <div className="min-w-0">
                                 <label className="block text-3xs xs:text-2xs sm:text-xs font-semibold text-slate-800 uppercase tracking-wide sm:tracking-wider mb-1.5">
@@ -2744,7 +2727,7 @@ export default function TiketServisDetail() {
 
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 pt-3 border-t border-slate-200/50">
                         <div className="flex flex-col xs:flex-row flex-wrap items-stretch xs:items-center gap-2 w-full sm:w-auto">
-                            {isAdmin && (
+                            {hasPermission("tickets.handover") && (
                                 <button
                                     onClick={handleSaveWarrantyConfig}
                                     disabled={isSavingWarrantyConfig}
@@ -2766,7 +2749,7 @@ export default function TiketServisDetail() {
                         </div>
 
                         <div className="flex flex-col xs:flex-row flex-wrap items-stretch xs:items-center gap-2 w-full sm:w-auto justify-end">
-                            {isAdmin && (
+                            {hasPermission("crm.view") && (
                                 <>
                                     <a
                                         href={generateWarrantyWaLink(tiket)}
@@ -2870,7 +2853,7 @@ export default function TiketServisDetail() {
                                     <Lock className="w-3 h-3 text-slate-400 shrink-0" />
                                     <span>Terkunci</span>
                                 </span>
-                            ) : isAdmin && !isEditingSopPermissions && (
+                            ) : hasPermission("tickets.intake") && !isEditingSopPermissions && (
                                 <button
                                     type="button"
                                     onClick={(e) => {
@@ -3263,7 +3246,7 @@ export default function TiketServisDetail() {
                         </div>
 
                         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end md:justify-start shrink-0">
-                            {tiket.diagnosis && (isAdmin || isAssignedToMe) && (
+                            {tiket.diagnosis && hasPermission("wiki.manage") && (
                                 <button
                                     type="button"
                                     onClick={(e) => {
@@ -3388,7 +3371,7 @@ export default function TiketServisDetail() {
                                     <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 shrink-0" />
                                     <span>Terkunci</span>
                                 </span>
-                            ) : (isAdmin || isAssignedToMe) && (
+                            ) : hasPermission("tickets.qc") && canActOnTicket && (
                                 <button
                                     type="button"
                                     onClick={(e) => {
@@ -3752,7 +3735,7 @@ export default function TiketServisDetail() {
                 onClose={() => setIsDefectModalOpen(false)}
                 value={tiket?.defect_map}
                 onChange={handleSaveDefectMap}
-                readOnly={!(isAdmin || isAssignedToMe) || isLocked}
+                readOnly={!(hasPermission("tickets.intake") || (hasPermission("tickets.repair") && isAssignedToMe)) || isLocked}
                 title={`Peta Cacat Fisik: ${tiket?.perangkat?.merek || ""} ${tiket?.perangkat?.model || ""}`}
             />
 

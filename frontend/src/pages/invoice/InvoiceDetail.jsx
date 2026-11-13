@@ -12,6 +12,7 @@ import AdminSignatureSelectorModal, { DEFAULT_WORKSHOP_SIGNATURE } from "../../c
 import WarrantyCertificateModal from "../../components/WarrantyCertificateModal";
 import { DocumentPrintService } from "../../services/documentPrintService";
 import { isNativePlatform } from "../../services/nativeServices";
+import { useAuth } from "../../hooks/useAuth";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
@@ -104,6 +105,8 @@ function AlignedSignatureRow({
 }
 
 export default function InvoiceDetail() {
+    const { hasPermission } = useAuth();
+    const canManageInvoice = hasPermission("invoices.manage");
     const { id } = useParams();
     const [searchParams] = useSearchParams();
     const isAutoPrint = searchParams.get("print") === "true";
@@ -245,11 +248,11 @@ export default function InvoiceDetail() {
                     <DigitalSignatureToggleBar
                         isDigital={isDigitalSignature}
                         onToggle={toggleDigitalSignature}
-                        onOpenSelector={() => setIsAdminSignatureModalOpen(true)}
+                        onOpenSelector={canManageInvoice ? () => setIsAdminSignatureModalOpen(true) : undefined}
                         adminName={invoice?.ttd_admin_nama}
                     />
 
-                    <button
+                    {canManageInvoice && <button
                         type="button"
                         onClick={() => setIsSignatureModalOpen(true)}
                         className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs select-none ${
@@ -270,7 +273,7 @@ export default function InvoiceDetail() {
                                 <span>+ TTD Pelanggan</span>
                             </>
                         )}
-                    </button>
+                    </button>}
 
                     <button
                         type="button"
@@ -502,7 +505,7 @@ export default function InvoiceDetail() {
 
             {/* In-Store Customer Digital Signature Pad Modal */}
             <DigitalSignaturePadModal
-                isOpen={isSignatureModalOpen}
+                isOpen={isSignatureModalOpen && canManageInvoice}
                 onClose={() => setIsSignatureModalOpen(false)}
                 onSave={handleSaveCustomerSignature}
                 defaultName={customer.nama}
@@ -515,7 +518,7 @@ export default function InvoiceDetail() {
 
             {/* Modal Pemilihan Profil Tanda Tangan Staf / Admin */}
             <AdminSignatureSelectorModal
-                isOpen={isAdminSignatureModalOpen}
+                isOpen={isAdminSignatureModalOpen && canManageInvoice}
                 onClose={() => setIsAdminSignatureModalOpen(false)}
                 onSelect={handleSelectAdminSignature}
                 currentSignature={invoice?.ttd_admin}

@@ -87,8 +87,9 @@ async function syncOwnerUsers() {
                         email: owner.email,
                         nama: existing.nama || owner.nama,
                         role: "pimpinan", // pastikan role pimpinan
-                        // Jika ada override khusus via env, update passwordnya
-                        ...(process.env.STAGING_OWNER_ARNI_PASSWORD || process.env.STAGING_OWNER_VIVERO_PASSWORD || process.env.STAGING_OWNER_PASSWORD
+                        // Preserve existing passwords on routine deploys. Rotate only
+                        // when an operator explicitly requests it.
+                        ...(process.env.ROTATE_STAGING_OWNER_PASSWORDS === "true"
                             ? { password: hashedPassword }
                             : {})
                     }

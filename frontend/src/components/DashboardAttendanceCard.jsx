@@ -16,7 +16,7 @@ import {
 
 export default function DashboardAttendanceCard() {
     const { user } = useAuth();
-    const isPimpinan = user?.role === "pimpinan";
+    const isExempt = user?.permissions?.includes("attendance.exempt");
     const [statusData, setStatusData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -42,7 +42,7 @@ export default function DashboardAttendanceCard() {
     }, []);
 
     // Role Manajerial / Owner (Pimpinan) tidak wajib absen operasional
-    if (isPimpinan) {
+    if (isExempt) {
         return (
             <div className="bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50 border border-blue-200/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full min-w-0">
                 <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">

@@ -3,11 +3,13 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
+import { offlineDataStore } from "../../services/offlineDataStore";
+import useConnectivity from "../../hooks/useConnectivity";
 import { ArrowLeft, Plus, Image as ImageIcon, X, History, ClipboardList } from "lucide-react";
 import { compressImage } from "../../utils/mediaUtils";
 
 export default function LogPerbaikanList() {
-    const { user, isAdmin, isTeknisi } = useAuth();
+    const { user, hasPermission } = useAuth();
     const { id } = useParams();
     const navigate = useNavigate();
     const [logs, setLogs] = useState([]);
@@ -17,7 +19,38 @@ export default function LogPerbaikanList() {
     const [fotoName, setFotoName] = useState("");
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [draftLoaded, setDraftLoaded] = useState(false);
+    const [draftSavedAt, setDraftSavedAt] = useState(null);
+    const { isOnline } = useConnectivity();
     const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        if (!user?.id || !id) return;
+        let active = true;
+        setDraftLoaded(false);
+        offlineDataStore.getDraft(user.id, "repair-note", id).then(draft => {
+            if (!active) return;
+            setCatatan(draft?.text || "");
+            setDraftSavedAt(draft?.updated_at || null);
+            setDraftLoaded(true);
+        });
+        return () => { active = false; };
+    }, [user?.id, id]);
+
+    useEffect(() => {
+        if (!draftLoaded || !catatan.trim() || !user?.id) return;
+        const timer = setTimeout(async () => {
+            if (await offlineDataStore.setDraft(user.id, "repair-note", id, catatan)) setDraftSavedAt(Date.now());
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [catatan, draftLoaded, user?.id, id]);
+
+    async function saveDraft() {
+        if (!catatan.trim()) return toast.error("Tulis catatan sebelum menyimpan draft");
+        const saved = await offlineDataStore.setDraft(user.id, "repair-note", id, catatan);
+        if (saved) { setDraftSavedAt(Date.now()); toast.success("Draft tersimpan di perangkat ini"); }
+        else toast.error("Gagal menyimpan draft di perangkat");
+    }
 
     useEffect(() => {
         fetchLogs();
@@ -75,6 +108,10 @@ export default function LogPerbaikanList() {
 
     async function handleSubmit(e) {
         e.preventDefault();
+        if (!isOnline || (typeof navigator !== "undefined" && navigator.onLine === false)) {
+            await saveDraft();
+            return;
+        }
         setSubmitting(true);
 
         try {
@@ -83,10 +120,17 @@ export default function LogPerbaikanList() {
                 catatan,
                 foto_url: fotoUrl || undefined
             });
+            await offlineDataStore.deleteDraft(user.id, "repair-note", id);
             setCatatan("");
+            setDraftSavedAt(null);
             removePhoto();
             fetchLogs();
         } catch (err) {
+            if (!err.response) await saveDraft();
+            if (err.response?.status === 401 || err.response?.status === 403) {
+                await offlineDataStore.deleteDraft(user.id, "repair-note", id);
+                setDraftSavedAt(null);
+            }
             toast.error(err.response?.data?.message || "Gagal menambahkan log");
         } finally {
             setSubmitting(false);
@@ -112,7 +156,7 @@ export default function LogPerbaikanList() {
             </div>
 
             {/* Form tambah log */}
-            {isTeknisi && tiket?.teknisi_id === user?.id && (
+            {hasPermission("tickets.repair") && !["selesai", "diambil", "dibatalkan"].includes(tiket?.status) && (hasPermission("tickets.view_all") || tiket?.teknisi_id === user?.id) && (
                 <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative overflow-hidden mb-6">
                     <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
                     <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
@@ -168,7 +212,11 @@ export default function LogPerbaikanList() {
                     </div>
                 </div>
 
-                <div className="mt-6 flex justify-end">
+                <div className="mt-4 text-xs text-slate-500">
+                    {draftSavedAt ? "Draft catatan tersimpan di perangkat ini. Kirim saat terhubung; foto perlu dipilih kembali jika aplikasi ditutup." : "Catatan dapat disimpan sebagai draft lokal selama 7 hari. Draft dihapus saat keluar akun atau akses dicabut."}
+                </div>
+                <div className="mt-6 flex justify-end gap-2">
+                    <button type="button" onClick={saveDraft} disabled={!catatan.trim() || submitting} className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold disabled:opacity-50">Simpan Draft</button>
                     <button
                         type="submit"
                         disabled={submitting}
@@ -182,7 +230,7 @@ export default function LogPerbaikanList() {
                         ) : (
                             <>
                                 <Plus className="w-4 h-4" />
-                                <span>Simpan Catatan</span>
+                                <span>{isOnline ? "Kirim Catatan" : "Simpan Draft"}</span>
                             </>
                         )}
                     </button>

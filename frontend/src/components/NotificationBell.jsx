@@ -6,7 +6,7 @@ import { Bell, CheckCheck, Send, MessageSquare, AlertTriangle, Info, Wrench, X }
 import toast from "react-hot-toast";
 
 export default function NotificationBell() {
-    const { user, isAdmin } = useAuth();
+    const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -14,6 +14,8 @@ export default function NotificationBell() {
     const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
     const [memoTitle, setMemoTitle] = useState("");
     const [memoMessage, setMemoMessage] = useState("");
+    const [recipientRoles, setRecipientRoles] = useState([]);
+    const [recipientRole, setRecipientRole] = useState("");
     const [submittingMemo, setSubmittingMemo] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -39,10 +41,22 @@ export default function NotificationBell() {
         return () => clearInterval(interval);
     }, [fetchNotifications]);
 
+    useEffect(() => {
+        if (!isMemoModalOpen) return;
+        api.get("/notifications/recipient-roles").then(({ data }) => {
+            const available = (data || []).filter(role => !user?.roles?.some(own => own.slug === role.slug));
+            const choices = available.length ? available : (data || []);
+            setRecipientRoles(choices);
+            setRecipientRole(current => choices.some(role => role.slug === current) ? current : (choices[0]?.slug || ""));
+        }).catch(() => toast.error("Gagal memuat peran penerima"));
+    }, [isMemoModalOpen, user?.roles]);
+
     // Real-Time SSE: Langsung terima notifikasi baru atau pembaruan status baca tanpa menunggu polling
     useRealtimeEvent(["notification:new", "notification:updated"], (data, eventName) => {
         fetchNotifications();
-        if (eventName === "notification:new" && data?.judul) {
+        const visibleToMe = data && (data.user_id === user?.id ||
+            (!data.user_id && (!data.recipient_role || user?.roles?.some(role => role.slug === data.recipient_role))));
+        if (eventName === "notification:new" && data?.judul && visibleToMe) {
             toast.custom((t) => (
                 <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-sm w-full bg-white shadow-lg rounded-2xl pointer-events-auto flex ring-1 ring-black/5 p-4 border border-blue-100`}>
                     <div className="flex-1 w-0">
@@ -92,20 +106,20 @@ export default function NotificationBell() {
 
     const handleSendMemo = async (e) => {
         e.preventDefault();
-        if (!memoTitle.trim() || !memoMessage.trim()) {
-            toast.error("Judul dan pesan memo wajib diisi");
+        if (!memoTitle.trim() || !memoMessage.trim() || !recipientRole) {
+            toast.error("Pilih penerima, judul, dan pesan memo");
             return;
         }
 
         setSubmittingMemo(true);
         try {
             await api.post("/notifications/send", {
-                recipient_role: isAdmin ? "teknisi" : "admin",
+                recipient_role: recipientRole,
                 tipe: "memo",
                 judul: memoTitle.trim(),
                 pesan: memoMessage.trim()
             });
-            toast.success(isAdmin ? "Memo terkirim ke seluruh Teknisi" : "Memo terkirim ke Admin");
+            toast.success("Memo terkirim");
             setMemoTitle("");
             setMemoMessage("");
             setIsMemoModalOpen(false);
@@ -237,7 +251,7 @@ export default function NotificationBell() {
                                     <Send className="w-4 h-4" />
                                 </div>
                                 <h3 className="font-bold text-slate-900">
-                                    {isAdmin ? "Kirim Memo ke Teknisi" : "Kirim Memo ke Admin"}
+                                    Kirim Memo
                                 </h3>
                             </div>
                             <button
@@ -250,6 +264,12 @@ export default function NotificationBell() {
                         </div>
 
                         <form onSubmit={handleSendMemo} className="space-y-3.5">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">Peran penerima</label>
+                                <select value={recipientRole} onChange={(event) => setRecipientRole(event.target.value)} required className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:border-blue-500">
+                                    {recipientRoles.map(role => <option key={role.slug} value={role.slug}>{role.name}</option>)}
+                                </select>
+                            </div>
                             <div>
                                 <label className="block text-xs font-semibold text-slate-700 mb-1">Perihal / Judul Singkat</label>
                                 <input

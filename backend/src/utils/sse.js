@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { getAuthorization, hasPermission } = require("../services/authorization.service");
 
 // Active SSE client connections pool
 const clients = new Set();
@@ -7,8 +8,24 @@ const clients = new Set();
  * Express handler for Server-Sent Events (SSE)
  * Route: GET /api/realtime/events
  */
-function sseHandler(req, res) {
-    // Standard headers for SSE streaming
+async function sseHandler(req, res) {
+    const authHeader = req.headers.authorization;
+    const token = (authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null) || req.query.token;
+    let user;
+    let tokenExpiresAt;
+    try {
+        if (!token) return res.status(401).json({ message: "Token tidak ditemukan" });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        tokenExpiresAt = decoded.exp;
+        user = await getAuthorization(decoded.id);
+        if (!user) return res.status(401).json({ message: "User tidak ditemukan" });
+    } catch (error) {
+        if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError" || error.name === "NotBeforeError") {
+            return res.status(401).json({ message: "Token tidak valid" });
+        }
+        return res.status(503).json({ message: "Layanan otorisasi tidak tersedia" });
+    }
+
     res.writeHead(200, {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache, no-transform",
@@ -16,24 +33,12 @@ function sseHandler(req, res) {
         "X-Accel-Buffering": "no" // Prevents buffering in Nginx / Caddy reverse proxy
     });
 
-    // Optional user authentication via query param or Authorization header
-    let user = null;
-    const authHeader = req.headers.authorization;
-    const token = (authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null) || req.query.token;
-
-    if (token) {
-        try {
-            user = jwt.verify(token, process.env.JWT_SECRET);
-        } catch (_) {
-            // Token expired or invalid; still keep public stream connection open
-        }
-    }
-
     const clientId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const client = {
         id: clientId,
         res,
         user,
+        tokenExpiresAt,
         connectedAt: new Date()
     };
 
@@ -43,7 +48,7 @@ function sseHandler(req, res) {
     res.write(`event: connected\ndata: ${JSON.stringify({ 
         status: "connected", 
         clientId, 
-        userRole: user?.role || "guest",
+        userId: user.id,
         timestamp: new Date().toISOString() 
     })}\n\n`);
 
@@ -75,15 +80,30 @@ function sseHandler(req, res) {
  * @param {object} data - Payload data
  * @param {object} [filter] - Optional filter { role, userId }
  */
-function broadcast(event, data = {}, filter = null) {
-    const payload = `event: ${event}\ndata: ${JSON.stringify({ ...data, _ts: Date.now() })}\n\n`;
-
+async function broadcast(event, data = {}, filter = null) {
     for (const client of clients) {
         try {
+            if (client.tokenExpiresAt && Date.now() >= client.tokenExpiresAt * 1000) { clients.delete(client); client.res.end(); continue; }
+            const auth = await getAuthorization(client.user.id);
+            if (!auth) { clients.delete(client); client.res.end(); continue; }
             if (filter) {
-                if (filter.userId && client.user?.id !== filter.userId) continue;
-                if (filter.role && client.user?.role !== filter.role && client.user?.role !== "pimpinan") continue;
+                if (filter.userId && auth.id !== filter.userId) continue;
+                if (filter.role && !auth.roles.some(role => role.slug === filter.role)) continue;
             }
+            if (event.startsWith("tiket:") && !hasPermission(auth, "tickets.view")) continue;
+            if (event.startsWith("invoice:") && !hasPermission(auth, "invoices.view")) continue;
+            if (event.startsWith("loaner:") && !hasPermission(auth, "loaners.view")) continue;
+            if (event.startsWith("rma:") && !hasPermission(auth, "suppliers.view")) continue;
+            if (event === "dashboard:refresh" && !hasPermission(auth, "dashboard.view")) continue;
+            if (event === "notification:new") {
+                if (data.user_id && data.user_id !== auth.id) continue;
+                if (!data.user_id && data.recipient_role && !auth.roles.some(role => role.slug === data.recipient_role)) continue;
+            }
+            const safeData = event === "notification:new" ? data
+                : event === "notification:updated" ? {}
+                : event.startsWith("tiket:") || event.startsWith("invoice:") || event.startsWith("loaner:") || event.startsWith("rma:") ? {}
+                : data;
+            const payload = `event: ${event}\ndata: ${JSON.stringify({ ...safeData, _ts: Date.now() })}\n\n`;
             client.res.write(payload);
         } catch (_) {
             clients.delete(client);

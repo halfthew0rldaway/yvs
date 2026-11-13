@@ -1,6 +1,7 @@
 const prisma = require("../config/database");
 const { broadcast } = require("../utils/sse");
 const { relocateTicketMedia } = require("../services/mediaStorage");
+const { hasPermission } = require("../services/authorization.service");
 
 // Input hasil diagnosis
 async function create(req, res) {
@@ -17,7 +18,7 @@ async function create(req, res) {
             return res.status(400).json({ message: "Tiket harus dalam status diterima atau didiagnosis untuk melakukan diagnosis" });
         }
 
-        if (req.user.role === "teknisi") {
+        if (!hasPermission(req.authorization, "tickets.view_all")) {
             if (!tiket.teknisi_id) {
                 return res.status(400).json({ message: "Tiket harus ditugaskan ke teknisi terlebih dahulu sebelum diagnosis" });
             }
@@ -123,7 +124,7 @@ async function update(req, res) {
             return res.status(400).json({ message: "Diagnosis tidak dapat diubah karena tiket telah selesai atau dibatalkan." });
         }
 
-        if (req.user.role === "teknisi" && diagnosis.tiket.teknisi_id !== req.user.id) {
+        if (!hasPermission(req.authorization, "tickets.view_all") && diagnosis.tiket.teknisi_id !== req.user.id) {
             return res.status(403).json({ message: "Anda tidak berhak mengubah diagnosis pada tiket ini" });
         }
 

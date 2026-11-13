@@ -20,7 +20,8 @@ function formatRupiah(num) {
 export default function SparepartList() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { isAdmin } = useAuth();
+    const { hasPermission } = useAuth();
+        const isAdmin = hasPermission("inventory.manage");
     const [spareparts, setSpareparts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deleteTarget, setDeleteTarget] = useState(null);

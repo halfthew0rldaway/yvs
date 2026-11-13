@@ -1,5 +1,5 @@
 const express = require("express");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const {
     getDevices,
     getDeviceStats,
@@ -17,17 +17,17 @@ const router = express.Router();
 router.use(authenticate);
 
 // Devices pool routes
-router.get("/devices", getDevices);
-router.get("/devices/stats", getDeviceStats);
-router.post("/devices", authorize("admin"), createDevice);
-router.put("/devices/:id", authorize("admin"), updateDevice);
-router.delete("/devices/:id", authorize("admin"), deleteDevice);
+router.get("/devices", requirePermission("loaners.view"), getDevices);
+router.get("/devices/stats", requirePermission("loaners.view"), getDeviceStats);
+router.post("/devices", requirePermission("loaners.manage"), createDevice);
+router.put("/devices/:id", requirePermission("loaners.manage"), updateDevice);
+router.delete("/devices/:id", requirePermission("loaners.manage"), deleteDevice);
 
 // Records / loan activity routes
-router.get("/records", getRecords);
-router.get("/records/ticket/:tiketId", getRecordsByTicket);
-router.post("/records", authorize("admin", "frontman"), createRecord);
-router.put("/records/:id/return", authorize("admin", "frontman"), returnRecord);
+router.get("/records", requirePermission("loaners.view"), getRecords);
+router.get("/records/ticket/:tiketId", requirePermission("loaners.view"), getRecordsByTicket);
+router.post("/records", requirePermission("loaners.manage"), createRecord);
+router.put("/records/:id/return", requirePermission("loaners.manage"), returnRecord);
 
 module.exports = router;
 

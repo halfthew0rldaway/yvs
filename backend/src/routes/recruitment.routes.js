@@ -1,5 +1,5 @@
 const express = require("express");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const {
     getOverviewStats,
     getJobPostings,
@@ -19,7 +19,7 @@ const {
 const router = express.Router();
 
 router.use(authenticate);
-router.use(authorize("admin", "pimpinan")); // Restricted to Admin and Pimpinan
+router.use((req, res, next) => requirePermission(req.method === "GET" ? "recruitment.view" : "recruitment.manage")(req, res, next));
 
 // Overview stats
 router.get("/stats", getOverviewStats);

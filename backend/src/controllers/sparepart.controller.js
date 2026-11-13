@@ -1,6 +1,7 @@
 const prisma = require("../config/database");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 const { normalizeText, normalizeSparepartCategory, normalizePhone } = require("../utils/normalize");
+const { hasPermission } = require("../services/authorization.service");
 
 // Mengambil seluruh data sparepart
 async function getAll(req, res) {
@@ -43,7 +44,7 @@ async function getAll(req, res) {
         }
 
         const include = { brand: true, supplier: true };
-        const isPrivileged = req.user?.role === "admin" || req.user?.role === "pimpinan";
+        const isPrivileged = req.authorization?.is_super_admin || req.authorization?.permissions?.includes("inventory.manage");
         const hideHpp = !isPrivileged;
 
         if (!isPaginated) {
@@ -493,7 +494,7 @@ async function use(req, res) {
             return res.status(400).json({ message: "Penambahan suku cadang hanya dapat dilakukan saat tiket dalam status 'Dalam Perbaikan'" });
         }
 
-        if (req.user.role === "teknisi" && tiket.teknisi_id !== req.user.id) {
+        if (!hasPermission(req.authorization, "tickets.view_all") && tiket.teknisi_id !== req.user.id) {
             return res.status(403).json({ message: "Akses ditolak: Ini bukan tiket Anda." });
         }
 
@@ -572,7 +573,7 @@ async function removeUsage(req, res) {
             return res.status(400).json({ message: "Penggunaan suku cadang hanya dapat dibatalkan saat tiket dalam status 'Dalam Perbaikan'" });
         }
 
-        if (req.user.role === "teknisi" && penggunaan.tiket.teknisi_id !== req.user.id) {
+        if (!hasPermission(req.authorization, "tickets.view_all") && penggunaan.tiket.teknisi_id !== req.user.id) {
             return res.status(403).json({ message: "Akses ditolak: Ini bukan tiket Anda." });
         }
 

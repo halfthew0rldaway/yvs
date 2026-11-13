@@ -1,6 +1,6 @@
 const { test, describe } = require("node:test");
 const assert = require("node:assert/strict");
-const { authenticate, authorize } = require("../../src/middleware/auth");
+const { authenticate, requirePermission } = require("../../src/middleware/auth");
 const jwt = require("jsonwebtoken");
 
 describe("WB-AUT: JWT Authentication & RBAC Inheritance", () => {
@@ -84,29 +84,20 @@ describe("WB-AUT: JWT Authentication & RBAC Inheritance", () => {
         assert.equal(responseJson.code, "INVALID_TOKEN");
     });
 
-    test("WB-AUT-004: authorize allows admin and pimpinan to inherit frontman role", () => {
-        const frontmanGate = authorize("frontman");
-
-        // Admin role accessing frontman endpoint
-        let adminAllowed = false;
-        const reqAdmin = { user: { id: 1, role: "admin" } };
-        frontmanGate(reqAdmin, {}, () => { adminAllowed = true; });
-        assert.equal(adminAllowed, true, "Admin should inherit frontman access");
-
-        // Pimpinan role accessing frontman endpoint
-        let pimpinanAllowed = false;
-        const reqPimpinan = { user: { id: 2, role: "pimpinan" } };
-        frontmanGate(reqPimpinan, {}, () => { pimpinanAllowed = true; });
-        assert.equal(pimpinanAllowed, true, "Pimpinan should inherit frontman access");
+    test("WB-AUT-004: custom role access follows its granted capability", () => {
+        const gate = requirePermission("customers.manage");
+        let allowed = false;
+        gate({ authorization: { permissions: ["customers.manage"], roles: [{ slug: "marketing" }] } }, {}, () => { allowed = true; });
+        assert.equal(allowed, true);
     });
 
-    test("WB-AUT-005: authorize rejects unauthorized roles with 403 Forbidden", () => {
-        const adminGate = authorize("admin");
+    test("WB-AUT-005: capability gate rejects unrelated grants with 403 Forbidden", () => {
+        const gate = requirePermission("customers.manage");
 
         let statusCode = null;
         let responseJson = null;
 
-        const reqTeknisi = { user: { id: 3, role: "teknisi" } };
+        const reqTeknisi = { authorization: { permissions: ["customers.view"], roles: [{ slug: "marketing" }] } };
         const res = {
             status(code) {
                 statusCode = code;
@@ -118,9 +109,9 @@ describe("WB-AUT: JWT Authentication & RBAC Inheritance", () => {
             }
         };
 
-        adminGate(reqTeknisi, res, () => {});
+        gate(reqTeknisi, res, () => {});
 
         assert.equal(statusCode, 403);
-        assert.equal(responseJson.message, "Tidak memiliki akses");
+        assert.equal(responseJson.code, "PERMISSION_DENIED");
     });
 });

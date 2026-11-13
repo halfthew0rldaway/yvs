@@ -14,6 +14,7 @@ const { broadcast } = require("../utils/sse");
 const { computeCustomerStatsAndBadges } = require("../utils/customerBadges");
 const { recordActivity } = require("../services/activityLog.service");
 const { relocateTicketMedia } = require("../services/mediaStorage");
+const { hasPermission } = require("../services/authorization.service");
 
 // Validasi transisi status yang diizinkan
 const STATUS_TRANSITIONS = {
@@ -30,6 +31,7 @@ const STATUS_TRANSITIONS = {
 // Mengambil seluruh tiket servis
 async function getAll(req, res) {
     try {
+        const canViewInvoices = hasPermission(req.authorization, "invoices.view");
         const { status, teknisi_id, search, sortOrder, sla_paket, sla_urgency } = req.query;
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
         const andConditions = [];
@@ -40,18 +42,15 @@ async function getAll(req, res) {
         // Jika parameter search aktif (misal saat scan barcode atau mencari no tiket / SN),
         // izinkan pencarian mencakup seluruh tiket agar teknisi mengetahui status tiket tersebut
         // (apakah tiket baru atau sudah ditangani teknisi lain).
-        if (req.user?.role === "teknisi" && !search) {
-            if (teknisi_id) {
-                andConditions.push({ teknisi_id: Number(teknisi_id) });
-            } else {
-                andConditions.push({
+        if (!hasPermission(req.authorization, "tickets.view_all")) {
+            andConditions.push({
                     OR: [
                         { teknisi_id: req.user.id },
                         { teknisi_id: null, status: { notIn: ["selesai", "diambil", "dibatalkan"] } }
                     ]
-                });
-            }
-        } else if (teknisi_id) {
+            });
+        }
+        if (teknisi_id) {
             andConditions.push({ teknisi_id: Number(teknisi_id) });
         }
 
@@ -138,7 +137,7 @@ async function getAll(req, res) {
         const include = {
             perangkat: { include: { customer: true } },
             teknisi: { select: { id: true, nama: true, foto_profile: true } },
-            invoice: { select: { id: true, total_biaya: true } },
+            invoice: canViewInvoices ? { select: { id: true, total_biaya: true } } : false,
             penggunaan_sparepart: { include: { sparepart: { include: { brand: true } } } },
             parent_tiket: { select: { id: true, nomor_tiket: true, status: true } },
             child_claims: { select: { id: true, nomor_tiket: true, status: true } },
@@ -163,7 +162,7 @@ async function getAll(req, res) {
         const now = new Date();
         const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-        const countBase = req.user?.role === "teknisi"
+        const countBase = !hasPermission(req.authorization, "tickets.view_all")
             ? {
                 OR: [
                     { teknisi_id: req.user.id },
@@ -200,17 +199,12 @@ async function getAll(req, res) {
             }),
             prisma.tiketServis.count({
                 where: {
-                    ...countBase,
-                    OR: [
-                        {
-                            status: { in: ["diterima", "didiagnosis"] },
-                            target_pengecekan_at: { lt: now }
-                        },
-                        {
-                            status: { in: ["disetujui", "dalam_perbaikan"] },
-                            target_selesai_at: { lt: now }
-                        }
-                    ]
+                    AND: [countBase, {
+                        OR: [
+                            { status: { in: ["diterima", "didiagnosis"] }, target_pengecekan_at: { lt: now } },
+                            { status: { in: ["disetujui", "dalam_perbaikan"] }, target_selesai_at: { lt: now } }
+                        ]
+                    }]
                 }
             })
         ]);
@@ -237,6 +231,14 @@ async function getAll(req, res) {
 // Mengambil tiket servis berdasarkan ID atau Nomor Tiket (termasuk Riwayat Medis Perangkat / Device History)
 async function getById(req, res) {
     try {
+        const canViewAllTickets = hasPermission(req.authorization, "tickets.view_all");
+        const canViewInvoices = hasPermission(req.authorization, "invoices.view");
+        const relatedScope = canViewAllTickets ? {} : {
+            OR: [
+                { teknisi_id: req.user.id },
+                { teknisi_id: null, status: { notIn: ["selesai", "diambil", "dibatalkan"] } }
+            ]
+        };
         const rawId = req.params.id;
         const isNumeric = /^\d+$/.test(rawId);
         const whereClause = isNumeric
@@ -250,12 +252,12 @@ async function getById(req, res) {
                     include: {
                         customer: true,
                         tiket_servis: {
-                            where: isNumeric ? { id: { not: Number(rawId) } } : { nomor_tiket: { not: rawId } },
+                            where: { AND: [isNumeric ? { id: { not: Number(rawId) } } : { nomor_tiket: { not: rawId } }, relatedScope] },
                             include: {
                                 teknisi: { select: { id: true, nama: true, foto_profile: true } },
                                 diagnosis: true,
                                 penggunaan_sparepart: { include: { sparepart: true } },
-                                invoice: true
+                                invoice: canViewInvoices
                             },
                             orderBy: { created_at: "desc" }
                         }
@@ -265,7 +267,7 @@ async function getById(req, res) {
                 diagnosis: true,
                 log_perbaikan: { orderBy: { created_at: "desc" } },
                 penggunaan_sparepart: { include: { sparepart: { include: { brand: true } } } },
-                invoice: true,
+                invoice: canViewInvoices,
                 peminjaman_loaner: {
                     include: { loaner_device: true },
                     orderBy: { created_at: "desc" }
@@ -277,6 +279,7 @@ async function getById(req, res) {
                 parent_tiket: {
                     select: {
                         id: true,
+                        teknisi_id: true,
                         nomor_tiket: true,
                         status: true,
                         created_at: true,
@@ -290,6 +293,7 @@ async function getById(req, res) {
                 child_claims: {
                     select: {
                         id: true,
+                        teknisi_id: true,
                         nomor_tiket: true,
                         status: true,
                         created_at: true,
@@ -308,7 +312,7 @@ async function getById(req, res) {
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
         // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
-        if (req.user?.role === "teknisi") {
+        if (!canViewAllTickets) {
             const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
             const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
@@ -318,7 +322,7 @@ async function getById(req, res) {
 
         // Enrich profil customer dengan badge reputasi dan histori revisi ACC
         let enrichedCustomer = tiket.perangkat?.customer;
-        if (enrichedCustomer?.id) {
+        if (enrichedCustomer?.id && canViewAllTickets && canViewInvoices) {
             try {
                 const customerData = await prisma.customer.findUnique({
                     where: { id: enrichedCustomer.id },
@@ -365,6 +369,10 @@ async function getById(req, res) {
 
         return res.json({
             ...tiket,
+            parent_tiket: canViewAllTickets || !tiket.parent_tiket || Number(tiket.parent_tiket.teknisi_id) === Number(req.user.id)
+                ? tiket.parent_tiket : null,
+            child_claims: canViewAllTickets ? tiket.child_claims : tiket.child_claims?.filter(child =>
+                Number(child.teknisi_id) === Number(req.user.id) || (!child.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(child.status))),
             perangkat: {
                 ...tiket.perangkat,
                 customer: enrichedCustomer
@@ -404,6 +412,29 @@ async function create(req, res) {
         const perangkat = await prisma.perangkat.findUnique({ where: { id: Number(perangkat_id) } });
         if (!perangkat) {
             return res.status(404).json({ message: "Perangkat tidak ditemukan" });
+        }
+
+        if (teknisi_id && !hasPermission(req.authorization, "tickets.assign")) {
+            return res.status(403).json({ message: "Tidak memiliki hak untuk menugaskan teknisi" });
+        }
+
+        if (req.body.registration_id && !/^\d+$/.test(String(req.body.registration_id))) {
+            return res.status(400).json({ message: "ID pendaftaran tidak valid" });
+        }
+        let registrationId = req.body.registration_id ? Number(req.body.registration_id) : null;
+        let registrationDetails = null;
+        if (registrationId) {
+            registrationDetails = await prisma.customerRegistration.findFirst({
+                where: { id: registrationId, perangkat_id: perangkat.id, status: "accepted", ticket_id: null },
+                select: { id: true, harapan: true }
+            });
+            if (!registrationDetails) return res.status(400).json({ message: "Pendaftaran pelanggan tidak cocok atau sudah diproses" });
+        } else {
+            registrationDetails = await prisma.customerRegistration.findFirst({
+                where: { perangkat_id: perangkat.id, status: "accepted", ticket_id: null },
+                select: { id: true, harapan: true }, orderBy: { submitted_at: "desc" }
+            });
+            registrationId = registrationDetails?.id || null;
         }
 
         // Validasi: pastikan perangkat tidak sedang memiliki tiket aktif yang masih berjalan (ongoing)
@@ -478,6 +509,7 @@ async function create(req, res) {
                         perangkat_id: Number(perangkat_id),
                         teknisi_id: teknisi_id ? Number(teknisi_id) : null,
                         keluhan,
+                        harapan_pelanggan: registrationDetails?.harapan || null,
                         kelengkapan,
                         kelengkapan_detail: parsedKelengkapanDetail,
                         foto_kondisi: currentFotoKondisi && currentFotoKondisi.length > 0 ? JSON.stringify(currentFotoKondisi) : null,
@@ -511,6 +543,17 @@ async function create(req, res) {
                 } else {
                     throw err;
                 }
+            }
+        }
+
+        if (registrationId) {
+            try {
+                await prisma.customerRegistration.updateMany({
+                    where: { id: registrationId, perangkat_id: perangkat.id, ticket_id: null },
+                    data: { ticket_id: tiket.id }
+                });
+            } catch (linkError) {
+                console.error("Ticket created but registration link failed", { ticketId: tiket.id, registrationId, linkError });
             }
         }
 
@@ -581,12 +624,16 @@ async function update(req, res) {
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
         // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
-        if (req.user?.role === "teknisi") {
+        if (!hasPermission(req.authorization, "tickets.view_all")) {
             const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
             const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
                 return res.status(403).json({ message: "Anda tidak memiliki akses ke tiket servis ini." });
             }
+        }
+
+        if (teknisi_id !== undefined && !hasPermission(req.authorization, "tickets.assign") && tiket.teknisi_id && Number(tiket.teknisi_id) !== Number(req.user.id)) {
+            return res.status(403).json({ message: "Tiket sudah ditugaskan. Hak mengambil tiket hanya berlaku untuk tiket kosong." });
         }
 
         // Validasi transisi status
@@ -598,28 +645,8 @@ async function update(req, res) {
                 });
             }
 
-            // RBAC untuk Teknisi:
-            // 1. diterima -> didiagnosis (ambil alih / claim tiket)
-            // 2. didiagnosis -> menunggu_persetujuan (selesaikan diagnosa & ajukan penawaran ke admin)
-            // 3. disetujui -> dalam_perbaikan (mulai eksekusi perbaikan)
-            // 4. dalam_perbaikan -> selesai (selesaikan perbaikan & verifikasi QC)
-            if (req.user.role === "teknisi") {
-                const allowedTeknisiTransitions = {
-                    diterima: ["didiagnosis"],
-                    didiagnosis: ["menunggu_persetujuan"],
-                    disetujui: ["dalam_perbaikan"],
-                    dalam_perbaikan: ["selesai"],
-                };
-
-                const allowedForCurrent = allowedTeknisiTransitions[tiket.status] || [];
-                if (!allowedForCurrent.includes(status)) {
-                    return res.status(403).json({
-                        message: `Akses ditolak: Teknisi tidak diizinkan mengubah status dari '${tiket.status}' ke '${status}'. Tahap ini dikelola oleh Admin.`,
-                    });
-                }
-
-                // Proteksi: Pastikan teknisi sudah mengisi log perbaikan sebelum menyelesaikan
-                if (status === "selesai") {
+            // Permission middleware authorizes the stage; finishing still requires a repair log.
+            if (status === "selesai") {
                     const logPerbaikan = await prisma.logPerbaikan.findFirst({
                         where: { tiket_id: id, fase: "Perbaikan" }
                     });
@@ -628,21 +655,16 @@ async function update(req, res) {
                             message: "Proteksi: Anda harus menambahkan minimal satu Log Perbaikan sebelum dapat menyelesaikan tiket ini.",
                         });
                     }
-                }
             }
         }
 
         // RBAC: Teknisi hanya boleh ambil alih jika kosong, dan hanya boleh edit tiket sendiri
-        if (req.user.role === "teknisi") {
-            if (teknisi_id !== undefined && teknisi_id !== null && Number(teknisi_id) !== Number(req.user.id)) {
+        if (!hasPermission(req.authorization, "tickets.view_all")) {
+            if (teknisi_id !== undefined && teknisi_id !== null && Number(teknisi_id) !== Number(req.user.id) && !hasPermission(req.authorization, "tickets.assign")) {
                 return res.status(403).json({ message: "Akses ditolak: Anda tidak bisa menugaskan tiket ke teknisi lain." });
             }
             if (tiket.teknisi_id && Number(tiket.teknisi_id) !== Number(req.user.id)) {
                 return res.status(403).json({ message: "Akses ditolak: Ini bukan tiket Anda." });
-            }
-            // Kredensial / PIN unit dicatat oleh Customer/Admin/Frontman saat intake dan tidak boleh diubah oleh teknisi
-            if (tipe_kunci !== undefined || password_perangkat !== undefined) {
-                return res.status(403).json({ message: "Akses ditolak: Teknisi tidak memiliki hak akses untuk mengubah kredensial/PIN unit." });
             }
         }
 
@@ -865,7 +887,7 @@ async function update(req, res) {
         });
 
         // Insert log catatan admin if provided
-        if (catatan_admin && req.user.role === "admin") {
+        if (catatan_admin && hasPermission(req.authorization, "tickets.approval")) {
             await prisma.logPerbaikan.create({
                 data: {
                     tiket_id: id,
@@ -912,7 +934,7 @@ async function updateDefectMap(req, res) {
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
         // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
-        if (req.user?.role === "teknisi") {
+        if (!hasPermission(req.authorization, "tickets.view_all")) {
             const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
             const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
@@ -953,7 +975,7 @@ async function updateReminder(req, res) {
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
         // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
-        if (req.user?.role === "teknisi") {
+        if (!hasPermission(req.authorization, "tickets.view_all")) {
             const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
             const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
@@ -1131,7 +1153,7 @@ async function markWarrantyFollowUp(req, res) {
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
         // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
-        if (req.user?.role === "teknisi") {
+        if (!hasPermission(req.authorization, "tickets.view_all")) {
             const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
             const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
@@ -1278,7 +1300,7 @@ async function markMaintenanceFollowUp(req, res) {
         // Hanya boleh membuka detail tiket yang:
         // 1. Sedang dihandle oleh dirinya sendiri (tiket.teknisi_id === req.user.id)
         // 2. Tiket yang belum di-assign ke siapapun (tiket.teknisi_id === null)
-        if (req.user?.role === "teknisi") {
+        if (!hasPermission(req.authorization, "tickets.view_all")) {
             const isMyTicket = Number(tiket.teknisi_id) === Number(req.user.id);
             const isUnassignedPool = !tiket.teknisi_id && !["selesai", "diambil", "dibatalkan"].includes(tiket.status);
             if (!isMyTicket && !isUnassignedPool) {
@@ -1622,7 +1644,7 @@ async function revisiAcc(req, res) {
         }
 
         // Restriksi role Teknisi jika bukan teknisi penanggung jawab
-        if (req.user?.role === "teknisi" && tiket.teknisi_id && tiket.teknisi_id !== req.user.id) {
+        if (!hasPermission(req.authorization, "tickets.view_all") && tiket.teknisi_id && tiket.teknisi_id !== req.user.id) {
             return res.status(403).json({ message: "Akses ditolak: Anda bukan teknisi penanggung jawab tiket ini." });
         }
 
@@ -1687,7 +1709,7 @@ async function revisiAcc(req, res) {
         });
 
         // 7. Broadcast SSE update agar update secara live
-        broadcast("TIKET_UPDATED", {
+        broadcast("tiket:updated", {
             tiketId: id,
             status: "menunggu_persetujuan",
             is_revisi_acc: true,

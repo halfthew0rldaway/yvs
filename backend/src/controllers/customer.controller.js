@@ -3,6 +3,14 @@ const { Prisma } = require("@prisma/client");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 const { normalizePhone, normalizeName, normalizeText } = require("../utils/normalize");
 const { computeCustomerStatsAndBadges } = require("../utils/customerBadges");
+const { hasPermission } = require("../services/authorization.service");
+
+function visibleTicketScope(req) {
+    return hasPermission(req.authorization, "tickets.view_all") ? {} : { OR: [
+        { teknisi_id: req.user.id },
+        { teknisi_id: null, status: { notIn: ["selesai", "diambil", "dibatalkan"] } }
+    ] };
+}
 
 function enrichCustomerWithBadges(c) {
     if (!c) return c;
@@ -46,6 +54,7 @@ function enrichCustomerWithBadges(c) {
 async function getAll(req, res) {
     try {
         const { search, tipe_kepribadian, has_perangkat, sortBy, status } = req.query;
+        const canViewTickets = hasPermission(req.authorization, "tickets.view");
         const { isPaginated, page, limit, skip } = parsePagination(req.query);
 
         let where = {};
@@ -106,11 +115,12 @@ async function getAll(req, res) {
         const includeCustomerRelations = {
             perangkat: {
                 include: {
-                    tiket_servis: {
+                    tiket_servis: canViewTickets ? {
+                        where: visibleTicketScope(req),
                         include: {
-                            invoice: { select: { total_biaya: true } }
+                            invoice: hasPermission(req.authorization, "invoices.view") ? { select: { total_biaya: true } } : false
                         }
-                    }
+                    } : false
                 }
             }
         };
@@ -154,6 +164,7 @@ async function getAll(req, res) {
 // Mengambil data customer berdasarkan ID
 async function getById(req, res) {
     try {
+        const canViewTickets = hasPermission(req.authorization, "tickets.view");
         const id = Number(req.params.id);
         if (isNaN(id)) {
             return res.status(400).json({ message: "ID customer tidak valid" });
@@ -164,16 +175,15 @@ async function getById(req, res) {
             include: {
                 perangkat: {
                     include: {
-                        tiket_servis: {
+                        tiket_servis: canViewTickets ? {
+                            where: visibleTicketScope(req),
                             include: {
                                 teknisi: { select: { id: true, nama: true } },
-                                invoice: { select: { id: true, total_biaya: true } }
+                                invoice: hasPermission(req.authorization, "invoices.view") ? { select: { id: true, total_biaya: true } } : false
                             },
                             orderBy: { created_at: "desc" }
-                        },
-                        _count: {
-                            select: { tiket_servis: true }
-                        }
+                        } : false,
+                        _count: canViewTickets ? { select: { tiket_servis: { where: visibleTicketScope(req) } } } : false
                     },
                     orderBy: { created_at: "desc" }
                 },
@@ -190,7 +200,7 @@ async function getById(req, res) {
         const allTikets = [];
 
         (customer.perangkat || []).forEach(p => {
-            totalTiket += p._count?.tiket_servis || 0;
+            totalTiket += (p.tiket_servis || []).length;
             (p.tiket_servis || []).forEach(t => {
                 allTikets.push({
                     ...t,

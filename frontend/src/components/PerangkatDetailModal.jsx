@@ -44,7 +44,7 @@ function getDeviceIcon(jenis) {
 }
 
 export default function PerangkatDetailModal({ perangkatId, isOpen, onClose, onSelectCustomer, onSelectPerangkat }) {
-    const { isAdmin } = useAuth();
+    const { hasPermission } = useAuth();
     const [perangkat, setPerangkat] = useState(null);
     const [loading, setLoading] = useState(false);
     const [expandedTiketIds, setExpandedTiketIds] = useState({});
@@ -143,7 +143,7 @@ export default function PerangkatDetailModal({ perangkatId, isOpen, onClose, onS
                     </div>
 
                     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                        {isAdmin && perangkat && (
+                        {hasPermission("devices.manage") && perangkat && (
                             <Link
                                 to={`/perangkat/edit/${perangkat.id}${window.location.pathname ? `?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}` : ''}`}
                                 className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg sm:rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer active:scale-95"
@@ -329,7 +329,7 @@ export default function PerangkatDetailModal({ perangkatId, isOpen, onClose, onS
                                                 </button>
                                             </div>
                                         )}
-                                        {isAdmin && (
+                                        {hasPermission("tickets.intake") && (
                                             <Link
                                                 to={`/tiket-servis/tambah?perangkat_id=${perangkat.id}&customer_id=${customer?.id}`}
                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all shadow-xs"

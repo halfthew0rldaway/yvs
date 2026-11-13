@@ -3,6 +3,7 @@ import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import api from "../services/api";
 import { getRememberedUsername, setRememberedUsername } from "../utils/authStorage";
+import { landingRouteFor } from "../utils/landingRoute";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
 import { Eye, EyeOff, Lock, User, Wrench, Shield, CheckCircle2, ArrowRight, ShieldCheck, Clock, AlertCircle } from "lucide-react";
@@ -15,7 +16,8 @@ export default function Login() {
     // Check query params for session expiration & redirect path
     const isExpired = searchParams.get("expired") === "true";
     const expireReason = searchParams.get("reason");
-    const redirectUrl = searchParams.get("redirect") || "/dashboard";
+    const requestedRedirect = searchParams.get("redirect");
+    const redirectUrl = requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//") ? requestedRedirect : null;
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -43,7 +45,7 @@ export default function Login() {
     }, []);
 
     if (user) {
-        return <Navigate to={redirectUrl} replace />;
+        return <Navigate to={redirectUrl || landingRouteFor(user)} replace />;
     }
 
     async function handleSubmit(e) {
@@ -53,28 +55,8 @@ export default function Login() {
 
         try {
             const cleanUser = username.trim();
-            // Pemetaan email fallback untuk memastikan kompatibilitas penuh dengan akun demo / akun lama database
-            const demoEmailMap = {
-                admin: "admin@workshop.com",
-                pimpinan: "arni@workshop.com",
-                manajer: "manajer@workshop.com",
-                arni: "arni@workshop.com",
-                vivero: "vivero@workshop.com",
-                teknisi1: "teknisi1@workshop.com",
-                teknisi2: "teknisi2@workshop.com",
-                teknisi3: "teknisi3@workshop.com",
-                teknisi4: "teknisi4@workshop.com",
-                teknisi5: "teknisi5@workshop.com",
-                teknisi6: "teknisi6@workshop.com",
-                siti: "siti.admin@workshop.com"
-            };
-            const fallbackEmail = cleanUser.includes("@") 
-                ? cleanUser 
-                : (demoEmailMap[cleanUser.toLowerCase()] || `${cleanUser}@workshop.com`);
-
             const res = await api.post("/auth/login", { 
                 username: cleanUser, 
-                email: fallbackEmail, 
                 password, 
                 rememberMe 
             });
@@ -88,7 +70,7 @@ export default function Login() {
 
             // Simpan sesi autentikasi dengan preferensi "Ingat Saya"
             login(res.data.user, res.data.token, rememberMe);
-            navigate(redirectUrl, { replace: true });
+            navigate(redirectUrl || landingRouteFor(res.data.user), { replace: true });
         } catch (err) {
             setError(err.response?.data?.message || "Kredensial tidak valid. Silakan coba lagi.");
         } finally {
@@ -200,7 +182,7 @@ export default function Login() {
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
-                                    placeholder="admin, owner, atau nama teknisi"
+                                    placeholder="Username atau email kerja"
                                     required
                                     autoComplete="username"
                                     autoCapitalize="none"
@@ -296,6 +278,7 @@ export default function Login() {
                                 onClick={() => handleSelectDemoAccount("arni", "ownerArni2026!")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Staging (Ibu Arni)</span>
                                 <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner (Ibu Arni)</span>
                                 <span className="block font-mono text-3xs text-blue-600 truncate">arni</span>
                             </button>
@@ -304,6 +287,7 @@ export default function Login() {
                                 onClick={() => handleSelectDemoAccount("vivero", "ownerVivero2026!")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
+                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner Staging (Bpk. Vivero)</span>
                                 <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Owner (Bpk. Vivero)</span>
                                 <span className="block font-mono text-3xs text-blue-600 truncate">vivero</span>
                             </button>

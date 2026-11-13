@@ -7,12 +7,16 @@ import Pagination from "../../components/common/Pagination";
 import TableEmptyState from "../../components/common/TableEmptyState";
 import TableLoadingState from "../../components/common/TableLoadingState";
 import { DocumentPrintService } from "../../services/documentPrintService";
+import { useAuth } from "../../hooks/useAuth";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
 }
 
 export default function InvoiceList() {
+    const { hasPermission } = useAuth();
+    const canReport = hasPermission("invoices.report");
+    const canManage = hasPermission("invoices.manage");
     const navigate = useNavigate();
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -29,8 +33,9 @@ export default function InvoiceList() {
     const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
-        fetchReportSummary();
-    }, [startDate, endDate]);
+        if (canReport) fetchReportSummary();
+        else setReportData(null);
+    }, [startDate, endDate, canReport]);
 
     useEffect(() => {
         fetchInvoices();
@@ -120,21 +125,21 @@ export default function InvoiceList() {
                     <p className="text-xs sm:text-sm text-slate-500 mt-1">Rekapitulasi transaksi, pendapatan periodik, dan performa servis</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-                    <button
+                    {canReport && <button
                         type="button"
                         onClick={() => setIsReportModalOpen(true)}
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold whitespace-nowrap shrink-0 transition-colors shadow-sm"
                     >
                         <FileText className="w-4 h-4 text-slate-300" />
                         <span>Rekap Laporan Keuangan</span>
-                    </button>
-                    <Link
+                    </button>}
+                    {canManage && <Link
                         to="/invoice/tambah"
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold whitespace-nowrap shrink-0 transition-colors shadow-sm"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Buat Invoice</span>
-                    </Link>
+                    </Link>}
                 </div>
             </div>
 

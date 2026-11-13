@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission, requireTicketMutation } = require("../middleware/auth");
 const { upload, compressMedia } = require("../middleware/upload");
 const { 
     getAll, 
@@ -39,23 +39,23 @@ const tiketValidation = [
         .trim()
 ];
 
-router.get("/", getAll);
-router.get("/warranty/expiring", getExpiringWarranties);
-router.get("/maintenance/due", getMaintenanceDue);
-router.get("/unclaimed/due", getUnclaimedDue);
-router.get("/:id", getById);
-router.post("/", authorize("admin", "frontman"), upload.array("foto_kondisi", 10), compressMedia, tiketValidation, validate, create);
-router.post("/:id/foto-selesai", authorize("admin", "teknisi"), upload.array("foto_selesai", 15), compressMedia, uploadFotoSelesai);
-router.post("/:id/foto-diagnosis", authorize("admin", "teknisi"), upload.array("foto_diagnosis", 25), compressMedia, uploadFotoDiagnosis);
-router.post("/:id/foto-handover", authorize("admin", "frontman", "teknisi"), upload.array("foto_handover", 5), compressMedia, uploadFotoHandover);
-router.post("/:id/claim-garansi", authorize("admin", "frontman", "teknisi"), createWarrantyClaim);
-router.post("/:id/reminder-garansi", authorize("admin", "frontman", "teknisi"), markWarrantyFollowUp);
-router.post("/:id/reminder-maintenance", authorize("admin", "frontman", "teknisi"), markMaintenanceFollowUp);
-router.post("/:id/reminder-unclaimed", authorize("admin", "frontman", "teknisi"), markUnclaimedFollowUp);
-router.post("/:id/revisi-acc", authorize("admin", "teknisi"), revisiAcc);
-router.patch("/:id/defect-map", authorize("admin", "frontman", "teknisi"), updateDefectMap);
-router.put("/:id/defect-map", authorize("admin", "frontman", "teknisi"), updateDefectMap);
-router.put("/:id", authorize("admin", "frontman", "teknisi"), update);
-router.put("/:id/reminder", authorize("admin", "frontman"), updateReminder);
+router.get("/", requirePermission("tickets.view"), getAll);
+router.get("/warranty/expiring", requirePermission("crm.view"), getExpiringWarranties);
+router.get("/maintenance/due", requirePermission("crm.view"), getMaintenanceDue);
+router.get("/unclaimed/due", requirePermission("crm.view"), getUnclaimedDue);
+router.get("/:id", requirePermission("tickets.view"), getById);
+router.post("/", requirePermission("tickets.intake"), upload.array("foto_kondisi", 10), compressMedia, tiketValidation, validate, create);
+router.post("/:id/foto-selesai", requirePermission("tickets.qc"), upload.array("foto_selesai", 15), compressMedia, uploadFotoSelesai);
+router.post("/:id/foto-diagnosis", requirePermission("tickets.diagnosis"), upload.array("foto_diagnosis", 25), compressMedia, uploadFotoDiagnosis);
+router.post("/:id/foto-handover", requirePermission("tickets.handover"), upload.array("foto_handover", 5), compressMedia, uploadFotoHandover);
+router.post("/:id/claim-garansi", requirePermission("tickets.handover"), createWarrantyClaim);
+router.post("/:id/reminder-garansi", requirePermission("crm.view"), markWarrantyFollowUp);
+router.post("/:id/reminder-maintenance", requirePermission("crm.view"), markMaintenanceFollowUp);
+router.post("/:id/reminder-unclaimed", requirePermission("crm.view"), markUnclaimedFollowUp);
+router.post("/:id/revisi-acc", requirePermission("tickets.diagnosis"), revisiAcc);
+router.patch("/:id/defect-map", requirePermission("tickets.intake", "tickets.repair"), updateDefectMap);
+router.put("/:id/defect-map", requirePermission("tickets.intake", "tickets.repair"), updateDefectMap);
+router.put("/:id", requireTicketMutation, update);
+router.put("/:id/reminder", requirePermission("crm.view"), updateReminder);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const express = require("express");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const {
     getAll,
     getById,
@@ -12,11 +12,11 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.get("/", getAll);
-router.get("/:id", getById);
-router.post("/", authorize("admin", "pimpinan"), create);
-router.put("/:id", authorize("admin", "pimpinan"), update);
-router.delete("/:id", authorize("admin", "pimpinan"), remove);
+router.get("/", requirePermission("wiki.view"), getAll);
+router.get("/:id", requirePermission("wiki.view"), getById);
+router.post("/", requirePermission("wiki.manage"), create);
+router.put("/:id", requirePermission("wiki.manage"), update);
+router.delete("/:id", requirePermission("wiki.manage"), remove);
 
 module.exports = router;
 

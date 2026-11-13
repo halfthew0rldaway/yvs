@@ -1,5 +1,5 @@
 const express = require("express");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const {
     getAll,
     getStats,
@@ -13,12 +13,12 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.get("/stats", getStats);
-router.get("/:id", getById);
-router.get("/", getAll);
-router.post("/", authorize("admin", "teknisi"), create);
-router.put("/:id", authorize("admin", "teknisi"), update);
-router.delete("/:id", authorize("admin"), remove);
+router.get("/stats", requirePermission("suppliers.view"), getStats);
+router.get("/:id", requirePermission("suppliers.view"), getById);
+router.get("/", requirePermission("suppliers.view"), getAll);
+router.post("/", requirePermission("suppliers.manage"), create);
+router.put("/:id", requirePermission("suppliers.manage"), update);
+router.delete("/:id", requirePermission("suppliers.manage"), remove);
 
 module.exports = router;
 

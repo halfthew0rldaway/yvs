@@ -1,5 +1,5 @@
 const express = require("express");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const {
     getAll,
     getById,
@@ -13,13 +13,13 @@ const router = express.Router();
 router.use(authenticate);
 
 // All authenticated roles (admin, teknisi) can view suppliers
-router.get("/", getAll);
-router.get("/:id", getById);
+router.get("/", requirePermission("suppliers.view"), getAll);
+router.get("/:id", requirePermission("suppliers.view"), getById);
 
 // Admin & Pimpinan can manage suppliers
-router.post("/", authorize("admin", "pimpinan"), create);
-router.put("/:id", authorize("admin", "pimpinan"), update);
-router.delete("/:id", authorize("admin", "pimpinan"), deleteSupplier);
+router.post("/", requirePermission("suppliers.manage"), create);
+router.put("/:id", requirePermission("suppliers.manage"), update);
+router.delete("/:id", requirePermission("suppliers.manage"), deleteSupplier);
 
 module.exports = router;
 

@@ -2,7 +2,7 @@
 
 > **Yangversa Computer (YVS) Management & ERP System**  
 > **Repository Root:** `/run/media/bleu/DATA/dev/yvs`  
-> **Last Updated:** 2026-11-10  
+> **Last Updated:** 2026-11-13
 > **Purpose:** Authoritative reference for autonomous and AI-assisted development (Antigravity, Cline, Roo-Cline, Cursor, etc.). All information in this document is derived strictly from the actual codebase.
 
 ---
@@ -172,9 +172,11 @@ Key entities defined in `backend/prisma/schema.prisma`:
 
 | Model | Purpose | Key Relations & Invariants |
 | :--- | :--- | :--- |
-| **`User`** | System staff & technicians | Roles: `admin`, `teknisi`, `pimpinan`. Links to tickets, attendances, leave requests. |
+| **`User`** | System staff & technicians | `User.role` is a legacy display/default slug; effective access comes from assigned `UserRole` records and permission grants. Links to tickets, attendances, leave requests. |
+| **`Role` / `Permission`** | Modular RBAC | Super Admin composes custom roles from code-owned action permissions; users may hold multiple roles through `UserRole`. |
 | **`Customer`** | Client directory & CRM | Phone (`nomor_telepon`), personality type (`tipe_kepribadian`), custom badges. Has many `Perangkat`. |
 | **`Perangkat`** | Customer physical hardware | Category (`jenis_perangkat`), brand, model, serial number. Belongs to `Customer`, has many `TiketServis`. |
+| **`CustomerRegistration`** | Public customer intake queue | Stores customer/device details and visit complaint/expectation until staff accepts or rejects. Accepted submissions link to canonical Customer, Perangkat, and optionally a ticket. Legacy invite fields are retained for migration safety but are no longer used by the form. |
 | **`TiketServis`** | Service ticket intake & lifecycle | Status: `diterima` -> `didiagnosis` -> `menunggu_persetujuan` -> `disetujui` -> `dalam_perbaikan` -> `selesai` -> `diambil` -> `dibatalkan`. Contains photo JSON arrays (`foto_kondisi`, `foto_diagnosis`, `foto_selesai`, `foto_handover`). |
 | **`Diagnosis`** | Technical assessment | Belongs to `TiketServis`. Stores findings, estimated cost, parts needed. |
 | **`LogPerbaikan`** | Action timeline of repair | Technicians log actions taken, tests performed. |
@@ -189,6 +191,11 @@ Key entities defined in `backend/prisma/schema.prisma`:
 ---
 
 ## 6. Critical Business Workflows
+
+### Customer Self-Registration Before Intake
+The reusable poster QR points to `/tracking/register` and can serve every walk-in customer; the page is not linked from the tracking landing page. The QR URL itself is public and shareable, so abuse protection comes from public submission rate limiting, a honeypot, one pending submission per normalized phone, strict validation, and staff review. Submissions first enter `CustomerRegistration`; they do not create Customer, Perangkat, or a ticket. Staff with `tickets.intake` reviews the details in the new-ticket page and accepts or rejects. Accepting atomically links an existing phone or creates a Customer, then reuses a matching serial-numbered device or creates a Perangkat. Staff then completes ticket intake; the expectation is copied to `TiketServis.harapan_pelanggan`.
+The customer form uses a wide responsive layout with device-category cards. Customers do not enter serial numbers; intake staff record a serial number during review before the device is saved.
+The technician picker is available only with `tickets.assign`; an intake-only role can still load customers/devices and create an unassigned ticket.
 
 ### 1. Service Ticket Lifecycle (`TiketServis`)
 1. **Intake (`diterima`)**: Frontman/Admin registers customer, device (`Perangkat`), complaints (`keluhan`), accessories checklist (`kelengkapan_detail`), and intake photos (`foto_kondisi`). System generates unique `nomor_tiket` and printable intake receipt (BPBS).
@@ -208,6 +215,30 @@ Key entities defined in `backend/prisma/schema.prisma`:
 ### 3. CRM & Maintenance Recall
 - Automated retention engine monitors devices 180 to 365+ days after completion.
 - Provides direct WhatsApp templates tailored for maintenance checks (thermal paste replacement, internal dust cleaning, fan servicing).
+
+### 4. Modular Access Control
+- Authorization is permission-based (`module.action`) and is enforced server-side; hiding an interface item is not authorization.
+- Super Admin alone manages users, roles, and permission assignments. Keep at least one designated Super Admin to prevent lockout.
+- Ticket capability is stage-specific: `tickets.intake`, `tickets.assign`, `tickets.diagnosis`, `tickets.repair`, `tickets.qc`, `tickets.approval`, and `tickets.handover`. Ticket workflow validation remains mandatory.
+- The web PWA and Capacitor Android app use the same permission-aware routes and navigation. PWA launch enters `/` and resolves a fresh permitted landing page; Android back treats that page as the app root. Mobile tabs select from granted modules, with the drawer retaining the complete permitted menu.
+- Offline browsing uses the last validated grants only while the browser reports offline and the JWT is unexpired. When connectivity returns, refresh grants and clear user-scoped cached data after revocation. Queued writes remain subject to backend authorization and are discarded on 401/403.
+- `tickets.assign` permits delegation of an unclaimed ticket without requiring `tickets.view_all`; reassignment of a ticket outside the user's visible scope remains blocked. Login resolves an exact username or email before legacy account aliases.
+- The fictional H. Bambang demo login and `bambang` legacy alias are removed. Leadership aliases fall back to Arni or Vivero; exact staff usernames and emails still take precedence.
+- Role and global notifications use `NotificationRead` records keyed by user and notification, so one recipient's read action does not clear another recipient's unread state. The legacy `Notification.is_read` flag remains for historical read records.
+- Super Admin designation changes require the acting Super Admin's password and a typed target username. Promotion and demotion are audited in the same transaction, and administrator row locks protect the final Super Admin from concurrent removal. Other Super Admins cannot reset each other's passwords through User Management.
+- `system.database` permits statistics and export; `system.database_maintain` permits normalization and old-log cleanup and derives export access. Demo-data seeding requires Super Admin. Run the RBAC seed after deploying a new capability.
+- Offline repair notes are seven-day text drafts scoped to the signed-in user and ticket. They require explicit online submission, current server permission, and an open assigned ticket. Photos, ticket state changes, invoice/payment actions, and other privileged writes are never replayed automatically. Local drafts and any legacy queue entries are cleared on logout or permission revocation.
+- Sidebar, page routes, and API routes use the same permission codes. Protected pages refresh `/auth/me` on navigation; the backend resolves grants from the database on every request. Selected manage/action permissions imply their module's view permission, and form dependencies are derived in `backend/src/config/permissions.js`.
+- User and role administration remains Super Admin only; its reserved permission codes are not offered in the assignable role catalog.
+- Ticket visibility is explicit: `tickets.view_all` opens all tickets; without it, `tickets.view` is limited to the user's assignments and unassigned active tickets. `tickets.claim` permits claiming an unassigned ticket for oneself, while `tickets.assign` permits assignment to another user. Ticket update fields and status transitions each require their corresponding capabilities.
+- `dashboard.report` protects business and revenue data separately from `dashboard.view`. `attendance.exempt` is an explicit role grant for staff excluded from attendance monitoring; Super Admin bypass alone does not grant an exemption.
+- `attendance.adjust` opens a narrow correction screen and staff-name picker without `attendance.review`; payroll monitoring still requires the separate review grant. `invoices.report` controls the financial report widgets and API, while `invoices.manage` controls invoice creation.
+- Brand creation is an inventory management action (`inventory.manage`). The legacy `system.settings` capability is hidden from the role editor until a dedicated settings feature exists.
+- New roles are created and assigned by Super Admin in the UI. To add a new module such as Marketing, implement its pages and API routes, register its action codes in `backend/src/config/permissions.js`, enforce them on the server and page routes, then Super Admin can compose Marketing roles without code changes for role names.
+- Register each new module's first accessible page in `frontend/src/utils/landingRoute.js` and its sidebar entry in `frontend/src/components/Layout.jsx`; users without dashboard access then land on a page they can actually open after login.
+- Run `backend/scripts/seed-rbac.js` after registering new capability codes. It adds newly introduced defaults once and preserves later Super Admin edits, revocations, user-role assignments, and Super Admin designations. The initial designation requires `SUPER_ADMIN_EMAIL` when none exists.
+- Staging startup uses a no-data-loss Prisma schema sync because its database predates migration history, then seeds RBAC after owner bootstrap. Startup fails if schema sync or RBAC bootstrap fails. Routine staging deploys preserve existing owner passwords; rotation requires `ROTATE_STAGING_OWNER_PASSWORDS=true`.
+- The realtime stream requires authentication and checks current database grants before delivering each event. Notification recipients use assigned role slugs or a user ID, and memo recipients come from the role table.
 
 ---
 
@@ -240,7 +271,7 @@ cd backend && node --test tests/unit/*.test.js
 ```
 
 Covered Domain Test Suites (36/36 passing):
-1. **`WB-AUT`**: JWT authentication validation, expiry codes, tampered signatures, and RBAC inheritance (`admin`, `teknisi`, `pimpinan`).
+1. **`WB-AUT`**: JWT authentication validation, expiry codes, tampered signatures, and permission-based authorization independent of role names.
 2. **`WB-DIA`**: Technician diagnosis input sanitization, non-negative cost enforcement, and error-free `LogPerbaikan` note formatting.
 3. **`WB-FIN`**: Multi-item sparepart summation, negative service fee prevention, DP / discount calculations, and remaining balance clamps.
 4. **`WB-GEO`**: Haversine distance math, exact 500m geofence checks, anti-spoofing accuracy buffers (capped at 200m), and late check-in detection at 09:16 WIB.

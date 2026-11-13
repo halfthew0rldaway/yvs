@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const validate = require("../middleware/validate");
-const { authenticate, authorize } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const { getAll, getById, create, update, remove } = require("../controllers/perangkat.controller");
 const { normalizeBrand, normalizeDeviceType, normalizeSerialNumber, normalizeText } = require("../utils/normalize");
 
@@ -26,10 +26,10 @@ const perangkatValidation = [
         .customSanitizer(val => normalizeSerialNumber(val))
 ];
 
-router.get("/", getAll);
-router.get("/:id", getById);
-router.post("/", authorize("admin", "frontman"), perangkatValidation, validate, create);
-router.put("/:id", authorize("admin", "frontman"), perangkatValidation, validate, update);
-router.delete("/:id", authorize("admin"), remove);
+router.get("/", requirePermission("devices.view"), getAll);
+router.get("/:id", requirePermission("devices.view"), getById);
+router.post("/", requirePermission("devices.manage"), perangkatValidation, validate, create);
+router.put("/:id", requirePermission("devices.manage"), perangkatValidation, validate, update);
+router.delete("/:id", requirePermission("devices.manage"), remove);
 
 module.exports = router;
