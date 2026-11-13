@@ -294,14 +294,6 @@ export default function Login() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => handleSelectDemoAccount("manajer")}
-                                className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
-                            >
-                                <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Manajerial (Hj. Maryam)</span>
-                                <span className="block font-mono text-3xs text-blue-600 truncate">manajer</span>
-                            </button>
-                            <button
-                                type="button"
                                 onClick={() => handleSelectDemoAccount("admin")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
