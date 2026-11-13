@@ -605,7 +605,7 @@ export default function AuditLogList() {
                 ) : (
                     <>
                         {/* Mobile Card View (< sm) */}
-                        <div className="sm:hidden divide-y divide-slate-100">
+                        <div className="lg:hidden divide-y divide-slate-100">
                             {logs.map((log) => {
                                 const entityInfo = ENTITY_CONFIG[log.entity] || ENTITY_CONFIG.sistem;
                                 const Icon = entityInfo.icon;
@@ -659,7 +659,7 @@ export default function AuditLogList() {
                         </div>
 
                         {/* Desktop Table View (>= sm) */}
-                        <table className="hidden sm:table w-full text-xs text-left whitespace-nowrap">
+                        <table className="hidden lg:table w-full text-xs text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-4 py-3">Waktu & Tanggal</th>

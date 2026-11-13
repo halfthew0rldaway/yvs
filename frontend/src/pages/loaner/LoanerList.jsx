@@ -589,7 +589,7 @@ export default function LoanerList() {
                         ) : (
                             <>
                             {/* Mobile Card View (< sm) */}
-                            <div className="sm:hidden divide-y divide-slate-100">
+                            <div className="lg:hidden divide-y divide-slate-100">
                                 {filteredDevices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((d) => {
                                     const activeLoan = d.pinjaman?.[0];
                                     return (
@@ -727,7 +727,7 @@ export default function LoanerList() {
                             </div>
 
                             {/* Desktop Table View (>= sm) */}
-                            <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
+                            <table className="hidden lg:table w-full text-sm text-left whitespace-nowrap">
                                 <thead className="table-header">
                                     <tr>
                                         <th className="px-6 py-3.5">Kode & Unit</th>
@@ -950,7 +950,7 @@ export default function LoanerList() {
                         ) : (
                             <>
                             {/* Mobile Card View (< sm) */}
-                            <div className="sm:hidden divide-y divide-slate-100">
+                            <div className="lg:hidden divide-y divide-slate-100">
                                 {filteredRecords.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((r) => (
                                     <div
                                         key={r.id}
@@ -1044,7 +1044,7 @@ export default function LoanerList() {
                             </div>
 
                             {/* Desktop Table View (>= sm) */}
-                            <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
+                            <table className="hidden lg:table w-full text-sm text-left whitespace-nowrap">
                                 <thead className="table-header">
                                     <tr>
                                         <th className="px-6 py-3.5">No. Pinjam & Tanggal</th>

@@ -327,8 +327,10 @@ export default function Layout({ children }) {
             if (document.visibilityState === "visible") refreshSidebarCounts();
         }, 60000);
         const onFocus = () => refreshSidebarCounts();
+        const onVisibility = () => { if (document.visibilityState === "visible") refreshSidebarCounts(); };
         window.addEventListener("focus", onFocus);
-        return () => { clearInterval(interval); window.removeEventListener("focus", onFocus); };
+        document.addEventListener("visibilitychange", onVisibility);
+        return () => { clearInterval(interval); window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVisibility); };
     }, [refreshSidebarCounts]);
 
     useRealtimeEvent(["registration:updated", "notification:new", "notification:updated"], refreshSidebarCounts);
@@ -469,6 +471,7 @@ export default function Layout({ children }) {
         }
         return groups;
     }, [hasPermission, user?.is_super_admin]);
+    const visibleSidebarCount = navGroups.reduce((total, group) => total + group.items.reduce((sum, item) => sum + (sidebarCounts[item.path] || 0), 0), 0);
 
     const mobileNavItems = useMemo(() => {
         const available = navGroups.flatMap(group => group.items);
@@ -652,6 +655,7 @@ export default function Layout({ children }) {
 
                 {/* Quick SOP & Process Flow Pocket Guides */}
                 <div className="px-4 py-2 border-t border-slate-100 shrink-0 space-y-1.5">
+                    <button type="button" onClick={() => { setIsSidebarOpen(false); setIsBluetoothModalOpen(true); }} className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 sm:hidden"><Bluetooth className="h-4 w-4 shrink-0" /> Bluetooth</button>
                     <button
                         type="button"
                         onClick={() => setIsProcessFlowModalOpen(true)}
@@ -721,11 +725,13 @@ export default function Layout({ children }) {
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-initial">
                         <button 
                             type="button"
-                            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shrink-0 cursor-pointer"
+                            className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shrink-0 cursor-pointer"
                             onClick={() => setIsSidebarOpen(prev => !prev)}
                             title={isSidebarOpen ? "Tutup Sidebar Menu" : "Buka Sidebar Menu"}
+                            aria-label={isSidebarOpen ? "Tutup sidebar" : `Buka sidebar${visibleSidebarCount ? `, ${visibleSidebarCount} perlu perhatian` : ""}`}
                         >
                             <Menu className="w-5 h-5" />
+                            {!isSidebarOpen && visibleSidebarCount > 0 && <span className="absolute -right-1.5 -top-1.5 flex min-w-4.5 items-center justify-center rounded-full bg-rose-600 px-1 text-3xs font-bold leading-4 text-white" aria-hidden="true">{visibleSidebarCount > 99 ? "99+" : visibleSidebarCount}</span>}
                         </button>
 
                         {/* Mobile Title View */}
@@ -789,7 +795,7 @@ export default function Layout({ children }) {
                         <button
                             type="button"
                             onClick={() => setIsProcessFlowModalOpen(true)}
-                            className="inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
+                            className="hidden sm:inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
                             title="Panduan Interaktif Alur Proses Bisnis & SOP Serv.io"
                             aria-label="Panduan Alur Proses"
                         >
@@ -813,7 +819,7 @@ export default function Layout({ children }) {
                         <button
                             type="button"
                             onClick={() => setIsBluetoothModalOpen(true)}
-                            className="inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-3 bg-blue-50/70 hover:bg-blue-100 text-blue-700 border border-blue-200/70 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
+                            className="hidden sm:inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-3 bg-blue-50/70 hover:bg-blue-100 text-blue-700 border border-blue-200/70 rounded-xl text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
                             title="Diagnostik Bluetooth & Printer Thermal"
                             aria-label="Bluetooth"
                         >
@@ -873,7 +879,7 @@ export default function Layout({ children }) {
                             isSidebarOpen ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-900 font-medium"
                         }`}
                     >
-                        <Menu className="w-5 h-5 mb-0.5" />
+                        <span className="relative"><Menu className="w-5 h-5 mb-0.5" />{!isSidebarOpen && visibleSidebarCount > 0 && <span className="absolute -right-2 -top-1.5 h-2.5 w-2.5 rounded-full border border-white bg-rose-600" aria-hidden="true" />}</span>
                         <span className="text-3xs tracking-tight">Menu</span>
                     </button>
                 </div>

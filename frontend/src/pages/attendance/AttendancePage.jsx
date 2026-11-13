@@ -1183,7 +1183,7 @@ export default function AttendancePage() {
                 </div>
 
                 {/* Tab Navigation Navigation Pill */}
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-4 mt-2 border-t border-slate-100">
+                <div className="attendance-tabs grid grid-cols-2 items-stretch gap-1.5 pt-4 mt-2 border-t border-slate-100 sm:flex sm:flex-nowrap sm:items-center sm:overflow-x-auto sm:no-scrollbar">
                     {canSelfAttend && <>
                     <button
                         onClick={() => setActiveTab("today")}

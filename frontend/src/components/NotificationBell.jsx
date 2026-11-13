@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import api from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 import useRealtimeEvent from "../hooks/useRealtime";
@@ -38,7 +39,9 @@ export default function NotificationBell() {
                 fetchNotifications();
             }
         }, 120000);
-        return () => clearInterval(interval);
+        const onVisibility = () => { if (document.visibilityState === "visible") fetchNotifications(); };
+        document.addEventListener("visibilitychange", onVisibility);
+        return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisibility); };
     }, [fetchNotifications]);
 
     useEffect(() => {
@@ -150,10 +153,10 @@ export default function NotificationBell() {
 
             {/* Dropdown Popover */}
             {isOpen && (
-                <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 mt-2 sm:w-[440px] md:w-[460px] max-w-[calc(100vw-24px)] bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden popover-surface">
+                <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 mt-2 sm:w-[440px] md:w-[460px] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-9rem)] lg:max-h-[calc(100dvh-5rem)] flex flex-col bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden popover-surface">
                     {/* Header */}
-                    <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100 flex-nowrap">
-                        <div className="flex items-center gap-2 shrink-0 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-3 bg-slate-50 border-b border-slate-100 shrink-0">
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
                             <span className="text-sm font-bold text-slate-900 whitespace-nowrap">Notifikasi & Memo</span>
                             {unreadCount > 0 && (
                                 <span className="inline-flex items-center px-2 py-0.5 text-2xs font-bold bg-rose-50 text-rose-700 rounded-full border border-rose-200 whitespace-nowrap shrink-0 w-fit max-w-max">
@@ -170,7 +173,7 @@ export default function NotificationBell() {
                                     title="Tandai Semua Dibaca"
                                 >
                                     <CheckCheck className="w-3.5 h-3.5 shrink-0" />
-                                    <span className="text-2xs font-semibold whitespace-nowrap">Baca Semua</span>
+                                    <span className="hidden sm:inline text-2xs font-semibold whitespace-nowrap">Baca Semua</span>
                                 </button>
                             )}
                             <button
@@ -180,13 +183,13 @@ export default function NotificationBell() {
                                 title="Tulis memo baru"
                             >
                                 <Send className="w-3 h-3 shrink-0" />
-                                <span className="whitespace-nowrap">Kirim Memo</span>
+                                <span className="hidden sm:inline whitespace-nowrap">Kirim Memo</span>
                             </button>
                         </div>
                     </div>
 
                     {/* List */}
-                    <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+                    <div className="min-h-0 flex-1 overflow-y-auto divide-y divide-slate-100">
                         {notifications.length === 0 ? (
                             <div className="p-6 text-center text-slate-400 text-xs">
                                 <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300 opacity-60" />
@@ -240,8 +243,8 @@ export default function NotificationBell() {
             )}
 
             {/* Modal Kirim Memo Kolaborasi */}
-            {isMemoModalOpen && (
-                <div className="modal-shell z-50 bg-slate-900/40 backdrop-blur-xs">
+            {isMemoModalOpen && createPortal(
+                <div className="modal-shell z-[100] bg-slate-900/40 backdrop-blur-xs">
                     <div className="modal-panel max-w-md border-slate-100">
                         <div className="modal-grabber" />
                         <div className="modal-body-tight">
@@ -314,7 +317,7 @@ export default function NotificationBell() {
                         </form>
                         </div>
                     </div>
-                </div>
+                </div>, document.body
             )}
         </div>
     );

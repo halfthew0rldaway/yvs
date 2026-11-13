@@ -62,7 +62,7 @@ export default function ConfirmModal({
             onClick={() => !loading && onCancel?.()}
         >
             <div 
-                className="relative w-full max-w-sm bg-white rounded-2xl p-5 sm:p-6 shadow-2xl border border-slate-200 text-slate-900 animate-in zoom-in-95 duration-150"
+                className="relative w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain bg-white rounded-2xl p-4 sm:p-6 shadow-2xl border border-slate-200 text-slate-900 animate-in zoom-in-95 duration-150"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button */}
@@ -96,12 +96,12 @@ export default function ConfirmModal({
                     )}
                     
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2.5 w-full mt-5">
+                    <div className="flex flex-wrap items-center gap-2.5 w-full mt-5">
                         <button
                             type="button"
                             disabled={loading}
                             onClick={onCancel}
-                            className="flex-1 h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all cursor-pointer border border-slate-200 disabled:opacity-50"
+                            className="flex-1 min-w-[7rem] min-h-9 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all cursor-pointer border border-slate-200 disabled:opacity-50"
                         >
                             {cancelText}
                         </button>
@@ -109,7 +109,7 @@ export default function ConfirmModal({
                             type="button"
                             disabled={loading}
                             onClick={onConfirm}
-                            className={`flex-1 h-9 px-3 rounded-xl text-xs font-semibold shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 ${variantStyles.confirmBtn}`}
+                            className={`flex-1 min-w-[7rem] min-h-9 px-3 py-2 rounded-xl text-xs font-semibold shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 ${variantStyles.confirmBtn}`}
                         >
                             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />}
                             <span>{confirmText}</span>

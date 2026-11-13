@@ -687,7 +687,7 @@ export default function CustomerList() {
                 ) : (
                     <>
                         {/* Mobile Card View (< sm) */}
-                        <div className="sm:hidden">
+                        <div className="lg:hidden">
                             {customers.map((c, i) => (
                                 <CustomerCard
                                     key={c.id}
@@ -703,7 +703,7 @@ export default function CustomerList() {
                         </div>
 
                         {/* Desktop Table View (>= sm) */}
-                        <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
+                        <table className="hidden lg:table w-full text-sm text-left whitespace-nowrap">
                             <thead className="table-header">
                                 <tr>
                                     <th className="px-6 py-3.5 w-16">No</th>

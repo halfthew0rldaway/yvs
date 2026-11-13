@@ -460,7 +460,7 @@ export default function UserList() {
                         ) : (
                             <>
                             {/* Mobile Card View (< sm) */}
-                            <div className="sm:hidden divide-y divide-slate-100">
+                            <div className="lg:hidden divide-y divide-slate-100">
                                 {users.map((u) => (
                                     <div
                                         key={u.id}
@@ -562,7 +562,7 @@ export default function UserList() {
                             </div>
 
                             {/* Desktop Table View (>= sm) */}
-                            <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
+                            <table className="hidden lg:table w-full text-sm text-left whitespace-nowrap">
                                 <thead className="table-header">
                                     <tr>
                                         <th className="px-6 py-3.5">User</th>

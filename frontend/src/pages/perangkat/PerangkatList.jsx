@@ -225,7 +225,7 @@ export default function PerangkatList() {
                 ) : (
                     <>
                         {/* Mobile Card View (< sm) - table columns flatten into stacked cards */}
-                        <div className="sm:hidden divide-y divide-slate-100">
+                        <div className="lg:hidden divide-y divide-slate-100">
                             {perangkats.map((p, i) => {
                                 const serviceCount = p._count?.tiket_servis || 0;
                                 const rowNumber = (currentPage - 1) * pageSize + i + 1;
@@ -317,7 +317,7 @@ export default function PerangkatList() {
                         </div>
 
                         {/* Desktop Table View (>= sm) */}
-                        <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
+                        <table className="hidden lg:table w-full text-sm text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5 w-16">No</th>

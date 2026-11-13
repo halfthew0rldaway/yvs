@@ -421,7 +421,7 @@ export default function RmaList() {
                 ) : (
                     <>
                         {/* Mobile Card View (< sm) */}
-                        <div className="sm:hidden divide-y divide-slate-100">
+                        <div className="lg:hidden divide-y divide-slate-100">
                             {filteredRma.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item) => {
                                 const statusCfg = RMA_STATUS_CONFIG[item.status] || RMA_STATUS_CONFIG.diajukan;
                                 const StatusIcon = statusCfg.icon;
@@ -548,7 +548,7 @@ export default function RmaList() {
                         </div>
 
                         {/* Desktop Table View (>= sm) */}
-                        <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
+                        <table className="hidden lg:table w-full text-sm text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5">No. RMA & Tanggal</th>

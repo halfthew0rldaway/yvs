@@ -195,7 +195,7 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                     isDraggingRef.current = false;
                 }, 120);
             }}
-            className="fixed z-[35] select-none cursor-grab active:cursor-grabbing pointer-events-auto print:hidden right-4 sm:right-7 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-7"
+            className="fixed z-[35] select-none cursor-grab active:cursor-grabbing pointer-events-auto print:hidden right-1 sm:right-7 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-7"
             style={{ touchAction: "none" }}
             initial={{ opacity: 0, scale: 0.9, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -459,11 +459,12 @@ export default function CrmFloatingBubble({ maintenanceDueData, onOpenRecallModa
                     >
                         {/* 3D ServiBot with Smooth Levitation Animation (CSS GPU compositor) */}
                         <div className="animate-levitate">
-                            <ServiBot3D size={44} isUrgent={urgentCount > 0} />
+                            <span className="sm:hidden"><ServiBot3D size={32} isUrgent={urgentCount > 0} /></span>
+                            <span className="hidden sm:block"><ServiBot3D size={44} isUrgent={urgentCount > 0} /></span>
                         </div>
 
                         {/* Notification Pill Badge on Robot */}
-                        <div className={`absolute top-0 right-1 px-2 py-0.5 rounded-full text-2xs font-black shadow-lg border-2 border-white flex items-center gap-0.5 text-white ${
+                        <div className={`absolute top-0 right-0 px-1 sm:right-1 sm:px-2 py-0.5 rounded-full text-3xs sm:text-2xs font-black shadow-lg border-2 border-white flex items-center gap-0.5 text-white ${
                             urgentCount > 0 ? "bg-rose-500" : totalDue > 0 ? "bg-blue-600" : "bg-emerald-600"
                         }`}>
                             <span>{totalDue > 0 ? totalDue : "OK"}</span>

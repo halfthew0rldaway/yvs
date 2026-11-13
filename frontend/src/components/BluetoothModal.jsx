@@ -93,8 +93,8 @@ export default function BluetoothModal({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
-            <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="modal-shell bg-slate-900/50 backdrop-blur-xs animate-fadeIn" role="dialog" aria-modal="true">
+            <div className="modal-panel max-w-md">
                 
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/70">

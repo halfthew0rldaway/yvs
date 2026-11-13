@@ -16,6 +16,7 @@
 - [x] **Mobile Android App (Capacitor 7)**: Android 16 compatibility, native camera, native GPS, native print spooler, official YVS adaptive icons and splash screens.
 - [x] **Staging App Distribution**: Added `/download`, login entry point, staged APK file serving, and a CI build from the same source commit as the PWA. Android builds currently use temporary debug signatures and require reinstall between deployments.
 - [x] **Sidebar Action Badges & QR Queue Layout**: Added route-aware unread-notification badges, intake registration counts and direct QR link, realtime count refresh, and paginated mobile-first QR review cards.
+- [x] **Mobile UI Consistency Audit**: Checked 24 authenticated routes at 320px, 390px, and short landscape widths with isolated demo data; corrected hidden-sidebar badge visibility, header crowding, list breakpoints, notification/memo layering, modal landscape bounds, attendance tabs, and mobile CRM bubble sizing.
 - [x] **AI Workflow & Context Retention**: Serena semantic symbol index, Cline Memory Bank, root `AGENTS.md`, and agent rules.
 - [x] **QA & Test Architecture**: Comprehensive White Box (55 scenarios) and Black Box (50 scenarios) test documentation under `docs/testing/`, and 36 automated unit tests passing across 6 suites under `backend/tests/unit/`.
 - [x] **Continuous Form & Half-A4 (A5 Landscape) Redesign**: Redesigned `InvoiceModal`, `InvoiceDetail`, and `BpbsPrintModal` with packed, responsive, high-density layouts optimized for continuous form dot-matrix printers (210mm x 148mm) without vertical white space waste.

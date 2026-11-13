@@ -814,7 +814,7 @@ export default function SparepartList() {
                 ) : (
                     <>
                         {/* Mobile Card View (< sm) - inventory rows flattened into stacked cards */}
-                        <div className="sm:hidden divide-y divide-slate-100">
+                        <div className="lg:hidden divide-y divide-slate-100">
                             {paginatedSpareparts.length === 0 ? (
                                 <div className="px-4 py-12 text-center text-slate-500 text-xs">
                                     Tidak ada data yang cocok dengan pencarian atau filter.
@@ -952,7 +952,7 @@ export default function SparepartList() {
                         </div>
 
                         {/* Desktop Table View (>= sm) */}
-                        <table className="hidden sm:table w-full text-sm text-left whitespace-nowrap">
+                        <table className="hidden lg:table w-full text-sm text-left whitespace-nowrap">
                         <thead className="table-header">
                             <tr>
                                 <th className="px-6 py-3.5 font-semibold">No</th>
