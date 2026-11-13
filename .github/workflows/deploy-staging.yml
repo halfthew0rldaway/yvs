@@ -41,7 +41,7 @@ jobs:
           npm run build
           npx cap sync android
           cd android
-          ./gradlew assembleDebug
+          bash ./gradlew assembleDebug
           cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/servio-staging.apk"
           node -e 'const fs=require("fs"); fs.writeFileSync(process.env.GITHUB_WORKSPACE+"/servio-staging.json", JSON.stringify({commit:process.env.GITHUB_SHA,build:new Date().toISOString(),versionCode:Number(process.env.SERVIO_VERSION_CODE)})+"\n")'
 
