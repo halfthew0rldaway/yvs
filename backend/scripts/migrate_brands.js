@@ -1,6 +1,6 @@
-require("dotenv").config({ path: __dirname + "/.env" });
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
+const prisma = require("../src/config/database");
 
 async function migrate() {
     console.log("Starting migration...");

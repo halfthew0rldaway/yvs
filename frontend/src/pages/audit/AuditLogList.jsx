@@ -805,7 +805,7 @@ export default function AuditLogList() {
                             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 space-y-1">
                                 <span className="text-2xs font-semibold text-slate-400 uppercase tracking-wider block">Operator Pelaksana</span>
                                 <div className="flex items-center justify-between">
-                                    <span className="font-bold text-slate-800 text-sm">{selectedLog.user_nama || "Sistem Serv.io"}</span>
+                                    <span className="font-bold text-slate-800 text-sm">{selectedLog.user_nama || "Sistem YVS Computer"}</span>
                                     {selectedLog.user?.role && (
                                         <span className="px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-wider bg-blue-100 text-blue-700">
                                             {selectedLog.user.role}

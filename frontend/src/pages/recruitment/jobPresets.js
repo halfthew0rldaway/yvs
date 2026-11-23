@@ -1,4 +1,4 @@
-// Preset Jabatan Standar KEOS KomputerAwet / Serv.io
+// Preset Jabatan Standar KEOS YVS Computer
 export const JOB_PRESETS = [
     {
         id: "teknisi_software",
@@ -13,7 +13,7 @@ export const JOB_PRESETS = [
 • Melakukan backup data pelanggan secara aman dan terverifikasi sebelum tindakan instalasi.
 • Mengatasi crash software, bluescreen (BSOD), driver conflict, serta infeksi malware/virus.
 • Melakukan optimasi startup, debloating, dan setting performa laptop/PC kerja & gaming.
-• Wajib menjalankan Standar 8-Point Quality Control (QC) Serv.io sebelum unit diserahkan.`,
+• Wajib menjalankan Standar 8-Point Quality Control (QC) YVS Computer sebelum unit diserahkan.`,
         kualifikasi: `• Pendidikan minimal SMK TKJ / Rekayasa Perangkat Lunak / Otodidak Berpengalaman.
 • Memiliki troubleshooting mindset yang logis dan teliti (bukan sekadar coba-coba).
 • Menjunjung tinggi integritas kerahasiaan data pribadi pelanggan (Zero Data Breach).
@@ -52,7 +52,7 @@ export const JOB_PRESETS = [
         deskripsi: `• Menyambut pelanggan datang dengan standar 3S (Senyum, Salam, Sapa) dan profesional.
 • Mendengarkan keluhan kerusakan pelanggan secara aktif (Active Listening) dan memetakan cacat fisik di Defect Map.
 • Menerbitkan bukti tanda terima servis resmi (BPBS) dan menjelaskan estimasi waktu & biaya diagnosa secara transparan.
-• Memberikan update progres pengerjaan servis kepada pelanggan melalui WhatsApp CRM Serv.io.
+• Memberikan update progres pengerjaan servis kepada pelanggan melalui WhatsApp CRM YVS Computer.
 • Melayani serah terima unit selesai, mengarahkan tanda tangan digital, dan memproses kasir/invoice.`,
         kualifikasi: `• Pria / Wanita, usia maksimal 28 tahun.
 • Berpenampilan rapi, bersih, dan mematuhi SOP Grooming perusahaan.
@@ -141,7 +141,7 @@ ${job.kualifikasi || "- Disiplin, jujur, dan memiliki motivasi kerja tinggi."}
 *BENEFIT & FASILITAS:*
 • Gaji pokok + Insentif performa unit servis
 • Lingkungan kerja modern & workshop ber-AC
-• Sistem kerja terstruktur (SOP & sistem Serv.io)
+• Sistem kerja terstruktur (SOP & sistem YVS Computer)
 • Akses modul training & pengembangan karir tim
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━

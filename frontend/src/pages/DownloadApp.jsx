@@ -47,9 +47,11 @@ export default function DownloadApp() {
                 <Link to="/login" className="text-sm font-semibold text-blue-600 hover:text-blue-700">← Kembali ke login</Link>
                 <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Smartphone size={22} /></div>
+                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 p-2">
+                            <img src="/logo-yangversa.png" alt="YVS Computer" className="h-full w-full object-contain" />
+                        </div>
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Serv.io Staging</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">YVS Computer Staging</p>
                             <h1 className="text-xl font-bold text-slate-900">Pasang aplikasi staf</h1>
                         </div>
                     </div>
@@ -60,13 +62,13 @@ export default function DownloadApp() {
                         <p className="mt-1 text-sm text-slate-500">File APK dibangun ulang dari kode pada setiap deploy staging.</p>
                         {release && !AppConfig.isNative ? (
                             <>
-                                <a href={`${apkUrl}?v=${encodeURIComponent(release.commit)}`} download="servio-staging.apk" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"><Download size={16} /> Unduh APK staging</a>
+                                <a href={`${apkUrl}?v=${encodeURIComponent(release.commit)}`} download="yvs-computer-staging.apk" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"><Download size={16} /> Unduh APK staging</a>
                                 <p className="mt-2 text-xs text-slate-500">Build #{release.versionCode} · Commit {release.commit.slice(0, 7)}</p>
                             </>
                         ) : (
                             <p className="mt-4 flex items-center gap-2 text-sm text-slate-500">{AppConfig.isNative ? "Buka halaman ini di browser untuk mengunduh APK." : loading ? <><RefreshCw size={15} className="animate-spin" /> Memeriksa APK…</> : "APK belum tersedia di server."}</p>
                         )}
-                        <p className="mt-3 text-xs leading-5 text-amber-700">Versi staging masih memakai tanda tangan debug sementara. Hapus instalasi Serv.io lama sebelum memasang APK baru. Data lokal yang belum tersinkron akan hilang.</p>
+                        <p className="mt-3 text-xs leading-5 text-amber-700">Versi staging masih memakai tanda tangan debug sementara. Hapus instalasi aplikasi lama sebelum memasang APK baru. Data lokal yang belum tersinkron akan hilang.</p>
                     </section>
 
                     <section className="mt-4 rounded-xl border border-slate-200 p-4 sm:p-5">

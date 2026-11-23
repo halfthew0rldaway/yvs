@@ -537,7 +537,7 @@ export default function JobPostingForm() {
                                     </div>
                                     <textarea
                                         rows={6}
-                                        placeholder="• Melakukan diagnosa kerusakan laptop...&#10;• Mengganti suku cadang sesuai SOP...&#10;• Menjalankan 8-Point QC Serv.io..."
+                                        placeholder="• Melakukan diagnosa kerusakan laptop...&#10;• Mengganti suku cadang sesuai SOP...&#10;• Menjalankan 8-Point QC YVS Computer..."
                                         value={deskripsi}
                                         onChange={(e) => setDeskripsi(e.target.value)}
                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all leading-relaxed"

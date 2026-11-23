@@ -33,7 +33,7 @@ import {
     FileText
 } from "lucide-react";
 
-// Standardized 6 Stages of the Serv.io Workshop ERP Lifecycle
+// Standardized 6 Stages of the YVS Computer Workshop ERP Lifecycle
 // Symmetrical architecture: every stage has 3 left cards and 3 right cards for perfect balance
 const FLOW_STAGES = [
     {
@@ -119,7 +119,7 @@ const FLOW_STAGES = [
                 badge: "Butuh Suku Cadang",
                 badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
                 condition: "Komponen fisik rusak permanen (LCD pecah, baterai kembung, keyboard short, IC berlubang, kipas macet).",
-                outcome: "Teknisi memeriksa ketersediaan suku cadang di modul gudang ERP Serv.io dan mencantumkan rincian part pada estimasi biaya."
+                outcome: "Teknisi memeriksa ketersediaan suku cadang di modul gudang ERP YVS Computer dan mencantumkan rincian part pada estimasi biaya."
             }
         ],
         keyTasks: [
@@ -200,7 +200,7 @@ const FLOW_STAGES = [
         roleBadgeBg: "bg-indigo-50 text-indigo-700 border-indigo-200",
         roleIcon: Cpu,
         summary: "Eksekusi perbaikan motherboard, penggantian komponen, dan pencatatan log progres.",
-        description: "Teknisi mengeksekusi perbaikan sesuai estimasi yang disetujui. Setiap perkembangan dicatat ke dalam log perbaikan sistem ERP Serv.io secara real-time.",
+        description: "Teknisi mengeksekusi perbaikan sesuai estimasi yang disetujui. Setiap perkembangan dicatat ke dalam log perbaikan sistem ERP YVS Computer secara real-time.",
         erpActionText: "Kelola Stok Sparepart",
         erpActionLink: "/sparepart",
         sopInstructions: [
@@ -215,7 +215,7 @@ const FLOW_STAGES = [
                 badge: "Potong Stok Otomatis",
                 badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200",
                 condition: "Perbaikan memerlukan part baru seperti SSD, RAM, LCD Panel, Baterai, Keyboard, atau Kipas Pendingin.",
-                outcome: "Stok suku cadang gudang terpotong otomatis dari inventaris ERP Serv.io dan tercatat dalam rincian nota servis unit."
+                outcome: "Stok suku cadang gudang terpotong otomatis dari inventaris ERP YVS Computer dan tercatat dalam rincian nota servis unit."
             },
             {
                 type: "component_level",
@@ -257,7 +257,7 @@ const FLOW_STAGES = [
         erpActionLink: "/tiket-servis",
         sopInstructions: [
             "Verifikasi bahwa unit telah lolos 100% running test dan bersihkan bodi dari bekas debu atau pasta thermal.",
-            "Pasang stiker segel garansi workshop Serv.io dan unggah foto dokumentasi fisik pasca-servis ke sistem.",
+            "Pasang stiker segel garansi workshop YVS Computer dan unggah foto dokumentasi fisik pasca-servis ke sistem.",
             "Kirim pesan WhatsApp resmi otomatis memberitahukan unit telah siap diambil lengkap dengan rincian biaya."
         ],
         decisionRules: [
@@ -282,7 +282,7 @@ const FLOW_STAGES = [
             "Mengunggah foto dokumentasi unit setelah selesai servis (kondisi rapi dan segel garansi terpasang).",
             "Menyatukan kelengkapan pelanggan (charger, tas) dan komponen lama ke dalam tas serah terima.",
             "Admin mengirim pesan WhatsApp resmi otomatis: 'Unit Anda telah selesai diperbaiki dan siap diambil di workshop'.",
-            "Menyertakan rincian total tagihan serta tautan tracking online resmi Serv.io."
+            "Menyertakan rincian total tagihan serta tautan tracking online resmi YVS Computer."
         ],
         deliverables: [
             "Foto kondisi fisik pasca-servis dan segel garansi terunggah di modul tiket.",
@@ -327,12 +327,12 @@ const FLOW_STAGES = [
                 badge: "Garansi / Retur Instan",
                 badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
                 condition: "Pelanggan menemukan hal yang belum sesuai dengan ekspektasi saat pengetesan langsung di meja serah terima.",
-                outcome: "Unit langsung ditangani oleh Kepala Teknisi tanpa biaya tambahan sebagai bentuk perlindungan kepuasan konsumen Serv.io."
+                outcome: "Unit langsung ditangani oleh Kepala Teknisi tanpa biaya tambahan sebagai bentuk perlindungan kepuasan konsumen YVS Computer."
             }
         ],
         keyTasks: [
             "Live Testing: Pelanggan menguji fungsi keyboard, layar, audio, port USB, dan pengisian daya baterai bersama staf.",
-            "Penerbitan Invoice Resmi dari modul ERP Serv.io (pencatatan metode bayar Tunai, QRIS, atau Transfer Bank).",
+            "Penerbitan Invoice Resmi dari modul ERP YVS Computer (pencatatan metode bayar Tunai, QRIS, atau Transfer Bank).",
             "Tanda Tangan Digital Serah Terima di layar tablet/HP sebagai bukti penerimaan unit tanpa cacat baru.",
             "Penerbitan Kartu Garansi Servis (SLA Garansi 30 - 90 Hari) yang tersimpan di sistem pelacakan online."
         ],
@@ -442,7 +442,7 @@ export default function BusinessProcessFlowModal({ isOpen, onClose }) {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight whitespace-nowrap">
-                                    Alur Kerja Operasional Bengkel Serv.io
+                                    Alur Kerja Operasional Bengkel YVS Computer
                                 </h2>
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
                                     <Sparkles className="w-3.5 h-3.5 text-blue-600" /> SOP Bengkel

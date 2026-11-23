@@ -170,7 +170,7 @@ export default function Profile() {
             <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Pengaturan Profil</h1>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Sesuaikan identitas diri, foto profil, dan keamanan kredensial akun Anda di Serv.io.
+                    Sesuaikan identitas diri, foto profil, dan keamanan kredensial akun Anda di YVS Computer.
                 </p>
             </div>
 

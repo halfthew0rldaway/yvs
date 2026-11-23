@@ -773,7 +773,7 @@ async function reminderRestock(req, res) {
             // Silently proceed if table is in sync process
         }
 
-        const waText = `Halo Admin Serv.io, saya ${senderNama} ingin menginfokan bahwa stok sparepart *${fullName}* saat ini sudah menipis (tersisa *${sparepart.stok} unit*). Mohon bantuan pengadaan / restock suku cadang tersebut. Terima kasih!`;
+        const waText = `Halo Admin YVS Computer, saya ${senderNama} ingin menginfokan bahwa stok sparepart *${fullName}* saat ini sudah menipis (tersisa *${sparepart.stok} unit*). Mohon bantuan pengadaan / restock suku cadang tersebut. Terima kasih!`;
 
         return res.json({
             message: `Pengingat restock untuk ${fullName} berhasil dikirim ke Admin`,

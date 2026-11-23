@@ -85,7 +85,7 @@ export default function HireApplicantModal({ isOpen, onClose, applicant, onSucce
                                 Konfirmasi Penerimaan Staf
                             </h2>
                             <p className="text-xs text-slate-500">
-                                Onboard kandidat terpilih langsung menjadi User Serv.io
+                                Onboard kandidat terpilih langsung menjadi User YVS Computer
                             </p>
                         </div>
                     </div>

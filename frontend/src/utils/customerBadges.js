@@ -32,7 +32,7 @@ export const BADGE_DEFINITIONS = {
         dotColor: "bg-purple-500",
         badgeTone: "purple",
         criteria: "Histori tiket servis selesai >= 5 tiket, ATAU total transaksi >= Rp 5.000.000.",
-        description: "Pelanggan prioritas tinggi dengan loyalitas dan rekam jejak servis paling sering di Serv.io.",
+        description: "Pelanggan prioritas tinggi dengan loyalitas dan rekam jejak servis paling sering di YVS Computer.",
         sopGuidance: "Prioritaskan antrean pengerjaan unit, berikan diskon jasa loyalitas, dan penanganan garansi yang fleksibel."
     },
     repeat_customer: {
@@ -80,7 +80,7 @@ export const BADGE_DEFINITIONS = {
         dotColor: "bg-slate-400",
         badgeTone: "slate",
         criteria: "Maksimal 1 tiket servis dan 0x revisi ACC.",
-        description: "Pelanggan baru terdaftar yang sedang merasakan standar layanan Serv.io untuk pertama kalinya.",
+        description: "Pelanggan baru terdaftar yang sedang merasakan standar layanan YVS Computer untuk pertama kalinya.",
         sopGuidance: "Berikan impresi terbaik, sambut ramah, dan jelaskan SOP garansi serta alur pengerjaan secara transparan."
     }
 };

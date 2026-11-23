@@ -548,7 +548,7 @@ export default function InvoiceList() {
                             </div>
 
                             <p className="text-2xs text-slate-400 text-center pt-2">
-                                Dokumen ini dihasilkan secara otomatis oleh Serv.io Workshop Management System.
+                                Dokumen ini dihasilkan secara otomatis oleh YVS Computer Workshop Management System.
                             </p>
                         </div>
                     </div>

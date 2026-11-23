@@ -180,7 +180,7 @@ export default function RepairWikiList() {
                             </span>
                         </div>
                         <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                            Pusat panduan operasional standar & basis pengetahuan teknis workshop KomputerAwet / Serv.io.
+                            Pusat panduan operasional standar & basis pengetahuan teknis workshop YVS Computer.
                         </p>
                     </div>
                 </div>

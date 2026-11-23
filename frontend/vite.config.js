@@ -9,7 +9,6 @@ export default defineConfig({
             injectRegister: null,
             registerType: "autoUpdate",
             includeAssets: [
-                "favicon.ico",
                 "logo-yangversa.png",
                 "icons/Icon-192.png",
                 "icons/Icon-512.png",
@@ -17,7 +16,7 @@ export default defineConfig({
                 "icons/Icon-maskable-512.png"
             ],
             manifest: {
-                name: "YVS Computer • Serv.io Workshop",
+                name: "YVS Computer • Pusat Reparasi & Rekayasa Komputer",
                 short_name: "YVS Computer",
                 description: "Pusat Reparasi & Rekayasa Komputer - Sistem Manajemen Workshop & Servis",
                 theme_color: "#2563eb",

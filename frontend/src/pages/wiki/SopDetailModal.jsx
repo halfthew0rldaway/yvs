@@ -152,7 +152,7 @@ export default function SopDetailModal({ isOpen, onClose, sop, onEdit, canModify
                 <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
                     <div className="text-2xs text-slate-400 flex items-center gap-1.5 font-medium">
                         <Calendar className="w-3.5 h-3.5" />
-                        <span>Dokumen Resmi KomputerAwet / Serv.io KEOS</span>
+                        <span>Dokumen Resmi YVS Computer</span>
                     </div>
 
                     <div className="flex items-center gap-2">

@@ -42,7 +42,7 @@ Menetapkan standar penampilan seluruh karyawan agar membangun kepercayaan pelang
             "Hadir minimal 15-30 menit sebelum jam operasional dimulai.",
             "Cek keamanan fisik: pintu, gembok, dan kamera CCTV aktif merekam.",
             "Cek kelistrikan & grounding workshop: pastikan tegangan stabil dan MCB aman.",
-            "Uji koneksi internet utama & cadangan untuk sistem tiket kasir Serv.io.",
+            "Uji koneksi internet utama & cadangan untuk sistem tiket kasir YVS Computer.",
             "Briefing pagi 10 menit (FRM-OPS-001) dipimpin Leader/Admin."
         ]),
         konten: `### 1. TUJUAN
@@ -51,7 +51,7 @@ Memastikan seluruh fasilitas fisik, infrastruktur listrik, perangkat pendukung, 
 ### 2. TAHAP PEMERIKSAAN HARIAN
 1. **Keamanan Fisik**: Periksa kondisi gembok, rolling door, dan pastikan seluruh kamera CCTV berfungsi merekam.
 2. **Kelistrikan & Grounding**: Hidupkan saklar utama workshop, cek voltmeter stabilizer (220V ±5%), pastikan grounding stopkontak teknisi di bawah 2 Ohm.
-3. **Koneksi Jaringan**: Pastikan router internet online, ping latency stabil, dan sistem kasir/tiket Serv.io siap dipakai.
+3. **Koneksi Jaringan**: Pastikan router internet online, ping latency stabil, dan sistem kasir/tiket YVS Computer siap dipakai.
 4. **Area Frontdesk & Customer**: Bersihkan meja penerimaan, display aksesoris, dan siapkan alat tulis serta tanda terima BPBS.
 5. **Briefing Pagi (10 Menit)**: Evaluasi unit pending kemarin, bagi tugas unit prioritas SLA hari ini, dan doa bersama.`,
         versi: "1.0",
@@ -132,7 +132,7 @@ Melindungi keselamatan teknisi dari bahaya luka bakar/sengatan listrik, serta me
 ### 2. STANDAR INTERAKSI DEPAN
 1. **Salam Pembuka**: "Selamat pagi/siang Kak, selamat datang di KomputerAwet. Ada yang bisa kami bantu periksa hari ini?"
 2. **Menggali Gejala**: Tanyakan kapan kendala pertama kali muncul, apakah pernah terkena tumpahan air, jatuh, atau ada suara asing.
-3. **Pemeriksaan Fisik Bersama**: Periksa kondisi fisik unit bersama pelanggan (baret, retak, karet hilang, charger bengkok). Catat langsung di modul **Visual Defect Map** Serv.io agar tidak ada salah paham saat unit selesai.
+3. **Pemeriksaan Fisik Bersama**: Periksa kondisi fisik unit bersama pelanggan (baret, retak, karet hilang, charger bengkok). Catat langsung di modul **Visual Defect Map** YVS Computer agar tidak ada salah paham saat unit selesai.
 4. **Konfirmasi Data Pribadi**: Ingatkan pelanggan terkait pencadangan data penting jika penanganan membutuhkan instalasi ulang.
 5. **Penyerahan Dokumen BPBS**: Pastikan pelanggan menerima struk BPBS dan jelaskan fitur tracking online lewat nomor tiket.`,
         versi: "1.0",
@@ -156,7 +156,7 @@ Melindungi keselamatan teknisi dari bahaya luka bakar/sengatan listrik, serta me
 
 ### 2. PROTOKOL KLAIM GARANSI
 1. **Sikap Pertama**: Dengarkan keluhan tanpa defensif. Katakan: *"Mohon maaf sekali ya Kak atas kendala ini. Unitnya langsung kami cek prioritas hari ini."*
-2. **Pengecekan Sistem**: Buka riwayat tiket pada Serv.io. Periksa tanggal selesai pengerjaan dan masa garansi suku cadang/jasa.
+2. **Pengecekan Sistem**: Buka riwayat tiket pada YVS Computer. Periksa tanggal selesai pengerjaan dan masa garansi suku cadang/jasa.
 3. **Pemberian Jalur Prioritas**: Tiket garansi diberi tag **RMA / Garansi** dan diserahkan ke teknisi senior untuk investigasi segera.
 4. **Penyelesaian Tanpa Biaya Tambahan**: Jika kendala disebabkan oleh suku cadang defek atau pengerjaan awal, penggantian dilakukan 100% gratis.`,
         versi: "1.0",

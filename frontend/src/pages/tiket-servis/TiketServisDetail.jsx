@@ -3211,7 +3211,7 @@ export default function TiketServisDetail() {
                                     <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 shrink-0" />
                                     <div className="min-w-0">
                                         <p className="font-bold break-words">Tidak ada riwayat perbaikan terdahulu untuk unit ini.</p>
-                                        <p className="text-emerald-700/80 break-words">Ini adalah kali pertama perangkat tercatat masuk ke pusat servis Serv.io.</p>
+                                        <p className="text-emerald-700/80 break-words">Ini adalah kali pertama perangkat tercatat masuk ke pusat servis YVS Computer.</p>
                                     </div>
                                 </div>
                             )}

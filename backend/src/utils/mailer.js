@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (to, subject, text, html) => {
     try {
         const info = await transporter.sendMail({
-            from: '"Serv.io Admin" <no-reply@serv.io>',
+            from: '"YVS Computer" <no-reply@yvs.co.id>',
             to,
             subject,
             text,

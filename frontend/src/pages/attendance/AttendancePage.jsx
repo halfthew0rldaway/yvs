@@ -3272,7 +3272,7 @@ export default function AttendancePage() {
 
                             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-amber-900 text-2xs">
                                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                                <span>Perubahan ini dicatat permanen dalam Audit Log Sistem Serv.io dengan identitas admin yang sedang login.</span>
+                                <span>Perubahan ini dicatat permanen dalam Audit Log Sistem YVS Computer dengan identitas admin yang sedang login.</span>
                             </div>
 
                             <div className="pt-3 border-t border-slate-100 flex justify-end gap-2.5">

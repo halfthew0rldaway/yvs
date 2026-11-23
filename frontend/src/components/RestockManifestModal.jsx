@@ -126,7 +126,7 @@ export default function RestockManifestModal({ isOpen, onClose }) {
 
         let lines = [];
         lines.push(`*DAFTAR REORDER SUKU CADANG (MANIFEST BELANJA)*`);
-        lines.push(`Toko: YVS Computer / Serv.io`);
+        lines.push(`Toko: YVS Computer`);
         lines.push(`Tanggal: ${todayStr}`);
         lines.push(`Kepada Yth: ${suppName}`);
         lines.push(``);

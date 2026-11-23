@@ -142,7 +142,7 @@ app.get("/api/health", (req, res) => {
 
 app.get("/", (req, res) => {
     res.json({ 
-        message: "Serv.io API - Running",
+        message: "YVS Computer API - Running",
         environment: process.env.NODE_ENV || "development",
         status: "healthy"
     });

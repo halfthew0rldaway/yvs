@@ -131,7 +131,7 @@ export default function SopFormModal({ isOpen, onClose, sopToEdit, onSuccess }) 
                                 {isEdit ? "Edit Dokumen SOP" : "Tulis SOP Standar Baru"}
                             </h2>
                             <p className="text-xs text-slate-500 mt-0.5">
-                                Format standar operasional untuk pedoman kerja tim KomputerAwet / Serv.io
+                                Format standar operasional untuk pedoman kerja tim YVS Computer
                             </p>
                         </div>
                     </div>

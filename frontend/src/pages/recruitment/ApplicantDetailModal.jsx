@@ -104,7 +104,7 @@ export default function ApplicantDetailModal({ isOpen, onClose, applicant, onUpd
     const handleDirectWhatsApp = () => {
         let phone = applicant.nomor_telepon.replace(/\D/g, "");
         if (phone.startsWith("0")) phone = "62" + phone.slice(1);
-        const msg = encodeURIComponent(`Halo Kak ${applicant.nama_lengkap}, kami dari Tim KomputerAwet / Serv.io terkait lamaran posisi ${applicant.job_posting?.judul_posisi || "Teknisi"}...`);
+        const msg = encodeURIComponent(`Halo Kak ${applicant.nama_lengkap}, kami dari Tim YVS Computer terkait lamaran posisi ${applicant.job_posting?.judul_posisi || "Teknisi"}...`);
         window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
     };
 

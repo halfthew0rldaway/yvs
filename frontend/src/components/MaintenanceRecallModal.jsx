@@ -116,31 +116,31 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
 
         switch (personalityTone) {
             case "Koleris":
-                greeting = `Halo Kak ${customerName}, salam dari Serv.io / YVS Computer.`;
+                greeting = `Halo Kak ${customerName}, salam dari YVS Computer.`;
                 body = `Mengingatkan secara singkat bahwa unit ${deviceStr} milik Anda telah selesai diservis sekitar ${timePhrase} lalu (${formatDate(selectedItem.tgl_diambil)}). Dalam siklus pemakaian 6 hingga 12 bulan, pasta termal mulai mengering dan debu ventilasi berpotensi menghambat pendinginan. Untuk mencegah penurunan performa dan kerusakan komponen yang lebih mahal, kami menyarankan perawatan berkala: ${recommended}.`;
                 closing = `Unit dapat dibawa ke workshop kami hari ini atau besok untuk inspeksi singkat tanpa antre panjang. Terima kasih atas kerja samanya.`;
                 break;
 
             case "Sanguinis":
-                greeting = `Halo Kak ${customerName}, apa kabar? Semoga dalam keadaan sehat dan lancar selalu aktivitasnya bersama YVS Computer / Serv.io.`;
+                greeting = `Halo Kak ${customerName}, apa kabar? Semoga dalam keadaan sehat dan lancar selalu aktivitasnya bersama YVS Computer.`;
                 body = `Sekadar menyapa dan menanyakan kabar unit ${deviceStr} Kakak yang diservis ${timePhrase} lalu, semoga sampai hari ini masih nyaman dan lancar dipakai ya kak. Mengingat sudah memasuki siklus 6 bulan hingga 1 tahun pemakaian, ada baiknya unit dijadwalkan perawatan rutin seperti ${recommended} agar suhu mesin tetap dingin dan selalu responsif.`;
                 closing = `Bisa langsung mampir ke toko kami kapan saja ya Kak, tim kami siap bantu cek kondisinya. Terima kasih banyak Kak ${customerName}!`;
                 break;
 
             case "Melankolis":
-                greeting = `Selamat siang/sore Kak ${customerName}, salam dari tim teknis Serv.io / YVS Computer.`;
+                greeting = `Selamat siang/sore Kak ${customerName}, salam dari tim teknis YVS Computer.`;
                 body = `Berdasarkan rekam jejak servis pada tiket #${selectedItem.nomor_tiket}, unit ${deviceStr} telah beroperasi selama ${timePhrase} sejak tanggal pengambilan (${formatDate(selectedItem.tgl_diambil)}). Berdasarkan standar pemeliharaan teknis perangkat keras, interval 6 hingga 12 bulan merupakan siklus rekomendasi untuk melakukan ${recommended} guna menjamin kestabilan temperatur, putaran kipas, serta keandalan media penyimpanan data.`;
                 closing = `Kami menyediakan layanan inspeksi parameter sistem dan uji termal menyeluruh di workshop. Silakan hubungi kami apabila memerlukan reservasi waktu kedatangan. Terima kasih.`;
                 break;
 
             case "Plegmatis":
-                greeting = `Halo Kak ${customerName}, selamat beraktivitas. Salam hangat dari tim YVS Computer / Serv.io.`;
+                greeting = `Halo Kak ${customerName}, selamat beraktivitas. Salam hangat dari tim YVS Computer.`;
                 body = `Kami ingin menanyakan kabar unit ${deviceStr} yang kemarin diservis sekitar ${timePhrase} lalu, semoga masih berjalan dengan baik dan tidak ada kendala. Apabila Kakak sedang memiliki waktu luang, kami menyarankan pemeriksaan berkala santai seperti ${recommended} supaya unitnya tetap awet dan tidak cepat panas.`;
                 closing = `Tidak perlu terburu-buru kak, bila nanti senggang silakan berkunjung ke bengkel kami. Semoga harinya menyenangkan.`;
                 break;
 
             default: // Netral
-                greeting = `Halo Kak ${customerName}, salam dari Serv.io / YVS Computer Service.`;
+                greeting = `Halo Kak ${customerName}, salam dari YVS Computer Service.`;
                 body = `Kami menginformasikan bahwa unit ${deviceStr} telah selesai diservis sekitar ${timePhrase} lalu (${formatDate(selectedItem.tgl_diambil)}). Untuk menjaga performa tetap stabil dan mencegah overheat, siklus 6 bulan hingga 1 tahun dianjurkan untuk perawatan berkala: ${recommended}.`;
                 closing = `Silakan bawa perangkat ke workshop kami untuk pemeriksaan rutin. Terima kasih atas kepercayaan Anda kepada YVS Computer.`;
                 break;
@@ -156,7 +156,7 @@ export default function MaintenanceRecallModal({ isOpen, onClose, initialSelecte
             noteText = `\n\n*Catatan Khusus:* ${customNote.trim()}`;
         }
 
-        return `*PENGINGAT PERAWATAN BERKALA PERANGKAT*\n*YVS Computer / Serv.io*\n\n${greeting}\n\n${body}${promoText}${noteText}\n\n${closing}`;
+        return `*PENGINGAT PERAWATAN BERKALA PERANGKAT*\n*YVS Computer*\n\n${greeting}\n\n${body}${promoText}${noteText}\n\n${closing}`;
     }
 
     async function handleMarkFollowUp(autoSendWa = false) {

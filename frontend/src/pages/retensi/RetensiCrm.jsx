@@ -260,15 +260,15 @@ export default function RetensiCrm() {
 
         switch (tone) {
             case "Koleris":
-                return `Halo Bpk/Ibu ${nama}, ini Serv.io Workshop.\n\nPerangkat Anda (${unit}) tercatat ${periodeStr}. Untuk menjaga kestabilan sistem dan mencegah overhead/kerusakan komponen, unit disarankan melakukan perawatan berkala:\n1. Pembersihan tumpukan debu pendingin\n2. Pembaruan pasta termal kering\n3. Pemeriksaan kesehatan storage & tegangan baterai.${promoText}${noteText}\n\nSilakan konfirmasi jadwal kunjungan jika unit ingin dijadwalkan perawatan hari ini. Terima kasih.`;
+                return `Halo Bpk/Ibu ${nama}, ini YVS Computer Workshop.\n\nPerangkat Anda (${unit}) tercatat ${periodeStr}. Untuk menjaga kestabilan sistem dan mencegah overhead/kerusakan komponen, unit disarankan melakukan perawatan berkala:\n1. Pembersihan tumpukan debu pendingin\n2. Pembaruan pasta termal kering\n3. Pemeriksaan kesehatan storage & tegangan baterai.${promoText}${noteText}\n\nSilakan konfirmasi jadwal kunjungan jika unit ingin dijadwalkan perawatan hari ini. Terima kasih.`;
             case "Sanguinis":
-                return `Halo Bpk/Ibu ${nama}! Semoga harinya menyenangkan bersama ${unit}.\n\nKami melihat laptop Anda ${periodeStr} di Serv.io. Supaya performanya tetap kencang, adem, dan bebas lag, sekarang adalah waktu terbaik untuk perawatan berkala pembersihan kipas dan repaste pasta pendingin.${promoText}${noteText}\n\nKapan ada waktu luang untuk mampir ke workshop kami? Tim kami siap menyambut Anda. Terima kasih!`;
+                return `Halo Bpk/Ibu ${nama}! Semoga harinya menyenangkan bersama ${unit}.\n\nKami melihat laptop Anda ${periodeStr} di YVS Computer. Supaya performanya tetap kencang, adem, dan bebas lag, sekarang adalah waktu terbaik untuk perawatan berkala pembersihan kipas dan repaste pasta pendingin.${promoText}${noteText}\n\nKapan ada waktu luang untuk mampir ke workshop kami? Tim kami siap menyambut Anda. Terima kasih!`;
             case "Melankolis":
-                return `Yth. Bpk/Ibu ${nama},\n\nBerdasarkan sistem pemeliharaan Serv.io untuk unit ${unit} (No. Tiket: #${item.nomor_tiket}), perangkat Anda ${periodeStr}.\n\nStandar siklus operasional 6-12 bulan merekomendasikan:\n- Penggantian senyawa konduksi termal (thermal paste) untuk efisiensi pendinginan\n- Pembersihan debu pada heatsink & fan bearing\n- Uji diagnostik SMART SSD & voltase pengisian daya.${promoText}${noteText}\n\nLayanan tersedia di workshop kami pada jam operasional. Terima kasih atas kepercayaan Anda.`;
+                return `Yth. Bpk/Ibu ${nama},\n\nBerdasarkan sistem pemeliharaan YVS Computer untuk unit ${unit} (No. Tiket: #${item.nomor_tiket}), perangkat Anda ${periodeStr}.\n\nStandar siklus operasional 6-12 bulan merekomendasikan:\n- Penggantian senyawa konduksi termal (thermal paste) untuk efisiensi pendinginan\n- Pembersihan debu pada heatsink & fan bearing\n- Uji diagnostik SMART SSD & voltase pengisian daya.${promoText}${noteText}\n\nLayanan tersedia di workshop kami pada jam operasional. Terima kasih atas kepercayaan Anda.`;
             case "Plegmatis":
-                return `Selamat siang Bpk/Ibu ${nama}, salam dari tim Serv.io.\n\nSekadar menyapa dan memastikan ${unit} Anda tetap beroperasi lancar. Mengingat unit ${periodeStr}, jika Anda berkenan, kami menyarankan pengecekan suhu dan pembersihan berkala agar laptop selalu nyaman digunakan.${promoText}${noteText}\n\nSilakan berkunjung saat Anda senggang. Terima kasih banyak atas kesetiaan Anda.`;
+                return `Selamat siang Bpk/Ibu ${nama}, salam dari tim YVS Computer.\n\nSekadar menyapa dan memastikan ${unit} Anda tetap beroperasi lancar. Mengingat unit ${periodeStr}, jika Anda berkenan, kami menyarankan pengecekan suhu dan pembersihan berkala agar laptop selalu nyaman digunakan.${promoText}${noteText}\n\nSilakan berkunjung saat Anda senggang. Terima kasih banyak atas kesetiaan Anda.`;
             default:
-                return `Halo Bpk/Ibu ${nama},\n\nKami dari Serv.io Workshop menginformasikan bahwa perangkat ${unit} Anda ${periodeStr}. Demi performa optimal dan pencegahan overheat, disarankan melakukan servis berkala (pembersihan sirkulasi debu dan penggantian thermal paste).${promoText}${noteText}\n\nSilakan hubungi kami untuk reservasi atau langsung datang ke workshop. Terima kasih.`;
+                return `Halo Bpk/Ibu ${nama},\n\nKami dari YVS Computer Workshop menginformasikan bahwa perangkat ${unit} Anda ${periodeStr}. Demi performa optimal dan pencegahan overheat, disarankan melakukan servis berkala (pembersihan sirkulasi debu dan penggantian thermal paste).${promoText}${noteText}\n\nSilakan hubungi kami untuk reservasi atau langsung datang ke workshop. Terima kasih.`;
         }
     };
 
@@ -280,11 +280,11 @@ export default function RetensiCrm() {
         const noteText = customNote.trim() ? `\n* Catatan: ${customNote.trim()}` : "";
 
         if (item.diff_days >= 90) {
-            return `Yth. Bpk/Ibu ${nama},\n\nKami dari Serv.io menginformasikan mengenai perangkat Anda (${unit}, No. Tiket: #${item.nomor_tiket}) yang telah selesai dikerjakan sejak lebih dari 3 bulan yang lalu dan masih berada di rak penyimpanan workshop kami.\n\nDetail Invoice: ${biaya}.${noteText}\n\nMengingat kapasitas ruang penyimpanan workshop kami yang terbatas serta risiko penyimpanan jangka panjang di luar pengawasan, kami mohon kesediaan Bpk/Ibu untuk mengambil unit ini dalam waktu dekat. Workshop kami buka setiap hari kerja. Mohon hubungi kami untuk konfirmasi. Terima kasih.`;
+            return `Yth. Bpk/Ibu ${nama},\n\nKami dari YVS Computer menginformasikan mengenai perangkat Anda (${unit}, No. Tiket: #${item.nomor_tiket}) yang telah selesai dikerjakan sejak lebih dari 3 bulan yang lalu dan masih berada di rak penyimpanan workshop kami.\n\nDetail Invoice: ${biaya}.${noteText}\n\nMengingat kapasitas ruang penyimpanan workshop kami yang terbatas serta risiko penyimpanan jangka panjang di luar pengawasan, kami mohon kesediaan Bpk/Ibu untuk mengambil unit ini dalam waktu dekat. Workshop kami buka setiap hari kerja. Mohon hubungi kami untuk konfirmasi. Terima kasih.`;
         } else if (item.diff_days >= 30) {
-            return `Halo Bpk/Ibu ${nama},\n\nIni adalah pengingat dari Serv.io mengenai unit ${unit} (Tiket #${item.nomor_tiket}). Perbaikan telah selesai lebih dari 30 hari yang lalu dan unit siap diambil di workshop kami.\n\nTotal Biaya: ${biaya}.${noteText}\n\nSilakan datang ke toko pada jam operasional untuk pengambilan dan verifikasi perangkat. Terima kasih.`;
+            return `Halo Bpk/Ibu ${nama},\n\nIni adalah pengingat dari YVS Computer mengenai unit ${unit} (Tiket #${item.nomor_tiket}). Perbaikan telah selesai lebih dari 30 hari yang lalu dan unit siap diambil di workshop kami.\n\nTotal Biaya: ${biaya}.${noteText}\n\nSilakan datang ke toko pada jam operasional untuk pengambilan dan verifikasi perangkat. Terima kasih.`;
         } else {
-            return `Halo Bpk/Ibu ${nama},\n\nKami mengabarkan bahwa perbaikan untuk perangkat ${unit} (Tiket #${item.nomor_tiket}) telah rampung dan siap diambil di Serv.io Workshop.\n\nTotal Biaya: ${biaya}.${noteText}\n\nSilakan membawa nota atau nomor tiket saat pengambilan unit. Terima kasih atas kepercayaan Anda.`;
+            return `Halo Bpk/Ibu ${nama},\n\nKami mengabarkan bahwa perbaikan untuk perangkat ${unit} (Tiket #${item.nomor_tiket}) telah rampung dan siap diambil di YVS Computer Workshop.\n\nTotal Biaya: ${biaya}.${noteText}\n\nSilakan membawa nota atau nomor tiket saat pengambilan unit. Terima kasih atas kepercayaan Anda.`;
         }
     };
 
@@ -295,7 +295,7 @@ export default function RetensiCrm() {
         const sisaHari = item.warranty_status?.sisaHari ?? 0;
         const noteText = customNote.trim() ? `\n* Catatan: ${customNote.trim()}` : "";
 
-        return `Halo Bpk/Ibu ${custName},\n\nKami dari Serv.io ingin menanyakan kabar dan performa perangkat ${unit} Anda (Tiket #${item.nomor_tiket}) pasca perbaikan tempo hari.\n\nSebagai bagian dari komitmen layanan kami, kami informasikan bahwa masa garansi servis unit Anda tersisa ${sisaHari} hari lagi. Jika Anda merasakan kendala atau performa yang kurang optimal, silakan bawa kembali ke workshop agar dapat diperiksa tanpa biaya tambahan.${noteText}\n\nTerima kasih telah mempercayakan perbaikan kepada Serv.io.`;
+        return `Halo Bpk/Ibu ${custName},\n\nKami dari YVS Computer ingin menanyakan kabar dan performa perangkat ${unit} Anda (Tiket #${item.nomor_tiket}) pasca perbaikan tempo hari.\n\nSebagai bagian dari komitmen layanan kami, kami informasikan bahwa masa garansi servis unit Anda tersisa ${sisaHari} hari lagi. Jika Anda merasakan kendala atau performa yang kurang optimal, silakan bawa kembali ke workshop agar dapat diperiksa tanpa biaya tambahan.${noteText}\n\nTerima kasih telah mempercayakan perbaikan kepada YVS Computer.`;
     };
 
     // Current displayed text

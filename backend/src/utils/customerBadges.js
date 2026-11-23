@@ -24,7 +24,7 @@ const ALL_BADGES = {
         colorClass: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
         dotColor: "bg-purple-500",
         priority: 2,
-        description: "Pelanggan prioritas tinggi dengan loyalitas dan rekam jejak servis paling sering di Serv.io.",
+        description: "Pelanggan prioritas tinggi dengan loyalitas dan rekam jejak servis paling sering di YVS Computer.",
         sopGuidance: "Prioritaskan antrean pengerjaan, tawarkan diskon loyalitas, dan berikan layanan garansi fleksibel."
     },
     repeat_customer: {

@@ -193,7 +193,7 @@ function escapeSqlValue(val) {
  * Generate SQL dump script from data map
  */
 function generateSqlDump(dataMap) {
-    let sql = `-- Serv.io / Yangversa Computer Database Backup\n`;
+    let sql = `-- YVS Computer Database Backup\n`;
     sql += `-- Generated At: ${new Date().toISOString()}\n`;
     sql += `-- Database Engine: MySQL / MariaDB\n\n`;
     sql += `SET FOREIGN_KEY_CHECKS = 0;\n\n`;
@@ -217,7 +217,7 @@ function generateSqlDump(dataMap) {
     }
 
     sql += `SET FOREIGN_KEY_CHECKS = 1;\n`;
-    sql += `-- End of Serv.io Database Backup\n`;
+    sql += `-- End of YVS Computer Database Backup\n`;
     return sql;
 }
 
@@ -415,7 +415,7 @@ async function exportData(req, res) {
         if (format === "json") {
             const jsonOutput = {
                 metadata: {
-                    title: "Yangversa Computer Serv.io Database Snapshot",
+                    title: "YVS Computer Database Snapshot",
                     exported_at: new Date().toISOString(),
                     exported_by: userNama,
                     date_range: dateRange,
