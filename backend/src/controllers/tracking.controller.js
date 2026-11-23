@@ -3,6 +3,35 @@ const { getWarrantyStatus, getSlaStatus, calculateSlaPengerjaanTarget } = requir
 const { broadcast } = require("../utils/sse");
 const { normalizePhone } = require("../utils/normalize");
 
+// Helper untuk masking nama pelanggan demi privasi publik (misal: "Budi Santoso" -> "Bu** Sa*****")
+function maskName(nama) {
+    if (!nama || typeof nama !== "string") return "Pelanggan";
+    const parts = nama.trim().split(/\s+/);
+    return parts.map(part => {
+        if (part.length <= 2) return part[0] + "*";
+        return part.slice(0, 2) + "*".repeat(Math.max(part.length - 2, 2));
+    }).join(" ");
+}
+
+// Helper untuk masking nomor telepon pelanggan (misal: "081234567890" -> "0812 •••••• 90")
+// PENTING: Hanya menampilkan 4 digit depan dan 2 digit belakang agar 4 digit rahasia tetap terlindungi
+function maskPhone(phone) {
+    if (!phone || typeof phone !== "string") return "";
+    const clean = phone.replace(/\D/g, "");
+    if (clean.length < 8) return "••••••••";
+    const prefix = clean.slice(0, 4);
+    const suffix = clean.slice(-2);
+    return `${prefix} •••••• ${suffix}`;
+}
+
+// Helper untuk masking serial number perangkat (misal: "NXK7SN123456" -> "NXK•••••456")
+function maskSerialNumber(sn) {
+    if (!sn || typeof sn !== "string" || sn === "-") return "-";
+    const clean = sn.trim();
+    if (clean.length <= 6) return clean.slice(0, 2) + "••••";
+    return clean.slice(0, 3) + "•••••" + clean.slice(-3);
+}
+
 // Customer melacak status servis tanpa login
 async function track(req, res) {
     try {
@@ -62,7 +91,7 @@ async function track(req, res) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
         }
 
-        // Format response untuk customer
+        // Format response untuk customer dengan masking PII ketat
         const result = tikets.map((t) => {
             let slaStatus = null;
             try {
@@ -81,13 +110,14 @@ async function track(req, res) {
             return {
                 id: t.id,
                 nomor_tiket: t.nomor_tiket,
-                customer_nama: t.perangkat?.customer?.nama || "Pelanggan",
-                customer_telepon: t.perangkat?.customer?.nomor_telepon || "",
-                customer_alamat: t.perangkat?.customer?.alamat || "",
+                // Masking data sensitif pelanggan untuk mencegah scraping & kebocoran PII publik
+                customer_nama: maskName(t.perangkat?.customer?.nama),
+                customer_telepon: maskPhone(t.perangkat?.customer?.nomor_telepon),
+                customer_alamat: "", // Alamat rumah pelanggan disembunyikan demi privasi
                 perangkat: perangkatNama,
                 merek: merek,
                 model: model,
-                serial_number: t.perangkat?.serial_number || "-",
+                serial_number: maskSerialNumber(t.perangkat?.serial_number),
                 jenis_perangkat: t.perangkat?.jenis_perangkat || "Perangkat",
                 status: t.status,
                 keluhan: t.keluhan || "-",
@@ -129,7 +159,11 @@ async function track(req, res) {
                         id: t.invoice.id,
                         biaya_jasa: t.invoice.biaya_jasa || 0,
                         biaya_sparepart: t.invoice.biaya_sparepart || 0,
+                        diskon: t.invoice.diskon || 0,
+                        nominal_dp: t.invoice.nominal_dp || 0,
                         total_biaya: t.invoice.total_biaya || 0,
+                        status_pembayaran: t.invoice.status_pembayaran || "lunas",
+                        metode_pembayaran: t.invoice.metode_pembayaran || "Tunai",
                         ttd_customer: t.invoice.ttd_customer,
                         ttd_customer_at: t.invoice.ttd_customer_at,
                         ttd_customer_nama: t.invoice.ttd_customer_nama,
@@ -164,15 +198,28 @@ async function track(req, res) {
     }
 }
 
-// Submitting rating without login (Public)
+// Submitting rating without login (Public with single-submission lock & phone verification)
 async function submitRating(req, res) {
     try {
-        const { nomorTiket, rating } = req.body;
+        const { nomorTiket, rating, phone_last4 } = req.body;
         if (!nomorTiket || !rating || rating < 1 || rating > 5) {
             return res.status(400).json({ message: "Nomor tiket dan rating (1-5 star) wajib diisi" });
         }
 
-        const tiket = await prisma.tiketServis.findUnique({ where: { nomor_tiket: nomorTiket } });
+        const cleanTiket = String(nomorTiket).trim();
+        const tiket = await prisma.tiketServis.findFirst({
+            where: {
+                OR: [
+                    { nomor_tiket: cleanTiket },
+                    { nomor_tiket: cleanTiket.toUpperCase() },
+                    { nomor_tiket: cleanTiket.toLowerCase() }
+                ]
+            },
+            include: {
+                perangkat: { include: { customer: true } }
+            }
+        });
+
         if (!tiket) {
             return res.status(404).json({ message: "Tiket servis tidak ditemukan" });
         }
@@ -181,18 +228,34 @@ async function submitRating(req, res) {
             return res.status(400).json({ message: "Penilaian rating hanya dapat diberikan setelah perbaikan selesai atau unit diambil." });
         }
 
+        // Kunci rating: Mencegah manipulasi atau penimpaan rating yang sudah pernah dikirim
+        if (tiket.rating_submitted_at) {
+            return res.status(400).json({ message: "Penilaian untuk tiket servis ini sudah pernah dikirim dan tidak dapat diubah." });
+        }
+
+        // Verifikasi 4 digit terakhir nomor telepon pelanggan jika terdaftar
+        const rawCustomerPhone = (tiket.perangkat?.customer?.nomor_telepon || "").replace(/\D/g, "");
+        if (rawCustomerPhone.length >= 4) {
+            const cleanInputPhone = String(phone_last4 || "").replace(/\D/g, "");
+            if (!phone_last4 || cleanInputPhone.length < 4 || !rawCustomerPhone.endsWith(cleanInputPhone)) {
+                return res.status(403).json({ message: "Verifikasi gagal: Masukkan 4 digit terakhir nomor telepon yang terdaftar pada tiket ini untuk memberikan penilaian." });
+            }
+        }
+
         const updated = await prisma.tiketServis.update({
-            where: { nomor_tiket: nomorTiket },
+            where: { id: tiket.id },
             data: {
                 rating_teknisi: Number(rating),
                 rating_submitted_at: new Date()
             }
         });
 
+        broadcast("tiket:updated", { id: tiket.id, nomor_tiket: tiket.nomor_tiket });
+
         return res.json({
             message: "Terima kasih atas penilaian Anda!",
             rating: updated.rating_teknisi,
-            googleMapsUrl: "https://maps.google.com/?q=Serv.io+IT+Repair+Center"
+            googleMapsUrl: "https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"
         });
     } catch (error) {
         return res.status(500).json({ message: "Terjadi kesalahan", error: error.message });
@@ -211,8 +274,15 @@ async function respondDiagnosisApproval(req, res) {
             return res.status(400).json({ message: "Aksi tidak valid. Pilih 'approve' atau 'reject'." });
         }
 
-        const tiket = await prisma.tiketServis.findUnique({
-            where: { nomor_tiket: nomorTiket },
+        const cleanTiket = String(nomorTiket).trim();
+        const tiket = await prisma.tiketServis.findFirst({
+            where: {
+                OR: [
+                    { nomor_tiket: cleanTiket },
+                    { nomor_tiket: cleanTiket.toUpperCase() },
+                    { nomor_tiket: cleanTiket.toLowerCase() }
+                ]
+            },
             include: {
                 perangkat: { include: { customer: true } },
                 diagnosis: true,
@@ -339,8 +409,20 @@ async function signCustomerInvoice(req, res) {
             return res.status(400).json({ message: "Nomor tiket, verifikasi 4 digit no telepon, dan tanda tangan wajib diisi." });
         }
 
-        const tiket = await prisma.tiketServis.findUnique({
-            where: { nomor_tiket: nomorTiket },
+        // Validasi payload signature: mencegah upload payload raksasa atau format tidak valid
+        if (typeof signature !== "string" || !signature.startsWith("data:image/") || signature.length > 500000) {
+            return res.status(400).json({ message: "Format tanda tangan tidak valid atau ukuran gambar melebihi batas." });
+        }
+
+        const cleanTiket = String(nomorTiket).trim();
+        const tiket = await prisma.tiketServis.findFirst({
+            where: {
+                OR: [
+                    { nomor_tiket: cleanTiket },
+                    { nomor_tiket: cleanTiket.toUpperCase() },
+                    { nomor_tiket: cleanTiket.toLowerCase() }
+                ]
+            },
             include: {
                 perangkat: { include: { customer: true } },
                 invoice: true,
@@ -356,6 +438,11 @@ async function signCustomerInvoice(req, res) {
             return res.status(400).json({ message: "Invoice untuk tiket ini belum diterbitkan oleh kasir." });
         }
 
+        // Cegah penimpaan tanda tangan yang sudah ada (Immutability protection)
+        if (tiket.invoice.ttd_customer) {
+            return res.status(400).json({ message: "Invoice ini sudah pernah ditandatangani sebelumnya dan tidak dapat diubah kembali." });
+        }
+
         // Verifikasi 4 digit terakhir nomor HP customer
         const rawCustomerPhone = (tiket.perangkat?.customer?.nomor_telepon || "").replace(/\D/g, "");
         const cleanInputPhone = String(phone_last4).replace(/\D/g, "");
@@ -366,7 +453,7 @@ async function signCustomerInvoice(req, res) {
             }
         }
 
-        const namaPenandatangan = signer_nama || tiket.perangkat?.customer?.nama || "Pelanggan";
+        const namaPenandatangan = signer_nama ? String(signer_nama).trim().slice(0, 100) : (tiket.perangkat?.customer?.nama || "Pelanggan");
         const signDate = new Date();
 
         const updatedInvoice = await prisma.invoice.update({

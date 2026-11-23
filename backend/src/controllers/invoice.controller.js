@@ -42,6 +42,7 @@ async function getAll(req, res) {
                 where,
                 include,
                 orderBy,
+                take: 100, // Safety cap to prevent unconstrained query exhaustion
             });
             return res.json(invoices);
         }
@@ -66,7 +67,15 @@ async function getAll(req, res) {
 // Membuat invoice baru
 async function create(req, res) {
     try {
-        const { tiket_id, biaya_jasa } = req.body;
+        const {
+            tiket_id,
+            biaya_jasa,
+            diskon = 0,
+            nominal_dp = 0,
+            status_pembayaran,
+            metode_pembayaran = "Tunai",
+            catatan
+        } = req.body;
 
         const tiket = await prisma.tiketServis.findUnique({
             where: { id: Number(tiket_id) },
@@ -100,14 +109,34 @@ async function create(req, res) {
             return res.status(400).json({ message: "Biaya jasa harus berupa angka dan tidak boleh negatif" });
         }
 
-        const total_biaya = jasa + biaya_sparepart;
+        const disc = Math.max(0, Number(diskon) || 0);
+        const dp = Math.max(0, Number(nominal_dp) || 0);
+        const subtotal = jasa + biaya_sparepart;
+        const total_biaya = Math.max(0, subtotal - disc);
+
+        // Tentukan status pembayaran otomatis jika tidak dispesifikasikan eksplisit
+        let statusBayar = status_pembayaran;
+        if (!statusBayar) {
+            if (dp >= total_biaya || total_biaya === 0) {
+                statusBayar = "lunas";
+            } else if (dp > 0) {
+                statusBayar = "dp_awal";
+            } else {
+                statusBayar = "belum_lunas";
+            }
+        }
 
         const invoice = await prisma.invoice.create({
             data: {
                 tiket_id: Number(tiket_id),
                 biaya_jasa: jasa,
                 biaya_sparepart,
+                diskon: disc,
+                nominal_dp: dp,
                 total_biaya,
+                status_pembayaran: statusBayar,
+                metode_pembayaran: String(metode_pembayaran || "Tunai").trim(),
+                catatan: catatan ? String(catatan).trim() : null,
             },
             include: {
                 tiket: {
@@ -128,11 +157,18 @@ async function create(req, res) {
     }
 }
 
-// Memperbarui biaya jasa invoice
+// Memperbarui biaya jasa & status pembayaran invoice
 async function update(req, res) {
     try {
         const id = Number(req.params.id);
-        const { biaya_jasa } = req.body;
+        const {
+            biaya_jasa,
+            diskon,
+            nominal_dp,
+            status_pembayaran,
+            metode_pembayaran,
+            catatan
+        } = req.body;
 
         const invoice = await prisma.invoice.findUnique({
             where: { id },
@@ -143,18 +179,37 @@ async function update(req, res) {
             return res.status(404).json({ message: "Invoice tidak ditemukan" });
         }
 
-        const jasa = Number(biaya_jasa);
+        const jasa = biaya_jasa !== undefined ? Number(biaya_jasa) : invoice.biaya_jasa;
         if (isNaN(jasa) || jasa < 0) {
             return res.status(400).json({ message: "Biaya jasa harus berupa angka dan tidak boleh negatif" });
         }
 
-        const total_biaya = jasa + invoice.biaya_sparepart;
+        const disc = diskon !== undefined ? Math.max(0, Number(diskon) || 0) : (invoice.diskon || 0);
+        const dp = nominal_dp !== undefined ? Math.max(0, Number(nominal_dp) || 0) : (invoice.nominal_dp || 0);
+        const subtotal = jasa + invoice.biaya_sparepart;
+        const total_biaya = Math.max(0, subtotal - disc);
+
+        let statusBayar = status_pembayaran !== undefined ? status_pembayaran : invoice.status_pembayaran;
+        if (!statusBayar && status_pembayaran === undefined) {
+            if (dp >= total_biaya || total_biaya === 0) {
+                statusBayar = "lunas";
+            } else if (dp > 0) {
+                statusBayar = "dp_awal";
+            } else {
+                statusBayar = "belum_lunas";
+            }
+        }
 
         const updated = await prisma.invoice.update({
             where: { id },
             data: {
                 biaya_jasa: jasa,
+                diskon: disc,
+                nominal_dp: dp,
                 total_biaya,
+                status_pembayaran: statusBayar,
+                metode_pembayaran: metode_pembayaran !== undefined ? String(metode_pembayaran).trim() : undefined,
+                catatan: catatan !== undefined ? (catatan ? String(catatan).trim() : null) : undefined,
             },
             include: {
                 tiket: {

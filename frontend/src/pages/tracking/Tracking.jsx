@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
+import QRCode from "qrcode";
 import api from "../../services/api";
 import { Search, LogIn, Phone, Ticket as TicketIcon, SearchX, CheckCircle, PackageSearch, PenTool, ChevronDown, ChevronUp, User, Calendar, MonitorSmartphone, ClipboardCheck, Award, Star, MapPin, MessageCircle, Download, ShieldCheck, QrCode, CreditCard, Camera, Lightbulb, Package, X, ChevronLeft, ChevronRight, Wrench, Image as ImageIcon, ImageOff, Clock, AlertTriangle, Check, CheckCircle2, Play, Video, ZoomIn, Share2, RefreshCw, Copy, Printer, FileText } from "lucide-react";
 import { isVideo, getMediaUrl } from "../../utils/mediaUtils";
@@ -32,6 +33,39 @@ import SpotlightCard from "../../components/tracking/SpotlightCard";
 import HolographicTiltCard from "../../components/tracking/HolographicTiltCard";
 
 const RECENT_TRACKING_KEY = "yvs_recent_tracking";
+
+function TrackingQrBadge({ nomorTiket }) {
+    const [qrUrl, setQrUrl] = useState("");
+    const targetUrl = typeof window !== "undefined"
+        ? `${window.location.origin}/tracking?nomor_tiket=${nomorTiket}`
+        : (nomorTiket || "");
+
+    useEffect(() => {
+        if (!nomorTiket) return;
+        let active = true;
+        QRCode.toDataURL(targetUrl, {
+            width: 240,
+            margin: 1,
+            color: { dark: "#000000", light: "#ffffff" },
+            errorCorrectionLevel: "M"
+        })
+            .then(url => { if (active) setQrUrl(url); })
+            .catch(() => {
+                if (active) setQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(targetUrl)}`);
+            });
+        return () => { active = false; };
+    }, [targetUrl, nomorTiket]);
+
+    return (
+        <img 
+            src={qrUrl || `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(targetUrl)}`} 
+            alt={`QR ${nomorTiket}`} 
+            loading="lazy"
+            decoding="async"
+            className="w-20 h-20 sm:w-24 sm:h-24 mix-blend-multiply block" 
+        />
+    );
+}
 
 function getRecentSearches() {
     try {
@@ -1387,17 +1421,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                                 {/* Content Body */}
                                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 flex-1 my-auto">
                                     <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/90 shrink-0 shadow-2xs flex items-center justify-center">
-                                        <img 
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
-                                                typeof window !== "undefined"
-                                                    ? `${window.location.origin}/tracking?nomor_tiket=${t.nomor_tiket}`
-                                                    : t.nomor_tiket
-                                            )}`} 
-                                            alt={`QR ${t.nomor_tiket}`} 
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="w-20 h-20 sm:w-24 sm:h-24 mix-blend-multiply block" 
-                                        />
+                                        <TrackingQrBadge nomorTiket={t.nomor_tiket} />
                                     </div>
                                     <div className="text-center sm:text-left flex-1 min-w-0">
                                         <h5 className="font-bold text-lg sm:text-xl mb-1 text-slate-900">Tunjukkan QR Ini</h5>
@@ -2001,7 +2025,7 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
                 description={`Bubuhkan tanda tangan Anda di layar untuk mengonfirmasi penerimaan unit ${t.perangkat}. Invoice resmi dan sertifikat garansi akan terbuka secara instan.`}
                 agreementText="Dengan menandatangani ini, saya menyatakan telah menerima kembali unit perangkat dalam kondisi baik dan menyetujui rincian perbaikan serta masa garansi yang berlaku."
                 requirePhoneVerify={true}
-                expectedPhoneLast4={(t.customer_telepon || "").replace(/\D/g, "")}
+                expectedPhoneLast4=""
                 loading={submittingSignInvoice}
             />
 
@@ -2128,20 +2152,39 @@ function TrackingDetail({ t: initialTicket, onBack, onUpdateTicket }) {
 function RatingSection({ ticket }) {
     const [userRating, setUserRating] = useState(ticket.rating_teknisi || 0);
     const [hoverRating, setHoverRating] = useState(0);
+    const [selectedStars, setSelectedStars] = useState(ticket.rating_teknisi || 0);
+    const [phoneLast4, setPhoneLast4] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(Boolean(ticket.rating_teknisi));
+    const [showVerify, setShowVerify] = useState(false);
 
-    async function handleRate(stars) {
+    function handleSelectStars(stars) {
+        if (submitted) return;
+        setSelectedStars(stars);
+        setShowVerify(true);
+    }
+
+    async function handleConfirmRating(e) {
+        if (e) e.preventDefault();
+        const cleanPhone = phoneLast4.replace(/\D/g, "");
+        if (cleanPhone.length !== 4) {
+            toast.error("Harap masukkan 4 digit terakhir nomor telepon Anda.");
+            return;
+        }
+
         setSubmitting(true);
         try {
             const res = await api.post("/tracking/rate", {
                 nomorTiket: ticket.nomor_tiket,
-                rating: stars
+                rating: selectedStars,
+                phone_last4: cleanPhone
             });
-            setUserRating(stars);
+            setUserRating(selectedStars);
             setSubmitted(true);
+            setShowVerify(false);
+            toast.success(res.data.message || "Terima kasih atas penilaian Anda!");
         } catch (err) {
-            console.error(err);
+            toast.error(err.response?.data?.message || "Gagal mengirim rating");
         } finally {
             setSubmitting(false);
         }
@@ -2165,16 +2208,16 @@ function RatingSection({ ticket }) {
                 {/* Star Rating Input */}
                 <div className="flex items-center gap-1.5">
                     {[1, 2, 3, 4, 5].map((star) => {
-                        const active = (hoverRating || userRating) >= star;
+                        const active = (hoverRating || selectedStars || userRating) >= star;
                         return (
                             <button
                                 key={star}
                                 type="button"
-                                disabled={submitting}
-                                onMouseEnter={() => setHoverRating(star)}
-                                onMouseLeave={() => setHoverRating(0)}
-                                onClick={() => handleRate(star)}
-                                className="p-1 transition-transform hover:scale-125 focus:outline-none cursor-pointer disabled:cursor-wait"
+                                disabled={submitting || submitted}
+                                onMouseEnter={() => !submitted && setHoverRating(star)}
+                                onMouseLeave={() => !submitted && setHoverRating(0)}
+                                onClick={() => handleSelectStars(star)}
+                                className="p-1 transition-transform hover:scale-125 focus:outline-none cursor-pointer disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                                 <Star className={`w-7 h-7 ${active ? "text-amber-400 fill-amber-400 drop-shadow-sm" : "text-slate-300"}`} />
                             </button>
@@ -2182,6 +2225,40 @@ function RatingSection({ ticket }) {
                     })}
                 </div>
             </div>
+
+            {/* Verification Form for Rating */}
+            {showVerify && !submitted && (
+                <form onSubmit={handleConfirmRating} className="pt-3 border-t border-blue-200/60 flex flex-col sm:flex-row items-center gap-2.5 animate-fade-in">
+                    <span className="text-xs text-slate-700 font-medium shrink-0">
+                        Konfirmasi dengan 4 digit terakhir No. HP:
+                    </span>
+                    <input
+                        type="text"
+                        maxLength={4}
+                        placeholder="Contoh: 7890"
+                        value={phoneLast4}
+                        onChange={(e) => setPhoneLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        className="w-28 px-3 py-1.5 text-center font-mono font-bold text-sm bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                        autoFocus
+                    />
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                        <button
+                            type="submit"
+                            disabled={submitting || phoneLast4.length !== 4}
+                            className="flex-1 sm:flex-none px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold text-xs rounded-xl cursor-pointer"
+                        >
+                            {submitting ? "Mengirim..." : "Kirim Rating"}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowVerify(false)}
+                            className="px-2.5 py-1.5 text-xs text-slate-500 hover:text-slate-700 cursor-pointer"
+                        >
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            )}
 
             {/* Google Maps Store Review Button */}
             <div className="pt-4 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm mt-4">

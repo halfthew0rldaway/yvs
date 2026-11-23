@@ -2,7 +2,7 @@ const prisma = require("../config/database");
 const { broadcast } = require("../utils/sse");
 const { hasPermission } = require("../services/authorization.service");
 
-const sidebarPaths = ["/tiket-servis", "/perangkat", "/customer", "/loaner", "/sparepart", "/rma", "/supplier", "/invoice", "/retensi", "/attendance", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/dashboard"];
+const sidebarPaths = ["/tiket-servis", "/perangkat", "/customer", "/loaner", "/sparepart", "/rma", "/supplier", "/invoice", "/retensi", "/attendance", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/dashboard", "/chat"];
 
 async function getSidebarCounts(req, res) {
     try {
@@ -22,6 +22,31 @@ async function getSidebarCounts(req, res) {
             registrations = await prisma.customerRegistration.count({ where: { status: { in: ["pending", "accepted"] }, submitted_at: { not: null }, ticket_id: null } });
             counts["/tiket-servis"] = (counts["/tiket-servis"] || 0) + registrations;
         }
+
+        // Hitung unread direct chat untuk user jika model tersedia
+        if (prisma.chatMember?.findMany) {
+            const chatMemberships = await prisma.chatMember.findMany({
+                where: { user_id: req.user.id },
+                include: {
+                    chat: {
+                        include: {
+                            messages: { take: 1, orderBy: { id: "desc" } }
+                        }
+                    }
+                }
+            });
+            let unreadChats = 0;
+            for (const cm of chatMemberships) {
+                const lastMsg = cm.chat?.messages?.[0];
+                if (lastMsg && lastMsg.sender_id !== req.user.id && (!cm.last_read_at || new Date(lastMsg.created_at) > new Date(cm.last_read_at))) {
+                    unreadChats++;
+                }
+            }
+            if (unreadChats > 0) {
+                counts["/chat"] = (counts["/chat"] || 0) + unreadChats;
+            }
+        }
+
         res.set("Cache-Control", "no-store").json({ counts, registrations });
     } catch (error) {
         console.error("Could not load sidebar counts", error);

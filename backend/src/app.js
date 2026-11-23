@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").resolve(__dirname, "../.env") });
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -23,6 +23,7 @@ const notificationRoutes = require("./routes/notification.routes");
 const loanerRoutes = require("./routes/loaner.routes");
 const rmaRoutes = require("./routes/rma.routes");
 const realtimeRoutes = require("./routes/realtime.routes");
+const chatRoutes = require("./routes/chat.routes");
 const databaseRoutes = require("./routes/database.routes");
 const staffSignatureRoutes = require("./routes/staffSignature.routes");
 const sopRoutes = require("./routes/sop.routes");
@@ -35,6 +36,7 @@ const activityLogger = require("./middleware/activityLogger");
 const sanitizeRequest = require("./middleware/sanitizeRequest");
 const errorHandler = require("./middleware/errorHandler");
 const { generalApiLimiter } = require("./middleware/rateLimiter");
+const { authenticate } = require("./middleware/auth");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,8 +55,33 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 // 3. Response Compression (Gzip / Brotli)
 app.use(compression());
 
-// 4. CORS
-app.use(cors());
+// 4. CORS Whitelist
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://staging.101.32.127.55.sslip.io",
+    "https://komputerawet.com",
+    "https://www.komputerawet.com",
+    "capacitor://localhost",
+    "http://localhost"
+].filter(Boolean);
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, native Capacitor, server-side)
+        if (!origin) return callback(null, true);
+        if (
+            allowedOrigins.includes(origin) || 
+            origin.endsWith(".sslip.io") || 
+            /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+        ) {
+            return callback(null, true);
+        }
+        return callback(new Error("Akses ditolak oleh kebijakan CORS"));
+    },
+    credentials: true
+}));
 
 // 5. Body Parsers
 app.use(express.json({ limit: "50mb" }));
@@ -66,7 +93,12 @@ app.use(sanitizeRequest);
 // 7. General API Rate Limiter
 app.use("/api", generalApiLimiter);
 
-// 8. Static Uploads
+// 8. Static & Protected Media Uploads
+// Sensitive employee data (attendance selfies, doctor notes / leave evidence) require authentication
+app.use('/uploads/attendance', authenticate, express.static(require('path').join(__dirname, '../uploads/attendance')));
+app.use('/uploads/leaves', authenticate, express.static(require('path').join(__dirname, '../uploads/leaves')));
+
+// Public uploads (ticket condition/diagnosis photos, device defect maps, avatars, branding)
 app.use('/uploads', express.static(require('path').join(__dirname, '../uploads')));
 
 // 9. Activity Logger
@@ -93,6 +125,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/loaner", loanerRoutes);
 app.use("/api/rma", rmaRoutes);
 app.use("/api/realtime", realtimeRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/database", databaseRoutes);
 app.use("/api/staff-signatures", staffSignatureRoutes);
 app.use("/api/sop", sopRoutes);

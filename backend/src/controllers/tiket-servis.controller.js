@@ -22,8 +22,8 @@ const STATUS_TRANSITIONS = {
     didiagnosis: ["menunggu_persetujuan", "dibatalkan"],
     menunggu_persetujuan: ["disetujui", "dibatalkan"],
     disetujui: ["dalam_perbaikan", "dibatalkan"],
-    dalam_perbaikan: ["selesai"],
-    selesai: ["diambil"],
+    dalam_perbaikan: ["selesai", "dibatalkan"],
+    selesai: ["diambil", "dalam_perbaikan"],
     diambil: [],
     dibatalkan: [],
 };
@@ -243,7 +243,7 @@ async function getById(req, res) {
         const isNumeric = /^\d+$/.test(rawId);
         const whereClause = isNumeric
             ? { id: Number(rawId) }
-            : { nomor_tiket: { equals: rawId, mode: "insensitive" } };
+            : { nomor_tiket: rawId };
 
         const tiket = await prisma.tiketServis.findFirst({
             where: whereClause,
@@ -826,13 +826,48 @@ async function update(req, res) {
                     message: `Proteksi Unit Pinjaman: Pelanggan masih meminjam unit cadangan [${activeLoan.loaner_device?.kode_unit || 'LOAN'} - ${activeLoan.loaner_device?.nama || 'Unit Pinjaman'}]. Harap proses pengembalian unit pinjaman di menu Pinjaman sebelum menyerahkan unit utama.`,
                 });
             }
+
+            // Proteksi Invoice: Unit yang diambil wajib memiliki invoice resmi yang sudah diterbitkan (kecuali tiket klaim garansi gratis)
+            if (!tiket.is_garansi_claim) {
+                const existingInvoice = await prisma.invoice.findUnique({
+                    where: { tiket_id: id }
+                });
+                if (!existingInvoice) {
+                    return res.status(400).json({
+                        message: "Proteksi Penyerahan: Invoice/faktur resmi belum diterbitkan oleh kasir untuk tiket ini. Terbitkan faktur terlebih dahulu sebelum unit dapat diserahkan ke pelanggan.",
+                    });
+                }
+            }
         }
 
-        // Catat log pembatalan jika tiket dibatalkan
+        // Catat log pembatalan dan restorasi stok suku cadang jika tiket dibatalkan
         if (status === "dibatalkan" && tiket.status !== "dibatalkan") {
             const reason = alasan_batal || tiket.alasan_batal || "Dibatalkan";
             const note = catatan_batal || tiket.catatan_batal || "";
             const fee = biaya_pembatalan !== undefined ? Number(biaya_pembatalan) : (tiket.biaya_pembatalan || 0);
+
+            // Restorasi stok suku cadang yang pernah dialokasikan pada tiket ini kembali ke gudang
+            const usedParts = await prisma.penggunaanSparepart.findMany({
+                where: { tiket_id: id },
+                include: { sparepart: true }
+            });
+
+            if (usedParts.length > 0) {
+                for (const up of usedParts) {
+                    await prisma.sparepart.update({
+                        where: { id: up.sparepart_id },
+                        data: { stok: { increment: up.jumlah } }
+                    });
+                }
+                await prisma.logPerbaikan.create({
+                    data: {
+                        tiket_id: id,
+                        fase: "Pembatalan",
+                        catatan: `[Restorasi Suku Cadang] Pembatalan tiket mengembalikan ${usedParts.length} jenis suku cadang ke stok gudang: ${usedParts.map(p => `${p.sparepart?.nama || 'Part'} (${p.jumlah}x)`).join(', ')}.`
+                    }
+                });
+            }
+
             await prisma.logPerbaikan.create({
                 data: {
                     tiket_id: id,

@@ -38,6 +38,45 @@ model User {
   user_roles             UserRole[]
   registrations_reviewed CustomerRegistration[] @relation("RegistrationReviewer")
   registrations_issued CustomerRegistration[] @relation("RegistrationIssuer")
+  chats_as_first Chat[] @relation("ChatFirst")
+  chats_as_second Chat[] @relation("ChatSecond")
+  chat_members ChatMember[]
+  chat_messages ChatMessage[]
+}
+
+model Chat {
+  id Int @id @default(autoincrement())
+  first_user_id Int
+  second_user_id Int
+  created_at DateTime @default(now())
+  first_user User @relation("ChatFirst", fields: [first_user_id], references: [id], onDelete: Restrict)
+  second_user User @relation("ChatSecond", fields: [second_user_id], references: [id], onDelete: Restrict)
+  members ChatMember[]
+  messages ChatMessage[]
+  @@unique([first_user_id, second_user_id])
+}
+
+model ChatMember {
+  chat_id Int
+  user_id Int
+  joined_at DateTime @default(now())
+  last_read_at DateTime?
+  chat Chat @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  @@id([chat_id, user_id])
+  @@index([user_id])
+}
+
+model ChatMessage {
+  id Int @id @default(autoincrement())
+  chat_id Int
+  sender_id Int?
+  sender_name String @db.VarChar(255)
+  body String @db.Text
+  created_at DateTime @default(now())
+  chat Chat @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+  sender User? @relation(fields: [sender_id], references: [id], onDelete: SetNull)
+  @@index([chat_id, id])
 }
 
 // RBAC is deliberately normalized: roles are configurable by Super Admin,
@@ -395,6 +434,11 @@ model Invoice {
   biaya_jasa        Float
   biaya_sparepart   Float
   total_biaya       Float
+  diskon            Float?    @default(0)
+  nominal_dp        Float?    @default(0)
+  status_pembayaran String?   @default("lunas") @db.VarChar(50)
+  metode_pembayaran String?   @default("Tunai") @db.VarChar(50)
+  catatan           String?   @db.Text
   ttd_customer      String?   @db.LongText
   ttd_customer_at   DateTime?
   ttd_customer_nama String?   @db.VarChar(150)

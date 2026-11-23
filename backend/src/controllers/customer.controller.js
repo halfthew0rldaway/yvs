@@ -130,6 +130,7 @@ async function getAll(req, res) {
                 where,
                 include: includeCustomerRelations,
                 orderBy,
+                take: 100, // Safety cap to prevent unconstrained query exhaustion
             });
             const enriched = customers.map(enrichCustomerWithBadges);
             return res.json(enriched);

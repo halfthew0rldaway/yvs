@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
 import { Plus, Edit2, Trash2, MonitorSmartphone, Search, Filter, History, User, Eye, X, RotateCcw } from "lucide-react";
@@ -16,10 +16,12 @@ export default function PerangkatList() {
     const { hasPermission } = useAuth();
     const canManage = hasPermission("devices.manage");
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [perangkats, setPerangkats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deleteTarget, setDeleteTarget] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
+    const initialSearch = searchParams.get("search") || searchParams.get("q") || "";
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [jenisFilter, setJenisFilter] = useState("");
     const [uniqueJenis, setUniqueJenis] = useState([]);
 

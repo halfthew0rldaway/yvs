@@ -571,6 +571,10 @@ async function deleteUser(req, res) {
             if (activeTicket) {
                 const error = new Error("Teknisi ini sedang menangani tiket servis aktif. Alihkan tiket ke teknisi lain terlebih dahulu sebelum menghapus akun."); error.status = 409; throw error;
             }
+            const hasChat = await tx.chat.findFirst({ where: { OR: [{ first_user_id: id }, { second_user_id: id }] }, select: { id: true } });
+            if (hasChat) {
+                const error = new Error("Akun memiliki riwayat chat. Riwayat perlu dipertahankan; jangan hapus akun ini."); error.status = 409; throw error;
+            }
             await tx.user.delete({ where: { id } });
             await tx.activityLog.create({ data: { user_id: req.user.id, user_nama: req.user.nama || req.user.username || "Super Admin", action: `Menghapus akun ${user.nama} (ID ${id})`, entity: "user" } });
         });

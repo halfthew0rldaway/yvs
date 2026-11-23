@@ -1,9 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Printer, FileText, CheckCircle2, ShieldCheck, User, MonitorSmartphone, Package, QrCode, Download, Share2 } from "lucide-react";
+import QRCode from "qrcode";
 import { DocumentPrintService } from "../services/documentPrintService";
 import { isNativePlatform } from "../services/nativeServices";
 
 export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
+    const [qrCodeUrl, setQrCodeUrl] = useState("");
+
     useEffect(() => {
         if (!isOpen) return;
         const handleKeyDown = (e) => {
@@ -13,13 +16,29 @@ export default function BpbsPrintModal({ isOpen, onClose, tiket }) {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isOpen, onClose]);
 
-    if (!isOpen || !tiket) return null;
+    const trackingUrl = typeof window !== "undefined"
+        ? `${window.location.origin}/tracking?nomor_tiket=${tiket?.nomor_tiket || ""}`
+        : `https://komputerawet.com/tracking?nomor_tiket=${tiket?.nomor_tiket || ""}`;
 
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=1&data=${encodeURIComponent(
-        typeof window !== "undefined"
-            ? `${window.location.origin}/tracking?nomor_tiket=${tiket.nomor_tiket}`
-            : `https://komputerawet.com/tracking?nomor_tiket=${tiket.nomor_tiket}`
-    )}`;
+    useEffect(() => {
+        if (!tiket?.nomor_tiket) return;
+        let active = true;
+        QRCode.toDataURL(trackingUrl, {
+            width: 280,
+            margin: 1,
+            color: { dark: "#000000", light: "#ffffff" },
+            errorCorrectionLevel: "M"
+        })
+            .then(url => { if (active) setQrCodeUrl(url); })
+            .catch(() => {
+                if (active) {
+                    setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=1&data=${encodeURIComponent(trackingUrl)}`);
+                }
+            });
+        return () => { active = false; };
+    }, [trackingUrl, tiket?.nomor_tiket]);
+
+    if (!isOpen || !tiket) return null;
 
     const tglMasuk = tiket.created_at
         ? new Date(tiket.created_at).toLocaleDateString("id-ID", {

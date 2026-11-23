@@ -58,6 +58,7 @@ class RealtimeService {
                 "tiket:updated",
                 "notification:new",
                 "notification:updated",
+                "chat:updated",
                 "invoice:created",
                 "invoice:updated",
                 "loaner:updated",

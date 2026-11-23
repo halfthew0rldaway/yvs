@@ -369,9 +369,18 @@ export default function InvoiceDetail() {
 
                     {/* Title & Status */}
                     <div className="text-left sm:text-right print:text-right shrink-0">
-                        <div className="flex items-center sm:justify-end print:justify-end mb-0.5">
+                        <div className="flex items-center sm:justify-end print:justify-end gap-1.5 mb-0.5">
                             <span className="text-3xs sm:text-2xs print:text-[7.5px] font-extrabold uppercase tracking-wider text-slate-700">
                                 FAKTUR PEMBAYARAN RESMI
+                            </span>
+                            <span className={`px-1.5 py-0.5 rounded text-3xs print:text-[6.5px] font-mono font-bold uppercase ${
+                                (invoice.status_pembayaran || "lunas") === "lunas"
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                    : (invoice.status_pembayaran === "dp_awal")
+                                    ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                    : "bg-rose-100 text-rose-800 border border-rose-300"
+                            }`}>
+                                {invoice.status_pembayaran === "dp_awal" ? "DP AWAL" : (invoice.status_pembayaran || "LUNAS").toUpperCase()}
                             </span>
                         </div>
                         <p className="text-base sm:text-lg print:text-sm font-mono font-black text-blue-700 leading-tight">
@@ -454,17 +463,61 @@ export default function InvoiceDetail() {
                             ))}
                         </tbody>
                         <tfoot>
-                            <tr className="border-t-2 border-slate-400 bg-slate-50/60 font-bold">
+                            <tr className="border-t-2 border-slate-300 bg-slate-50/60 font-semibold text-3xs sm:text-2xs print:text-[7px]">
+                                <td colSpan="4" className="py-1 px-2 print:py-0.5 print:px-1 text-slate-500">
+                                    Subtotal Item ({sparepartsList.length + 1} item) &bull; Metode: <strong>{invoice.metode_pembayaran || "Tunai"}</strong>
+                                </td>
+                                <td className="py-1 px-2 print:py-0.5 print:px-1 text-right text-slate-600">
+                                    SUBTOTAL:
+                                </td>
+                                <td className="py-1 px-2 print:py-0.5 print:px-1 text-right font-mono text-slate-800">
+                                    {formatRupiah((invoice.biaya_jasa || 0) + (invoice.biaya_sparepart || 0))}
+                                </td>
+                            </tr>
+                            {invoice.diskon > 0 && (
+                                <tr className="bg-slate-50/60 font-semibold text-3xs sm:text-2xs print:text-[7px] text-rose-600">
+                                    <td colSpan="4" className="py-0.5 px-2 print:py-0.5 print:px-1"></td>
+                                    <td className="py-0.5 px-2 print:py-0.5 print:px-1 text-right">
+                                        DISKON:
+                                    </td>
+                                    <td className="py-0.5 px-2 print:py-0.5 print:px-1 text-right font-mono">
+                                        - {formatRupiah(invoice.diskon)}
+                                    </td>
+                                </tr>
+                            )}
+                            <tr className="border-t border-slate-300 bg-slate-50/80 font-bold">
                                 <td colSpan="4" className="py-1.5 px-2 print:py-1 print:px-1 text-slate-600 text-3xs print:text-[7px]">
-                                    Total {sparepartsList.length + 1} item tindakan jasa & suku cadang
+                                    {invoice.catatan && <span>Catatan: {invoice.catatan}</span>}
                                 </td>
                                 <td className="py-1.5 px-2 print:py-1 print:px-1 text-right text-slate-700 uppercase tracking-wide text-2xs print:text-[7.5px]">
-                                    TOTAL BIAYA:
+                                    TOTAL TAGIHAN:
                                 </td>
                                 <td className="py-1.5 px-2 print:py-1 print:px-1 text-right font-black text-sm sm:text-base print:text-[10pt] text-blue-700 font-mono">
                                     {formatRupiah(invoice.total_biaya)}
                                 </td>
                             </tr>
+                            {invoice.nominal_dp > 0 && (
+                                <>
+                                    <tr className="bg-amber-50/60 font-semibold text-3xs sm:text-2xs print:text-[7px] text-amber-800">
+                                        <td colSpan="4" className="py-0.5 px-2 print:py-0.5 print:px-1"></td>
+                                        <td className="py-0.5 px-2 print:py-0.5 print:px-1 text-right">
+                                            DP / UANG MUKA:
+                                        </td>
+                                        <td className="py-0.5 px-2 print:py-0.5 print:px-1 text-right font-mono">
+                                            - {formatRupiah(invoice.nominal_dp)}
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-amber-100/40 font-black text-2xs sm:text-xs print:text-[8px] text-slate-900 border-t border-amber-200">
+                                        <td colSpan="4" className="py-1 px-2 print:py-0.5 print:px-1"></td>
+                                        <td className="py-1 px-2 print:py-0.5 print:px-1 text-right uppercase">
+                                            SISA PELUNASAN:
+                                        </td>
+                                        <td className="py-1 px-2 print:py-0.5 print:px-1 text-right font-mono text-amber-800">
+                                            {formatRupiah(Math.max(0, invoice.total_biaya - invoice.nominal_dp))}
+                                        </td>
+                                    </tr>
+                                </>
+                            )}
                         </tfoot>
                     </table>
                 </div>

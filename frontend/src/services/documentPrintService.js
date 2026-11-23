@@ -71,22 +71,29 @@ export const DocumentPrintService = {
         const imgData = canvas.toDataURL("image/jpeg", 0.95);
 
         // Determine target dimensions
-        // For continuous form / half-A4 invoices: width is 210mm (landscape), height adapts tightly to content
-        const isLandscape = orientation === "landscape";
-        const standardWidth = isLandscape ? 210 : 148;
+        // Supports custom label dimensions (e.g. 50x30mm, 60x40mm, 80x50mm, 100x75mm)
+        // or continuous form / half-A4 invoices: width is 210mm (landscape)
+        const customWidth = options.widthMm;
+        const customHeight = options.heightMm;
+        const isCustomLabel = Boolean(customWidth && customHeight);
+
+        const isLandscape = isCustomLabel ? customWidth >= customHeight : orientation === "landscape";
+        const standardWidth = isCustomLabel ? customWidth : (isLandscape ? 210 : 148);
         const contentWidth = standardWidth - (marginMm * 2);
         const contentHeight = (canvas.height * contentWidth) / canvas.width;
 
         // Auto-fit height to content so there is zero trailing blank space/gap at the bottom
-        const fitHeight = options.fitContentHeight ?? true;
-        const pageHeight = fitHeight 
-            ? Math.max(Math.round(contentHeight + (marginMm * 2)), 45)
-            : (isLandscape ? 148 : 210);
+        const fitHeight = options.fitContentHeight ?? !isCustomLabel;
+        const pageHeight = isCustomLabel
+            ? customHeight
+            : (fitHeight 
+                ? Math.max(Math.round(contentHeight + (marginMm * 2)), 45)
+                : (isLandscape ? 148 : 210));
 
-        // In jsPDF format parameter: [height, width] for landscape mode
-        const pdfFormat = isLandscape ? [pageHeight, standardWidth] : [standardWidth, pageHeight];
+        // In jsPDF format parameter: [width, height] or array
+        const pdfFormat = [standardWidth, pageHeight];
         const pdf = new jsPDF({
-            orientation,
+            orientation: isLandscape ? "landscape" : "portrait",
             unit: "mm",
             format: pdfFormat
         });

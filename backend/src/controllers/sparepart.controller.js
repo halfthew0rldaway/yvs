@@ -373,7 +373,7 @@ async function getAllRestockLogs(req, res) {
         const where = {};
 
         if (supplier && supplier !== "all") {
-            where.supplier_nama = { equals: supplier, mode: "insensitive" };
+            where.supplier_nama = supplier;
         }
 
         if (startDate || endDate) {
@@ -391,11 +391,11 @@ async function getAllRestockLogs(req, res) {
         if (search && search.trim() !== "") {
             const q = search.trim();
             where.OR = [
-                { nomor_faktur: { contains: q, mode: "insensitive" } },
-                { supplier_nama: { contains: q, mode: "insensitive" } },
-                { catatan: { contains: q, mode: "insensitive" } },
-                { user_nama: { contains: q, mode: "insensitive" } },
-                { sparepart: { nama: { contains: q, mode: "insensitive" } } },
+                { nomor_faktur: { contains: q } },
+                { supplier_nama: { contains: q } },
+                { catatan: { contains: q } },
+                { user_nama: { contains: q } },
+                { sparepart: { nama: { contains: q } } },
             ];
         }
 
@@ -540,7 +540,8 @@ async function use(req, res) {
                     include: { sparepart: true }
                 });
                 const biaya_sparepart = allPenggunaan.reduce((sum, p) => sum + (p.sparepart.harga * p.jumlah), 0);
-                const total_biaya = existingInvoice.biaya_jasa + biaya_sparepart;
+                const subtotal = existingInvoice.biaya_jasa + biaya_sparepart;
+                const total_biaya = Math.max(0, subtotal - (existingInvoice.diskon || 0));
                 await tx.invoice.update({
                     where: { id: existingInvoice.id },
                     data: { biaya_sparepart, total_biaya }
@@ -595,7 +596,8 @@ async function removeUsage(req, res) {
                     include: { sparepart: true }
                 });
                 const biaya_sparepart = remainingPenggunaan.reduce((sum, p) => sum + (p.sparepart.harga * p.jumlah), 0);
-                const total_biaya = existingInvoice.biaya_jasa + biaya_sparepart;
+                const subtotal = existingInvoice.biaya_jasa + biaya_sparepart;
+                const total_biaya = Math.max(0, subtotal - (existingInvoice.diskon || 0));
                 await tx.invoice.update({
                     where: { id: existingInvoice.id },
                     data: { biaya_sparepart, total_biaya }

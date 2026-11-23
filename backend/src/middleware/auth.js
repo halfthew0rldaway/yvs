@@ -4,12 +4,17 @@ const { getAuthorization, hasPermission } = require("../services/authorization.s
 // Permissions are looked up on every request so revoked access takes effect immediately.
 async function authenticate(req, res, next) {
     const header = req.headers.authorization;
+    let token = null;
 
-    if (!header || !header.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "Token tidak ditemukan" });
+    if (header && header.startsWith("Bearer ")) {
+        token = header.split(" ")[1];
+    } else if (req.query && req.query.token) {
+        token = String(req.query.token).trim();
     }
 
-    const token = header.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ message: "Token tidak ditemukan" });
+    }
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);

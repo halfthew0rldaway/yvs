@@ -1,4 +1,5 @@
 import { Capacitor } from "@capacitor/core";
+import { getAuthToken } from "../utils/authStorage";
 
 /**
  * Central Environment & API Configuration
@@ -40,6 +41,13 @@ export const AppConfig = {
         if (!clean) return "";
 
         if (clean.startsWith("http://") || clean.startsWith("https://") || clean.startsWith("data:") || clean.startsWith("blob:")) {
+            if ((clean.includes("attendance/") || clean.includes("leaves/")) && !clean.includes("token=")) {
+                const token = getAuthToken();
+                if (token) {
+                    const separator = clean.includes("?") ? "&" : "?";
+                    return `${clean}${separator}token=${encodeURIComponent(token)}`;
+                }
+            }
             return clean;
         }
 
@@ -48,9 +56,16 @@ export const AppConfig = {
             clean = `uploads/${clean}`;
         }
 
-        // On native Capacitor, always prepend full asset base URL
-        // On web, also prepend asset base URL if not running on the same domain
-        return `${this.assetBaseUrl}/${clean}`;
+        let fullUrl = `${this.assetBaseUrl}/${clean}`;
+        if ((clean.includes("attendance/") || clean.includes("leaves/")) && !fullUrl.includes("token=")) {
+            const token = getAuthToken();
+            if (token) {
+                const separator = fullUrl.includes("?") ? "&" : "?";
+                fullUrl = `${fullUrl}${separator}token=${encodeURIComponent(token)}`;
+            }
+        }
+
+        return fullUrl;
     },
 
     /**

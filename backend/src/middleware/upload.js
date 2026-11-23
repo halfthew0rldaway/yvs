@@ -69,6 +69,19 @@ const uploadAvatar = multer({
     fileFilter: avatarFilter
 });
 
+// Mapping ekstensi aman berdasarkan mimetype tervalidasi
+const SAFE_IMAGE_EXTS = {
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp'
+};
+
+const SAFE_LEAVE_EXTS = {
+    ...SAFE_IMAGE_EXTS,
+    'application/pdf': '.pdf'
+};
+
 // Storage for Attendance selfie photos
 const attendanceStorage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -80,14 +93,23 @@ const attendanceStorage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname) || ".jpg";
-        cb(null, 'selfie-' + uniqueSuffix + ext.toLowerCase());
+        const safeExt = SAFE_IMAGE_EXTS[file.mimetype] || ".jpg";
+        cb(null, 'selfie-' + uniqueSuffix + safeExt);
     }
 });
 
+const attendanceFilter = (req, file, cb) => {
+    if (SAFE_IMAGE_EXTS[file.mimetype]) {
+        cb(null, true);
+    } else {
+        cb(new Error("Hanya file foto (JPG, PNG, WEBP) yang diizinkan untuk presensi selfie!"), false);
+    }
+};
+
 const uploadAttendance = multer({
     storage: attendanceStorage,
-    limits: { fileSize: 10 * 1024 * 1024 }
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max per selfie
+    fileFilter: attendanceFilter
 });
 
 // Storage for Leave Request attachments (doctor note / evidence)
@@ -101,14 +123,23 @@ const leaveStorage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname) || ".jpg";
-        cb(null, 'leave-' + uniqueSuffix + ext.toLowerCase());
+        const safeExt = SAFE_LEAVE_EXTS[file.mimetype] || ".jpg";
+        cb(null, 'leave-' + uniqueSuffix + safeExt);
     }
 });
 
+const leaveFilter = (req, file, cb) => {
+    if (SAFE_LEAVE_EXTS[file.mimetype]) {
+        cb(null, true);
+    } else {
+        cb(new Error("Hanya file gambar (JPG, PNG, WEBP) atau PDF yang diizinkan untuk lampiran surat izin / cuti!"), false);
+    }
+};
+
 const uploadLeave = multer({
     storage: leaveStorage,
-    limits: { fileSize: 10 * 1024 * 1024 }
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max per lampiran
+    fileFilter: leaveFilter
 });
 
 /**

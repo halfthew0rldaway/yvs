@@ -32,6 +32,9 @@ import {
 } from "lucide-react";
 import WebcamSelfieModal from "./WebcamSelfieModal";
 import { LocationService, isNativePlatform } from "../../services/nativeServices";
+import AppConfig from "../../services/config";
+
+const resolveMedia = (path) => AppConfig.resolveImageUrl(path);
 
 // Haversine formula client-side for immediate feedback
 function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
@@ -1520,7 +1523,7 @@ export default function AttendancePage() {
                                             </p>
                                             {todayRecord.foto_masuk && (
                                                 <button
-                                                    onClick={() => setPreviewPhotoUrl(todayRecord.foto_masuk)}
+                                                    onClick={() => setPreviewPhotoUrl(resolveMedia(todayRecord.foto_masuk))}
                                                     className="text-2xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1 cursor-pointer"
                                                 >
                                                     <Eye className="w-3 h-3" />
@@ -1564,7 +1567,7 @@ export default function AttendancePage() {
                                             </p>
                                             {todayRecord.foto_pulang && (
                                                 <button
-                                                    onClick={() => setPreviewPhotoUrl(todayRecord.foto_pulang)}
+                                                    onClick={() => setPreviewPhotoUrl(resolveMedia(todayRecord.foto_pulang))}
                                                     className="text-2xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1 cursor-pointer"
                                                 >
                                                     <Eye className="w-3 h-3" />
@@ -1810,7 +1813,7 @@ export default function AttendancePage() {
                                                     <div className="flex items-center justify-center gap-2">
                                                         {item.foto_masuk && (
                                                             <button
-                                                                onClick={() => setPreviewPhotoUrl(item.foto_masuk)}
+                                                                onClick={() => setPreviewPhotoUrl(resolveMedia(item.foto_masuk))}
                                                                 className="p-1 hover:bg-slate-100 rounded text-blue-600 cursor-pointer"
                                                                 title="Lihat Foto Masuk"
                                                             >
@@ -1819,7 +1822,7 @@ export default function AttendancePage() {
                                                         )}
                                                         {item.foto_pulang && (
                                                             <button
-                                                                onClick={() => setPreviewPhotoUrl(item.foto_pulang)}
+                                                                onClick={() => setPreviewPhotoUrl(resolveMedia(item.foto_pulang))}
                                                                 className="p-1 hover:bg-slate-100 rounded text-amber-600 cursor-pointer"
                                                                 title="Lihat Foto Pulang"
                                                             >
@@ -1908,7 +1911,7 @@ export default function AttendancePage() {
                                                 <td className="py-3 px-4">
                                                     {l.lampiran_url ? (
                                                         <a
-                                                            href={l.lampiran_url}
+                                                            href={resolveMedia(l.lampiran_url)}
                                                             target="_blank"
                                                             rel="noreferrer"
                                                             className="text-2xs font-semibold text-blue-600 hover:underline flex items-center gap-1"
@@ -2211,20 +2214,20 @@ export default function AttendancePage() {
                                                     <div className="flex items-center gap-2">
                                                         {row.attendance?.foto_masuk && (
                                                             <button
-                                                                onClick={() => setPreviewPhotoUrl(row.attendance.foto_masuk)}
+                                                                onClick={() => setPreviewPhotoUrl(resolveMedia(row.attendance.foto_masuk))}
                                                                 className="w-7 h-7 rounded-lg overflow-hidden border border-slate-200 hover:ring-2 hover:ring-blue-400 transition-all cursor-pointer"
                                                                 title="Foto Selfie Masuk"
                                                             >
-                                                                <img src={row.attendance.foto_masuk} alt="Masuk" className="w-full h-full object-cover" />
+                                                                <img src={resolveMedia(row.attendance.foto_masuk)} alt="Masuk" className="w-full h-full object-cover" />
                                                             </button>
                                                         )}
                                                         {row.attendance?.foto_pulang && (
                                                             <button
-                                                                onClick={() => setPreviewPhotoUrl(row.attendance.foto_pulang)}
+                                                                onClick={() => setPreviewPhotoUrl(resolveMedia(row.attendance.foto_pulang))}
                                                                 className="w-7 h-7 rounded-lg overflow-hidden border border-slate-200 hover:ring-2 hover:ring-amber-400 transition-all cursor-pointer"
                                                                 title="Foto Selfie Pulang"
                                                             >
-                                                                <img src={row.attendance.foto_pulang} alt="Pulang" className="w-full h-full object-cover" />
+                                                                <img src={resolveMedia(row.attendance.foto_pulang)} alt="Pulang" className="w-full h-full object-cover" />
                                                             </button>
                                                         )}
                                                     </div>
@@ -2866,11 +2869,11 @@ export default function AttendancePage() {
                                             </span>
                                             {item.foto_pulang || item.foto_masuk ? (
                                                 <div
-                                                    onClick={() => setPreviewPhotoUrl(item.foto_pulang || item.foto_masuk)}
+                                                    onClick={() => setPreviewPhotoUrl(resolveMedia(item.foto_pulang || item.foto_masuk))}
                                                     className="relative aspect-4/3 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 group cursor-pointer shadow-2xs hover:ring-2 hover:ring-blue-500/30 transition-all"
                                                 >
                                                     <img
-                                                        src={item.foto_pulang || item.foto_masuk}
+                                                        src={resolveMedia(item.foto_pulang || item.foto_masuk)}
                                                         alt="Selfie Bukti Presensi"
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                                     />

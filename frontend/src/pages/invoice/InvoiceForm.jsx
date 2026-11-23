@@ -2,14 +2,25 @@ import toast from 'react-hot-toast';
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
-import { ArrowLeft, Save, FileCheck, DollarSign, Info } from "lucide-react";
+import { ArrowLeft, Save, FileCheck, DollarSign, Info, Percent, CreditCard, Tag, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import CustomSelect from "../../components/common/CustomSelect";
+
+function formatRupiah(num) {
+    return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num || 0);
+}
 
 export default function InvoiceForm() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const queryTiketId = searchParams.get("tiket_id") || "";
-    const [form, setForm] = useState({ tiket_id: queryTiketId, biaya_jasa: "" });
+    const [form, setForm] = useState({ 
+        tiket_id: queryTiketId, 
+        biaya_jasa: "",
+        diskon: 0,
+        nominal_dp: 0,
+        metode_pembayaran: "Tunai",
+        catatan: ""
+    });
     const [tikets, setTikets] = useState([]);
     const [selectedTiketData, setSelectedTiketData] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -140,34 +151,167 @@ export default function InvoiceForm() {
                     )}
                 </div>
 
-                <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-slate-400" />
-                        Biaya Jasa (Rp) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="number"
-                        value={form.biaya_jasa}
-                        onChange={(e) => setForm({ ...form, biaya_jasa: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
-                        placeholder="Contoh: 150000"
-                        min="0"
-                        required
-                    />
-                    <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg">
-                        <Info className="w-4 h-4 text-slate-400" />
-                        Biaya sparepart akan dihitung secara otomatis berdasarkan suku cadang yang digunakan.
-                    </p>
+                {/* Financial Fields: Biaya Jasa, Diskon, DP, Metode */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-slate-400" />
+                            Biaya Jasa (Rp) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            value={form.biaya_jasa}
+                            onChange={(e) => setForm({ ...form, biaya_jasa: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                            placeholder="Contoh: 150000"
+                            min="0"
+                            required
+                        />
+                        <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1.5">
+                            <Info className="w-3.5 h-3.5 text-slate-400" />
+                            Biaya sparepart terhitung otomatis dari suku cadang.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-slate-400" />
+                            Potongan Harga / Diskon (Rp)
+                        </label>
+                        <input
+                            type="number"
+                            value={form.diskon}
+                            onChange={(e) => setForm({ ...form, diskon: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                            placeholder="0"
+                            min="0"
+                        />
+                        <p className="text-xs text-slate-500 mt-1.5">
+                            Diskon khusus pelanggan atau voucher promo.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-slate-400" />
+                            Uang Muka / DP Telah Dibayar (Rp)
+                        </label>
+                        <input
+                            type="number"
+                            value={form.nominal_dp}
+                            onChange={(e) => setForm({ ...form, nominal_dp: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                            placeholder="0"
+                            min="0"
+                        />
+                        <p className="text-xs text-slate-500 mt-1.5">
+                            Uang muka saat intake (kosongkan jika langsung lunas).
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                            <CreditCard className="w-4 h-4 text-slate-400" />
+                            Metode Pembayaran <span className="text-red-500">*</span>
+                        </label>
+                        <CustomSelect
+                            value={form.metode_pembayaran}
+                            onChange={(e) => setForm({ ...form, metode_pembayaran: e.target.value })}
+                            label="Pilih Metode Pembayaran"
+                            required
+                        >
+                            <option value="Tunai">Tunai / Cash</option>
+                            <option value="Transfer Bank">Transfer Bank (BCA / Mandiri)</option>
+                            <option value="QRIS">QRIS Dinamis</option>
+                            <option value="Kartu Debit">Kartu Debit</option>
+                        </CustomSelect>
+                    </div>
                 </div>
 
-                {selectedTiketData && (
-                    <div className="bg-emerald-50/50 p-5 rounded-xl border border-emerald-100 flex flex-col sm:flex-row justify-between sm:items-center gap-2 mt-6">
-                        <span className="font-bold text-emerald-800 uppercase tracking-wider text-sm">Estimasi Grand Total</span>
-                        <span className="font-black text-2xl text-emerald-700">
-                            Rp {Number(form.biaya_jasa || 0) + totalSparepart}
-                        </span>
-                    </div>
-                )}
+                <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Catatan Transaksi / Keterangan Tambahan
+                    </label>
+                    <textarea
+                        value={form.catatan}
+                        onChange={(e) => setForm({ ...form, catatan: e.target.value })}
+                        rows={2}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400 text-sm"
+                        placeholder="Contoh: Garansi berlaku 30 hari untuk servis motherboard..."
+                    />
+                </div>
+
+                {selectedTiketData && (() => {
+                    const biayaJasaNum = Number(form.biaya_jasa || 0);
+                    const diskonNum = Number(form.diskon || 0);
+                    const dpNum = Number(form.nominal_dp || 0);
+                    const subtotal = biayaJasaNum + totalSparepart;
+                    const totalTagihan = Math.max(0, subtotal - diskonNum);
+                    const sisaTagihan = Math.max(0, totalTagihan - dpNum);
+                    const statusOtomatis = sisaTagihan <= 0 ? "lunas" : dpNum > 0 ? "dp_awal" : "belum_lunas";
+
+                    return (
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3 mt-6">
+                            <h4 className="font-bold text-slate-800 text-sm flex items-center justify-between">
+                                <span>Ringkasan Keuangan Invoice</span>
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
+                                    statusOtomatis === "lunas"
+                                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                        : statusOtomatis === "dp_awal"
+                                        ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                        : "bg-rose-100 text-rose-800 border border-rose-200"
+                                }`}>
+                                    {statusOtomatis === "lunas" ? (
+                                        <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Status: Lunas</>
+                                    ) : statusOtomatis === "dp_awal" ? (
+                                        <><Clock className="w-3.5 h-3.5 text-amber-600" /> Status: DP Awal</>
+                                    ) : (
+                                        <><AlertCircle className="w-3.5 h-3.5 text-rose-600" /> Status: Belum Lunas</>
+                                    )}
+                                </span>
+                            </h4>
+
+                            <div className="space-y-1.5 text-xs sm:text-sm text-slate-600 pt-2 border-t border-slate-200">
+                                <div className="flex justify-between">
+                                    <span>Biaya Jasa Servis</span>
+                                    <span className="font-mono text-slate-900">{formatRupiah(biayaJasaNum)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Biaya Suku Cadang</span>
+                                    <span className="font-mono text-slate-900">{formatRupiah(totalSparepart)}</span>
+                                </div>
+                                <div className="flex justify-between font-semibold text-slate-700 pt-1 border-t border-slate-200/60">
+                                    <span>Subtotal</span>
+                                    <span className="font-mono">{formatRupiah(subtotal)}</span>
+                                </div>
+                                {diskonNum > 0 && (
+                                    <div className="flex justify-between text-rose-600 font-medium">
+                                        <span>Potongan Diskon</span>
+                                        <span className="font-mono">- {formatRupiah(diskonNum)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between font-bold text-slate-900 text-sm sm:text-base pt-1 border-t border-slate-200">
+                                    <span>Total Tagihan Bersih</span>
+                                    <span className="font-mono text-blue-700">{formatRupiah(totalTagihan)}</span>
+                                </div>
+                                {dpNum > 0 && (
+                                    <div className="flex justify-between text-amber-700 font-medium">
+                                        <span>Uang Muka / DP Masuk</span>
+                                        <span className="font-mono">- {formatRupiah(dpNum)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between font-extrabold text-sm sm:text-base pt-1.5 border-t-2 border-slate-300">
+                                    <span className={sisaTagihan > 0 ? "text-rose-700" : "text-emerald-700"}>
+                                        {sisaTagihan > 0 ? "Sisa Tagihan Pelunasan" : "Kembalian / Lunas"}
+                                    </span>
+                                    <span className={`font-mono ${sisaTagihan > 0 ? "text-rose-700" : "text-emerald-700"}`}>
+                                        {formatRupiah(sisaTagihan)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
 
                 <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-6">
                     <button

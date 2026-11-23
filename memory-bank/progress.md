@@ -34,3 +34,19 @@
 - Staging backend must remain on `https://staging.101.32.127.55.sslip.io/api`.
 - Never register Service Workers inside Capacitor native WebView.
 - Do not modify database schema directly without Prisma migrations.
+# Direct chat (2026-11-17)
+- Added one-to-one staff chat with per-user read state, paginated history, recipient-scoped realtime refresh, and participant TXT/JSON transcript exports with Android/Capacitor native share support.
+- Replaced manual `[[ticket:123]]` workflow with interactive `InsertReferenceModal` to search & link tickets, devices, spare parts, and staff members with real-time permission access checks.
+- Rendered rich entity chips/badges in message history, auto-scroll to bottom, scroll retention on older message prepending, and Enter-to-send shortcut.
+- Added deletion guard preventing deletion of staff accounts with active chat retention history.
+- Added comprehensive unit test suite in `backend/tests/unit/direct_chat.test.js` (81/81 unit tests passing).
+- Added safety caps (`take: 100`) on unpaginated customer/invoice endpoints and tightened CORS origins in `backend/src/app.js`.
+- Fixed "Tiket tidak ditemukan" on chat mention click: synced missing `Invoice` columns (`diskon`, `nominal_dp`, `status_pembayaran`, `metode_pembayaran`, `catatan`) in MySQL database, eliminated invalid `mode: "insensitive"` in Prisma MySQL queries, and upgraded reference tokens to support both numeric ID and alphanumeric ticket codes with optional display labels (e.g. `[[ticket:1127|SRV-2026-005]]`). Added `useSearchParams` URL search synchronization to `PerangkatList`.
+- Upgraded Chat Layout & UI/UX (2026-11-18): Expanded layout to wide-to-edge (`w-full`), modernized bubble shapes (`rounded-2xl rounded-br-xs` vs `rounded-2xl rounded-bl-xs`), formatted snippet tokens (`🎫 Tiket ...`), added date cluster separators, integrated Web Audio chime and realtime system toast notifications, and integrated unread chat counters into the main sidebar badges.
+- Centered & Responsive Navbar Live Clock (2026-11-18): Positioned `LiveClock` at exact horizontal/vertical center via `absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`, encased in a modern slate capsule, and added multi-tier responsive date formatting (full format on desktop, abbreviated on tablet, compact date on mobile) without text clipping.
+- Thermal Label Printing & Universal Offline QR Upgrade (2026-11-22):
+  - Fixed 4-page overflow and browser header/footer clutter bug in `TicketQrModal` by portaling modal to `document.body` via `createPortal`, isolating the print DOM tree with `#root { display: none !important; }`, and dynamically configuring `@page { size: ...; margin: 0mm !important; }` to guarantee exact 1-page prints.
+  - Added comprehensive thermal label size selector: `50 x 30 mm` (Mini/Aksesoris/Charger), `60 x 40 mm` (Kompak), `80 x 50 mm` (Standar Servis - Rekomendasi), `100 x 75 mm` (Besar/Box/Casing), and `roll` (Continuous Roll 58/80 mm) with real-time physical aspect ratio preview, zero clipping, and copy multiplier (1x-5x).
+  - Replaced external third-party QR generation (`api.qrserver.com`) across `TicketQrModal`, `SparepartQrModal`, `BpbsPrintModal`, and `Tracking` with 100% offline-ready local generation via the `qrcode` library (`QRCode.toDataURL`), supporting custom-dimension PDF export (`DocumentPrintService.downloadPdf`), PNG download, and direct thermal printing.
+  - Upgraded `CrmFloatingBubble` with dual notification badges (CRM Left / Blue, Chat Right / Red), optimized vector 3D mascot rendering, and responsive section tabs.
+

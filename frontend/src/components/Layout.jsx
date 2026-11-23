@@ -32,7 +32,8 @@ import {
     Clock,
     HelpCircle,
     Layers,
-    Bluetooth
+    Bluetooth,
+    MessageCircle
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
@@ -262,24 +263,50 @@ const LiveClock = memo(function LiveClock() {
     }, []);
 
     const dayName = currentTime.toLocaleDateString("id-ID", { weekday: "long" });
+    const shortDayName = currentTime.toLocaleDateString("id-ID", { weekday: "short" });
     const dateFormatted = currentTime.toLocaleDateString("id-ID", {
         day: "numeric",
         month: "long",
         year: "numeric"
+    });
+    const shortDateFormatted = currentTime.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "short"
     });
     const hours = String(currentTime.getHours()).padStart(2, "0");
     const minutes = String(currentTime.getMinutes()).padStart(2, "0");
     const seconds = String(currentTime.getSeconds()).padStart(2, "0");
 
     return (
-        <div className="hidden xs:flex items-center justify-center gap-1.5 select-none shrink-0 px-1">
-            <span className="font-mono tabular-nums text-xs sm:text-base lg:text-lg font-semibold text-slate-800 tracking-tight">
-                {hours}<span className="text-slate-300">:</span>{minutes}<span className="hidden sm:inline"><span className="text-slate-300">:</span>{seconds}</span>
-            </span>
-            <span className="hidden xl:block w-px h-4 bg-slate-200"></span>
-            <span className="hidden xl:inline text-xs text-slate-500 font-medium whitespace-nowrap">
-                {dayName}, {dateFormatted}
-            </span>
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 bg-slate-50/90 border border-slate-200/80 rounded-xl shadow-2xs select-none backdrop-blur-xs transition-all pointer-events-auto">
+            {/* Jam Digital */}
+            <div className="flex items-baseline font-mono tabular-nums font-bold text-xs sm:text-sm lg:text-base text-slate-800 tracking-tight">
+                <span>{hours}</span>
+                <span className="text-blue-500 animate-pulse mx-0.5">:</span>
+                <span>{minutes}</span>
+                <span className="hidden sm:inline text-slate-400 text-2xs sm:text-xs font-normal">
+                    <span className="mx-0.5">:</span>{seconds}
+                </span>
+            </div>
+
+            {/* Pemisah Vertikal */}
+            <span className="hidden xs:block w-px h-3.5 bg-slate-200 shrink-0" aria-hidden="true" />
+
+            {/* Tanggal Responsif */}
+            <div className="hidden xs:flex items-center text-slate-500 font-medium">
+                {/* Desktop Lengkap (>= lg) */}
+                <span className="hidden lg:inline text-xs truncate whitespace-nowrap">
+                    {dayName}, {dateFormatted}
+                </span>
+                {/* Tablet Sedang (sm to lg) */}
+                <span className="hidden sm:inline lg:hidden text-2xs truncate whitespace-nowrap">
+                    {shortDayName}, {dateFormatted}
+                </span>
+                {/* Mobile Ringkas (xs to sm) */}
+                <span className="inline sm:hidden text-3xs text-slate-500 font-mono truncate whitespace-nowrap">
+                    {shortDateFormatted}
+                </span>
+            </div>
         </div>
     );
 });
@@ -333,7 +360,7 @@ export default function Layout({ children }) {
         return () => { clearInterval(interval); window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVisibility); };
     }, [refreshSidebarCounts]);
 
-    useRealtimeEvent(["registration:updated", "notification:new", "notification:updated"], refreshSidebarCounts);
+    useRealtimeEvent(["registration:updated", "notification:new", "notification:updated", "chat:updated"], refreshSidebarCounts);
 
     // Idle timer untuk memonitor inaktivitas user
     const {
@@ -465,6 +492,7 @@ export default function Layout({ children }) {
             "/audit-log": "audit.view", "/roles": "roles.manage"
         };
         const groups = adminNavGroups.map(group => ({ ...group, items: group.items.filter(item => item.path === "/users" ? user?.is_super_admin : item.path === "/attendance" ? ["attendance.self", "attendance.review", "attendance.adjust", "attendance.policy"].some(hasPermission) : hasPermission(permissionForPath[item.path])) })).filter(group => group.items.length);
+        groups.push({ id: "komunikasi", label: "Komunikasi", icon: MessageCircle, items: [{ path: "/chat", label: "Chat Tim", icon: MessageCircle }] });
         if (user?.is_super_admin) {
             const system = groups.find(group => group.id === "sistem");
             if (system) system.items.push({ path: "/roles", label: "Peran & Hak Akses", icon: KeyRound });
@@ -720,9 +748,9 @@ export default function Layout({ children }) {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 print:bg-white print:overflow-visible">
                 {/* Global Top Navbar */}
-                <header className="flex items-center justify-between min-h-[4rem] h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-3.5 sm:px-6 bg-white border-b border-slate-200 shrink-0 print:hidden z-10 gap-2 sm:gap-4">
+                <header className="relative flex items-center justify-between min-h-[4rem] h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-3.5 sm:px-6 bg-white border-b border-slate-200 shrink-0 print:hidden z-10 gap-2 sm:gap-4">
                     {/* Left: Sidebar Toggle & Page Title */}
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-initial">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[32%] sm:max-w-[35%] md:max-w-[38%] shrink-0 z-10">
                         <button 
                             type="button"
                             className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shrink-0 cursor-pointer"
@@ -754,8 +782,9 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/database") && "Database"}
                                 {location.pathname.startsWith("/audit-log") && "Audit Log"}
                                 {location.pathname.startsWith("/attendance") && "Presensi"}
+                                {location.pathname.startsWith("/chat") && "Chat Tim"}
                                 {location.pathname.startsWith("/profile") && "Profil"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/chat", "/profile"].some(p => location.pathname.startsWith(p)) && "YVS Computer"}
                             </span>
                         </div>
 
@@ -780,14 +809,17 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/database") && "Cadangan Database"}
                                 {location.pathname.startsWith("/audit-log") && "Log Audit Aktivitas (Anti-Fraud)"}
                                 {location.pathname.startsWith("/attendance") && "Presensi & Absensi Karyawan"}
+                                {location.pathname.startsWith("/chat") && "Chat Internal Tim"}
                                 {location.pathname.startsWith("/profile") && "Profil Akun"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/profile"].some(p => location.pathname.startsWith(p)) && "Serv.io"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/chat", "/profile"].some(p => location.pathname.startsWith(p)) && "YVS Computer"}
                             </span>
                         </div>
                     </div>
 
-                    {/* Center: Live Clock (Standalone Memoized Component) */}
-                    <LiveClock />
+                    {/* Center: Live Clock (Mathematically dead-center on all viewports) */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-20 pointer-events-none">
+                        <LiveClock />
+                    </div>
 
                     {/* Right: Quick Action Button & Notification Bell */}
                     <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
@@ -796,7 +828,7 @@ export default function Layout({ children }) {
                             type="button"
                             onClick={() => setIsProcessFlowModalOpen(true)}
                             className="hidden sm:inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
-                            title="Panduan Interaktif Alur Proses Bisnis & SOP Serv.io"
+                            title="Panduan Interaktif Alur Proses Bisnis & SOP YVS Computer"
                             aria-label="Panduan Alur Proses"
                         >
                             <HelpCircle className="w-4 h-4 text-blue-600 shrink-0" />
@@ -925,25 +957,24 @@ export default function Layout({ children }) {
                 </Suspense>
             )}
 
-            {/* Maintenance Recall Modal & Floating CRM Bot (Khusus Admin / Front Office / Pimpinan) */}
-            {canAccessCrm && (
-                <>
-                    {isMaintenanceModalOpen && (
-                        <Suspense fallback={null}>
-                            <MaintenanceRecallModal
-                                isOpen={isMaintenanceModalOpen}
-                                onClose={() => setIsMaintenanceModalOpen(false)}
-                            />
-                        </Suspense>
-                    )}
-                    {/* Floating CRM Bot: selalu aktif di desktop & tablet, hanya disembunyikan di mobile jika drawer sidebar sedang terbuka */}
-                    {!(isSidebarOpen && typeof window !== "undefined" && window.innerWidth < 1024) && (
-                        <CrmFloatingBubble 
-                            maintenanceDueData={maintenanceDueData}
-                            onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
-                        />
-                    )}
-                </>
+            {/* Maintenance Recall Modal (Khusus Admin / Front Office / Pimpinan dengan Hak Akses CRM) */}
+            {canAccessCrm && isMaintenanceModalOpen && (
+                <Suspense fallback={null}>
+                    <MaintenanceRecallModal
+                        isOpen={isMaintenanceModalOpen}
+                        onClose={() => setIsMaintenanceModalOpen(false)}
+                    />
+                </Suspense>
+            )}
+
+            {/* Quick Hub Floating Widget (CRM Recall & Chat Tim): Selalu aktif untuk semua staf login */}
+            {Boolean(user) && !(isSidebarOpen && typeof window !== "undefined" && window.innerWidth < 1024) && (
+                <CrmFloatingBubble 
+                    canAccessCrm={canAccessCrm}
+                    maintenanceDueData={maintenanceDueData}
+                    unreadChatCount={sidebarCounts["/chat"] || 0}
+                    onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
+                />
             )}
 
             {/* Modal Peringatan Inaktivitas Sebelum Terkunci */}

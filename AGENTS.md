@@ -251,6 +251,11 @@ The technician picker is available only with `tickets.assign`; an intake-only ro
 - Authenticated `/notifications/sidebar-counts` groups unread linked notifications by module route and adds the count of QR registrations awaiting review or ticket creation for staff with `tickets.intake`. Sidebar and collapsed group badges use these counts; a QR sublink opens the new-ticket review section. Counts refresh on realtime events, navigation, focus, and a visible-tab interval.
 - The QR review list loads 50 registrations at a time with an explicit load-more control. Mobile-first cards wrap long text, allow search through loaded entries, and remain in a bounded scroll area for large queues. Public submissions and review actions emit `registration:updated` only to intake-authorized realtime clients.
 
+### Direct Staff Chat
+- `/chat` provides one-to-one staff conversations across roles. `Chat` holds a canonical user pair, `ChatMember` holds per-user read state, and `ChatMessage` stores server-side history and sender-name snapshots. Accounts with chat history cannot be deleted, preserving the other participant's transcript.
+- Authenticated `/api/chat` endpoints enforce conversation membership on reads, sends, and exports. Messages are paginated by ID and `chat:updated` SSE events target only participants.
+- Participants may export a full conversation as readable TXT (dates and times in Asia/Jakarta, sender, text) or structured JSON. Message references use `[[ticket:ID]]`, `[[device:ID]]`, `[[part:ID]]`, and `[[user:ID]]`; record navigation remains gated by the viewer's permissions.
+
 ---
 
 ## 7. Guidelines for AI Agents

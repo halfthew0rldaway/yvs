@@ -319,6 +319,20 @@ export default function InvoiceList() {
                                             <p className="text-3xs text-slate-500 mt-0.5">
                                                 Teknisi: {inv.tiket?.teknisi?.nama || "-"}
                                             </p>
+                                            <div className="flex items-center gap-1.5 mt-1.5">
+                                                <span className={`px-2 py-0.5 rounded-full text-3xs font-semibold uppercase ${
+                                                    (inv.status_pembayaran || "lunas") === "lunas"
+                                                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                                        : inv.status_pembayaran === "dp_awal"
+                                                        ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                                        : "bg-rose-50 text-rose-700 border border-rose-200"
+                                                }`}>
+                                                    {inv.status_pembayaran === "dp_awal" ? "DP Awal" : inv.status_pembayaran === "belum_lunas" ? "Belum Lunas" : "Lunas"}
+                                                </span>
+                                                {inv.metode_pembayaran && (
+                                                    <span className="text-3xs text-slate-400">&bull; {inv.metode_pembayaran}</span>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="text-right shrink-0">
                                             <p className="text-3xs text-slate-400 font-semibold uppercase">Total</p>
@@ -357,6 +371,7 @@ export default function InvoiceList() {
                                 <th className="px-6 py-3.5 text-right">Biaya Jasa</th>
                                 <th className="px-6 py-3.5 text-right">Biaya Sparepart</th>
                                 <th className="px-6 py-3.5 text-right">Total Tagihan</th>
+                                <th className="px-6 py-3.5 text-center">Status</th>
                                 <th className="px-6 py-3.5">Tanggal Invoice</th>
                                 <th className="px-6 py-3.5 text-center w-28">Aksi</th>
                             </tr>
@@ -381,6 +396,17 @@ export default function InvoiceList() {
                                     <td className="px-6 py-4 text-right text-slate-600 font-mono text-xs">{formatRupiah(inv.biaya_jasa)}</td>
                                     <td className="px-6 py-4 text-right text-slate-600 font-mono text-xs">{formatRupiah(inv.biaya_sparepart)}</td>
                                     <td className="px-6 py-4 text-right font-bold text-slate-900 font-mono text-xs">{formatRupiah(inv.total_biaya)}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${
+                                            (inv.status_pembayaran || "lunas") === "lunas"
+                                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                                : inv.status_pembayaran === "dp_awal"
+                                                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                                : "bg-rose-50 text-rose-700 border border-rose-200"
+                                        }`}>
+                                            {inv.status_pembayaran === "dp_awal" ? "DP Awal" : inv.status_pembayaran === "belum_lunas" ? "Belum Lunas" : "Lunas"}
+                                        </span>
+                                    </td>
                                     <td className="px-6 py-4 text-slate-500 text-xs">
                                         {new Date(inv.created_at).toLocaleDateString("id-ID", { year: 'numeric', month: 'short', day: 'numeric' })}
                                     </td>

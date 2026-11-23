@@ -14,6 +14,7 @@ const NON_CACHEABLE_ROUTES = [
     "/auth/",
     "/attendance/",
     "/database/",
+    "/chat/",
     "/health"
 ];
 

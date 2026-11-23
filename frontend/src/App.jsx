@@ -13,6 +13,7 @@ import { landingRouteFor } from "./utils/landingRoute";
 const Login = lazyWithRetry(() => import("./pages/Login"));
 const DownloadApp = lazyWithRetry(() => import("./pages/DownloadApp"));
 const Profile = lazyWithRetry(() => import("./pages/Profile"));
+const Chat = lazyWithRetry(() => import("./pages/chat/Chat"));
 const Dashboard = lazyWithRetry(() => import("./pages/dashboard/Dashboard"));
 const CustomerList = lazyWithRetry(() => import("./pages/customer/CustomerList"));
 const CustomerForm = lazyWithRetry(() => import("./pages/customer/CustomerForm"));
@@ -145,7 +146,14 @@ function ProtectedRoute({ children, permissions, superAdmin = false }) {
 export default function App() {
     return (
         <ErrorBoundary>
-            <Toaster position="top-right" toastOptions={{ className: 'text-sm font-medium text-slate-900', style: { borderRadius: '12px', padding: '16px' } }} />
+            <Toaster 
+                position={typeof window !== "undefined" && window.innerWidth < 640 ? "top-center" : "top-right"} 
+                containerStyle={{ zIndex: 100000, top: 16 }}
+                toastOptions={{ 
+                    className: 'text-sm font-medium text-slate-900 shadow-lg', 
+                    style: { borderRadius: '12px', padding: '14px 18px', maxWidth: '92vw' } 
+                }} 
+            />
             <Suspense fallback={<PageLoader />}>
                 <Routes>
                     <Route path="/login" element={<Login />} />
@@ -155,6 +163,7 @@ export default function App() {
 
                     {/* Protected routes */}
                     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                    <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
                     <Route path="/dashboard" element={<ProtectedRoute permissions={["dashboard.view"]}><Dashboard /></ProtectedRoute>} />
                     <Route path="/customer" element={<ProtectedRoute permissions={["customers.view"]}><CustomerList /></ProtectedRoute>} />
                     <Route path="/customer/tambah" element={<ProtectedRoute permissions={["customers.manage"]}><CustomerForm /></ProtectedRoute>} />
