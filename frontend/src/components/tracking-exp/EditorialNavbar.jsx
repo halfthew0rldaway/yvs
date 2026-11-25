@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { MagneticWrap, smoothScrollToTarget } from "./MotionPrimitives";
 
 const NAV_LINKS = [
-    { id: "hardware-lab", label: "Bedah Unit" },
+    { id: "cek-keluhan", label: "Cek Keluhan" },
     { id: "layanan", label: "Layanan" },
     { id: "standar", label: "Standar Kerja" },
     { id: "ulasan", label: "Ulasan" },

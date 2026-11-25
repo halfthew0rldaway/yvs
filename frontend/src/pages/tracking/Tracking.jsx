@@ -2307,9 +2307,11 @@ export default function Tracking() {
             });
         });
 
-        if (onFinished) {
-            transition.finished.finally(onFinished);
-        }
+        transition.ready.catch(() => {});
+        transition.updateCallbackDone.catch(() => {});
+        transition.finished.catch(() => {}).finally(() => {
+            if (onFinished) onFinished();
+        });
     };
 
     useEffect(() => {
