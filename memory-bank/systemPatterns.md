@@ -52,3 +52,14 @@
    - Pekayon Workshop Coordinates: `-6.26064, 106.98744`.
    - Radius: 500 meters.
    - Haversine formula implemented in both backend controller and frontend validator.
+
+6. **Marketing Promo Concurrency & HPP Protection**:
+   - Pure calculation & eligibility rules live in `backend/src/utils/promotionMath.js` (WIB `UTC+7` day boundaries, `jasa`-default scope to protect sparepart HPP, `maksimal_diskon` cap, min transaction, 1x per normalized customer phone).
+   - Cashier redemption executes inside `prisma.$transaction` with an atomic optimistic quota lock (`updateMany` with `kuota_terpakai: { lt: kuota_total }`) to eliminate race-condition over-redemption; detaching a promo or cancelling its ticket (`dibatalkan`) restores `kuota_terpakai`.
+   - Live cashier endpoints (`/marketing/promotions/active`, `/marketing/promotions/validate`) explicitly bypass IndexedDB stale cache in `frontend/src/services/api.js`.
+   - Public `/api/tracking/promotions` returns zero PII and only active offers flagged `tampil_di_tracking: true`.
+
+7. **Desktop Split-Pane Scoped Scroll & Mobile-First Balance**:
+   - Full-page asymmetric forms (`RmaForm`, `SparepartForm`, `JobPostingForm`) lock to desktop viewport height (`lg:h-[calc(100dvh-7.25rem)] lg:min-h-[580px] flex flex-col lg:overflow-hidden`) with a pinned header and independently scrollable panes (`lg:overflow-y-auto lg:overscroll-contain custom-scrollbar`).
+   - Master-detail / split-workspace panels (`MarketingPage` Outreach, `RetensiCrm`, `Dashboard` Row 3, `AttendancePage` Policy) synchronize left/right heights (`items-stretch` + fixed desktop height) and paginate/bound long customer lists (10/20/50 per page) so whole-page infinite scroll never occurs.
+   - Mobile (`< 1024px`) keeps forms in natural 1-column flow while bounding selectable queues and replacing native `<select>` dialogs with `CustomSelect`.

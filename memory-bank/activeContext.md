@@ -19,6 +19,17 @@
       - Integrated complete direct thermal label size picker: `50 x 30 mm` (Mini/Aksesoris/Charger), `60 x 40 mm` (Kompak), `80 x 50 mm` (Standar Servis - Rekomendasi), `100 x 75 mm` (Besar/Box/Casing), and `roll` (Continuous Roll 58/80 mm) with real-time physical aspect ratio preview, zero clipping, and copy multiplier (1x-5x).
       - Replaced external third-party QR generation (`api.qrserver.com`) across `TicketQrModal`, `SparepartQrModal`, `BpbsPrintModal`, and `Tracking` with 100% offline-ready local generation via the `qrcode` library (`QRCode.toDataURL`), supporting custom-dimension PDF export (`DocumentPrintService.downloadPdf`), PNG download, and direct thermal printing.
       - Upgraded `CrmFloatingBubble` with dual notification badges (CRM Left / Blue, Chat Right / Red), optimized vector 3D mascot rendering, and responsive section tabs.
+  14. YVS Computer Branding & PWA Cleanup (2026-11-24): Standardized Yangversa Computer (YVS) branding across `frontend`, `backend`, and PWA manifests/icons, and moved `backend/migrate_brands.js` -> `backend/scripts/migrate_brands.js`.
+  15. Marketing & Promosi Module + Public Tracking Showcase + Cashier Integration (2026-11-25):
+      - Added Prisma models `Promotion` (with `tampil_di_tracking`) and `CampaignNote`, plus `Invoice.promotion_id` & `Invoice.keterangan_diskon`.
+      - Added modular RBAC capabilities (`marketing.view`, `marketing.manage`, `marketing.report`), pure HPP-safe promo math (`backend/src/utils/promotionMath.js`), and full CRUD/validation/outreach/report APIs (`/api/marketing/*`).
+      - Integrated 3-mode discount selector (`Tanpa Diskon` | `Promo Toko` | `Manual`) into `InvoiceForm`/`InvoiceDetail`/`invoice.controller.js` with ACID `$transaction` atomic optimistic quota locking, 1x-per-phone guard, quota restoration on detachment or ticket cancellation (`tiket-servis.controller.js`), offline fallback, HPP manual-discount warning, and ethical `"Keterangan Potongan / Apresiasi"` wording (never `"Alasan"`).
+      - Added zero-PII public active promo banner (`PromoShowcase.jsx` + `GET /api/tracking/promotions`) on `/tracking` with 1-click copy promo code.
+      - Built 4-tab mobile-first `MarketingPage.jsx` (`Daftar Promo`, `Kampanye`, `Outreach`, `Hasil Promo`) featuring a 3-step guided Outreach flow (Step 1: pick promo & filters -> Step 2: bounded paginated customer picker -> Step 3: personalized WA composer appears only after picking a customer).
+      - Added manual idempotent demo seeder (`npm --prefix backend run seed:marketing`) and 8 unit tests (`WB-MKT-001`..`008` in `backend/tests/unit/marketing.test.js`); total **89/89 unit tests passing**.
+  16. Split-Pane Layout & Scoped Internal Scroll Audit (2026-11-25):
+      - Audited all asymmetric 2-column desktop layouts and locked tall split views (`RmaForm`, `SparepartForm`, `JobPostingForm`, `MarketingPage` Outreach, `RetensiCrm`, `AttendancePage` Policy, `Dashboard` Row 3) into balanced, flush-aligned desktop panes with independent internal scrolling (`lg:overflow-y-auto lg:overscroll-contain custom-scrollbar`) instead of whole-page infinite scroll, while preserving natural 1-column mobile forms and bounded/paginated queues.
+      - Added `/marketing` breadcrumb labels to `Layout.jsx`.
 
 ## Active Decisions
 - Customer self-registration uses one reusable poster QR pointing to `/tracking/register`. Public submissions enter a review queue, with rate limiting, honeypot, field validation, and one pending record per normalized phone. Staff with `tickets.intake` accepts or rejects; acceptance atomically creates or links Customer/Perangkat and makes the complaint/expectation available for ticket intake. No public form action creates canonical customer/device or ticket data.
@@ -41,9 +52,18 @@
 - Sidebar badges now count unread notifications with module links and the QR intake queue. QR registrations update via permission-filtered realtime events; the review list uses 50-item pages, search within loaded entries, and responsive cards in a bounded scroll area.
 - Mobile UI audit: the hidden sidebar now leaves an actionable count on the header/menu toggle while the notification bell stays visible. Header quick controls are compact on phones, notification popovers are viewport-bounded, memo dialogs portal above bottom navigation, list cards remain active through tablet widths, and shared modals respect dynamic viewport height in landscape. Attendance tabs and floating CRM control were compacted for narrow screens.
 - Mobile form typography uses a shared 13px label/control baseline, 11px helper text, and 40px controls/custom select triggers. Long hints stack below labels on narrow screens in customer, device, and ticket forms.
+- **Marketing & Invoice Invariants**:
+  - `Customer` soft-delete fields are `is_active: Boolean` and `deleted_at: DateTime?` (never query `is_archived`).
+  - Ethical invoice discount wording: NEVER use `"Alasan"` on invoice discount inputs, labels, or printed receipts — always use `"Keterangan Potongan / Apresiasi"` / `"Penyesuaian Harga / Apresiasi"`. Discounts always live on the separate `Invoice.diskon` line without lowering catalog `biaya_jasa`/`biaya_sparepart`.
+  - Promo validation endpoints (`/marketing/promotions/active`, `/marketing/promotions/validate`) bypass IndexedDB stale cache (`src/services/api.js`) so cashiers never redeem stale quotas.
+  - Keep automated WA broadcast bots, loyalty points, referrals, and complex service bundles out of scope unless explicitly requested.
+  - Preserve staging login credentials in `Login.jsx` & `auth.controller.js` (`arni`, `vivero`, `admin`, `siti`, `teknisi1`).
+- **Desktop Split-Pane Scoped Scroll & Tailwind Guardrails**:
+  - Asymmetric desktop left/right views must keep both columns level top-to-bottom and scope vertical scrolling to the taller pane (`lg:h-[calc(100dvh-7.25rem)]` or synchronized fixed height + `lg:overflow-y-auto lg:overscroll-contain`), never letting the whole page stretch with a dangling empty void on the shorter side.
+  - Do not use non-existent Tailwind tokens like `w-4.5`/`h-4.5`; avoid `text-3xs` for readable labels in new UI; keep KPI numbers uniform (`text-base xs:text-lg sm:text-xl font-bold tabular-nums truncate`).
 
 ## Next Steps
-- Apply the `20261117_direct_chat` Prisma migration and deploy the updated chat engine to staging.
-- Apply the modular RBAC Prisma migration and run `npm run seed:rbac` in each environment before deploying the permission-aware backend.
-- Run `backend/migrate_brands.js` once the staging or target database is connected to normalize spare part brand names.
+- Staging deploys automatically run `npx prisma db push --skip-generate` and `node scripts/seed-rbac.js` via `backend/scripts/docker-init.js` on every push to `staging`.
+- Run `node backend/scripts/migrate_brands.js` once against staging/production DB if spare part brand names still need normalization.
+- Optionally run `npm --prefix backend run seed:marketing` only in local/demo environments (never auto-run on staging).
 - Periodically validate memory referential integrity using `serena memories check`.

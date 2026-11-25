@@ -15,7 +15,8 @@ YVS solves these challenges in a unified, cloud-backed ERP accessible across des
 1. **Admin / Frontman**:
    - Rapid customer intake (< 2 minutes) with digital accessories checklist, physical defect mapper, and immediate BPBS printout.
    - Real-time visibility into open tickets, technician workloads, and parts availability.
-   - Instant invoice creation with digital signatures and thermal/A4 printing.
+   - Instant invoice creation with 3-mode discount handling (`Tanpa Diskon`, official `Promo Toko`, or `Manual` appreciation deduction), digital signatures, and thermal/A4 printing.
+   - Marketing & Promosi management: create HPP-safe store promos, log multi-channel campaign waves (`CampaignNote`), and run 3-step guided personalized WhatsApp outreach.
 
 2. **Technician**:
    - Mobile-first interface for inspecting tickets, uploading technical diagnostic photos, updating status, and picking parts.
@@ -24,9 +25,10 @@ YVS solves these challenges in a unified, cloud-backed ERP accessible across des
 
 3. **Owner / Pimpinan**:
    - Executive dashboard tracking revenue, SLA compliance, ticket turnaround time, and technician efficiency.
+   - Marketing results report comparing offer redemptions, promo vs manual discounts, revenue impact, and new vs returning customers.
    - Audit trail of all database operations, sensitive edits, and user logins.
    - Geofenced attendance summaries and leave request approvals.
 
 4. **Customer**:
-   - Frictionless self-service ticket status tracking via web portal.
-   - Clear WhatsApp notifications and timely maintenance reminders for laptop cleaning and thermal service.
+   - Frictionless self-service ticket status tracking via web portal, plus an optional zero-PII active store promo showcase with 1-click promo code copy.
+   - Clear WhatsApp notifications, personalized promo offers, and timely maintenance reminders for laptop cleaning and thermal service.

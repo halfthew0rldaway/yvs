@@ -2,7 +2,7 @@
 
 > **Yangversa Computer (YVS) Management & ERP System**  
 > **Repository Root:** `/run/media/bleu/DATA/dev/yvs`  
-> **Last Updated:** 2026-11-13
+> **Last Updated:** 2026-11-25
 > **Purpose:** Authoritative reference for autonomous and AI-assisted development (Antigravity, Cline, Roo-Cline, Cursor, etc.). All information in this document is derived strictly from the actual codebase.
 
 ---
@@ -83,18 +83,18 @@ The system is organized as a high-cohesion, multi-tier application:
 │
 ├── backend/                     <-- Express.js API & Prisma
 │   ├── prisma/
-│   │   └── schema.prisma        <-- 25+ models database schema
-│   ├── scripts/                 <-- Database normalization, seeding & maintenance
+│   │   └── schema.prisma        <-- 28+ models database schema (incl. Promotion, CampaignNote, Chat, RBAC)
+│   ├── scripts/                 <-- Database normalization, seeding (seed-rbac, seed-marketing-dummy, migrate_brands)
 │   ├── tests/                   <-- Automated unit test suites (node --test)
-│   │   └── unit/                <-- 36 automated unit tests across 6 domain suites
+│   │   └── unit/                <-- 89 automated unit tests across 9 domain suites
 │   ├── src/
 │   │   ├── app.js               <-- Express entrypoint & middleware pipeline
-│   │   ├── config/              <-- Database & system configuration
-│   │   ├── controllers/         <-- 22 controllers handling business domains
+│   │   ├── config/              <-- Database & RBAC permission catalog (permissions.js)
+│   │   ├── controllers/         <-- 24+ controllers (incl. marketing, chat, invoice, tracking)
 │   │   ├── middleware/          <-- Auth, roles, rateLimiter, sanitizeRequest, activityLogger
 │   │   ├── routes/              <-- Express router definitions
 │   │   ├── services/            <-- Realtime SSE & background helper routines
-│   │   └── utils/               <-- Standard response helpers, formatters
+│   │   └── utils/               <-- Standard helpers, formatters, promotionMath.js, sse.js
 │   └── uploads/                 <-- Media, photos, tickets, diagnosis attachments
 │
 ├── frontend/                    <-- Main React ERP Web & Capacitor App
@@ -105,11 +105,11 @@ The system is organized as a high-cohesion, multi-tier application:
 │   │       └── res/             <-- Launcher icons & splash screens
 │   ├── public/                  <-- Favicon, logo-yangversa.png, PWA icons
 │   ├── src/
-│   │   ├── components/          <-- Shared UI, Modals, PrintModals, ConnectivityBanner
+│   │   ├── components/          <-- Shared UI, Modals, PrintModals, ConnectivityBanner, landing/PromoShowcase
 │   │   ├── hooks/               <-- useAuth, useConnectivity, useDevice, useRealtime, useIdleTimer
-│   │   ├── pages/               <-- 20+ feature pages (tiket-servis, diagnosis, invoice, attendance, etc.)
+│   │   ├── pages/               <-- 22+ feature pages (tiket-servis, diagnosis, invoice, marketing, chat, attendance, etc.)
 │   │   ├── services/            <-- api.js, config.js, connectivity.js, documentPrintService.js, offlineDataStore.js
-│   │   └── utils/               <-- authStorage.js, checklistItems.js, mediaUtils.js
+│   │   └── utils/               <-- authStorage.js, checklistItems.js, landingRoute.js, mediaUtils.js
 │   ├── vite.config.js           <-- Vite bundler config with custom chunking & PWA setup
 │   └── capacitor.config.json    <-- Capacitor mobile bridge configuration
 │
@@ -161,10 +161,13 @@ The system is organized as a high-cohesion, multi-tier application:
      - Standard mobile button text is 13px; shared button and field classes keep heights and spacing proportional. Place long field hints below labels on narrow screens to prevent collisions.
      - **PWA Custom Dropdown (`CustomSelect`)**: Replaces native Android OS-level `<select>` radio dialogs with a modern Bottom Sheet Picker on mobile (< 640px) and animated popover on desktop, featuring live search and active indicators.
    - **Small-screen layout audit**: Keep the notification bell visible when the sidebar is closed and show actionable module counts on the sidebar toggle. The mobile header keeps secondary Bluetooth controls in the drawer to preserve title and notification space. Dense list modules use cards below 1024px and tables at larger widths. Modal panels are constrained by dynamic viewport height and shell padding; their headers and footers remain usable in short landscape viewports. The notification memo dialog portals to the document modal layer.
+   - **Desktop Split-Pane Scoped Scroll & Balance Invariant**: Whenever a desktop view (`>= lg`) splits into asymmetric left/right columns where one side is taller than the other, never let the whole page scroll while leaving a giant empty whitespace void under the shorter column. Lock the split container to the viewport (`lg:h-[calc(100dvh-7.25rem)] lg:min-h-[580px] flex flex-col lg:overflow-hidden`) with a pinned header (`shrink-0`) or synchronized height (`items-stretch lg:h-[560px]`/`lg:h-[600px]`/`lg:h-[360px]`), and give the taller pane its own internal scroll (`lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain custom-scrollbar`). Applied across `RmaForm`, `SparepartForm`, `JobPostingForm`, `MarketingPage` (Outreach), `RetensiCrm`, `AttendancePage` (Policy), and `Dashboard` (Row 3). Below `1024px`, multi-section forms stack naturally in 1 column while long selectable customer queues (Outreach, Retensi) remain inside bounded scrollable boxes with pagination.
+   - **Tailwind Token Guardrails**: `frontend/tailwind.config.js` extends `xs: 375px`, `spacing['8.5']`, and `fontSize` `4xs`/`3xs`/`2xs`. Avoid non-existent utility tokens like `w-4.5`/`h-4.5`, avoid `text-3xs` for readable labels/badges in new UI (use `text-2xs`/`text-xs`), and keep KPI card metrics uniform (`text-base xs:text-lg sm:text-xl font-bold tabular-nums truncate`) with `min-w-0` on flex/grid children.
 
 6. **Continuous Form & Dot Matrix Printing Standards**:
    - Official invoice layouts are packed horizontally (`80mm` / half A4 continuous form format) for fast dot matrix continuous feeding without excessive white space.
    - BPBS intake receipts are designed for horizontal A5 format.
+   - **Ethical Invoice Discount Wording**: Never use the word `"Alasan"` on invoice discount fields, notes, or printed receipts. Always use `"Keterangan Potongan / Apresiasi"` or `"Penyesuaian Harga / Apresiasi"`. Never reduce catalog `biaya_jasa` or `biaya_sparepart` to fake a discount; always record discounts on the separate `Invoice.diskon` deduction line.
 
 ---
 
@@ -176,7 +179,7 @@ Key entities defined in `backend/prisma/schema.prisma`:
 | :--- | :--- | :--- |
 | **`User`** | System staff & technicians | `User.role` is a legacy display/default slug; effective access comes from assigned `UserRole` records and permission grants. Links to tickets, attendances, leave requests. |
 | **`Role` / `Permission`** | Modular RBAC | Super Admin composes custom roles from code-owned action permissions; users may hold multiple roles through `UserRole`. |
-| **`Customer`** | Client directory & CRM | Phone (`nomor_telepon`), personality type (`tipe_kepribadian`), custom badges. Has many `Perangkat`. |
+| **`Customer`** | Client directory & CRM | Phone (`nomor_telepon`), personality type (`tipe_kepribadian`), custom badges, soft-delete flags (`is_active: Boolean`, `deleted_at: DateTime?` — **never** query `is_archived`). Has many `Perangkat`. |
 | **`Perangkat`** | Customer physical hardware | Category (`jenis_perangkat`), brand, model, serial number. Belongs to `Customer`, has many `TiketServis`. |
 | **`CustomerRegistration`** | Public customer intake queue | Stores customer/device details and visit complaint/expectation until staff accepts or rejects. Accepted submissions link to canonical Customer, Perangkat, and optionally a ticket. Legacy invite fields are retained for migration safety but are no longer used by the form. |
 | **`TiketServis`** | Service ticket intake & lifecycle | Status: `diterima` -> `didiagnosis` -> `menunggu_persetujuan` -> `disetujui` -> `dalam_perbaikan` -> `selesai` -> `diambil` -> `dibatalkan`. Contains photo JSON arrays (`foto_kondisi`, `foto_diagnosis`, `foto_selesai`, `foto_handover`). |
@@ -184,11 +187,14 @@ Key entities defined in `backend/prisma/schema.prisma`:
 | **`LogPerbaikan`** | Action timeline of repair | Technicians log actions taken, tests performed. |
 | **`Sparepart`** | Inventory & replacement parts | SKU, part name, stock, cost price, selling price, supplier links, minimum stock alert. |
 | **`PenggunaanSparepart`**| Parts billed to ticket | Links `TiketServis` and `Sparepart`, auto-deducts inventory upon dispatch. |
-| **`Invoice`** | Customer billing & warranty | Belongs to `TiketServis`. Subtotal, discount, DP, payment method, tax, warranty duration. |
+| **`Invoice`** | Customer billing & warranty | Belongs to `TiketServis`. Subtotal, discount (`diskon`), optional linked `promotion_id` (`Promotion`), `keterangan_diskon` (ethical appreciation note), DP, payment method, tax, warranty duration. |
+| **`Promotion`** | Official store discount offers | Unique uppercase `kode_promo`, `nama_promo`, `tipe_diskon` (`persen`/`nominal`), HPP-safe `cakupan_diskon` (`jasa`/`sparepart`/`total`), `maksimal_diskon`, `minimal_transaksi`, `kategori_perangkat`, `tipe_tiket`, WIB `tanggal_mulai`/`tanggal_selesai`, `kuota_total`/`kuota_terpakai`, `satu_kali_per_pelanggan`, `tampil_di_tracking`, `is_active`. Linked to `Invoice[]` and `CampaignNote[]`. |
+| **`CampaignNote`** | Marketing campaign publication log | Optional `promotion_id` (`Promotion?`, supports general brand-awareness campaigns when null), `judul`, `saluran` (WhatsApp, Instagram, Poster Toko, Google Maps, TikTok, etc.), `tanggal_publikasi`, `catatan`, optional `tautan_referensi` (URL or physical placeholder). |
 | **`StaffSignature`** | Digital signatures & stamps | Vector/base64 signature stamps for official invoices and BPBS. |
 | **`AttendanceRecord`** | Staff GPS Presensi & Geofence | Pekayon workshop coordinates (`-6.26064, 106.98744`), 500m radius validation, selfie photo verification, external duty reason. |
 | **`SupplierRma`** | Defective component return | Manages parts returned to vendor/supplier with tracking and replacement status. |
 | **`RepairWiki`** | Knowledge base | Solved repair procedures, symptom patterns, schematic notes. |
+| **`Chat` / `ChatMember` / `ChatMessage`** | 1-on-1 direct staff chat | Canonical user pair, per-user read state, server-side transcript with entity reference chips (`[[ticket:ID]]`, etc.). Accounts with chat history cannot be deleted. |
 
 ---
 
@@ -256,6 +262,21 @@ The technician picker is available only with `tickets.assign`; an intake-only ro
 - Authenticated `/api/chat` endpoints enforce conversation membership on reads, sends, and exports. Messages are paginated by ID and `chat:updated` SSE events target only participants.
 - Participants may export a full conversation as readable TXT (dates and times in Asia/Jakarta, sender, text) or structured JSON. Message references use `[[ticket:ID]]`, `[[device:ID]]`, `[[part:ID]]`, and `[[user:ID]]`; record navigation remains gated by the viewer's permissions.
 
+### 5. Marketing & Promosi Module (`/marketing`)
+- **Modular RBAC & Routing**: Capabilities `marketing.view`, `marketing.manage`, and `marketing.report` are registered in `backend/src/config/permissions.js` (defaulted to `admin`, with `view`/`report` to `pimpinan`, excluded from `teknisi`), enforced server-side on `/api/marketing/*`, gated on `marketing:*` SSE events (`backend/src/utils/sse.js`), and wired into `frontend/src/App.jsx`, `Layout.jsx`, and `landingRoute.js`.
+- **HPP-Safe Promotion Engine (`backend/src/utils/promotionMath.js`)**: Supports percentage or nominal discounts, discount scope (`jasa` default to protect sparepart HPP, `sparepart`, or `total`), `maksimal_diskon` cap, `minimal_transaksi`, device category & ticket type rules, strict Asia/Jakarta (`WIB`, UTC+7) start/end date boundaries (`00:00:00` to `23:59:59.999 WIB`), quota tracking, and 1x-per-customer normalized phone guard. `sanitizeRequest.js` auto-uppercases `kode_promo`.
+- **Atomic Cashier Redemption (`invoice.controller.js`, `InvoiceForm.jsx`, `InvoiceDetail.jsx`)**:
+  - Cashier chooses 3 mutually exclusive modes: `Tanpa Diskon` | `Promo Toko` | `Manual`.
+  - Promo validation endpoints (`/marketing/promotions/active`, `/marketing/promotions/validate`) bypass IndexedDB stale cache (`src/services/api.js`); offline mode gracefully disables promo lookup while allowing manual discount fallback.
+  - Invoice creation/update runs inside `prisma.$transaction` with an atomic optimistic quota lock (`updateMany` with `kuota_terpakai: { lt: kuota_total }`) to prevent race-condition over-redemption, server-side recomputation of `diskon`, and quota restoration when a promo is detached or its ticket is cancelled (`dibatalkan` in `tiket-servis.controller.js`).
+  - Hard-deleting a promo already linked to invoices is blocked (soft-disable via `is_active` instead) to preserve financial audit history.
+  - Manual discounts exceeding `biaya_jasa` display a soft HPP warning, and discount notes use `"Keterangan Potongan / Apresiasi"` (never `"Alasan"`).
+- **Dedicated Campaign Notes (`CampaignNote`)**: Separate tab & modal (`CampaignNoteModal.jsx`) allowing 1 promo to log multiple publication waves across channels/dates with optional `tautan_referensi` (clickable URL or physical placement placeholder), plus general brand-awareness campaigns with no linked promo.
+- **Public Tracking Promo Showcase (`GET /api/tracking/promotions`, `PromoShowcase.jsx`)**: Zero-PII read-only endpoint returning only active offers with `is_active && tampil_di_tracking`. Rendered as a compact promo strip below `#track-lookup` on `/tracking` with 1-click copy promo code; auto-hides when no public active promo exists.
+- **3-Step Guided Customer Outreach (`MarketingPage.jsx`)**: Step 1 selects an active promo (or general greeting) + filters active customers (`is_active: true, deleted_at: null`); Step 2 displays a bounded internal-scroll paginated customer picker (`10`/`20`/`50` per page, never whole-page infinite scroll); Step 3 opens the editable personalized WhatsApp message composer *only after* selecting a customer (auto-filled with customer name, device, discount rule, promo code, expiry, plus Reset Teks, Copy, 1-click WA, and per-session "Terkirim" badge).
+- **Results & Comparison Report (`GET /api/marketing/report`)**: Compares offers by redemption count, promo revenue, promo discount vs manual cashier discount, and new vs returning customer split.
+- **Manual Demo Seeding**: `npm --prefix backend run seed:marketing` (`backend/scripts/seed-marketing-dummy.js`) idempotently seeds 5 sample promos, 8 linked invoices, and 5 campaign notes for local demos; it is never auto-run on staging.
+
 ---
 
 ## 7. Guidelines for AI Agents
@@ -286,14 +307,16 @@ Tests run using the native Node.js test runner with zero extra dependencies:
 cd backend && node --test tests/unit/*.test.js
 ```
 
-Covered Domain Test Suites (36/36 passing):
+Covered Domain Test Suites (**89/89 passing across 9 suites** via `npm --prefix backend test`):
 1. **`WB-AUT`**: JWT authentication validation, expiry codes, tampered signatures, and permission-based authorization independent of role names.
-2. **`WB-DIA`**: Technician diagnosis input sanitization, non-negative cost enforcement, and error-free `LogPerbaikan` note formatting.
-3. **`WB-FIN`**: Multi-item sparepart summation, negative service fee prevention, DP / discount calculations, and remaining balance clamps.
-4. **`WB-GEO`**: Haversine distance math, exact 500m geofence checks, anti-spoofing accuracy buffers (capped at 200m), and late check-in detection at 09:16 WIB.
-5. **`WB-SEC`**: Null-byte stripping, whitespace trimming, Indonesian phone normalization (`+62` -> `08...`), and uppercase formatting for ticket numbers.
-6. **`WB-SLA`**: Priority vs regular SLA target scheduling, warranty period math (30d, 1m, 1y), and overdue / paused status detection.
-7. **`WB-STA`**: Ticket service state machine transitions, role gatekeeping, QC prerequisites for handover, and active loaner blocking.
+2. **`WB-CHT`**: 1-on-1 staff direct chat pair canonicalization, self-chat blocking, reference token parsing, permission gating, deletion retention guard, and WIB export formatting (`direct_chat.test.js`).
+3. **`WB-DIA`**: Technician diagnosis input sanitization, non-negative cost enforcement, and error-free `LogPerbaikan` note formatting.
+4. **`WB-FIN`**: Multi-item sparepart summation, negative service fee prevention, DP / discount calculations, and remaining balance clamps.
+5. **`WB-GEO`**: Haversine distance math, exact 500m geofence checks, anti-spoofing accuracy buffers (capped at 200m), and late check-in detection at 09:16 WIB.
+6. **`WB-MKT`**: Promo code normalization, HPP-safe jasa-only percentage/nominal caps, WIB end-of-day expiry boundary, device/ticket eligibility, min-transaction & 1x-per-customer guards, atomic optimistic quota lock concurrency, and quota restoration (`marketing.test.js`).
+7. **`WB-SEC`**: Null-byte stripping, whitespace trimming, Indonesian phone normalization (`+62` -> `08...`), and uppercase formatting for ticket numbers & promo codes.
+8. **`WB-SLA`**: Priority vs regular SLA target scheduling, warranty period math (30d, 1m, 1y), and overdue / paused status detection.
+9. **`WB-STA` & `WB-TRK` & RBAC/QR/Super Admin Regressions**: Ticket service state machine transitions, QC/loaner/invoice interlocks, public tracking PII masking, QR self-registration validation, notification read isolation, and last Super Admin lock protection.
 
 ### Specification & Planning Deliverables (`docs/testing/`)
 - **`white-box-test-cases.md`**: 55 white-box test specifications covering backend controllers, services, middleware, and business logic.
