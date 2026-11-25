@@ -14,7 +14,7 @@ function CountMetric({ to, decimals = 0, suffix = "" }) {
     useEffect(() => {
         if (reducedMotion || !inView) return;
         const controls = animate(0, to, {
-            duration: 1.25,
+            duration: 1.2,
             ease: [0.16, 1, 0.3, 1],
             onUpdate: (latest) => {
                 setDisplay(
@@ -39,7 +39,7 @@ const REVIEWS = [
     {
         name: "Rizky Fajar",
         service: "Servis laptop & upgrade SSD",
-        quote: "Pelayanannya sangat jujur, transparan, dan konsultasinya gratis. Teknisi menjelaskan kerusakannya secara detail tanpa ada biaya tambahan yang ditutup-tutupi.",
+        quote: "Pelayanannya jujur dan transparan. Teknisi menjelaskan kerusakannya secara detail tanpa ada biaya tambahan yang ditutup-tutupi.",
     },
     {
         name: "Dewi Anggraini",
@@ -49,12 +49,12 @@ const REVIEWS = [
     {
         name: "Dimas Prasetyo",
         service: "Perbaikan motherboard & engsel",
-        quote: "Laptop mati total dan engsel patah diperbaiki sangat rapi. Komponen bekasnya juga dikembalikan sebagai bukti penggantian dan ada garansi resminya.",
+        quote: "Laptop mati total dan engsel patah diperbaiki dengan rapi. Komponen bekasnya juga dikembalikan dan ada garansinya.",
     },
     {
         name: "Hendro Wijaya",
         service: "PC desktop kantor",
-        quote: "Datang konsultasi PC sering restart sendiri, langsung dicek dan diberi opsi solusi yang pas di kantong. Komunikatif lewat WhatsApp dan progresnya jelas.",
+        quote: "Datang konsultasi PC sering restart sendiri, langsung dicek dan diberi opsi solusi yang sesuai anggaran. Komunikatif lewat WhatsApp.",
     },
     {
         name: "Bagus Pratama",
@@ -64,7 +64,7 @@ const REVIEWS = [
     {
         name: "Siti Nurhaliza",
         service: "Ganti keyboard & baterai",
-        quote: "Sebelum dikerjakan selalu diinfokan perkiraan biayanya dulu jadi tenang. Suku cadang terjamin, garansi jelas, dan teknisinya sangat sopan.",
+        quote: "Sebelum dikerjakan selalu diinfokan perkiraan biayanya dulu jadi tenang. Garansi jelas dan teknisinya sopan.",
     },
 ];
 
@@ -79,92 +79,67 @@ export default function ProofReviewsStrip() {
             className="w-full bg-slate-50 border-b border-slate-200 py-16 sm:py-24 scroll-mt-16 overflow-x-clip"
         >
             <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
-                {/* Editorial Typographic Metrics Strip */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-6 pb-12 sm:pb-16 border-b border-slate-200">
-                    <div className="space-y-1.5">
-                        <span className="font-mono text-xs text-slate-500 block">Rating Google Maps</span>
-                        <div className="flex items-baseline gap-1.5">
-                            <span className="font-display font-extrabold text-3xl sm:text-5xl text-blue-600 tracking-tight leading-none">
-                                <CountMetric to={4.7} decimals={1} />
-                            </span>
-                            <span className="font-mono text-sm sm:text-base text-slate-400">/ 5</span>
-                        </div>
-                        <p className="text-xs sm:text-sm text-slate-600">Dari 350+ ulasan pelanggan asli</p>
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <span className="font-mono text-xs text-slate-500 block">Biaya cek jika batal</span>
-                        <div className="font-display font-extrabold text-3xl sm:text-5xl text-slate-950 tracking-tight leading-none tabular-nums">
-                            Rp 0
-                        </div>
-                        <p className="text-xs sm:text-sm text-slate-600">Tidak ada biaya bila estimasi ditolak</p>
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <span className="font-mono text-xs text-slate-500 block">Garansi tertulis</span>
-                        <div className="font-display font-extrabold text-3xl sm:text-5xl text-slate-950 tracking-tight leading-none tabular-nums">
-                            30–90
-                        </div>
-                        <p className="text-xs sm:text-sm text-slate-600">Hari garansi tercatat digital</p>
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <span className="font-mono text-xs text-slate-500 block">Jam layanan</span>
-                        <div className="font-display font-extrabold text-3xl sm:text-5xl text-slate-950 tracking-tight leading-none tabular-nums">
-                            7 hari
-                        </div>
-                        <p className="text-xs sm:text-sm text-slate-600">Buka Senin–Minggu, 09.00–18.00 WIB</p>
-                    </div>
-                </div>
-
-                {/* Reviews Header + WCAG 2.2.2 Pause/Play Control */}
-                <div className="pt-12 sm:pt-14 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-5">
-                    <div className="space-y-2 max-w-xl">
+                {/* Reviews Header + Verified Google Maps Score + WCAG Pause/Play Control */}
+                <div className="pb-8 sm:pb-10 flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-slate-200 mb-8">
+                    <div className="space-y-2.5 max-w-xl">
                         <span className="font-mono text-xs text-blue-600 font-semibold block">
-                            04 / ULASAN PELANGGAN
+                            04 / ULASAN GOOGLE MAPS
                         </span>
                         <MaskedLines
                             as="h2"
-                            lines={["Cerita mereka yang sudah", "menservis di Pekayon."]}
+                            lines={["Pengalaman pelanggan", "di workshop Pekayon."]}
                             className="font-display font-extrabold text-2xl sm:text-4xl text-slate-950 tracking-[-0.03em] leading-[1.08]"
                         />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2.5">
-                        {!reducedMotion && (
-                            <button
-                                type="button"
-                                onClick={() => setIsPlaying((prev) => !prev)}
-                                className="min-h-[40px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-xs font-semibold text-slate-800 transition-colors cursor-pointer"
-                            >
-                                {isPlaying ? (
-                                    <>
-                                        <Pause className="w-3.5 h-3.5" />
-                                        <span>Jeda ulasan</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Play className="w-3.5 h-3.5" />
-                                        <span>Putar ulasan</span>
-                                    </>
-                                )}
-                            </button>
-                        )}
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                        {/* Grounded Verifiable Rating */}
+                        <div className="flex items-baseline gap-2 pr-4 sm:pr-6 sm:border-r sm:border-slate-200">
+                            <span className="font-display font-extrabold text-3xl sm:text-4xl text-blue-600 tracking-tight leading-none">
+                                <CountMetric to={4.7} decimals={1} />
+                            </span>
+                            <div className="text-xs text-slate-500">
+                                <span className="font-mono font-semibold text-slate-800 block">/ 5,0 di Google Maps</span>
+                                <span>350+ ulasan pelanggan</span>
+                            </div>
+                        </div>
 
-                        <a
-                            href="https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="min-h-[40px] inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 hover:bg-blue-600 text-white text-xs sm:text-sm font-semibold transition-colors"
-                        >
-                            <span>Lihat di Google Maps</span>
-                            <ArrowUpRight className="w-4 h-4 shrink-0" />
-                        </a>
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            {!reducedMotion && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsPlaying((prev) => !prev)}
+                                    className="min-h-[40px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-xs font-semibold text-slate-800 transition-colors cursor-pointer"
+                                >
+                                    {isPlaying ? (
+                                        <>
+                                            <Pause className="w-3.5 h-3.5" />
+                                            <span>Jeda ulasan</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Play className="w-3.5 h-3.5" />
+                                            <span>Putar ulasan</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            <a
+                                href="https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="min-h-[40px] inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 hover:bg-blue-600 text-white text-xs sm:text-sm font-semibold transition-colors"
+                            >
+                                <span>Buka Google Maps</span>
+                                <ArrowUpRight className="w-4 h-4 shrink-0" />
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Horizontal Editorial Review Stream (Scrollable manually when paused, smooth marquee when playing) */}
+            {/* Horizontal Editorial Review Stream */}
             <div className={shouldAnimate ? "overflow-hidden" : "overflow-x-auto px-4 sm:px-6 lg:px-10 xl:px-14"}>
                 <div
                     data-playing={shouldAnimate ? "true" : "false"}

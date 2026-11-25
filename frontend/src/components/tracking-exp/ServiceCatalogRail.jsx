@@ -5,79 +5,73 @@ import { MaskedLines } from "./MotionPrimitives";
 
 const CATEGORIES = [
     "Semua",
-    "Mati Total & Daya",
-    "Layar & Grafis",
-    "Panas & Perawatan",
+    "Daya & Mesin",
+    "Layar & Fisik",
+    "Perawatan Suhu",
     "Kena Cairan",
-    "Data & Upgrade",
+    "Upgrade & Data",
 ];
 
 const SERVICES = [
     {
         id: "power",
         num: "01",
-        category: "Mati Total & Daya",
-        title: "Perbaikan motherboard & jalur daya",
-        symptoms: "Laptop mati total, tidak mau cas, atau mendadak mati sendiri.",
-        detail: "Melacak korsleting jalur daya utama dan mengganti komponen yang rusak langsung di papan utama—bukan langsung ganti seluruh mesin.",
-        devices: "MacBook, ThinkPad, ASUS, Lenovo, HP, Acer, Dell",
-        eta: "1–3 hari kerja",
-        warranty: "Garansi 30–90 hari",
+        category: "Daya & Mesin",
+        title: "Perbaikan laptop & PC mati total atau bermasalah daya",
+        symptoms: "Perangkat tidak menyala, tidak mengisi daya, atau sering mati mendadak.",
+        detail: "Pemeriksaan menyeluruh mulai dari adaptor, baterai, konektor daya, hingga komponen papan utama sesuai hasil pengecekan teknisi.",
+        devices: "Laptop berbagai merek, MacBook, dan PC desktop",
+        note: "Estimasi waktu & biaya diinfokan setelah dicek",
     },
     {
-        id: "gpu",
+        id: "display",
         num: "02",
-        category: "Layar & Grafis",
-        title: "Perbaikan chipset & tampilan layar",
-        symptoms: "Layar gelap, muncul garis, berkedip, atau kartu grafis tidak terbaca.",
-        detail: "Penanganan ulang solder chipset grafis, pemeriksaan kabel fleksibel, hingga penggantian panel layar sesuai spesifikasi aslinya.",
-        devices: "Laptop kerja, laptop gaming, workstation, PC desktop",
-        eta: "2–4 hari kerja",
-        warranty: "Garansi 60–90 hari",
+        category: "Layar & Fisik",
+        title: "Perbaikan layar, keyboard, baterai & engsel",
+        symptoms: "Layar bergaris atau gelap, tombol macet, baterai cepat habis, atau engsel patah.",
+        detail: "Pengecekan kabel fleksibel, panel layar, modul keyboard, baterai, hingga perbaikan dudukan engsel dan casing dengan pilihan suku cadang yang sesuai.",
+        devices: "Laptop kerja, laptop gaming, dan MacBook",
+        note: "Pilihan suku cadang disesuaikan kebutuhan",
     },
     {
         id: "thermal",
         num: "03",
-        category: "Panas & Perawatan",
-        title: "Pembersihan menyeluruh & ganti pasta termal",
-        symptoms: "Kipas berisik, bodi cepat panas, atau performa mendadak melambat.",
-        detail: "Pembersihan debu menumpuk di sirip tembaga dan kipas, serta penggantian pasta termal baru agar suhu kerja kembali dingin dan senyap.",
-        devices: "Semua laptop, MacBook, dan PC desktop",
-        eta: "2–4 jam (bisa ditunggu)",
-        warranty: "Garansi 30 hari",
+        category: "Perawatan Suhu",
+        title: "Pembersihan debu & ganti pasta termal",
+        symptoms: "Kipas terdengar berisik, bodi terasa cepat panas, atau perangkat melambat saat dipakai lama.",
+        detail: "Pembersihan debu di jalur pendingin dan kipas, disertai penggantian pasta termal agar sirkulasi panas perangkat lebih terjaga.",
+        devices: "Laptop, MacBook, dan PC desktop",
+        note: "Disarankan secara berkala tiap 6–12 bulan",
     },
     {
         id: "liquid",
         num: "04",
         category: "Kena Cairan",
         title: "Penanganan perangkat terkena cairan",
-        symptoms: "Tertumpah air, kopi, atau minuman hingga tombol dan mesin tidak merespons.",
-        detail: "Pencucian ultrasonik untuk menghentikan korosi, lalu menyambung ulang jalur papan yang terputus dan melindungi bagian rentan.",
+        symptoms: "Tertumpah air, kopi, atau minuman lainnya ke area keyboard maupun mesin.",
+        detail: "Pembersihan sisa cairan dan pemeriksaan bagian yang terdampak untuk menekan risiko kerusakan lanjutan. Sebaiknya segera matikan unit dan jangan dinyalakan dulu sebelum diperiksa.",
         devices: "Laptop & MacBook terkena tumpahan cairan",
-        eta: "1–5 hari kerja",
-        warranty: "Garansi 30–60 hari",
-    },
-    {
-        id: "recovery",
-        num: "05",
-        category: "Data & Upgrade",
-        title: "Penyelamatan data dari SSD & harddisk",
-        symptoms: "Penyimpanan tidak terbaca, meminta format, atau file penting hilang.",
-        detail: "Penyelamatan dokumen kerja, foto, dan data penting dari SSD maupun harddisk bermasalah dengan prosedur aman terhadap media asli.",
-        devices: "SSD NVMe, SSD SATA, Harddisk internal & eksternal",
-        eta: "1–3 hari kerja",
-        warranty: "Kerahasiaan data terjaga",
+        note: "Penanganan bergantung tingkat kerusakan cairan",
     },
     {
         id: "upgrade",
+        num: "05",
+        category: "Upgrade & Data",
+        title: "Upgrade SSD, tambah RAM & instalasi sistem",
+        symptoms: "Perangkat terasa lambat saat membuka aplikasi atau ruang penyimpanan mulai penuh.",
+        detail: "Pemasangan SSD, penambahan RAM, pemindahan sistem serta file, hingga instalasi ulang sistem operasi dan perakitan PC desktop sesuai kebutuhan.",
+        devices: "Laptop yang mendukung upgrade & PC desktop",
+        note: "Bisa konsultasi spesifikasi terlebih dulu",
+    },
+    {
+        id: "recovery",
         num: "06",
-        category: "Data & Upgrade",
-        title: "Upgrade SSD, tambah RAM & rakit PC",
-        symptoms: "Laptop terasa lambat saat membuka aplikasi atau butuh rakitan PC kerja.",
-        detail: "Pemasangan SSD cepat, penambahan kapasitas RAM, migrasi sistem tanpa kehilangan file, hingga perakitan PC desktop rapi dan stabil.",
-        devices: "Laptop upgradeable & PC desktop kustom",
-        eta: "Hari yang sama",
-        warranty: "Garansi pemasangan 30 hari",
+        category: "Upgrade & Data",
+        title: "Pengecekan & penyelamatan data",
+        symptoms: "SSD atau harddisk sulit terbaca, sistem gagal masuk, atau perlu memindahkan dokumen penting.",
+        detail: "Pemeriksaan kondisi media penyimpanan dan upaya penyelamatan file penting menyesuaikan tingkat kerusakan perangkat.",
+        devices: "SSD NVMe, SSD SATA, harddisk internal & eksternal",
+        note: "Kerahasiaan data pelanggan dijaga",
     },
 ];
 
@@ -100,22 +94,22 @@ export default function ServiceCatalogRail() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-end pb-8 sm:pb-10 border-b border-slate-200">
                     <div className="lg:col-span-7 space-y-2.5">
                         <span className="font-mono text-xs text-blue-600 font-semibold block">
-                            02 / JENIS PENANGANAN
+                            02 / JENIS LAYANAN
                         </span>
                         <MaskedLines
                             as="h2"
-                            lines={["Apa yang bisa kami", "perbaiki untuk Anda."]}
-                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.75rem] text-slate-950 tracking-[-0.03em] leading-[1.08]"
+                            lines={["Layanan yang biasa", "kami tangani di bengkel."]}
+                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.65rem] text-slate-950 tracking-[-0.03em] leading-[1.08]"
                         />
                     </div>
                     <div className="lg:col-span-5">
                         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                            Setiap jenis perbaikan punya estimasi waktu yang jelas, pilihan suku cadang sesuai anggaran, dan garansi tertulis.
+                            Biaya dan lama pengerjaan bergantung pada hasil pemeriksaan unit. Anda bisa bertanya dulu lewat WhatsApp sebelum datang.
                         </p>
                     </div>
                 </div>
 
-                {/* Filter Tabs with Spring Indicator */}
+                {/* Filter Tabs */}
                 <div
                     role="tablist"
                     aria-label="Filter kategori layanan"
@@ -156,18 +150,20 @@ export default function ServiceCatalogRail() {
                     })}
                 </div>
 
-                {/* Interactive Editorial Ledger Rows */}
+                {/* Editorial Ledger Rows */}
                 <div className="divide-y divide-slate-200">
                     {list.map((service) => {
                         const isOpen = openId === service.id;
                         const waText = encodeURIComponent(
-                            `Halo YVS Computer, saya ingin tanya soal ${service.title.toLowerCase()}.`
+                            `Halo YVS Computer, saya ingin konsultasi soal ${service.title.toLowerCase()}.`
                         );
                         return (
                             <div
                                 key={service.id}
                                 className={`transition-colors ${
-                                    isOpen ? "bg-white -mx-3 sm:-mx-5 px-3 sm:px-5 rounded-2xl my-2 border border-slate-200 shadow-2xs" : ""
+                                    isOpen
+                                        ? "bg-white -mx-3 sm:-mx-5 px-3 sm:px-5 rounded-2xl my-2 border border-slate-200 shadow-2xs"
+                                        : ""
                                 }`}
                             >
                                 <button
@@ -180,7 +176,7 @@ export default function ServiceCatalogRail() {
                                         {service.num}
                                     </span>
 
-                                    <div className="col-span-8 sm:col-span-6 lg:col-span-6 min-w-0">
+                                    <div className="col-span-8 sm:col-span-9 lg:col-span-7 min-w-0">
                                         <h3 className="font-display font-bold text-base sm:text-xl text-slate-950 group-hover:text-blue-600 transition-colors leading-snug">
                                             {service.title}
                                         </h3>
@@ -189,14 +185,8 @@ export default function ServiceCatalogRail() {
                                         </p>
                                     </div>
 
-                                    <div className="hidden lg:flex lg:col-span-2 flex-col">
-                                        <span className="font-mono text-[11px] text-slate-400">Estimasi</span>
-                                        <span className="text-sm font-semibold text-slate-800">{service.eta}</span>
-                                    </div>
-
-                                    <div className="hidden sm:flex sm:col-span-3 lg:col-span-2 flex-col">
-                                        <span className="font-mono text-[11px] text-slate-400">Jaminan</span>
-                                        <span className="text-sm font-semibold text-emerald-700">{service.warranty}</span>
+                                    <div className="hidden lg:block lg:col-span-3 text-xs text-slate-500">
+                                        {service.note}
                                     </div>
 
                                     <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex justify-end">
@@ -218,27 +208,19 @@ export default function ServiceCatalogRail() {
                                             initial={{ height: 0, opacity: 0 }}
                                             animate={{ height: "auto", opacity: 1 }}
                                             exit={{ height: 0, opacity: 0 }}
-                                            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                                            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                                             className="overflow-hidden"
                                         >
                                             <div className="pb-6 pt-1 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 border-t border-slate-100">
                                                 <div className="hidden lg:block lg:col-span-1" />
-                                                <div className="lg:col-span-7 space-y-2.5 pt-3">
+                                                <div className="lg:col-span-7 space-y-2 pt-3">
                                                     <p className="text-sm sm:text-[15px] text-slate-700 leading-relaxed">
                                                         {service.detail}
                                                     </p>
                                                     <p className="text-xs text-slate-500">
-                                                        <strong className="text-slate-700">Perangkat ditangani:</strong>{" "}
+                                                        <strong className="text-slate-700">Cakupan unit:</strong>{" "}
                                                         {service.devices}
                                                     </p>
-                                                    <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-600 lg:hidden pt-1">
-                                                        <span>
-                                                            Estimasi: <strong className="text-slate-900">{service.eta}</strong>
-                                                        </span>
-                                                        <span>
-                                                            Jaminan: <strong className="text-emerald-700">{service.warranty}</strong>
-                                                        </span>
-                                                    </div>
                                                 </div>
                                                 <div className="lg:col-span-4 flex lg:justify-end items-end pt-2">
                                                     <a
@@ -247,7 +229,7 @@ export default function ServiceCatalogRail() {
                                                         rel="noreferrer"
                                                         className="w-full sm:w-auto min-h-[42px] inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-blue-600 text-white text-xs sm:text-sm font-semibold transition-colors"
                                                     >
-                                                        <span>Tanya estimasi layanan ini</span>
+                                                        <span>Tanya via WhatsApp</span>
                                                         <ArrowUpRight className="w-4 h-4 shrink-0" />
                                                     </a>
                                                 </div>

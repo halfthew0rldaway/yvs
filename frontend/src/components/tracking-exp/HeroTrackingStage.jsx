@@ -114,10 +114,10 @@ export default function HeroTrackingStage({
                             <MagneticWrap strength={0.16}>
                                 <button
                                     type="button"
-                                    onClick={() => smoothScrollToTarget("cek-keluhan", -64)}
+                                    onClick={() => smoothScrollToTarget("alur-servis", -64)}
                                     className="inline-flex items-center gap-2 min-h-[44px] px-4 sm:px-5 py-2.5 rounded-lg bg-white hover:bg-slate-900 hover:text-white text-slate-900 border border-slate-300 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                                 >
-                                    <span>Cek titik kerusakan perangkat</span>
+                                    <span>Lihat alur pengerjaan</span>
                                     <ArrowDownRight className="w-4 h-4 shrink-0" />
                                 </button>
                             </MagneticWrap>
@@ -343,27 +343,27 @@ export default function HeroTrackingStage({
                     </div>
                 </div>
 
-                {/* Bottom Architectural Principles Bar (No cards-inside-cards, pure editorial grid) */}
+                {/* Bottom Architectural Principles Bar (Honest, grounded, zero overclaim) */}
                 <div className="mt-12 sm:mt-16 pt-8 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0 sm:divide-x sm:divide-slate-200">
                     <div className="sm:pr-8 space-y-1">
-                        <p className="font-mono text-xs text-blue-600 font-semibold">01 · Cek tanpa risiko</p>
-                        <p className="font-display font-bold text-base text-slate-900">Gratis cek bila tidak jadi</p>
+                        <p className="font-mono text-xs text-blue-600 font-semibold">01 · Konfirmasi dulu</p>
+                        <p className="font-display font-bold text-base text-slate-900">Estimasi sebelum dikerjakan</p>
                         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            Biaya diinfokan sebelum pengerjaan. Bila batal, perangkat bisa langsung diambil tanpa biaya cek.
+                            Perkiraan biaya disampaikan lebih dulu setelah pemeriksaan. Pengerjaan baru berjalan bila Anda setuju.
                         </p>
                     </div>
                     <div className="sm:px-8 space-y-1">
-                        <p className="font-mono text-xs text-blue-600 font-semibold">02 · Bukti transparan</p>
-                        <p className="font-display font-bold text-base text-slate-900">Komponen lama dikembalikan</p>
+                        <p className="font-mono text-xs text-blue-600 font-semibold">02 · Foto &amp; catatan</p>
+                        <p className="font-display font-bold text-base text-slate-900">Progres tercatat di portal</p>
                         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            Foto kerusakan dan seluruh komponen bekas penggantian selalu diserahkan utuh kepada pemilik.
+                            Kondisi awal unit, catatan pengerjaan, dan rincian biaya dapat Anda lihat kapan saja lewat nomor servis.
                         </p>
                     </div>
                     <div className="sm:pl-8 space-y-1">
-                        <p className="font-mono text-xs text-blue-600 font-semibold">03 · Jaminan tertulis</p>
-                        <p className="font-display font-bold text-base text-slate-900">Garansi digital 30–90 hari</p>
+                        <p className="font-mono text-xs text-blue-600 font-semibold">03 · Garansi tercatat</p>
+                        <p className="font-display font-bold text-base text-slate-900">Kartu garansi digital</p>
                         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            Tercatat otomatis di sistem pelacakan, aman walau lembar nota kertas suatu saat terselip.
+                            Informasi garansi sesuai jenis perbaikan tersimpan otomatis di sistem sehingga mudah dicek kembali.
                         </p>
                     </div>
                 </div>

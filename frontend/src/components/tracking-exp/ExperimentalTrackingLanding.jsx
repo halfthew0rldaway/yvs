@@ -5,7 +5,7 @@ import EditorialNavbar from "./EditorialNavbar";
 import HeroTrackingStage from "./HeroTrackingStage";
 
 // Lazy-load below-the-fold sections so the initial tracking hero & form stay instant
-const InteractiveDiagnosticBench = lazy(() => import("./InteractiveDiagnosticBench"));
+const ServiceJourneyTimeline = lazy(() => import("./ServiceJourneyTimeline"));
 const EditorialPromoStrip = lazy(() => import("./EditorialPromoStrip"));
 const ServiceCatalogRail = lazy(() => import("./ServiceCatalogRail"));
 const CraftStandardsStack = lazy(() => import("./CraftStandardsStack"));
@@ -83,9 +83,9 @@ export default function ExperimentalTrackingLanding({
                     <EditorialPromoStrip />
                 </Suspense>
 
-                {/* 4. Signature Visual Identity: Interactive Symptom-to-Motherboard Diagnostic Lab */}
-                <Suspense fallback={<SectionSkeleton dark />}>
-                    <InteractiveDiagnosticBench />
+                {/* 4. Grounded Interactive 5-Stage Service Journey */}
+                <Suspense fallback={<SectionSkeleton />}>
+                    <ServiceJourneyTimeline />
                 </Suspense>
 
                 {/* 5. Interactive Service Catalog Ledger */}

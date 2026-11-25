@@ -421,7 +421,7 @@ export default function WarrantyCertificateModal({
                                             {tiket.kategori_perbaikan || "Perbaikan Perangkat & Komponen"}
                                         </p>
                                         <p className="text-2xs text-slate-500 mt-0.5 leading-snug line-clamp-2">
-                                            {tiket.diagnosis?.solusi || "Telah melewati uji kualitas 25 titik workshop"}
+                                            {tiket.diagnosis?.solusi || "Sesuai catatan pemeriksaan dan pengerjaan workshop"}
                                         </p>
                                     </div>
                                 </div>

@@ -4,9 +4,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { MagneticWrap, smoothScrollToTarget } from "./MotionPrimitives";
 
 const NAV_LINKS = [
-    { id: "cek-keluhan", label: "Cek Keluhan" },
+    { id: "alur-servis", label: "Alur Servis" },
     { id: "layanan", label: "Layanan" },
-    { id: "standar", label: "Standar Kerja" },
+    { id: "standar", label: "Prinsip Kerja" },
     { id: "ulasan", label: "Ulasan" },
     { id: "lokasi", label: "Lokasi" },
 ];

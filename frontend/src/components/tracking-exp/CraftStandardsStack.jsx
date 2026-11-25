@@ -8,34 +8,30 @@ gsap.registerPlugin(ScrollTrigger);
 const STANDARDS = [
     {
         num: "01",
-        kicker: "Tanpa biaya tersembunyi",
-        title: "Estimasi biaya jelas sebelum dikerjakan.",
-        body: "Setelah unit diperiksa, kami kirimkan rincian kerusakan dan perkiraan biayanya. Jika belum cocok, perangkat tetap bisa Anda ambil tanpa biaya cek sama sekali.",
-        highlight: "Rp 0 biaya cek jika batal",
+        kicker: "Konfirmasi di awal",
+        title: "Estimasi biaya disampaikan sebelum pengerjaan.",
+        body: "Setelah perangkat diperiksa, kami informasikan temuan kerusakan beserta perkiraan biayanya terlebih dulu. Pengerjaan baru dilanjutkan setelah Anda menyetujuinya.",
         accent: "border-t-blue-600",
     },
     {
         num: "02",
-        kicker: "Bukti pengerjaan terbuka",
-        title: "Foto proses & komponen lama dikembalikan utuh.",
-        body: "Anda tidak perlu menebak apa yang dikerjakan di dalam ruang servis. Foto kondisi awal, foto komponen yang diganti, dan bagian bekasnya kami serahkan kembali.",
-        highlight: "Dokumentasi foto di portal ini",
+        kicker: "Terbuka & mudah dicek",
+        title: "Foto kondisi dan progres tercatat di nomor servis.",
+        body: "Foto awal perangkat, catatan pemeriksaan, hingga rincian komponen yang digunakan dapat Anda pantau langsung lewat halaman pelacakan ini.",
         accent: "border-t-emerald-600",
     },
     {
         num: "03",
-        kicker: "Pilihan sesuai anggaran",
-        title: "Suku cadang original atau kompatibel, Anda yang memilih.",
-        body: "Kami jelaskan kelebihan tiap opsi suku cadang secara jujur sesuai kebutuhan pemakaian harian Anda, tanpa memaksa memilih yang paling mahal.",
-        highlight: "Konsultasi jujur tanpa paksaan",
+        kicker: "Sesuai kebutuhan",
+        title: "Pilihan suku cadang dibahas bersama pemilik.",
+        body: "Jika ada komponen yang perlu diganti, kami sampaikan opsi yang tersedia sesuai ketersediaan dan anggaran Anda tanpa paksaan.",
         accent: "border-t-slate-900",
     },
     {
         num: "04",
-        kicker: "Uji 25 titik & garansi",
-        title: "Diperiksa menyeluruh sebelum pulang, bergaransi resmi.",
-        body: "Sebelum unit dinyatakan selesai, teknisi menguji layar, tombol, audio, port, suhu, dan kestabilan baterai. Sertifikat garansi digital 30–90 hari langsung aktif.",
-        highlight: "Garansi tersimpan otomatis",
+        kicker: "Tercatat rapi",
+        title: "Nota dan catatan garansi tersimpan digital.",
+        body: "Setelah serah terima unit, rincian pembayaran dan masa garansi sesuai jenis perbaikan tersimpan di sistem agar mudah diakses bila suatu saat diperlukan.",
         accent: "border-t-amber-600",
     },
 ];
@@ -51,7 +47,6 @@ export default function CraftStandardsStack() {
         if (!isDesktop) return;
 
         const ctx = gsap.context(() => {
-            // Vertical scroll progress rail on left editorial column
             if (railFillRef.current) {
                 gsap.fromTo(
                     railFillRef.current,
@@ -69,13 +64,12 @@ export default function CraftStandardsStack() {
                 );
             }
 
-            // Progressively stacking cards subtle depth scale-down as next card arrives
             const cards = gsap.utils.toArray("[data-stack-card]");
             cards.forEach((card, i) => {
                 if (i === cards.length - 1) return;
                 gsap.to(card, {
-                    scale: 0.955,
-                    opacity: 0.84,
+                    scale: 0.96,
+                    opacity: 0.86,
                     ease: "none",
                     scrollTrigger: {
                         trigger: cards[i + 1],
@@ -102,33 +96,30 @@ export default function CraftStandardsStack() {
                     <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
                         <div className="space-y-3">
                             <span className="font-mono text-xs text-blue-600 font-semibold block">
-                                03 / STANDAR KERJA YVS
+                                03 / PRINSIP KERJA
                             </span>
                             <MaskedLines
                                 as="h2"
-                                lines={["Empat hal yang", "selalu kami jaga."]}
-                                className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.75rem] text-slate-950 tracking-[-0.03em] leading-[1.08]"
+                                lines={["Cara kami bekerja", "menangani perangkat Anda."]}
+                                className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.65rem] text-slate-950 tracking-[-0.03em] leading-[1.08]"
                             />
                         </div>
 
                         <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-md">
-                            Banyak orang ragu menservis komputer karena takut biayanya membengkak atau komponen ditukar. Kami membangun alur kerja yang terbuka supaya Anda tetap tenang.
+                            Kami menjaga komunikasi tetap sederhana dan jelas—mulai dari pencatatan saat unit diterima hingga pengecekan bersama saat pengambilan.
                         </p>
 
                         {/* Scroll-Driven Vertical Progress Hairline */}
                         <div className="hidden lg:flex items-center gap-4 pt-2">
-                            <div className="w-[2px] h-28 bg-slate-200 rounded-full overflow-hidden relative">
+                            <div className="w-[2px] h-24 bg-slate-200 rounded-full overflow-hidden relative">
                                 <div
                                     ref={railFillRef}
                                     className="w-full h-full bg-blue-600 origin-top"
                                 />
                             </div>
-                            <div className="space-y-1.5 text-xs text-slate-500">
-                                <p className="font-semibold text-slate-900">Pemeriksaan 25 titik uji mutu</p>
-                                <p className="leading-relaxed max-w-[260px]">
-                                    Suhu prosesor, kestabilan daya, pengisian baterai, port USB/HDMI, keyboard, audio, hingga layar dicek satu per satu.
-                                </p>
-                            </div>
+                            <p className="text-xs text-slate-500 leading-relaxed max-w-[260px]">
+                                Seluruh status, foto kondisi, dan riwayat tindakan dapat diperiksa kembali menggunakan nomor servis Anda.
+                            </p>
                         </div>
                     </div>
 
@@ -143,14 +134,11 @@ export default function CraftStandardsStack() {
                                         ? { top: `calc(5.5rem + ${idx * 18}px)` }
                                         : undefined
                                 }
-                                className={`lg:sticky bg-slate-50 border border-slate-200 border-t-[3px] ${item.accent} rounded-2xl p-6 sm:p-8 shadow-[0_14px_34px_-22px_rgba(15,23,42,0.2)] will-change-transform origin-top`}
+                                className={`lg:sticky bg-slate-50 border border-slate-200 border-t-[3px] ${item.accent} rounded-2xl p-6 sm:p-8 shadow-[0_14px_34px_-22px_rgba(15,23,42,0.18)] will-change-transform origin-top`}
                             >
-                                <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-200/80">
+                                <div className="pb-4 mb-4 border-b border-slate-200/80">
                                     <span className="font-mono text-xs font-bold text-slate-500">
                                         {item.num} / {item.kicker}
-                                    </span>
-                                    <span className="font-mono text-xs font-semibold text-slate-800">
-                                        {item.highlight}
                                     </span>
                                 </div>
 
