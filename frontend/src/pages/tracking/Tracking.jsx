@@ -24,6 +24,7 @@ import ErrorBoundary from "../../components/ErrorBoundary";
 import LandingNavbar from "../../components/landing/LandingNavbar";
 import ServiceProcess3D from "../../components/landing/ServiceProcess3D";
 import BrandTicker from "../../components/landing/BrandTicker";
+import PromoShowcase from "../../components/landing/PromoShowcase";
 import ServiceSpecSheet from "../../components/landing/ServiceSpecSheet";
 import EngineeringStandards from "../../components/landing/EngineeringStandards";
 import WorkshopMetrics from "../../components/landing/WorkshopMetrics";
@@ -2714,6 +2715,9 @@ export default function Tracking() {
             </div>
         </div>
     </section>
+
+            {/* 3.5 Active Official Workshop Promotions Showcase (Dynamic from Marketing ERP) */}
+            <PromoShowcase />
 
             {/* 4. Engineering Capabilities Spec Sheet Matrix */}
             <ServiceSpecSheet />

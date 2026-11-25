@@ -11,6 +11,7 @@ const landingRoutes = [
     ["loaners.view", "/loaner"],
     ["wiki.view", "/wiki"],
     ["crm.view", "/retensi"],
+    ["marketing.view", "/marketing"],
     ["attendance.self", "/attendance"],
     ["attendance.review", "/attendance"],
     ["attendance.adjust", "/attendance"],

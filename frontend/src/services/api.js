@@ -15,6 +15,8 @@ const NON_CACHEABLE_ROUTES = [
     "/attendance/",
     "/database/",
     "/chat/",
+    "/marketing/promotions/active",
+    "/marketing/promotions/validate",
     "/health"
 ];
 

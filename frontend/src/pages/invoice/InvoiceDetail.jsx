@@ -476,9 +476,15 @@ export default function InvoiceDetail() {
                             </tr>
                             {invoice.diskon > 0 && (
                                 <tr className="bg-slate-50/60 font-semibold text-3xs sm:text-2xs print:text-[7px] text-rose-600">
-                                    <td colSpan="4" className="py-0.5 px-2 print:py-0.5 print:px-1"></td>
-                                    <td className="py-0.5 px-2 print:py-0.5 print:px-1 text-right">
-                                        DISKON:
+                                    <td colSpan="4" className="py-0.5 px-2 print:py-0.5 print:px-1 text-slate-600 font-normal">
+                                        {invoice.keterangan_diskon
+                                            ? <span>Keterangan: <strong className="text-slate-700">{invoice.keterangan_diskon}</strong></span>
+                                            : invoice.promotion?.nama_promo
+                                            ? <span>Keterangan: <strong className="text-slate-700">Promo {invoice.promotion.nama_promo} ({invoice.promotion.kode_promo})</strong></span>
+                                            : null}
+                                    </td>
+                                    <td className="py-0.5 px-2 print:py-0.5 print:px-1 text-right whitespace-nowrap">
+                                        POTONGAN / APRESIASI:
                                     </td>
                                     <td className="py-0.5 px-2 print:py-0.5 print:px-1 text-right font-mono">
                                         - {formatRupiah(invoice.diskon)}

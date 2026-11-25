@@ -2405,9 +2405,9 @@ export default function AttendancePage() {
 
             {/* TAB 5: KEBIJAKAN & PENGATURAN GEOFENCE (ADMIN) */}
             {activeTab === "policy" && canEditPolicy && (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
                     {/* Left: Main Configuration Form (8 cols) */}
-                    <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+                    <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col justify-between space-y-4 min-w-0">
                         <div className="border-b border-slate-100 pb-3">
                             <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                 <Sliders className="w-4 h-4 text-blue-600" />
@@ -2547,7 +2547,7 @@ export default function AttendancePage() {
                     </div>
 
                     {/* Right: Live Geofence Summary & Security Guide (4 cols) */}
-                    <div className="lg:col-span-5 xl:col-span-4 space-y-4">
+                    <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-4 min-w-0">
                         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
                             <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
                                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
@@ -2602,7 +2602,7 @@ export default function AttendancePage() {
                         </div>
 
                         {/* Security Feature Highlights Card */}
-                        <div className="bg-slate-50 rounded-2xl border border-slate-200/80 p-4 space-y-3">
+                        <div className="bg-slate-50 rounded-2xl border border-slate-200/80 p-4 space-y-3 flex-1">
                             <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
                                 <span>Lapisan Keamanan Anti-Fraud</span>

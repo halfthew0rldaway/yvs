@@ -34,7 +34,7 @@ function sanitizeValue(key, value) {
         if (lowerKey === "jenis_perangkat") {
             return normalizeDeviceType(cleaned);
         }
-        if (lowerKey === "kode_unit" || lowerKey === "nomor_rma" || lowerKey === "nomor_tiket") {
+        if (lowerKey === "kode_unit" || lowerKey === "nomor_rma" || lowerKey === "nomor_tiket" || lowerKey === "kode_promo") {
             return cleaned.toUpperCase();
         }
         if (lowerKey === "kurir" || lowerKey === "kurir_pengiriman") {

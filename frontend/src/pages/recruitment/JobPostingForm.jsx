@@ -225,9 +225,9 @@ export default function JobPostingForm() {
     }
 
     return (
-        <div className="w-full space-y-6 pb-16">
+        <div className="w-full lg:h-[calc(100dvh-7.25rem)] lg:min-h-[580px] flex flex-col gap-4 sm:gap-5 pb-12 lg:pb-0 lg:overflow-hidden">
             {/* TOP BAR / NAVIGATION */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shrink-0">
                 <div className="flex items-center gap-3.5">
                     <button
                         type="button"
@@ -270,11 +270,11 @@ export default function JobPostingForm() {
                 </div>
             </div>
 
-            {/* MAIN FORM GRID */}
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+            {/* MAIN FORM SPLIT-PANE GRID */}
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
                     
-                    {/* LEFT COLUMN: FORM CONTENT (8 COLS) */}
-                    <div className="lg:col-span-8 space-y-6">
+                    {/* LEFT COLUMN: FORM CONTENT (8 COLS - Independently Scrollable) */}
+                    <div className="lg:col-span-8 space-y-5 min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 custom-scrollbar pb-1">
 
                         {/* SECTION 0: PRESET STANDAR POSISI KEOS */}
                         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
@@ -652,11 +652,11 @@ export default function JobPostingForm() {
 
                     </div>
 
-                    {/* RIGHT COLUMN: STICKY BROADCAST PREVIEW & ACTION (4 COLS) */}
-                    <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-20">
+                    {/* RIGHT COLUMN: BROADCAST PREVIEW & ACTION (4 COLS - Flush Viewport Pane) */}
+                    <div className="lg:col-span-4 flex flex-col gap-5 min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1 custom-scrollbar pb-1">
 
                         {/* CARD 1: LIVE BROADCAST SIAP COPAS */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden shrink-0">
                             <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center">
@@ -778,13 +778,15 @@ export default function JobPostingForm() {
                         </div>
 
                         {/* CARD 3: ACTION CTA */}
-                        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                                Konfirmasi & Terbitkan
-                            </h3>
-                            <p className="text-xs text-slate-600 leading-relaxed">
-                                Lowongan yang berstatus <strong>Aktif</strong> akan langsung tersedia di pipeline rekrutmen dan siap menampung data pelamar masuk.
-                            </p>
+                        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between gap-3 lg:flex-1">
+                            <div className="space-y-2">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                    Konfirmasi & Terbitkan
+                                </h3>
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                    Lowongan yang berstatus <strong>Aktif</strong> akan langsung tersedia di pipeline rekrutmen dan siap menampung data pelamar masuk.
+                                </p>
+                            </div>
 
                             <div className="space-y-2 pt-2 border-t border-slate-100">
                                 <button

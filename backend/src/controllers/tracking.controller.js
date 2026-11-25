@@ -497,4 +497,52 @@ async function signCustomerInvoice(req, res) {
     }
 }
 
-module.exports = { track, submitRating, respondDiagnosisApproval, signCustomerInvoice };
+/**
+ * GET /api/tracking/promotions
+ * Public read-only active offers explicitly opted in for `/tracking` showcase.
+ * Zero PII, zero internal sales data.
+ */
+async function getPublicPromotions(req, res) {
+    try {
+        const { getPromotionStatus, matchesDeviceCategory } = require("../utils/promotionMath");
+        const { kategori_perangkat } = req.query;
+        const now = new Date();
+
+        const promos = await prisma.promotion.findMany({
+            where: {
+                is_active: true,
+                tampil_di_tracking: true,
+            },
+            orderBy: [{ tanggal_selesai: "asc" }, { created_at: "desc" }],
+        });
+
+        let activePublic = promos
+            .filter((p) => getPromotionStatus(p, now) === "aktif")
+            .map((p) => ({
+                id: p.id,
+                kode_promo: p.kode_promo,
+                nama_promo: p.nama_promo,
+                deskripsi: p.deskripsi || null,
+                tipe_diskon: p.tipe_diskon,
+                nilai_diskon: p.nilai_diskon,
+                cakupan_diskon: p.cakupan_diskon,
+                maksimal_diskon: p.maksimal_diskon,
+                minimal_transaksi: p.minimal_transaksi || 0,
+                kategori_perangkat: p.kategori_perangkat || "Semua",
+                tipe_tiket: p.tipe_tiket || "Semua",
+                tanggal_selesai: p.tanggal_selesai,
+                sisa_kuota: p.kuota_total !== null ? Math.max(0, p.kuota_total - p.kuota_terpakai) : null,
+                satu_kali_per_pelanggan: Boolean(p.satu_kali_per_pelanggan),
+            }));
+
+        if (kategori_perangkat) {
+            activePublic = activePublic.filter((p) => matchesDeviceCategory(p.kategori_perangkat, kategori_perangkat));
+        }
+
+        return res.json(activePublic);
+    } catch (error) {
+        return res.status(500).json({ message: "Gagal memuat penawaran promo publik" });
+    }
+}
+
+module.exports = { track, submitRating, respondDiagnosisApproval, signCustomerInvoice, getPublicPromotions };

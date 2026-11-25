@@ -37,6 +37,7 @@ const RepairWikiList = lazyWithRetry(() => import("./pages/wiki/RepairWikiList")
 const RecruitmentDashboard = lazyWithRetry(() => import("./pages/recruitment/RecruitmentDashboard"));
 const JobPostingForm = lazyWithRetry(() => import("./pages/recruitment/JobPostingForm"));
 const RetensiCrm = lazyWithRetry(() => import("./pages/retensi/RetensiCrm"));
+const MarketingPage = lazyWithRetry(() => import("./pages/marketing/MarketingPage"));
 const LoanerList = lazyWithRetry(() => import("./pages/loaner/LoanerList"));
 const RmaList = lazyWithRetry(() => import("./pages/rma/RmaList"));
 const RmaForm = lazyWithRetry(() => import("./pages/rma/RmaForm"));
@@ -177,6 +178,7 @@ export default function App() {
                     <Route path="/tiket-servis/:id/diagnosis" element={<ProtectedRoute permissions={["tickets.diagnosis"]}><DiagnosisForm /></ProtectedRoute>} />
                     <Route path="/tiket-servis/:id/log" element={<ProtectedRoute permissions={["tickets.view"]}><LogPerbaikanList /></ProtectedRoute>} />
                     <Route path="/retensi" element={<ProtectedRoute permissions={["crm.view"]}><RetensiCrm /></ProtectedRoute>} />
+                    <Route path="/marketing" element={<ProtectedRoute permissions={["marketing.view"]}><MarketingPage /></ProtectedRoute>} />
                     <Route path="/loaner" element={<ProtectedRoute permissions={["loaners.view"]}><LoanerList /></ProtectedRoute>} />
                     <Route path="/sparepart" element={<ProtectedRoute permissions={["inventory.view"]}><SparepartList /></ProtectedRoute>} />
                     <Route path="/sparepart/tambah" element={<ProtectedRoute permissions={["inventory.manage"]}><SparepartForm /></ProtectedRoute>} />

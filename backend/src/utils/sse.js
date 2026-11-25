@@ -94,6 +94,7 @@ async function broadcast(event, data = {}, filter = null) {
             if (event.startsWith("invoice:") && !hasPermission(auth, "invoices.view")) continue;
             if (event.startsWith("loaner:") && !hasPermission(auth, "loaners.view")) continue;
             if (event.startsWith("rma:") && !hasPermission(auth, "suppliers.view")) continue;
+            if (event.startsWith("marketing:") && !hasPermission(auth, "marketing.view")) continue;
             if (event === "registration:updated" && !hasPermission(auth, "tickets.intake")) continue;
             if (event === "dashboard:refresh" && !hasPermission(auth, "dashboard.view")) continue;
             if (event === "notification:new") {
@@ -102,7 +103,7 @@ async function broadcast(event, data = {}, filter = null) {
             }
             const safeData = event === "notification:new" ? data
                 : event === "notification:updated" ? {}
-                : event.startsWith("tiket:") || event.startsWith("invoice:") || event.startsWith("loaner:") || event.startsWith("rma:") ? {}
+                : event.startsWith("tiket:") || event.startsWith("invoice:") || event.startsWith("loaner:") || event.startsWith("rma:") || event.startsWith("marketing:") ? {}
                 : data;
             const payload = `event: ${event}\ndata: ${JSON.stringify({ ...safeData, _ts: Date.now() })}\n\n`;
             client.res.write(payload);

@@ -329,10 +329,10 @@ export default function SparepartForm() {
     }
 
     return (
-        <div className="w-full space-y-6 pb-14">
+        <div className="w-full lg:h-[calc(100dvh-7.25rem)] lg:min-h-[580px] flex flex-col gap-4 sm:gap-5 pb-12 lg:pb-0 lg:overflow-hidden">
             
             {/* TOP BAR / BREADCRUMB */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shrink-0">
                 <div className="flex items-center gap-3.5">
                     <button
                         type="button"
@@ -392,13 +392,13 @@ export default function SparepartForm() {
                 </div>
             </div>
 
-            {/* MAIN 12-COLUMN EDGE-TO-EDGE FORM GRID */}
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* MAIN 12-COLUMN EDGE-TO-EDGE SPLIT-PANE FORM GRID */}
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
                 
                 {/* ======================================================== */}
                 {/* LEFT COLUMN: IDENTITAS & ASAL SUPPLIER & GARANSI (8 COLS) */}
                 {/* ======================================================== */}
-                <div className="lg:col-span-8 space-y-6">
+                <div className="lg:col-span-8 space-y-5 min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 custom-scrollbar pb-1">
 
                     {/* CARD 1: IDENTITAS PRODUK & MEREK */}
                     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-5">
@@ -971,10 +971,10 @@ export default function SparepartForm() {
                 {/* ======================================================== */}
                 {/* RIGHT COLUMN: FINANSIAL, STOK & AUDIT PENGADAAN (4 COLS) */}
                 {/* ======================================================== */}
-                <div className="lg:col-span-4 space-y-6">
+                <div className="lg:col-span-4 flex flex-col gap-5 min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1 custom-scrollbar pb-1">
                     
                     {/* CARD 4: FINANSIAL & KALKULATOR MARGIN LABA */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4 shrink-0">
                         <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
                             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                                 <DollarSign className="w-4 h-4 text-emerald-600" />
@@ -1145,23 +1145,25 @@ export default function SparepartForm() {
                     </div>
 
                     {/* CARD 6: RINGKASAN & ACTION */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Ringkasan Nilai Aset
-                        </h4>
+                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between gap-4 lg:flex-1">
+                        <div className="space-y-3">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Ringkasan Nilai Aset
+                            </h4>
 
-                        <div className="space-y-2 text-xs">
-                            <div className="flex items-center justify-between text-slate-600">
-                                <span>Total Modal Disimpan:</span>
-                                <span className="font-bold font-mono text-slate-900">
-                                    {formatRupiah((Number(form.stok) || 0) * hppNum)}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between text-slate-600">
-                                <span>Potensi Nilai Jual:</span>
-                                <span className="font-bold font-mono text-emerald-700">
-                                    {formatRupiah((Number(form.stok) || 0) * hargaJualNum)}
-                                </span>
+                            <div className="space-y-2 text-xs">
+                                <div className="flex items-center justify-between text-slate-600">
+                                    <span>Total Modal Disimpan:</span>
+                                    <span className="font-bold font-mono text-slate-900">
+                                        {formatRupiah((Number(form.stok) || 0) * hppNum)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between text-slate-600">
+                                    <span>Potensi Nilai Jual:</span>
+                                    <span className="font-bold font-mono text-emerald-700">
+                                        {formatRupiah((Number(form.stok) || 0) * hargaJualNum)}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 

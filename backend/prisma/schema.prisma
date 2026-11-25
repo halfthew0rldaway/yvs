@@ -435,6 +435,8 @@ model Invoice {
   biaya_sparepart   Float
   total_biaya       Float
   diskon            Float?    @default(0)
+  promotion_id      Int?
+  keterangan_diskon String?   @db.VarChar(255)
   nominal_dp        Float?    @default(0)
   status_pembayaran String?   @default("lunas") @db.VarChar(50)
   metode_pembayaran String?   @default("Tunai") @db.VarChar(50)
@@ -447,7 +449,10 @@ model Invoice {
   ttd_admin_nama    String?   @db.VarChar(150)
   created_at        DateTime  @default(now())
 
-  tiket TiketServis @relation(fields: [tiket_id], references: [id], onDelete: Cascade)
+  tiket     TiketServis @relation(fields: [tiket_id], references: [id], onDelete: Cascade)
+  promotion Promotion?  @relation(fields: [promotion_id], references: [id], onDelete: SetNull)
+
+  @@index([promotion_id])
 }
 
 model StaffSignature {
@@ -793,4 +798,57 @@ model LeaveRequest {
   @@index([user_id])
   @@index([status])
   @@index([tgl_mulai])
+}
+
+model Promotion {
+  id                      Int       @id @default(autoincrement())
+  kode_promo              String    @unique @db.VarChar(50)
+  nama_promo              String    @db.VarChar(150)
+  deskripsi               String?   @db.Text
+  tipe_diskon             String    @default("persen") @db.VarChar(20) // "persen" | "nominal"
+  nilai_diskon            Float
+  cakupan_diskon          String    @default("jasa") @db.VarChar(20) // "jasa" | "sparepart" | "total"
+  maksimal_diskon         Float?
+  minimal_transaksi       Float     @default(0)
+  kategori_perangkat      String    @default("Semua") @db.VarChar(100) // "Semua" | "Laptop" | "PC Desktop" | "Printer" | "Smartphone" | etc.
+  tipe_tiket              String    @default("Semua") @db.VarChar(50) // "Semua" | "reguler" | "prioritas"
+  tanggal_mulai           DateTime
+  tanggal_selesai         DateTime
+  kuota_total             Int?
+  kuota_terpakai          Int       @default(0)
+  satu_kali_per_pelanggan Boolean   @default(false)
+  saluran_promosi         String?   @db.VarChar(150) // "WhatsApp", "Instagram", "Poster Toko", dll
+  tanggal_promosi         DateTime?
+  catatan_kampanye        String?   @db.Text
+  tampil_di_tracking      Boolean   @default(false)
+  is_active               Boolean   @default(true)
+  created_by_nama         String?   @db.VarChar(150)
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  invoices       Invoice[]
+  campaign_notes CampaignNote[]
+
+  @@index([is_active])
+  @@index([tampil_di_tracking])
+  @@index([tanggal_mulai, tanggal_selesai])
+}
+
+model CampaignNote {
+  id                Int        @id @default(autoincrement())
+  promotion_id      Int?
+  judul             String     @db.VarChar(150)
+  saluran           String     @db.VarChar(100) // "WhatsApp", "Instagram", "Poster Toko", "Google Maps", "TikTok", "Lainnya"
+  tanggal_publikasi DateTime
+  tautan_referensi  String?    @db.VarChar(500)
+  catatan           String?    @db.Text
+  created_by_nama   String?    @db.VarChar(150)
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @updatedAt
+
+  promotion Promotion? @relation(fields: [promotion_id], references: [id], onDelete: SetNull)
+
+  @@index([promotion_id])
+  @@index([saluran])
+  @@index([tanggal_publikasi])
 }

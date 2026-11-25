@@ -41,6 +41,9 @@ const PERMISSIONS = [
     ["recruitment.manage", "recruitment", "manage", "Mengelola rekrutmen"],
     ["audit.view", "audit", "view", "Melihat audit log"],
     ["crm.view", "crm", "view", "Melihat CRM dan retensi"],
+    ["marketing.view", "marketing", "view", "Melihat promosi, kampanye, dan daftar outreach"],
+    ["marketing.manage", "marketing", "manage", "Membuat dan mengelola promosi serta catatan kampanye"],
+    ["marketing.report", "marketing", "report", "Melihat laporan performa dan hasil promosi"],
     ["users.view", "users", "view", "Melihat pengguna"],
     ["users.manage", "users", "manage", "Mengelola pengguna"],
     ["roles.manage", "roles", "manage", "Mengelola peran dan hak akses"],
@@ -51,7 +54,7 @@ const PERMISSIONS = [
 
 const DEFAULT_ROLE_PERMISSIONS = {
     admin: PERMISSIONS.map(([code]) => code).filter(code => !["roles.manage", "attendance.exempt"].includes(code)),
-    pimpinan: ["dashboard.view", "dashboard.report", "tickets.view", "tickets.view_all", "invoices.view", "invoices.report", "suppliers.view", "loaners.view", "wiki.view", "attendance.self", "attendance.exempt", "attendance.review", "recruitment.view", "audit.view", "crm.view", "users.view"],
+    pimpinan: ["dashboard.view", "dashboard.report", "tickets.view", "tickets.view_all", "invoices.view", "invoices.report", "suppliers.view", "loaners.view", "wiki.view", "attendance.self", "attendance.exempt", "attendance.review", "recruitment.view", "audit.view", "crm.view", "marketing.view", "marketing.report", "users.view"],
     frontman: ["dashboard.view", "customers.view", "customers.manage", "devices.view", "devices.manage", "tickets.view", "tickets.view_all", "tickets.intake", "tickets.approval", "tickets.handover", "invoices.view", "invoices.manage", "loaners.view", "loaners.manage", "attendance.self"],
     teknisi: ["dashboard.view", "customers.view", "devices.view", "tickets.view", "tickets.claim", "tickets.diagnosis", "tickets.repair", "tickets.qc", "inventory.view", "inventory.use", "invoices.view", "suppliers.view", "wiki.view", "wiki.manage", "attendance.self", "loaners.view"],
 };
@@ -60,7 +63,8 @@ const VIEW_IMPLICATIONS = {
     dashboard: "dashboard.view",
     customers: "customers.view", devices: "devices.view", tickets: "tickets.view",
     inventory: "inventory.view", invoices: "invoices.view", suppliers: "suppliers.view",
-    loaners: "loaners.view", wiki: "wiki.view", recruitment: "recruitment.view"
+    loaners: "loaners.view", wiki: "wiki.view", recruitment: "recruitment.view",
+    marketing: "marketing.view"
 };
 // Forms need read access to their linked records. These are derived grants,
 // removed as soon as the corresponding action permission is revoked.

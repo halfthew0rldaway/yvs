@@ -282,10 +282,10 @@ export default function RmaForm() {
     }
 
     return (
-        <div className="w-full space-y-6 pb-16">
+        <div className="w-full lg:h-[calc(100dvh-7.25rem)] lg:min-h-[580px] flex flex-col gap-4 sm:gap-5 pb-12 lg:pb-0 lg:overflow-hidden">
             
             {/* Top Bar Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shrink-0">
                 <div className="flex items-center gap-3.5">
                     <button
                         type="button"
@@ -330,11 +330,11 @@ export default function RmaForm() {
                 </div>
             </div>
 
-            {/* Form Container - Wide Edge to Edge 12-Column Grid */}
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Form Container - Wide Edge to Edge 12-Column Split-Pane Grid */}
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
                 
-                {/* LEFT / MAIN COLUMN (8 Columns) */}
-                <div className="lg:col-span-8 space-y-6">
+                {/* LEFT / MAIN COLUMN (8 Columns - Independently Scrollable on Desktop) */}
+                <div className="lg:col-span-8 space-y-5 min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 custom-scrollbar pb-1">
                     
                     {/* CARD 1: 3 KATEGORI SUMBER KLAIM */}
                     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-5">
@@ -854,11 +854,11 @@ export default function RmaForm() {
 
                 </div>
 
-                {/* RIGHT / SIDE COLUMN (4 Columns Sticky) */}
-                <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-20">
+                {/* RIGHT / SIDE COLUMN (4 Columns - Flush Viewport Pane) */}
+                <div className="lg:col-span-4 flex flex-col gap-5 min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1 custom-scrollbar pb-1">
                     
                     {/* CARD 4: LOGISTIK EKSPEDISI & PENGIRIMAN */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4 shrink-0">
                         <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
                             <Truck className="w-4 h-4 text-blue-600" />
                             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
@@ -931,47 +931,49 @@ export default function RmaForm() {
                     </div>
 
                     {/* CARD 5: RINGKASAN & ACTION CTA */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
-                        <div>
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                                Ringkasan Pengajuan Klaim RMA
-                            </h3>
-                            <p className="text-sm font-bold text-slate-900 mt-1">
-                                {currentSelectedSparepart?.nama || "Pilih suku cadang"}
-                            </p>
-                            <p className="text-xs text-slate-500 font-mono mt-0.5">
-                                Qty: {formData.jumlah} unit | {
-                                    formData.tipe_sumber === "tiket_user" 
-                                        ? `Tiket #${formData.tiket_id || '-'}` 
-                                        : formData.tipe_sumber === "retail_customer" 
-                                        ? "Retail / Beli Lepas" 
-                                        : "Stok Toko"
-                                }
-                            </p>
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between gap-4 lg:flex-1">
+                        <div className="space-y-4">
+                            <div>
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                    Ringkasan Pengajuan Klaim RMA
+                                </h3>
+                                <p className="text-sm font-bold text-slate-900 mt-1">
+                                    {currentSelectedSparepart?.nama || "Pilih suku cadang"}
+                                </p>
+                                <p className="text-xs text-slate-500 font-mono mt-0.5">
+                                    Qty: {formData.jumlah} unit | {
+                                        formData.tipe_sumber === "tiket_user" 
+                                            ? `Tiket #${formData.tiket_id || '-'}` 
+                                            : formData.tipe_sumber === "retail_customer" 
+                                            ? "Retail / Beli Lepas" 
+                                            : "Stok Toko"
+                                    }
+                                </p>
+                            </div>
+
+                            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-slate-500">Distributor:</span>
+                                    <span className="font-semibold text-slate-900 truncate max-w-[170px]">{formData.supplier_nama || "-"}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-slate-500">SN Fisik:</span>
+                                    {formData.serial_number_lama ? (
+                                        <span className="font-mono text-slate-900 font-bold truncate max-w-[170px]">{formData.serial_number_lama}</span>
+                                    ) : (
+                                        <span className="font-sans text-2xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-medium">Belum diisi</span>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-slate-500">Kebijakan:</span>
+                                    <span className="font-semibold text-blue-700 bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded">
+                                        {formData.kebijakan_garansi === "lifetime" ? "Lifetime Warranty" : formData.kebijakan_garansi === "sejak_segel_distri" ? "Segel Distri" : "Nota End-User"}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs space-y-2">
-                            <div className="flex items-center justify-between">
-                                <span className="text-slate-500">Distributor:</span>
-                                <span className="font-semibold text-slate-900 truncate max-w-[170px]">{formData.supplier_nama || "-"}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-slate-500">SN Fisik:</span>
-                                {formData.serial_number_lama ? (
-                                    <span className="font-mono text-slate-900 font-bold truncate max-w-[170px]">{formData.serial_number_lama}</span>
-                                ) : (
-                                    <span className="font-sans text-2xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-medium">Belum diisi</span>
-                                )}
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-slate-500">Kebijakan:</span>
-                                <span className="font-semibold text-blue-700 bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded">
-                                    {formData.kebijakan_garansi === "lifetime" ? "Lifetime Warranty" : formData.kebijakan_garansi === "sejak_segel_distri" ? "Segel Distri" : "Nota End-User"}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <div className="space-y-2 pt-3 border-t border-slate-100">
                             <button
                                 type="submit"
                                 disabled={submitting}

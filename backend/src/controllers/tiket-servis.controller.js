@@ -868,6 +868,26 @@ async function update(req, res) {
                 });
             }
 
+            // Kompensasi kuota promo jika tiket yang dibatalkan sudah sempat memiliki invoice berpromo
+            const linkedInvoice = await prisma.invoice.findUnique({
+                where: { tiket_id: id },
+                include: { promotion: { select: { id: true, kode_promo: true, nama_promo: true } } },
+            });
+            if (linkedInvoice?.promotion_id) {
+                await prisma.promotion.updateMany({
+                    where: { id: linkedInvoice.promotion_id, kuota_terpakai: { gt: 0 } },
+                    data: { kuota_terpakai: { decrement: 1 } },
+                });
+                broadcast("marketing:updated", { id: linkedInvoice.promotion_id });
+                await prisma.logPerbaikan.create({
+                    data: {
+                        tiket_id: id,
+                        fase: "Pembatalan",
+                        catatan: `[Restorasi Kuota Promo] Kuota promo ${linkedInvoice.promotion?.kode_promo || linkedInvoice.promotion_id} dikembalikan otomatis akibat pembatalan tiket.`
+                    }
+                });
+            }
+
             await prisma.logPerbaikan.create({
                 data: {
                     tiket_id: id,

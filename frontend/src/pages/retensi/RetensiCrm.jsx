@@ -572,9 +572,9 @@ export default function RetensiCrm() {
                 </div>
 
                 {/* Workspace Body: Split View (40% List / 60% Interactive Action Panel) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
+                <div className="grid grid-cols-1 lg:grid-cols-12 lg:h-[600px] lg:overflow-hidden">
                     {/* Left Column: List Queue (lg:col-span-5) */}
-                    <div className="lg:col-span-5 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col bg-slate-50/30">
+                    <div className="lg:col-span-5 lg:h-full lg:min-h-0 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col bg-slate-50/30 min-w-0">
                         {/* Search & Sub-filters */}
                         <div className="p-3.5 border-b border-slate-200 bg-white space-y-2.5">
                             <div className="relative">
@@ -685,7 +685,7 @@ export default function RetensiCrm() {
                         </div>
 
                         {/* Queue Items List */}
-                        <div className="flex-1 overflow-y-auto max-h-[550px] p-2 space-y-1.5 custom-scrollbar">
+                        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain max-h-[420px] lg:max-h-none p-2 space-y-1.5 custom-scrollbar">
                             {/* TAB 1: PERAWATAN BERKALA LIST */}
                             {activeTab === "perawatan" && (
                                 filteredMaintList.length === 0 ? (
@@ -871,7 +871,7 @@ export default function RetensiCrm() {
                     </div>
 
                     {/* Right Column: Interactive Detail & Communication Canvas (lg:col-span-7) */}
-                    <div className="lg:col-span-7 p-5 flex flex-col justify-between bg-white">
+                    <div className="lg:col-span-7 lg:h-full lg:min-h-0 overflow-y-auto overscroll-contain custom-scrollbar p-5 flex flex-col justify-between bg-white min-w-0">
                         {/* TAB 1: PERAWATAN BERKALA ACTIVE PANEL */}
                         {activeTab === "perawatan" && (
                             !currentMaintItem ? (

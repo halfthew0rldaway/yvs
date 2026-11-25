@@ -33,7 +33,8 @@ import {
     HelpCircle,
     Layers,
     Bluetooth,
-    MessageCircle
+    MessageCircle,
+    Megaphone
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
@@ -150,6 +151,7 @@ const adminNavGroups = [
         items: [
             { path: "/invoice", label: "Invoice & Kasir", icon: FileText },
             { path: "/retensi", label: "Retensi & CRM Pelanggan", icon: HeartHandshake },
+            { path: "/marketing", label: "Marketing & Promo", icon: Megaphone },
         ]
     },
     {
@@ -487,7 +489,7 @@ export default function Layout({ children }) {
             "/dashboard": "dashboard.view", "/tiket-servis": "tickets.view", "/perangkat": "devices.view",
             "/customer": "customers.view", "/loaner": "loaners.view", "/sparepart": "inventory.view",
             "/rma": "suppliers.view", "/supplier": "suppliers.view", "/invoice": "invoices.view",
-            "/retensi": "crm.view", "/attendance": "attendance.self", "/wiki": "wiki.view",
+            "/retensi": "crm.view", "/marketing": "marketing.view", "/attendance": "attendance.self", "/wiki": "wiki.view",
             "/recruitment": "recruitment.view", "/users": "roles.manage", "/database": "system.database",
             "/audit-log": "audit.view", "/roles": "roles.manage"
         };
@@ -772,6 +774,7 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/tiket-servis") && location.pathname !== "/tiket-servis/tambah" && "Tiket Servis"}
                                 {location.pathname.startsWith("/loaner") && "Unit Pinjaman"}
                                 {location.pathname.startsWith("/retensi") && "Retensi CRM"}
+                                {location.pathname.startsWith("/marketing") && "Marketing"}
                                 {location.pathname.startsWith("/sparepart") && "Sparepart"}
                                 {location.pathname.startsWith("/rma") && "Klaim RMA"}
                                 {location.pathname.startsWith("/supplier") && "Supplier"}
@@ -784,7 +787,7 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/attendance") && "Presensi"}
                                 {location.pathname.startsWith("/chat") && "Chat Tim"}
                                 {location.pathname.startsWith("/profile") && "Profil"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/chat", "/profile"].some(p => location.pathname.startsWith(p)) && "YVS Computer"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/marketing", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/chat", "/profile"].some(p => location.pathname.startsWith(p)) && "YVS Computer"}
                             </span>
                         </div>
 
@@ -799,6 +802,7 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/tiket-servis") && "Tiket Servis"}
                                 {location.pathname.startsWith("/loaner") && "Unit Pinjaman"}
                                 {location.pathname.startsWith("/retensi") && "Retensi & CRM Pelanggan"}
+                                {location.pathname.startsWith("/marketing") && "Marketing & Promosi"}
                                 {location.pathname.startsWith("/sparepart") && "Katalog Sparepart"}
                                 {location.pathname.startsWith("/rma") && "Klaim RMA Supplier"}
                                 {location.pathname.startsWith("/supplier") && "Direktori Supplier"}
@@ -811,7 +815,7 @@ export default function Layout({ children }) {
                                 {location.pathname.startsWith("/attendance") && "Presensi & Absensi Karyawan"}
                                 {location.pathname.startsWith("/chat") && "Chat Internal Tim"}
                                 {location.pathname.startsWith("/profile") && "Profil Akun"}
-                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/chat", "/profile"].some(p => location.pathname.startsWith(p)) && "YVS Computer"}
+                                {!["/dashboard", "/customer", "/perangkat", "/tiket-servis", "/loaner", "/retensi", "/marketing", "/sparepart", "/rma", "/supplier", "/invoice", "/wiki", "/recruitment", "/users", "/database", "/audit-log", "/attendance", "/chat", "/profile"].some(p => location.pathname.startsWith(p)) && "YVS Computer"}
                             </span>
                         </div>
                     </div>
