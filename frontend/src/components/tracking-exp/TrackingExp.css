@@ -1,0 +1,151 @@
+/* ============================================================================
+   YVS Computer — Experimental Interactive Redesign Stylesheet (Isolated)
+   Branch: exp/tracking-redesign
+   ============================================================================ */
+
+/* 1. Native CSS Scroll-Driven Reading Progress Indicator
+   (Progressive Enhancement per modern-web-guidance: scroll-progress-indicator) */
+.yvs-exp-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #2563eb;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  z-index: 70;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    @keyframes yvs-exp-grow-progress {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    .yvs-exp-progress-bar {
+      animation: yvs-exp-grow-progress auto linear;
+      /* animation-timeline declared AFTER animation shorthand */
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+
+/* 2. Same-Document View Transitions between Landing and Tracking Result Views */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.34s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(yvs-tracking-shell),
+::view-transition-new(yvs-tracking-shell) {
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* 3. Subtle Architectural Drafting Grid (Zero neon, ultra-crisp 1px hairlines) */
+.yvs-exp-drafting-grid {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.yvs-exp-dark-grid {
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* 4. Animated PCB Circuit Trace Path (Opt-in only under no-preference) */
+.yvs-pcb-trace-pulse {
+  stroke-dasharray: 260;
+  stroke-dashoffset: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes yvs-pcb-flow {
+    0% {
+      stroke-dashoffset: 260;
+      opacity: 0.25;
+    }
+    45% {
+      opacity: 1;
+    }
+    100% {
+      stroke-dashoffset: -260;
+      opacity: 0.25;
+    }
+  }
+
+  .yvs-pcb-trace-pulse {
+    animation: yvs-pcb-flow 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+}
+
+/* 5. Pausable Editorial Review Ticker (WCAG 2.2.2 Pause/Play controlled) */
+.yvs-exp-review-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes yvs-exp-marquee {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    100% {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  .yvs-exp-review-track[data-playing="true"] {
+    animation: yvs-exp-marquee 48s linear infinite;
+  }
+
+  .yvs-exp-review-track[data-playing="true"]:hover {
+    animation-play-state: paused;
+  }
+}
+
+.yvs-exp-review-track[data-playing="false"] {
+  animation: none;
+}
+
+/* 6. Editorial Tracking Input Focus Override (preserve readable scale on mobile & desktop) */
+.yvs-exp-track-input {
+  font-size: 0.9375rem !important;
+  line-height: 1.5rem !important;
+}
+
+@media (min-width: 640px) {
+  .yvs-exp-track-input {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+  }
+}
+
+/* 7. Hide native scrollbar on horizontal interactive filter rails */
+.yvs-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.yvs-no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
