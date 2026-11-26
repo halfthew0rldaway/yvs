@@ -16,28 +16,39 @@ export default function EditorialNavbar({ onFocusTrack }) {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 36);
+        let rafId = null;
+        let observer = null;
+
+        const onScroll = () => {
+            const next = window.scrollY > 36;
+            setScrolled((prev) => (prev === next ? prev : next));
+        };
         window.addEventListener("scroll", onScroll, { passive: true });
-        onScroll();
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const visible = entries
-                    .filter((e) => e.isIntersecting)
-                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-                if (visible?.target?.id) setActiveSection(visible.target.id);
-            },
-            { rootMargin: "-25% 0px -55% 0px", threshold: [0.1, 0.35] }
-        );
+        // Defer layout read & IntersectionObserver attach past first paint to avoid forced reflow
+        rafId = window.requestAnimationFrame(() => {
+            if (window.scrollY > 36) setScrolled(true);
 
-        NAV_LINKS.forEach((item) => {
-            const el = document.getElementById(item.id);
-            if (el) observer.observe(el);
+            observer = new IntersectionObserver(
+                (entries) => {
+                    const visible = entries
+                        .filter((e) => e.isIntersecting)
+                        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+                    if (visible?.target?.id) setActiveSection(visible.target.id);
+                },
+                { rootMargin: "-25% 0px -55% 0px", threshold: [0.1, 0.35] }
+            );
+
+            NAV_LINKS.forEach((item) => {
+                const el = document.getElementById(item.id);
+                if (el) observer.observe(el);
+            });
         });
 
         return () => {
+            if (rafId) window.cancelAnimationFrame(rafId);
             window.removeEventListener("scroll", onScroll);
-            observer.disconnect();
+            if (observer) observer.disconnect();
         };
     }, []);
 
@@ -99,7 +110,7 @@ export default function EditorialNavbar({ onFocusTrack }) {
                                     <span>{item.label}</span>
                                     <span
                                         aria-hidden="true"
-                                        className={`absolute left-4 right-4 bottom-1.5 h-[1.5px] bg-[var(--yvs-accent)] transition-transform duration-200 origin-left ${
+                                        className={`absolute left-4 right-4 bottom-1.5 h-[1.5px] bg-[var(--yvs-accent)] motion-safe:transition-transform duration-200 origin-left ${
                                             isActive ? "scale-x-100" : "scale-x-0"
                                         }`}
                                     />

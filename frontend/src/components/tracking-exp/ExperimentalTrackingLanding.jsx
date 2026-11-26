@@ -17,7 +17,7 @@ const EditorialPromoStrip = lazy(() => import("./EditorialPromoStrip"));
 const TransparentPricingSection = lazy(() => import("./TransparentPricingSection"));
 const WorkshopVisitSection = lazy(() => import("./WorkshopVisitSection"));
 
-function DeferredSection({ id, minHeight = 560, bgClass = "bg-white", forceMount = false, children }) {
+function DeferredSection({ id, minHeight = 560, bgClass = "bg-white", armed = false, forceMount = false, children }) {
     const hostRef = useRef(null);
     const [mounted, setMounted] = useState(forceMount);
 
@@ -26,7 +26,7 @@ function DeferredSection({ id, minHeight = 560, bgClass = "bg-white", forceMount
             setMounted(true);
             return;
         }
-        if (mounted || !hostRef.current) return;
+        if (mounted || !armed || !hostRef.current) return;
 
         const observer = new IntersectionObserver(
             (entries) => {
@@ -35,11 +35,11 @@ function DeferredSection({ id, minHeight = 560, bgClass = "bg-white", forceMount
                     observer.disconnect();
                 }
             },
-            { rootMargin: "320px 0px" }
+            { rootMargin: "200px 0px" }
         );
         observer.observe(hostRef.current);
         return () => observer.disconnect();
-    }, [mounted, forceMount]);
+    }, [mounted, armed, forceMount]);
 
     if (mounted) {
         return (
@@ -79,17 +79,38 @@ export default function ExperimentalTrackingLanding({
     isScannerOpen,
 }) {
     const trackInputRef = useRef(null);
+    const [armed, setArmed] = useState(false);
     const [mountAll, setMountAll] = useState(false);
 
     useLenisSmoothScroll(!isScannerOpen);
 
+    // Arm below-the-fold sections on first user scroll/wheel or after LCP idle window (~1.8s)
     useEffect(() => {
         if (mountAll) return;
         const onScroll = () => {
-            if (window.scrollY > 120) setMountAll(true);
+            setArmed(true);
+            if (window.scrollY > 40) setMountAll(true);
         };
+        const onWheel = () => setArmed(true);
         window.addEventListener("scroll", onScroll, { passive: true });
-        return () => window.removeEventListener("scroll", onScroll);
+        window.addEventListener("wheel", onWheel, { passive: true, once: true });
+
+        let idleId = null;
+        let timerId = null;
+        if (typeof window.requestIdleCallback === "function") {
+            idleId = window.requestIdleCallback(() => setArmed(true), { timeout: 1800 });
+        } else {
+            timerId = window.setTimeout(() => setArmed(true), 1500);
+        }
+
+        return () => {
+            window.removeEventListener("scroll", onScroll);
+            window.removeEventListener("wheel", onWheel);
+            if (idleId && typeof window.cancelIdleCallback === "function") {
+                window.cancelIdleCallback(idleId);
+            }
+            if (timerId) window.clearTimeout(timerId);
+        };
     }, [mountAll]);
 
     const handleFocusTrack = useCallback(() => {
@@ -124,33 +145,33 @@ export default function ExperimentalTrackingLanding({
                 />
 
                 {/* ACT II — Viewport-Gated Disassembly Process */}
-                <DeferredSection id="alur-servis" minHeight={720} bgClass="yvs-studio-canvas" forceMount={mountAll}>
+                <DeferredSection id="alur-servis" minHeight={720} bgClass="yvs-studio-canvas" armed={armed} forceMount={mountAll}>
                     <ServiceJourneyTimeline />
                 </DeferredSection>
 
                 {/* ACT III — Horizontal Scroll Editorial Services Showcase */}
-                <DeferredSection id="layanan" minHeight={680} bgClass="bg-white" forceMount={mountAll}>
+                <DeferredSection id="layanan" minHeight={680} bgClass="bg-white" armed={armed} forceMount={mountAll}>
                     <ServiceCatalogRail />
                 </DeferredSection>
 
                 {/* ACT IV — Full-Bleed Obsidian Navy Proof & Velocity Reviews */}
-                <DeferredSection id="ulasan" minHeight={760} bgClass="bg-[var(--yvs-obsidian)]" forceMount={mountAll}>
+                <DeferredSection id="ulasan" minHeight={760} bgClass="bg-[var(--yvs-obsidian)]" armed={armed} forceMount={mountAll}>
                     <ProofReviewsStrip />
                 </DeferredSection>
 
                 {/* Active Promotions (Auto-hides if none active) */}
-                <DeferredSection id="promo-aktif" minHeight={0} bgClass="bg-white" forceMount={mountAll}>
+                <DeferredSection id="promo-aktif" minHeight={0} bgClass="bg-white" armed={armed} forceMount={mountAll}>
                     <EditorialPromoStrip />
                 </DeferredSection>
 
                 {/* ACT V — Swiss Editorial Pricing Ledger */}
-                <DeferredSection id="estimasi-biaya" minHeight={620} bgClass="bg-white" forceMount={mountAll}>
+                <DeferredSection id="estimasi-biaya" minHeight={620} bgClass="bg-white" armed={armed} forceMount={mountAll}>
                     <TransparentPricingSection />
                 </DeferredSection>
             </main>
 
             {/* ACT VI — Monumental Obsidian Navy Footer */}
-            <DeferredSection id="lokasi" minHeight={620} bgClass="bg-[var(--yvs-obsidian)]" forceMount={mountAll}>
+            <DeferredSection id="lokasi" minHeight={620} bgClass="bg-[var(--yvs-obsidian)]" armed={armed} forceMount={mountAll}>
                 <WorkshopVisitSection onFocusTrack={handleFocusTrack} />
             </DeferredSection>
         </div>
