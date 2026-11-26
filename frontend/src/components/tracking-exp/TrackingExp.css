@@ -304,7 +304,9 @@
 @media (prefers-reduced-motion: reduce) {
   .yvs-stack-card,
   .yvs-marquee-lane,
-  .yvs-marquee-h-lane {
+  .yvs-marquee-h-lane,
+  .yvs-border-beam-ring::before,
+  .yvs-btn-shimmer::after {
     will-change: auto;
     animation: none !important;
   }
@@ -312,4 +314,134 @@
   .yvs-review-3d-plane {
     transform: none;
   }
+
+  .yvs-border-beam-ring,
+  .yvs-spotlight-card::before {
+    display: none;
+  }
+}
+
+/* 12. Subtle Architectural Hero Dot Matrix with Soft Radial Mask */
+.yvs-hero-dot-grid {
+  background-image: radial-gradient(
+    oklch(18.5% 0.028 258 / 0.11) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 74% 62% at 50% 34%,
+    black 18%,
+    transparent 96%
+  );
+  mask-image: radial-gradient(
+    ellipse 74% 62% at 50% 34%,
+    black 18%,
+    transparent 96%
+  );
+}
+
+/* 13. Precision Cobalt Border Beam (GPU transform rotation, zero repaint) */
+@keyframes yvs-beam-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.yvs-border-beam-wrap {
+  position: relative;
+}
+
+.yvs-border-beam-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.75rem;
+  padding: 1.5px;
+  pointer-events: none;
+  overflow: hidden;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0.45;
+  transition: opacity 0.25s ease;
+}
+
+.yvs-border-beam-wrap:hover .yvs-border-beam-ring,
+.yvs-border-beam-wrap:focus-within .yvs-border-beam-ring {
+  opacity: 1;
+}
+
+.yvs-border-beam-ring::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240%;
+  aspect-ratio: 1 / 1;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 285deg,
+    oklch(54.6% 0.215 262.8 / 0.28) 315deg,
+    var(--yvs-accent) 348deg,
+    transparent 360deg
+  );
+  animation: yvs-beam-spin 5.5s linear infinite;
+  will-change: transform;
+}
+
+/* 14. Tactile CTA Shimmer Sweep (hover/focus only, GPU translate3d) */
+.yvs-btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.yvs-btn-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    112deg,
+    transparent 28%,
+    oklch(99% 0.004 252 / 0.24) 50%,
+    transparent 72%
+  );
+  transform: translate3d(-135%, 0, 0);
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.yvs-btn-shimmer:not(:disabled):hover::after,
+.yvs-btn-shimmer:not(:disabled):focus-visible::after {
+  transform: translate3d(135%, 0, 0);
+}
+
+/* 15. Zero-Reflow Cursor Spotlight Service Card */
+.yvs-spotlight-card {
+  position: relative;
+  isolation: isolate;
+}
+
+.yvs-spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--spot-opacity, 0);
+  transition: opacity 0.28s ease;
+  background: radial-gradient(
+    360px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    oklch(54.6% 0.215 262.8 / 0.085),
+    transparent 70%
+  );
+  z-index: 0;
+}
+
+.yvs-spotlight-card > * {
+  position: relative;
+  z-index: 1;
 }

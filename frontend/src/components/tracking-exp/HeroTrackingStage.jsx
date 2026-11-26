@@ -99,7 +99,11 @@ const HeroTrackingStage = memo(function HeroTrackingStage({
             id="track-lookup"
             className="relative w-full min-h-[92svh] lg:min-h-[100svh] bg-[var(--yvs-paper)] flex flex-col justify-between pt-24 pb-12 sm:pt-32 sm:pb-16 overflow-x-clip scroll-mt-16"
         >
-            <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 flex-1 flex flex-col justify-between gap-12 lg:gap-16">
+            <div
+                aria-hidden="true"
+                className="yvs-hero-dot-grid pointer-events-none absolute inset-0 opacity-80"
+            />
+            <div className="relative z-10 w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 flex-1 flex flex-col justify-between gap-12 lg:gap-16">
                 {/* 1. Asymmetric Editorial Header: Monumental Display Left + Concise Lede Right */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-end pt-4 sm:pt-8">
                     <div className="lg:col-span-8 min-w-0">
@@ -236,7 +240,7 @@ const HeroTrackingStage = memo(function HeroTrackingStage({
                         noValidate
                         className="flex flex-col sm:flex-row items-stretch gap-3"
                     >
-                        <div className="relative flex-1 min-w-0">
+                        <div className="yvs-border-beam-wrap relative flex-1 min-w-0">
                             <label htmlFor="yvs-exp-track-field" className="sr-only">
                                 {trackMethod === "tiket"
                                     ? "Masukkan nomor servis"
@@ -265,6 +269,9 @@ const HeroTrackingStage = memo(function HeroTrackingStage({
                                         : "border-[var(--yvs-rule)] hover:border-slate-400"
                                 }`}
                             />
+                            {!inlineError && (
+                                <span aria-hidden="true" className="yvs-border-beam-ring" />
+                            )}
                             <button
                                 type="button"
                                 onClick={onOpenScanner}
@@ -282,7 +289,7 @@ const HeroTrackingStage = memo(function HeroTrackingStage({
                                 type="submit"
                                 disabled={loading}
                                 onPointerEnter={onWarmResult}
-                                className="w-full sm:w-auto h-[56px] px-8 rounded-xl bg-[var(--yvs-accent)] hover:bg-[var(--yvs-accent-hover)] text-[var(--yvs-accent-ink)] font-semibold text-sm sm:text-base transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-55 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+                                className="yvs-btn-shimmer w-full sm:w-auto h-[56px] px-8 rounded-xl bg-[var(--yvs-accent)] hover:bg-[var(--yvs-accent-hover)] text-[var(--yvs-accent-ink)] font-semibold text-sm sm:text-base transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-55 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
                             >
                                 {loading ? (
                                     <>

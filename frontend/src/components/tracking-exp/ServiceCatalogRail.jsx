@@ -114,6 +114,37 @@ export default function ServiceCatalogRail() {
         };
     }, [reducedMotion]);
 
+    const handleCardPointerEnter = (e) => {
+        if (reducedMotion || e.pointerType === "touch") return;
+        const card = e.currentTarget;
+        card._yvsRect = card.getBoundingClientRect();
+        card.style.setProperty("--spot-opacity", "1");
+    };
+
+    const handleCardPointerMove = (e) => {
+        if (reducedMotion || e.pointerType === "touch") return;
+        const card = e.currentTarget;
+        const rect = card._yvsRect || card.getBoundingClientRect();
+        card._yvsRect = rect;
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        if (card._yvsRaf) window.cancelAnimationFrame(card._yvsRaf);
+        card._yvsRaf = window.requestAnimationFrame(() => {
+            card.style.setProperty("--spot-x", `${x}px`);
+            card.style.setProperty("--spot-y", `${y}px`);
+        });
+    };
+
+    const handleCardPointerLeave = (e) => {
+        const card = e.currentTarget;
+        if (card._yvsRaf) {
+            window.cancelAnimationFrame(card._yvsRaf);
+            card._yvsRaf = null;
+        }
+        card._yvsRect = null;
+        card.style.setProperty("--spot-opacity", "0");
+    };
+
     return (
         <section
             id="layanan"
@@ -151,7 +182,10 @@ export default function ServiceCatalogRail() {
                             return (
                                 <article
                                     key={service.num}
-                                    className="snap-start w-[300px] sm:w-[380px] lg:w-[420px] shrink-0 bg-[var(--yvs-paper-2)] hover:bg-white border border-[var(--yvs-rule)] hover:border-blue-300 rounded-2xl p-6 sm:p-8 flex flex-col justify-between gap-8 transition-colors duration-300"
+                                    onPointerEnter={handleCardPointerEnter}
+                                    onPointerMove={handleCardPointerMove}
+                                    onPointerLeave={handleCardPointerLeave}
+                                    className="yvs-spotlight-card group snap-start w-[300px] sm:w-[380px] lg:w-[420px] shrink-0 bg-[var(--yvs-paper-2)] hover:bg-white border border-[var(--yvs-rule)] hover:border-blue-300 rounded-2xl p-6 sm:p-8 flex flex-col justify-between gap-8 transition-colors duration-300"
                                 >
                                     <div className="space-y-5">
                                         <div className="flex items-baseline justify-between gap-3 pb-4 border-b border-[var(--yvs-rule)]">

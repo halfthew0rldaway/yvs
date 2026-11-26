@@ -53,11 +53,14 @@ export default function WorkshopVisitSection({ onFocusTrack }) {
                                 href="https://wa.me/628121034212?text=Halo%20YVS%20Computer,%20saya%20ingin%20tanya%20tentang%20perbaikan%20perangkat%20saya"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="min-h-[50px] inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--yvs-accent)] hover:bg-[var(--yvs-accent-hover)] text-[var(--yvs-accent-ink)] text-sm font-semibold transition-colors whitespace-nowrap"
+                                className="yvs-btn-shimmer group min-h-[50px] inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--yvs-accent)] hover:bg-[var(--yvs-accent-hover)] text-[var(--yvs-accent-ink)] text-sm font-semibold transition-colors whitespace-nowrap"
                             >
                                 <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                                 <span>Chat WhatsApp</span>
-                                <ArrowUpRight className="w-4 h-4 shrink-0" aria-hidden="true" />
+                                <ArrowUpRight
+                                    className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                                    aria-hidden="true"
+                                />
                             </a>
                         </MagneticWrap>
                         <button
