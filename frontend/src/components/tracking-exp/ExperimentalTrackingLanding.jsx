@@ -84,32 +84,36 @@ export default function ExperimentalTrackingLanding({
 
     useLenisSmoothScroll(!isScannerOpen);
 
-    // Arm below-the-fold sections on first user scroll/wheel or after LCP idle window (~1.8s)
+    // Arm below-the-fold sections strictly on real scroll/wheel/touch/nav intent
+    // so initial cold LCP never wastes network/CPU on offscreen chunks or /frames/.
     useEffect(() => {
         if (mountAll) return;
-        const onScroll = () => {
+        const armNow = () => {
             setArmed(true);
             if (window.scrollY > 40) setMountAll(true);
         };
-        const onWheel = () => setArmed(true);
-        window.addEventListener("scroll", onScroll, { passive: true });
-        window.addEventListener("wheel", onWheel, { passive: true, once: true });
+        const armAndMount = () => {
+            setArmed(true);
+            setMountAll(true);
+        };
+        const onKeyScroll = (e) => {
+            if (["ArrowDown", "PageDown", "End", " "].includes(e.key)) {
+                armNow();
+            }
+        };
 
-        let idleId = null;
-        let timerId = null;
-        if (typeof window.requestIdleCallback === "function") {
-            idleId = window.requestIdleCallback(() => setArmed(true), { timeout: 1800 });
-        } else {
-            timerId = window.setTimeout(() => setArmed(true), 1500);
-        }
+        window.addEventListener("scroll", armNow, { passive: true });
+        window.addEventListener("wheel", armNow, { passive: true, once: true });
+        window.addEventListener("touchmove", armNow, { passive: true, once: true });
+        window.addEventListener("keydown", onKeyScroll, { passive: true });
+        window.addEventListener("yvs:arm-sections", armAndMount);
 
         return () => {
-            window.removeEventListener("scroll", onScroll);
-            window.removeEventListener("wheel", onWheel);
-            if (idleId && typeof window.cancelIdleCallback === "function") {
-                window.cancelIdleCallback(idleId);
-            }
-            if (timerId) window.clearTimeout(timerId);
+            window.removeEventListener("scroll", armNow);
+            window.removeEventListener("wheel", armNow);
+            window.removeEventListener("touchmove", armNow);
+            window.removeEventListener("keydown", onKeyScroll);
+            window.removeEventListener("yvs:arm-sections", armAndMount);
         };
     }, [mountAll]);
 

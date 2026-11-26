@@ -128,7 +128,12 @@ const HeroTrackingStage = memo(function HeroTrackingStage({
                             </a>
                             <button
                                 type="button"
-                                onClick={() => smoothScrollToTarget("alur-servis", 0)}
+                                onClick={() => {
+                                    window.dispatchEvent(new Event("yvs:arm-sections"));
+                                    window.requestAnimationFrame(() => {
+                                        smoothScrollToTarget("alur-servis", 0);
+                                    });
+                                }}
                                 className="min-h-[44px] inline-flex items-center text-sm font-medium text-[var(--yvs-muted)] hover:text-[var(--yvs-ink)] transition-colors cursor-pointer"
                             >
                                 Lihat alur pengerjaan

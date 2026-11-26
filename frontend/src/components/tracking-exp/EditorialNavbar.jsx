@@ -16,19 +16,12 @@ export default function EditorialNavbar({ onFocusTrack }) {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     useEffect(() => {
-        let rafId = null;
         let observer = null;
+        let observerAttached = false;
 
-        const onScroll = () => {
-            const next = window.scrollY > 36;
-            setScrolled((prev) => (prev === next ? prev : next));
-        };
-        window.addEventListener("scroll", onScroll, { passive: true });
-
-        // Defer layout read & IntersectionObserver attach past first paint to avoid forced reflow
-        rafId = window.requestAnimationFrame(() => {
-            if (window.scrollY > 36) setScrolled(true);
-
+        const attachSectionObserver = () => {
+            if (observerAttached) return;
+            observerAttached = true;
             observer = new IntersectionObserver(
                 (entries) => {
                     const visible = entries
@@ -38,15 +31,20 @@ export default function EditorialNavbar({ onFocusTrack }) {
                 },
                 { rootMargin: "-25% 0px -55% 0px", threshold: [0.1, 0.35] }
             );
-
             NAV_LINKS.forEach((item) => {
                 const el = document.getElementById(item.id);
                 if (el) observer.observe(el);
             });
-        });
+        };
 
+        const onScroll = () => {
+            const next = window.scrollY > 36;
+            setScrolled((prev) => (prev === next ? prev : next));
+            if (window.scrollY > 12) attachSectionObserver();
+        };
+
+        window.addEventListener("scroll", onScroll, { passive: true });
         return () => {
-            if (rafId) window.cancelAnimationFrame(rafId);
             window.removeEventListener("scroll", onScroll);
             if (observer) observer.disconnect();
         };
@@ -54,7 +52,10 @@ export default function EditorialNavbar({ onFocusTrack }) {
 
     const handleNavClick = (id) => {
         setMobileOpen(false);
-        smoothScrollToTarget(id, -68);
+        window.dispatchEvent(new Event("yvs:arm-sections"));
+        window.requestAnimationFrame(() => {
+            smoothScrollToTarget(id, -68);
+        });
     };
 
     return (
