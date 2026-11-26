@@ -101,7 +101,7 @@ export default function CraftStandardsStack() {
                             <MaskedLines
                                 as="h2"
                                 lines={["Cara kami bekerja", "menangani perangkat Anda."]}
-                                className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.65rem] text-slate-950 tracking-[-0.03em] leading-[1.08]"
+                                className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.25rem] xl:text-[2.6rem] text-slate-950 tracking-[-0.025em] leading-[1.12]"
                             />
                         </div>
 

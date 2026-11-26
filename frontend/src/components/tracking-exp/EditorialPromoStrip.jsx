@@ -142,7 +142,7 @@ export default function EditorialPromoStrip() {
                                         <span className="font-mono text-[11px] text-slate-400 block">
                                             Kode di kasir
                                         </span>
-                                        <span className="font-mono font-bold text-base sm:text-lg text-slate-950 tracking-wide block truncate">
+                                        <span className="font-mono font-bold text-base sm:text-lg text-slate-950 tracking-wide block break-words">
                                             {p.kode_promo}
                                         </span>
                                         <span className="inline-flex items-center gap-1 text-xs text-slate-500 mt-0.5">

@@ -222,29 +222,31 @@ export function MaskedLines({
             if (trigger === "mount") {
                 gsap.fromTo(
                     innerLines,
-                    { yPercent: 108, opacity: 0.001 },
-                    {
-                        yPercent: 0,
-                        opacity: 1,
-                        duration: 0.9,
-                        stagger: 0.09,
-                        delay,
-                        ease: "power4.out",
-                    }
-                );
-            } else {
-                gsap.fromTo(
-                    innerLines,
-                    { yPercent: 105, opacity: 0.001 },
+                    { yPercent: 112, opacity: 0.001 },
                     {
                         yPercent: 0,
                         opacity: 1,
                         duration: 0.85,
                         stagger: 0.08,
+                        delay,
                         ease: "power4.out",
+                        clearProps: "transform",
+                    }
+                );
+            } else {
+                gsap.fromTo(
+                    innerLines,
+                    { yPercent: 112, opacity: 0.001 },
+                    {
+                        yPercent: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        stagger: 0.08,
+                        ease: "power4.out",
+                        clearProps: "transform",
                         scrollTrigger: {
                             trigger: containerRef.current,
-                            start: "top 86%",
+                            start: "top 90%",
                             once: true,
                         },
                     }
@@ -252,13 +254,20 @@ export function MaskedLines({
             }
         }, containerRef);
 
-        return () => ctx.revert();
+        const rafId = window.requestAnimationFrame(() => {
+            ScrollTrigger.refresh();
+        });
+
+        return () => {
+            window.cancelAnimationFrame(rafId);
+            ctx.revert();
+        };
     }, [reducedMotion, trigger, delay]);
 
     return (
         <Tag ref={containerRef} className={className}>
             {lines.map((line, idx) => (
-                <span key={idx} className="block overflow-hidden pb-[0.06em] -mb-[0.06em]">
+                <span key={idx} className="block overflow-hidden pt-[0.1em] -mt-[0.1em] pb-[0.14em] -mb-[0.14em]">
                     <span
                         data-mask-line
                         className={`block will-change-transform ${lineClassName} ${

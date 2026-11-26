@@ -99,7 +99,7 @@ export default function ServiceCatalogRail() {
                         <MaskedLines
                             as="h2"
                             lines={["Layanan yang biasa", "kami tangani di bengkel."]}
-                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.65rem] text-slate-950 tracking-[-0.03em] leading-[1.08]"
+                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.65rem] text-slate-950 tracking-[-0.03em] leading-[1.12]"
                         />
                     </div>
                     <div className="lg:col-span-5">
@@ -180,7 +180,7 @@ export default function ServiceCatalogRail() {
                                         <h3 className="font-display font-bold text-base sm:text-xl text-slate-950 group-hover:text-blue-600 transition-colors leading-snug">
                                             {service.title}
                                         </h3>
-                                        <p className="text-xs sm:text-sm text-slate-500 mt-1 line-clamp-2 sm:line-clamp-1">
+                                        <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
                                             {service.symptoms}
                                         </p>
                                     </div>

@@ -74,7 +74,7 @@ export default function HeroTrackingStage({
                             ]}
                             accentLineIndex={2}
                             accentClassName="text-blue-600"
-                            className="font-display font-extrabold text-[1.95rem] xs:text-[2.2rem] sm:text-5xl lg:text-[3.5rem] xl:text-[4.25rem] text-slate-950 tracking-[-0.035em] leading-[1.04]"
+                            className="font-display font-extrabold text-[1.95rem] xs:text-[2.2rem] sm:text-5xl lg:text-[3.5rem] xl:text-[4.25rem] text-slate-950 tracking-[-0.035em] leading-[1.08]"
                         />
 
                         <p className="text-slate-600 text-sm sm:text-lg leading-relaxed max-w-xl font-sans">

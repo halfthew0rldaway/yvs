@@ -79,7 +79,7 @@ export default function ServiceJourneyTimeline() {
                         <MaskedLines
                             as="h2"
                             lines={["Dari masuk sampai selesai,", "setiap tahap bisa dipantau."]}
-                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.65rem] text-slate-950 tracking-[-0.03em] leading-[1.08]"
+                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.65rem] text-slate-950 tracking-[-0.03em] leading-[1.12]"
                         />
                     </div>
                     <div className="lg:col-span-5">

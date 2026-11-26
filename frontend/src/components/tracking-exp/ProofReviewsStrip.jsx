@@ -88,7 +88,7 @@ export default function ProofReviewsStrip() {
                         <MaskedLines
                             as="h2"
                             lines={["Pengalaman pelanggan", "di workshop Pekayon."]}
-                            className="font-display font-extrabold text-2xl sm:text-4xl text-slate-950 tracking-[-0.03em] leading-[1.08]"
+                            className="font-display font-extrabold text-2xl sm:text-4xl text-slate-950 tracking-[-0.03em] leading-[1.12]"
                         />
                     </div>
 
@@ -163,9 +163,9 @@ export default function ProofReviewsStrip() {
                                     &ldquo;{rev.quote}&rdquo;
                                 </blockquote>
                             </div>
-                            <figcaption className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+                            <figcaption className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs">
                                 <span className="font-bold text-slate-950">{rev.name}</span>
-                                <span className="text-slate-500 truncate">{rev.service}</span>
+                                <span className="text-slate-500">{rev.service}</span>
                             </figcaption>
                         </figure>
                     ))}

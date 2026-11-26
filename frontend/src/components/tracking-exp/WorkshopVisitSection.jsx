@@ -48,7 +48,7 @@ export default function WorkshopVisitSection({ onFocusTrack }) {
                                 <MaskedLines
                                     as="h2"
                                     lines={["Datang langsung atau", "kirim unit lewat kurir."]}
-                                    className="font-display font-extrabold text-2xl sm:text-4xl text-slate-950 tracking-[-0.03em] leading-[1.08]"
+                                    className="font-display font-extrabold text-2xl sm:text-4xl text-slate-950 tracking-[-0.03em] leading-[1.12]"
                                 />
                             </div>
 
