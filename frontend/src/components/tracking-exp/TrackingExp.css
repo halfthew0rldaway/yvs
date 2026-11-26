@@ -215,8 +215,53 @@
   transform-origin: top center;
 }
 
+/* 11. GPU-Composited 3D Vertical Review Marquee (Tailwind v3 compatible) */
+@keyframes yvs-marquee-vertical {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, calc(-100% - var(--yvs-marquee-gap, 1rem)), 0);
+  }
+}
+
+.yvs-marquee-lane {
+  animation: yvs-marquee-vertical var(--yvs-marquee-duration, 38s) linear infinite;
+  will-change: transform;
+}
+
+.yvs-marquee-lane[data-reverse="true"] {
+  animation-direction: reverse;
+}
+
+.yvs-marquee-group:hover .yvs-marquee-lane,
+.yvs-marquee-group[data-paused="true"] .yvs-marquee-lane {
+  animation-play-state: paused;
+}
+
+.yvs-review-3d-stage {
+  perspective: 960px;
+}
+
+.yvs-review-3d-plane {
+  transform: translate3d(0, -1%, -36px) rotateX(10deg) rotateY(-4deg) rotateZ(7deg) scale(0.9);
+  transform-style: preserve-3d;
+}
+
+@media (min-width: 768px) {
+  .yvs-review-3d-plane {
+    transform: translate3d(-2%, -4%, -70px) rotateX(18deg) rotateY(-8deg) rotateZ(14deg) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .yvs-stack-card {
+  .yvs-stack-card,
+  .yvs-marquee-lane {
     will-change: auto;
+    animation: none !important;
+  }
+
+  .yvs-review-3d-plane {
+    transform: none;
   }
 }
