@@ -191,8 +191,8 @@ export default function NotificationBell() {
                     {/* List */}
                     <div className="min-h-0 flex-1 overflow-y-auto divide-y divide-slate-100">
                         {notifications.length === 0 ? (
-                            <div className="p-6 text-center text-slate-400 text-xs">
-                                <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300 opacity-60" />
+                            <div className="p-6 text-center text-slate-500 text-xs">
+                                <Bell className="w-8 h-8 mx-auto mb-2 text-slate-400 opacity-70" />
                                 Belum ada notifikasi atau memo masuk
                             </div>
                         ) : (

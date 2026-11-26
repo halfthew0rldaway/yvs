@@ -76,7 +76,7 @@ export default function DashboardAttendanceCard() {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs animate-pulse flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full min-w-0">
+            <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full min-w-0">
                 <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 shrink-0"></div>
                     <div className="space-y-1.5 flex-1 min-w-0">
@@ -199,7 +199,7 @@ export default function DashboardAttendanceCard() {
                                 <MapPin className="w-3 h-3 text-blue-600 shrink-0" />
                                 <span>Lokasi {Math.round(record.jarak_meter_masuk || 0)}m dari kantor</span>
                             </span>
-                            <span className="hidden xs:inline text-slate-400">•</span>
+                            <span className="hidden xs:inline text-slate-500">•</span>
                             <span>Check-out pukul {policy?.jam_pulang || "18:00"} WIB</span>
                         </p>
                     </div>
@@ -221,7 +221,7 @@ export default function DashboardAttendanceCard() {
     return (
         <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full min-w-0">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                <div className="p-2 sm:p-2.5 bg-amber-500 text-white rounded-xl shadow-xs shrink-0 mt-0.5 sm:mt-0 animate-pulse">
+                <div className="p-2 sm:p-2.5 bg-amber-500 text-white rounded-xl shadow-xs shrink-0 mt-0.5 sm:mt-0">
                     <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0 flex-1">

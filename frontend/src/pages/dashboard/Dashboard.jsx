@@ -48,11 +48,11 @@ function StatCard({ label, value, icon: Icon, color = "blue", to, className = ""
                 <Icon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">{label}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider truncate">{label}</p>
                 <p className="text-base sm:text-xl md:text-2xl font-extrabold text-slate-900 mt-0.5 truncate tracking-tight" title={value}>{value}</p>
             </div>
             {to && (
-                <div className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0 hidden xs:block">
+                <div className="text-slate-500 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-transform shrink-0 hidden xs:block">
                     <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
             )}
@@ -63,7 +63,7 @@ function StatCard({ label, value, icon: Icon, color = "blue", to, className = ""
         return (
             <Link 
                 to={to} 
-                className={`group bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-slate-200/90 hover:border-blue-300 hover:shadow-md transition-all duration-200 flex flex-col justify-center h-full block cursor-pointer ${className}`}
+                className={`group bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-slate-200/90 hover:border-blue-300 hover:shadow-md transition-colors duration-200 flex flex-col justify-center h-full block cursor-pointer ${className}`}
             >
                 {cardContent}
             </Link>
@@ -100,7 +100,7 @@ const CustomTooltip = ({ active, payload }) => {
             <div className="bg-white text-slate-700 text-sm rounded-lg px-4 py-3 shadow-lg border border-slate-100">
                 <p className="font-medium text-slate-500 mb-1">{payload[0].payload.name}</p>
                 <p className="font-bold text-lg text-slate-800" style={{ color: payload[0].payload.fillColor || "#3b82f6" }}>
-                    {payload[0].value} <span className="text-sm font-medium text-slate-400">Tiket</span>
+                    {payload[0].value} <span className="text-sm font-medium text-slate-500">Tiket</span>
                 </p>
             </div>
         );
@@ -208,9 +208,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                                     paddingAngle={hasData ? 3 : 0}
                                     dataKey="value"
                                     stroke="none"
-                                    isAnimationActive={true}
-                                    animationDuration={800}
-                                    animationEasing="ease-out"
+                                    isAnimationActive={false}
                                     className={hasData ? "cursor-pointer" : ""}
                                     onClick={(e) => e && handleSliceClick(e)}
                                 >
@@ -231,7 +229,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                                                     <div className="bg-white text-slate-700 text-xs rounded-xl px-3 py-2 shadow-lg border border-slate-100">
                                                         <p className="font-semibold text-slate-800">{item.name}</p>
                                                         <p className="font-bold text-sm mt-0.5" style={{ color: item.color }}>
-                                                            {item.value} <span className="text-xs font-normal text-slate-400">tiket ({item.percent}%)</span>
+                                                            {item.value} <span className="text-xs font-normal text-slate-500">tiket ({item.percent}%)</span>
                                                         </p>
                                                     </div>
                                                 );
@@ -285,7 +283,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                             <p className="text-xs text-slate-500 pl-0.5">Overdue batas waktu servis</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xl sm:text-2xl font-extrabold ${overdueCount > 0 ? "text-rose-600" : "text-slate-400"}`}>
+                            <span className={`text-xl sm:text-2xl font-extrabold ${overdueCount > 0 ? "text-rose-600" : "text-slate-500"}`}>
                                 {overdueCount}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
@@ -311,7 +309,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                             <p className="text-xs text-slate-500 pl-0.5">Antrean cepat paket kilat</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xl sm:text-2xl font-extrabold ${expressCount > 0 ? "text-amber-600" : "text-slate-400"}`}>
+                            <span className={`text-xl sm:text-2xl font-extrabold ${expressCount > 0 ? "text-amber-600" : "text-slate-500"}`}>
                                 {expressCount}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
@@ -337,7 +335,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                             <p className="text-xs text-slate-500 pl-0.5">Estimasi SLA dijeda (ACC)</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xl sm:text-2xl font-extrabold ${pendingApprovalCount > 0 ? "text-slate-700" : "text-slate-400"}`}>
+                            <span className={`text-xl sm:text-2xl font-extrabold ${pendingApprovalCount > 0 ? "text-slate-700" : "text-slate-500"}`}>
                                 {pendingApprovalCount}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
@@ -363,7 +361,7 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                             <p className="text-xs text-slate-500 pl-0.5">Pengerjaan tepat waktu</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xl sm:text-2xl font-extrabold ${onTrackCount > 0 ? "text-emerald-600" : "text-slate-400"}`}>
+                            <span className={`text-xl sm:text-2xl font-extrabold ${onTrackCount > 0 ? "text-emerald-600" : "text-slate-500"}`}>
                                 {onTrackCount}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
@@ -431,8 +429,36 @@ export default function Dashboard() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="space-y-4 sm:space-y-4.5" aria-busy="true">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                            Halo{user?.nama ? `, ${user.nama}` : ""}!
+                        </h1>
+                        <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                            Memuat ringkasan performa sistem hari ini...
+                        </p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-3.5">
+                    {[0, 1, 2, 3, 4].map((idx) => (
+                        <div
+                            key={idx}
+                            className={`bg-white rounded-xl p-3 sm:p-4 border border-slate-200/90 shadow-2xs h-[76px] ${
+                                idx === 4 ? "col-span-2 sm:col-span-2 lg:col-span-1" : ""
+                            }`}
+                        >
+                            <div className="flex items-center gap-3 h-full">
+                                <div className="w-10 h-10 rounded-xl bg-slate-100 shrink-0" />
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-2.5 w-20 bg-slate-100 rounded" />
+                                    <div className="h-5 w-14 bg-slate-100 rounded" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs h-[290px]" />
             </div>
         );
     }
@@ -445,7 +471,7 @@ export default function Dashboard() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
                         <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Halo, {user?.nama}!</h1>
-                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{welcomeSubtitle}</p>
+                        <p className="text-xs sm:text-sm text-slate-600 mt-0.5">{welcomeSubtitle}</p>
                     </div>
 
                     {/* Quick Access Toolbar: Backup Database & Log Audit */}
@@ -605,9 +631,7 @@ export default function Dashboard() {
                                             radius={[4, 4, 0, 0]} 
                                             maxBarSize={38}
                                             className="cursor-pointer"
-                                            isAnimationActive={true}
-                                            animationDuration={800}
-                                            animationEasing="ease-out"
+                                            isAnimationActive={false}
                                         >
                                             {data.chartData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.fillColor} className="hover:opacity-80 transition-opacity cursor-pointer" />
@@ -718,9 +742,7 @@ export default function Dashboard() {
                                             fill="url(#colorPendapatan)" 
                                             dot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} 
                                             activeDot={{ r: 6 }} 
-                                            isAnimationActive={true}
-                                            animationDuration={800}
-                                            animationEasing="ease-out"
+                                            isAnimationActive={false}
                                         />
                                     </AreaChart>
                                 </ResponsiveContainer>
@@ -793,7 +815,7 @@ export default function Dashboard() {
                                     })}
                                 </div>
                             ) : (
-                                <p className="text-xs sm:text-sm text-slate-400">Belum ada data diagnosis</p>
+                                <p className="text-xs sm:text-sm text-slate-500">Belum ada data diagnosis</p>
                             )}
                         </div>
                     </div>
@@ -866,9 +888,7 @@ export default function Dashboard() {
                                         paddingAngle={4}
                                         dataKey="value"
                                         stroke="none"
-                                        isAnimationActive={true}
-                                        animationDuration={800}
-                                        animationEasing="ease-out"
+                                        isAnimationActive={false}
                                         className="cursor-pointer"
                                         onClick={(e) => {
                                             if (e && e.name) {
@@ -889,7 +909,7 @@ export default function Dashboard() {
                                 <span className="text-3xl font-extrabold text-slate-800">
                                     {data.chartData.reduce((acc, curr) => acc + curr.value, 0)}
                                 </span>
-                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1">Total Tiket</span>
+                                <span className="text-xs font-semibold text-slate-600 uppercase tracking-widest mt-1">Total Tiket</span>
                             </div>
                         </div>
 
@@ -949,10 +969,10 @@ export default function Dashboard() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b-2 border-slate-100">
-                                    <th className="py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Tiket</th>
-                                    <th className="py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Perangkat</th>
-                                    <th className="py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                                    <th className="py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">Aksi</th>
+                                    <th className="py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Tiket</th>
+                                    <th className="py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Perangkat</th>
+                                    <th className="py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                                    <th className="py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">

@@ -38,7 +38,6 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
-import CrmFloatingBubble from "./CrmFloatingBubble";
 import ConnectivityBanner from "./ConnectivityBanner";
 import NotificationBell from "./NotificationBell";
 import UserAvatar from "./common/UserAvatar";
@@ -47,7 +46,8 @@ import SessionWarningModal from "./SessionWarningModal";
 import { useIdleTimer } from "../hooks/useIdleTimer";
 import { isRememberMeActive } from "../utils/authStorage";
 
-// Code-split heavy modals so they are only downloaded when opened by user
+// Code-split heavy modals & floating framer-motion widget so ERP initial dashboard paint stays fast
+const CrmFloatingBubble = lazy(() => import("./CrmFloatingBubble"));
 const SopModal = lazy(() => import("./SopModal"));
 const BusinessProcessFlowModal = lazy(() => import("./common/BusinessProcessFlowModal"));
 const CameraScannerModal = lazy(() => import("./CameraScannerModal"));
@@ -286,7 +286,7 @@ const LiveClock = memo(function LiveClock() {
                 <span>{hours}</span>
                 <span className="text-blue-500 animate-pulse mx-0.5">:</span>
                 <span>{minutes}</span>
-                <span className="hidden sm:inline text-slate-400 text-2xs sm:text-xs font-normal">
+                <span className="hidden sm:inline text-slate-500 text-2xs sm:text-xs font-normal">
                     <span className="mx-0.5">:</span>{seconds}
                 </span>
             </div>
@@ -334,6 +334,19 @@ export default function Layout({ children }) {
         }
         return true;
     });
+    const [showFloatingHub, setShowFloatingHub] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        let idleId = null;
+        let timerId = null;
+        if (typeof window.requestIdleCallback === "function") {
+            idleId = window.requestIdleCallback(() => setShowFloatingHub(true), { timeout: 1400 });
+            return () => window.cancelIdleCallback?.(idleId);
+        }
+        timerId = window.setTimeout(() => setShowFloatingHub(true), 450);
+        return () => window.clearTimeout(timerId);
+    }, []);
     const [isSopModalOpen, setIsSopModalOpen] = useState(false);
     const [isProcessFlowModalOpen, setIsProcessFlowModalOpen] = useState(false);
     const [maintenanceDueData, setMaintenanceDueData] = useState({ items: [], total_due: 0, urgent_count: 0 });
@@ -560,32 +573,34 @@ export default function Layout({ children }) {
 
             {/* Sidebar (Fully Toggleable on Desktop & Mobile) */}
             <aside 
-                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] transition-transform duration-250 ease-out will-change-transform lg:transition-[width,transform] print:hidden ${
+                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] transition-transform duration-200 ease-out print:hidden ${
                     isSidebarOpen 
                         ? "w-72 max-w-[85vw] translate-x-0 shadow-lg lg:shadow-none" 
-                        : "-translate-x-full lg:translate-x-0 lg:w-0 lg:border-r-0 lg:overflow-hidden"
+                        : "-translate-x-full lg:hidden"
                 }`}
             >
                 {/* Sidebar Brand Header */}
                 <div className="flex items-center justify-between p-5 h-16 border-b border-slate-100 shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                         <img
-                            src="/logo-yangversa.png"
+                            src="/logo-yangversa-64.png"
                             alt="Yangversa Computer"
+                            decoding="async"
                             className="w-9 h-9 object-contain shrink-0"
                             width="36"
                             height="36"
                         />
                         <div className="min-w-0">
                             <div className="text-sm font-bold text-slate-900 tracking-tight leading-tight font-display truncate">Yangversa</div>
-                            <p className="text-2xs text-slate-400 font-medium tracking-wide truncate">Workshop Platform</p>
+                            <p className="text-2xs text-slate-500 font-medium tracking-wide truncate">Workshop Platform</p>
                         </div>
                     </div>
                     {/* Toggle button to close sidebar */}
                     <button 
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                        className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                         onClick={() => setIsSidebarOpen(false)}
                         title="Tutup Menu Sidebar"
+                        aria-label="Tutup Menu Sidebar"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -631,14 +646,14 @@ export default function Layout({ children }) {
                                     className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-2xs font-bold uppercase tracking-wider transition-colors cursor-pointer group ${
                                         hasActiveChild 
                                             ? "text-blue-600 hover:bg-blue-50/60" 
-                                            : "text-slate-400 hover:text-slate-700 hover:bg-slate-100/60"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
                                     }`}
                                 >
                                     <div className="flex min-w-0 items-center gap-2">
-                                        <GroupIcon className={`w-3.5 h-3.5 ${hasActiveChild ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`} />
+                                        <GroupIcon className={`w-3.5 h-3.5 ${hasActiveChild ? "text-blue-600" : "text-slate-500 group-hover:text-slate-700"}`} />
                                         <span className="truncate">{group.label}</span>
                                     </div>
-                                    <div className="flex shrink-0 items-center gap-1.5 text-slate-400 group-hover:text-slate-600 transition-transform">
+                                    <div className="flex shrink-0 items-center gap-1.5 text-slate-500 group-hover:text-slate-700 transition-transform">
                                         {groupCount > 0 && <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-3xs font-bold tabular-nums text-white">{groupCount > 99 ? "99+" : groupCount}</span>}
                                         {isOpen ? (
                                             <ChevronDown className="w-3.5 h-3.5" />
@@ -663,7 +678,7 @@ export default function Layout({ children }) {
                                                             : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
                                                     }`}
                                                 >
-                                                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
+                                                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-blue-600" : "text-slate-500"}`} />
                                                     <span className="min-w-0 flex-1 truncate">{item.label}</span>
                                                     {sidebarCounts[item.path] > 0 && <span className="shrink-0 rounded-full bg-rose-600 px-1.5 py-0.5 text-3xs font-bold tabular-nums text-white" aria-label={`${sidebarCounts[item.path]} perlu perhatian`}>{sidebarCounts[item.path] > 99 ? "99+" : sidebarCounts[item.path]}</span>}
                                                 </Link>
@@ -792,9 +807,9 @@ export default function Layout({ children }) {
                         </div>
 
                         {/* Desktop Breadcrumbs */}
-                        <div className="hidden md:flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-slate-400 min-w-0 overflow-hidden">
-                            <span className="text-slate-500 uppercase tracking-wider text-2xs font-bold shrink-0">Workshop</span>
-                            <span className="text-slate-300 shrink-0">/</span>
+                        <div className="hidden md:flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-slate-600 min-w-0 overflow-hidden">
+                            <span className="text-slate-600 uppercase tracking-wider text-2xs font-bold shrink-0">Workshop</span>
+                            <span className="text-slate-400 shrink-0" aria-hidden="true">/</span>
                             <span className="text-slate-800 text-xs sm:text-sm font-bold tracking-tight truncate">
                                 {location.pathname.startsWith("/dashboard") && "Dashboard"}
                                 {location.pathname.startsWith("/customer") && "Data Pelanggan"}
@@ -971,14 +986,16 @@ export default function Layout({ children }) {
                 </Suspense>
             )}
 
-            {/* Quick Hub Floating Widget (CRM Recall & Chat Tim): Selalu aktif untuk semua staf login */}
-            {Boolean(user) && !(isSidebarOpen && typeof window !== "undefined" && window.innerWidth < 1024) && (
-                <CrmFloatingBubble 
-                    canAccessCrm={canAccessCrm}
-                    maintenanceDueData={maintenanceDueData}
-                    unreadChatCount={sidebarCounts["/chat"] || 0}
-                    onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
-                />
+            {/* Quick Hub Floating Widget (CRM Recall & Chat Tim): Lazy-mounted past initial paint */}
+            {showFloatingHub && Boolean(user) && !(isSidebarOpen && typeof window !== "undefined" && window.innerWidth < 1024) && (
+                <Suspense fallback={null}>
+                    <CrmFloatingBubble 
+                        canAccessCrm={canAccessCrm}
+                        maintenanceDueData={maintenanceDueData}
+                        unreadChatCount={sidebarCounts["/chat"] || 0}
+                        onOpenRecallModal={() => setIsMaintenanceModalOpen(true)}
+                    />
+                </Suspense>
             )}
 
             {/* Modal Peringatan Inaktivitas Sebelum Terkunci */}

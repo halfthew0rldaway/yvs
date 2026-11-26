@@ -380,7 +380,7 @@ export default function ProofReviewsStrip() {
                     </div>
                 ) : (
                     <div className="mt-12 sm:mt-16">
-                        <div className="yvs-review-3d-stage relative h-[430px] sm:h-[490px] lg:h-[540px] w-full rounded-3xl border border-white/10 bg-[var(--yvs-obsidian)] overflow-hidden flex items-center justify-center">
+                        <div className="yvs-review-3d-stage relative h-[430px] sm:h-[490px] lg:h-[540px] w-full bg-[var(--yvs-obsidian)] overflow-hidden flex items-center justify-center">
                             <div className="yvs-review-3d-plane flex flex-row items-center justify-center gap-3.5 sm:gap-5 h-[145%]">
                                 {lanes.map((lane, laneIdx) => (
                                     <div
@@ -419,11 +419,11 @@ export default function ProofReviewsStrip() {
                             />
                             <div
                                 aria-hidden="true"
-                                className="pointer-events-none absolute inset-y-0 left-0 w-10 sm:w-24 bg-gradient-to-r from-[var(--yvs-obsidian)] via-[var(--yvs-obsidian)]/55 to-transparent"
+                                className="pointer-events-none absolute inset-y-0 left-0 w-14 sm:w-32 bg-gradient-to-r from-[var(--yvs-obsidian)] via-[var(--yvs-obsidian)]/65 to-transparent"
                             />
                             <div
                                 aria-hidden="true"
-                                className="pointer-events-none absolute inset-y-0 right-0 w-10 sm:w-24 bg-gradient-to-l from-[var(--yvs-obsidian)] via-[var(--yvs-obsidian)]/55 to-transparent"
+                                className="pointer-events-none absolute inset-y-0 right-0 w-14 sm:w-32 bg-gradient-to-l from-[var(--yvs-obsidian)] via-[var(--yvs-obsidian)]/65 to-transparent"
                             />
                         </div>
                     </div>
