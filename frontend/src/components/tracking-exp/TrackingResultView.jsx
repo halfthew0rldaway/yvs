@@ -2074,10 +2074,11 @@ export default function TrackingResultView({
                             className="hidden sm:flex items-center gap-2 min-w-0 focus:outline-none"
                         >
                             <img
-                                src="/logo-yangversa.png"
+                                src="/logo-yangversa-64.png"
                                 alt=""
                                 width="24"
                                 height="24"
+                                decoding="async"
                                 className="w-6 h-6 rounded object-contain bg-white border border-slate-200 p-0.5 shrink-0"
                             />
                             <span className="font-display font-bold text-sm text-slate-900 truncate">

@@ -10,6 +10,7 @@ export default defineConfig({
             registerType: "autoUpdate",
             includeAssets: [
                 "logo-yangversa.png",
+                "logo-yangversa-64.png",
                 "icons/Icon-192.png",
                 "icons/Icon-512.png",
                 "icons/Icon-maskable-192.png",
@@ -98,6 +99,9 @@ export default defineConfig({
                 changeOrigin: true,
             },
         },
+    },
+    esbuild: {
+        legalComments: "none",
     },
     build: {
         chunkSizeWarningLimit: 800,

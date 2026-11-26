@@ -82,10 +82,11 @@ export default function EditorialNavbar({ onFocusTrack }) {
                         className="min-h-[44px] inline-flex items-center gap-2.5 text-left cursor-pointer shrink-0 rounded-lg"
                     >
                         <img
-                            src="/logo-yangversa.png"
+                            src="/logo-yangversa-64.png"
                             alt="YVS Computer"
                             width="32"
                             height="32"
+                            decoding="async"
                             className="w-8 h-8 rounded-lg object-contain bg-white p-0.5 border border-[var(--yvs-rule)] shrink-0"
                         />
                         <span className="font-display font-bold text-base tracking-[-0.02em] text-[var(--yvs-ink)]">
