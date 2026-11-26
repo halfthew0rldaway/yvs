@@ -1,5 +1,25 @@
 import React from "react";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+
+function AlertTriangleIcon({ className }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+        </svg>
+    );
+}
+
+function RefreshCwIcon({ className }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+            <path d="M8 16H3v5" />
+        </svg>
+    );
+}
 
 export default class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -43,7 +63,7 @@ export default class ErrorBoundary extends React.Component {
                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto shadow-sm ${
                             isChunkLoadError ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-rose-50 text-rose-600 border border-rose-100"
                         }`}>
-                            {isChunkLoadError ? <RefreshCw className="w-7 h-7 animate-spin-slow" /> : <AlertTriangle className="w-7 h-7" />}
+                            {isChunkLoadError ? <RefreshCwIcon className="w-7 h-7 animate-spin-slow" /> : <AlertTriangleIcon className="w-7 h-7" />}
                         </div>
 
                         <div>
@@ -72,7 +92,7 @@ export default class ErrorBoundary extends React.Component {
                                     onClick={() => window.location.reload()}
                                     className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer"
                                 >
-                                    <RefreshCw className="w-3.5 h-3.5" />
+                                    <RefreshCwIcon className="w-3.5 h-3.5" />
                                     <span>Muat Versi Terbaru Sekarang</span>
                                 </button>
                             ) : (
@@ -82,7 +102,7 @@ export default class ErrorBoundary extends React.Component {
                                         onClick={this.handleReset}
                                         className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer"
                                     >
-                                        <RefreshCw className="w-3.5 h-3.5" />
+                                        <RefreshCwIcon className="w-3.5 h-3.5" />
                                         <span>Coba Lagi</span>
                                     </button>
                                     <button
@@ -90,7 +110,7 @@ export default class ErrorBoundary extends React.Component {
                                         onClick={() => window.location.reload()}
                                         className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
                                     >
-                                        <RefreshCw className="w-3.5 h-3.5" />
+                                        <RefreshCwIcon className="w-3.5 h-3.5" />
                                         <span>Muat Ulang Halaman</span>
                                     </button>
                                 </>

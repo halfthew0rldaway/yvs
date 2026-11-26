@@ -74,9 +74,8 @@
     padding-right: 2.25rem !important;
   }
 
-  /* Dropdown option items */
   select option {
-    font-size: 0.8125rem !important; /* 13px on mobile */
+    font-size: 0.8125rem !important;
     padding: 6px 10px;
     background-color: #ffffff;
     color: #1e293b;
@@ -97,252 +96,6 @@
   }
 }
 
-@layer components {
-  /* ============================================================
-     MOBILE-FIRST MODAL / BOTTOM-SHEET SHELL
-     ------------------------------------------------------------
-     On phones a centered dialog wastes vertical space and gets
-     clipped by browser chrome. We anchor the sheet to the bottom
-     edge (slide-up) and expand to a centered card from `sm` up.
-     Height uses `dvh` so iOS Safari address bars never clip it.
-     ============================================================ */
-  .modal-shell {
-    @apply fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 md:p-6;
-    padding-bottom: max(1rem, env(safe-area-inset-bottom, 16px));
-  }
-
-  .modal-panel {
-    @apply relative w-full bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col;
-    @apply rounded-2xl sm:rounded-3xl;
-    min-width: 0;
-    max-height: min(88dvh, calc(100dvh - 2rem));
-  }
-
-  @media (min-width: 640px) {
-    .modal-panel { max-height: min(92dvh, calc(100dvh - 2rem)); }
-  }
-  @media (min-width: 768px) {
-    .modal-panel { max-height: min(92dvh, calc(100dvh - 3rem)); }
-  }
-
-  @media (max-width: 639px) {
-    .attendance-tabs button {
-      min-width: 0;
-      min-height: 2.5rem;
-      justify-content: center;
-      text-align: center;
-      white-space: normal;
-      padding-inline: 0.5rem;
-      gap: 0.25rem;
-    }
-    .attendance-tabs button svg { flex-shrink: 0; }
-    .attendance-tabs button span { overflow-wrap: anywhere; }
-  }
-
-  @media (max-width: 639px) {
-    .modal-header :is(h1, h2, h3) {
-      font-size: 1rem;
-      line-height: 1.35;
-    }
-    .modal-footer {
-      flex-wrap: wrap;
-    }
-    .modal-footer > :is(button, a) {
-      min-width: 0;
-      max-width: 100%;
-    }
-  }
-
-  /* Drag-handle affordance shown only on the mobile bottom sheet */
-  .modal-grabber {
-    @apply mx-auto mt-2.5 mb-1 h-1.5 w-11 rounded-full bg-slate-300/90 sm:hidden shrink-0;
-  }
-
-  /* Standardized responsive header / body / footer paddings */
-  .modal-header {
-    @apply px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 shrink-0;
-  }
-  .modal-body {
-    @apply px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1 custom-scrollbar;
-  }
-  .modal-body-tight {
-    @apply px-4 sm:px-6 py-4 overflow-y-auto flex-1 custom-scrollbar;
-  }
-  .modal-footer {
-    @apply px-3.5 sm:px-5 py-2.5 sm:py-3 border-t border-slate-100 shrink-0 flex items-center justify-end gap-2;
-    padding-bottom: max(0.625rem, calc(0.5rem + env(safe-area-inset-bottom, 0px)));
-  }
-  @media (min-width: 640px) {
-    .modal-footer {
-      padding-bottom: 0.75rem;
-    }
-  }
-
-  /* Standardized responsive card padding (replaces bare `p-6`) */
-  .card-pad {
-    @apply p-4 sm:p-5 lg:p-6;
-  }
-  .card-pad-sm {
-    @apply p-3.5 sm:p-4;
-  }
-
-  /* Standardized Page Typography Hierarchy */
-  .page-title {
-    @apply text-xl sm:text-2xl font-bold tracking-tight text-slate-900;
-  }
-  .page-subtitle {
-    @apply text-xs sm:text-sm text-slate-500 mt-1;
-  }
-  .section-title {
-    @apply text-sm sm:text-base font-bold text-slate-900 tracking-tight;
-  }
-  .section-overline {
-    @apply text-2xs font-bold uppercase tracking-wider text-slate-500;
-  }
-  
-  /* KPI Metric Cards Typography */
-  .kpi-title {
-    @apply text-xs font-semibold uppercase tracking-wider text-slate-500;
-  }
-  .kpi-value {
-    @apply text-xl sm:text-2xl font-bold tracking-tight text-slate-900;
-  }
-  .kpi-caption {
-    @apply text-xs text-slate-500 mt-1;
-  }
-
-  /* Standardized Form Typography */
-  .form-label {
-    @apply block text-[13px] sm:text-sm font-semibold text-slate-700 mb-1.5;
-  }
-  .form-helper {
-    @apply text-[11px] sm:text-xs text-slate-500 mt-1.5 leading-relaxed;
-  }
-
-  @media (max-width: 639px) {
-    /* Form controls already use 13px; keep their labels and hints on the same scale. */
-    form label[class] { font-size: 0.8125rem; line-height: 1.25rem; }
-    form :is(p, span).text-2xs,
-    form :is(p, span).text-3xs { font-size: 0.6875rem; line-height: 1rem; }
-  }
-
-  /* ============================================================
-     DETAIL PAGE SCALE (ticket / customer / device detail pages)
-     ------------------------------------------------------------
-     One normalized scale for cards, section headers, meta rows,
-     chips and buttons so font sizes and component sizes stay
-     proportional from 320px phones up to desktop.
-     ============================================================ */
-  .detail-page {
-    @apply space-y-3 sm:space-y-4 lg:space-y-6 pb-8 sm:pb-10 min-w-0 max-w-full;
-  }
-
-  /* Card container: consistent radius + responsive padding everywhere */
-  .detail-card {
-    @apply bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-5 md:p-6 shadow-sm border border-slate-200 min-w-0 max-w-full;
-  }
-
-  /* Card header row with divider (icon + title + optional actions) */
-  .card-head {
-    @apply flex items-start sm:items-center justify-between gap-2.5 sm:gap-3 mb-3.5 sm:mb-5 pb-3 sm:pb-4 border-b border-slate-100 flex-wrap;
-  }
-  .card-head-title {
-    @apply flex items-center gap-2 min-w-0 text-sm sm:text-base font-bold text-slate-900 leading-tight;
-  }
-
-  /* Meta row icon (customer / device / complaint rows) */
-  .meta-icon {
-    @apply w-4 h-4 mt-0.5 shrink-0;
-  }
-  .meta-label {
-    @apply text-2xs xs:text-xs font-semibold uppercase tracking-wider text-slate-500;
-  }
-  .meta-value {
-    @apply text-xs sm:text-sm text-slate-800 break-words;
-  }
-  .meta-value-muted {
-    @apply text-2xs xs:text-xs text-slate-500 break-words;
-  }
-
-  /* Chip / pill — the single source of truth for small badges */
-  .chip {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-2xs font-bold whitespace-nowrap leading-tight;
-  }
-  .chip-sm {
-    @apply px-1.5 py-0 text-4xs sm:text-3xs;
-  }
-
-  /* Alert / banner block used across the detail page */
-  .alert-banner {
-    @apply rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm min-w-0;
-  }
-  .alert-banner-body {
-    @apply flex items-start gap-2.5 sm:gap-3.5 min-w-0 flex-1;
-  }
-  .alert-banner-icon {
-    @apply p-2 sm:p-2.5 rounded-lg sm:rounded-xl shrink-0 mt-0.5;
-  }
-  .alert-banner-title {
-    @apply text-xs xs:text-sm font-bold leading-snug break-words;
-  }
-  .alert-banner-text {
-    @apply text-2xs xs:text-xs mt-1 leading-relaxed break-words;
-  }
-
-  /* Toolbar action button (header actions: Cetak BPBS, QR, WA, …) */
-  .action-btn {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-2xs px-2.5 py-1.5 xs:px-3 xs:py-2 sm:px-4 sm:py-2.5 shrink-0 cursor-pointer leading-none;
-    min-height: 2.25rem;
-  }
-  .action-btn-label {
-    @apply hidden xs:inline truncate;
-  }
-
-  /* Compact inline action button / link (Profil, Edit, Lihat, …) */
-  .mini-btn {
-    @apply inline-flex items-center gap-1 px-2 py-1 rounded-md sm:rounded-lg text-2xs font-semibold transition-all shadow-2xs shrink-0 whitespace-nowrap cursor-pointer leading-tight;
-  }
-  @media (hover: none) and (pointer: coarse) {
-    .mini-btn { min-height: 2rem; }
-  }
-
-  /* Standardized Table Typography */
-  .table-header {
-    @apply sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm text-slate-500 uppercase tracking-wider text-2xs font-bold border-b border-slate-200 shadow-[0_1px_0_0_#e2e8f0];
-  }
-
-  /* Standard Normalized Button Dimensions & Active Tactile Feedback */
-  .btn-base {
-    @apply inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-100 select-none cursor-pointer leading-tight;
-    @apply h-8.5 sm:h-9 px-3 sm:px-3.5 text-[13px] sm:text-xs;
-    @apply active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
-    min-height: 2.5rem;
-  }
-  .btn-primary {
-    @apply btn-base bg-blue-600 hover:bg-blue-700 text-white shadow-sm active:bg-blue-800;
-  }
-  .btn-secondary {
-    @apply btn-base bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs;
-  }
-  .btn-danger {
-    @apply btn-base bg-rose-600 hover:bg-rose-700 text-white shadow-sm active:bg-rose-800;
-  }
-  .btn-form-action {
-    @apply h-8.5 sm:h-9 px-3 sm:px-3.5 text-xs font-semibold rounded-xl transition-all active:scale-[0.98] inline-flex items-center justify-center gap-1.5 cursor-pointer;
-  }
-
-  /* Standardized Form Inputs with Normalized Compact Height */
-  .input-base {
-    @apply w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 placeholder-slate-400;
-    @apply h-10 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20;
-  }
-
-  /* Instant Touch Scale Feedback */
-  .touch-feedback {
-    @apply active:scale-[0.98] transition-transform duration-75;
-  }
-}
-
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
@@ -359,7 +112,6 @@
     background-color: #94a3b8;
   }
 
-  /* Hide scrollbar utility */
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
@@ -368,7 +120,6 @@
     scrollbar-width: none;
   }
 
-  /* Mobile safe area padding utilities */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -379,7 +130,6 @@
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Restrained Editorial Brand Ticker */
   @keyframes marquee {
     0% { transform: translate3d(0, 0, 0); }
     100% { transform: translate3d(-50%, 0, 0); }
@@ -394,98 +144,10 @@
     animation-play-state: paused;
   }
 
-  /* 60fps GPU Hardware-Accelerated Compositing & Spring Transitions */
   .gpu-layer {
     transform: translateZ(0);
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-  }
-
-  /* Mobile list card virtualization hint: skips layout/paint for off-screen cards */
-  .mobile-card-row {
-    content-visibility: auto;
-    contain-intrinsic-size: 0 110px;
-  }
-
-  /* Instant touch tap response without delayed flicker */
-  @media (hover: none) and (pointer: coarse) {
-    .tap-press:active {
-      transform: scale(0.985);
-      transition: transform 0.08s ease-out;
-    }
-  }
-
-  /* Core Web Vitals: Defer paint & style recalculations for off-screen sections */
-  .content-deferred {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 650px;
-  }
-
-  .modal-backdrop {
-    will-change: opacity;
-    animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  .modal-surface {
-    will-change: transform, opacity;
-    transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    animation: modalEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  .popover-surface {
-    will-change: transform, opacity;
-    transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    animation: popoverEnter 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  .accordion-surface {
-    will-change: transform, opacity;
-    animation: accordionDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  /* Compatibility aliases for shadcn-style animation classes */
-  .animate-in {
-    animation-duration: 200ms;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    animation-fill-mode: both;
-    will-change: transform, opacity;
-    transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-  }
-
-  .fade-in {
-    animation-name: fadeIn;
-  }
-
-  .zoom-in-95 {
-    animation-name: modalEnter;
-  }
-
-  .zoom-in-50 {
-    animation-name: scaleUp;
-  }
-
-  .slide-in-from-bottom-2, .slide-in-from-bottom-4 {
-    animation-name: slideUp;
-  }
-
-  /* Mobile bottom-sheet entry (phones only) — slides up from the bottom edge */
-  @media (max-width: 639px) {
-    .modal-sheet-enter {
-      animation: sheetUp 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-  }
-  @keyframes sheetUp {
-    0% { transform: translate3d(0, 100%, 0); opacity: 0.6; }
-    100% { transform: translate3d(0, 0, 0); opacity: 1; }
-  }
-
-  /* Content-visibility optimization for high-density tables & offscreen cards */
-  .content-visibility-auto {
-    content-visibility: auto;
-    contain-intrinsic-size: 0 450px;
   }
 }
 

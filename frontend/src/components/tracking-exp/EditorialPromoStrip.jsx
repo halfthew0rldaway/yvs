@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import toast from "react-hot-toast";
-import api from "../../services/api";
 import { Copy, Check, Calendar } from "lucide-react";
+import AppConfig from "../../services/config";
+import { showPublicToast } from "../../utils/publicToast";
 
 function formatRupiah(num) {
     return new Intl.NumberFormat("id-ID", {
@@ -32,15 +32,26 @@ export default function EditorialPromoStrip() {
 
     useEffect(() => {
         let active = true;
-        api.get("/tracking/promotions", { skipCache: true })
-            .then((res) => {
-                if (active && Array.isArray(res.data)) setPromos(res.data);
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), 6000);
+        fetch(`${AppConfig.apiBaseUrl}/tracking/promotions`, {
+            headers: { Accept: "application/json" },
+            signal: controller.signal,
+        })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (active && Array.isArray(data)) setPromos(data);
             })
             .catch(() => {
                 // Silent fail on public landing page — never disrupt tracking UX
+            })
+            .finally(() => {
+                window.clearTimeout(timer);
             });
         return () => {
             active = false;
+            window.clearTimeout(timer);
+            controller.abort();
         };
     }, []);
 
@@ -50,10 +61,10 @@ export default function EditorialPromoStrip() {
         try {
             await navigator.clipboard.writeText(code);
             setCopiedCode(code);
-            toast.success(`Kode ${code} disalin. Tunjukkan ke kasir saat pembayaran.`);
+            showPublicToast("success", `Kode ${code} disalin. Tunjukkan ke kasir saat pembayaran.`);
             setTimeout(() => setCopiedCode(""), 2400);
         } catch {
-            toast.success(`Catat kode promo: ${code}`);
+            showPublicToast("success", `Catat kode promo: ${code}`);
         }
     };
 
