@@ -63,6 +63,11 @@ export function ScrollProgressBar() {
             rafId = null;
             const el = barRef.current;
             if (!el) return;
+            // Avoid reading scrollHeight on initial y=0 paint to prevent forced synchronous reflow
+            if (window.scrollY <= 0) {
+                el.style.transform = "scaleX(0)";
+                return;
+            }
             const scrollable = document.documentElement.scrollHeight - window.innerHeight;
             const ratio = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
             el.style.transform = `scaleX(${ratio})`;

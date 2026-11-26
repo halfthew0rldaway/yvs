@@ -1,21 +1,20 @@
 import { Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Tracking from "./pages/tracking/Tracking";
 import { lazyWithRetry } from "./utils/lazyWithRetry";
 
 const initialPath = typeof window !== "undefined" ? window.location.pathname.replace(/\/+$/, "") || "/" : "/";
 
-// Pre-kick the active branch chunk at module load so React doesn't wait a commit cycle to start fetching
-const preloadedTracking = initialPath === "/tracking" ? import("./pages/tracking/Tracking") : null;
+// Pre-kick ErpApp chunk when entering any non-public-tracking route
 const preloadedErp = initialPath !== "/tracking" && initialPath !== "/tracking/register" ? import("./ErpApp") : null;
 
-const Tracking = lazyWithRetry(() => preloadedTracking || import("./pages/tracking/Tracking"));
 const CustomerRegistration = lazyWithRetry(() => import("./pages/tracking/CustomerRegistration"));
 const ErpApp = lazyWithRetry(() => preloadedErp || import("./ErpApp"));
 
-function AppFallback({ isPublicTracking }) {
-    if (isPublicTracking) {
-        return <div className="min-h-screen bg-[oklch(99%_0.004_252)]" />;
+function AppFallback({ isRegistration }) {
+    if (isRegistration) {
+        return <div className="min-h-screen bg-slate-50" />;
     }
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
@@ -30,19 +29,21 @@ function AppFallback({ isPublicTracking }) {
 export default function App() {
     const location = useLocation();
     const pathname = location.pathname.replace(/\/+$/, "") || "/";
-    const isTracking = pathname === "/tracking";
+
+    if (pathname === "/tracking") {
+        return (
+            <ErrorBoundary>
+                <Tracking />
+            </ErrorBoundary>
+        );
+    }
+
     const isRegistration = pathname === "/tracking/register";
 
     return (
         <ErrorBoundary>
-            <Suspense fallback={<AppFallback isPublicTracking={isTracking || isRegistration} />}>
-                {isTracking ? (
-                    <Tracking />
-                ) : isRegistration ? (
-                    <CustomerRegistration />
-                ) : (
-                    <ErpApp />
-                )}
+            <Suspense fallback={<AppFallback isRegistration={isRegistration} />}>
+                {isRegistration ? <CustomerRegistration /> : <ErpApp />}
             </Suspense>
         </ErrorBoundary>
     );

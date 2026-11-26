@@ -24,11 +24,20 @@ if (typeof window !== "undefined") {
             }).catch(() => {});
         }
     } else if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
-        // Defer PWA service worker registration past first paint
+        // Defer PWA service worker registration & 5MB precache well past FCP/LCP/TTI
         window.addEventListener("load", () => {
-            import("virtual:pwa-register").then(({ registerSW }) => {
-                registerSW({ immediate: true });
-            }).catch(() => {});
+            const registerDeferred = () => {
+                import("virtual:pwa-register").then(({ registerSW }) => {
+                    registerSW({ immediate: true });
+                }).catch(() => {});
+            };
+            window.setTimeout(() => {
+                if (typeof window.requestIdleCallback === "function") {
+                    window.requestIdleCallback(registerDeferred, { timeout: 3000 });
+                } else {
+                    registerDeferred();
+                }
+            }, 2500);
         }, { once: true });
     }
 
@@ -60,9 +69,13 @@ if (typeof window !== "undefined") {
         }
     })();
 
+    const isPublicTrackingPath =
+        window.location.pathname === "/tracking" ||
+        window.location.pathname.startsWith("/tracking/");
+
     if (isNativeCapacitor()) {
         scheduleBackgroundInit();
-    } else if (hasStaffSession) {
+    } else if (hasStaffSession && !isPublicTrackingPath) {
         if (typeof window.requestIdleCallback === "function") {
             window.requestIdleCallback(scheduleBackgroundInit, { timeout: 2500 });
         } else {
