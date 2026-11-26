@@ -45,6 +45,7 @@ const SupplierList = lazyWithRetry(() => import("./pages/supplier/SupplierList")
 const DatabaseManagement = lazyWithRetry(() => import("./pages/database/DatabaseManagement"));
 const AuditLogList = lazyWithRetry(() => import("./pages/audit/AuditLogList"));
 const AttendancePage = lazyWithRetry(() => import("./pages/attendance/AttendancePage"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 function PageLoader() {
     return (
@@ -202,7 +203,8 @@ export default function App() {
                     <Route path="/recruitment/jobs/tambah" element={<ProtectedRoute permissions={["recruitment.manage"]}><JobPostingForm /></ProtectedRoute>} />
                     <Route path="/recruitment/jobs/edit/:id" element={<ProtectedRoute permissions={["recruitment.manage"]}><JobPostingForm /></ProtectedRoute>} />
 
-                    <Route path="*" element={<LandingRedirect />} />
+                    <Route path="/" element={<LandingRedirect />} />
+                    <Route path="*" element={<NotFound />} />
                 </Routes>
             </Suspense>
         </ErrorBoundary>

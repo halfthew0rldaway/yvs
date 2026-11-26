@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /tracking
+Allow: /download
+Disallow: /dashboard
+Disallow: /tiket-servis
+Disallow: /customer
+Disallow: /invoice
+Disallow: /users
+Disallow: /roles
+Disallow: /database
+Disallow: /audit-log

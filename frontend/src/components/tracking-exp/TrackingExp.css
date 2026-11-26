@@ -1,10 +1,9 @@
 /* ============================================================================
-   YVS Computer — Experimental Interactive Redesign Stylesheet (Isolated)
-   Branch: exp/tracking-redesign
+   YVS Computer — Editorial Redesign Stylesheet
+   Palette: White (#FFFFFF / #F8FAFC) + Brand Blue (#2563EB) + Deep Navy (#0B162C)
    ============================================================================ */
 
-/* 1. Native CSS Scroll-Driven Reading Progress Indicator
-   (Progressive Enhancement per modern-web-guidance: scroll-progress-indicator) */
+/* 1. Native CSS Scroll-Driven Reading Progress Indicator */
 .yvs-exp-progress-bar {
   position: fixed;
   top: 0;
@@ -31,13 +30,49 @@
 
     .yvs-exp-progress-bar {
       animation: yvs-exp-grow-progress auto linear;
-      /* animation-timeline declared AFTER animation shorthand */
+      /* animation-timeline MUST follow animation shorthand */
       animation-timeline: scroll(root block);
     }
   }
 }
 
-/* 2. Same-Document View Transitions between Landing and Tracking Result Views */
+/* 2. Short Non-Blocking Intro Accent (< 0.8s, never hides hero LCP) */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes yvs-intro-sweep {
+    0% {
+      transform: scaleX(0);
+      opacity: 1;
+    }
+    70% {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scaleX(1);
+      opacity: 0;
+    }
+  }
+
+  .yvs-exp-intro-bar {
+    animation: yvs-intro-sweep 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* LCP-safe hero line rise: stays opacity 1 throughout so LCP fires at 0ms */
+  @keyframes yvs-hero-line-rise {
+    from {
+      transform: translate3d(0, 18%, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  .yvs-exp-hero-line {
+    animation: yvs-hero-line-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+/* 3. Same-Document View Transitions between Landing and Tracking Results */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.34s;
@@ -57,91 +92,91 @@
   }
 }
 
-/* 3. Subtle Architectural Drafting Grid (Zero neon, ultra-crisp 1px hairlines) */
-.yvs-exp-drafting-grid {
-  background-image:
-    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
-  background-size: 64px 64px;
+/* 4. Custom Editorial Cursor (Desktop Fine Pointer Only) */
+.yvs-exp-cursor {
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  margin-top: -6px;
+  border-radius: 9999px;
+  background: rgba(37, 99, 235, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    margin 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.22s ease,
+    opacity 0.2s ease;
 }
 
-.yvs-exp-dark-grid {
-  background-image:
-    linear-gradient(to right, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
-  background-size: 56px 56px;
+.yvs-exp-cursor[data-state="interactive"] {
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  margin-top: -14px;
+  background: rgba(37, 99, 235, 0.14);
+  border: 1.5px solid #2563eb;
 }
 
-/* 4. Animated PCB Circuit Trace Path (Opt-in only under no-preference) */
-.yvs-pcb-trace-pulse {
-  stroke-dasharray: 260;
-  stroke-dashoffset: 0;
+.yvs-exp-cursor[data-state="label"] {
+  width: 68px;
+  height: 68px;
+  margin-left: -34px;
+  margin-top: -34px;
+  background: #0b162c;
+  color: #ffffff;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes yvs-pcb-flow {
-    0% {
-      stroke-dashoffset: 260;
-      opacity: 0.25;
-    }
-    45% {
-      opacity: 1;
-    }
-    100% {
-      stroke-dashoffset: -260;
-      opacity: 0.25;
-    }
-  }
-
-  .yvs-pcb-trace-pulse {
-    animation: yvs-pcb-flow 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  }
+.yvs-exp-cursor-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  white-space: nowrap;
 }
 
-/* 5. Pausable Editorial Review Ticker (WCAG 2.2.2 Pause/Play controlled) */
+/* 5. Pausable Velocity-Linked Review Marquee (WCAG 2.2.2) */
 .yvs-exp-review-track {
   display: flex;
   width: max-content;
-  will-change: transform;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes yvs-exp-marquee {
-    0% {
-      transform: translate3d(0, 0, 0);
-    }
-    100% {
-      transform: translate3d(-50%, 0, 0);
-    }
-  }
-
-  .yvs-exp-review-track[data-playing="true"] {
-    animation: yvs-exp-marquee 48s linear infinite;
-  }
-
-  .yvs-exp-review-track[data-playing="true"]:hover {
-    animation-play-state: paused;
-  }
-}
-
-.yvs-exp-review-track[data-playing="false"] {
-  animation: none;
-}
-
-/* 6. Editorial Tracking Input Focus Override (preserve readable scale on mobile & desktop) */
+/* 6. Editorial Tracking Input Focus Override (readable 16px on mobile avoids iOS auto-zoom) */
 .yvs-exp-track-input {
-  font-size: 0.9375rem !important;
+  font-size: 1rem !important;
   line-height: 1.5rem !important;
 }
 
-@media (min-width: 640px) {
-  .yvs-exp-track-input {
-    font-size: 1rem !important;
-    line-height: 1.5rem !important;
+/* 7. Semantic Active Pulse for Current Tracking Stage */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes yvs-stage-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.55;
+    }
+    70% {
+      transform: scale(1.75);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.75);
+      opacity: 0;
+    }
+  }
+
+  .yvs-stage-pulse-ring {
+    animation: yvs-stage-pulse 2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
 }
 
-/* 7. Hide native scrollbar on horizontal interactive filter rails */
+/* 8. Visible Accessible Focus Rings */
+.yvs-exp-scope :is(a, button, input, [tabindex="0"]):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* 9. Hide native scrollbar on horizontal interactive filter rails */
 .yvs-no-scrollbar::-webkit-scrollbar {
   display: none;
 }

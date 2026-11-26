@@ -3,21 +3,107 @@
 
 <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/icons/Icon-192.png" />
-    <link rel="apple-touch-icon" href="/icons/Icon-192.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>YVS Computer • Lacak Servis &amp; Perbaikan Laptop, MacBook, PC Bekasi</title>
+    <meta name="description" content="Lacak status perbaikan laptop, MacBook, dan PC di YVS Computer Pekayon Bekasi secara transparan. Cek hasil diagnosa, estimasi biaya, foto pengerjaan, nota, dan garansi digital." />
     <meta name="theme-color" content="#2563eb" />
+    <meta name="robots" content="index, follow" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="format-detection" content="telephone=no" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:site_name" content="YVS Computer" />
+    <meta property="og:title" content="YVS Computer • Lacak Servis &amp; Perbaikan Komputer Bekasi" />
+    <meta property="og:description" content="Pantau progres perbaikan perangkat Anda secara terbuka: foto kondisi awal, hasil diagnosa, konfirmasi biaya sebelum dikerjakan, dan kartu garansi digital." />
+    <meta property="og:image" content="/icons/Icon-512.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="YVS Computer • Lacak Servis &amp; Perbaikan Komputer Bekasi" />
+    <meta name="twitter:description" content="Cek status servis laptop, MacBook, dan PC di YVS Computer Pekayon Bekasi dengan nomor servis atau nomor WhatsApp." />
+    <meta name="twitter:image" content="/icons/Icon-512.png" />
+
+    <!-- Favicon Set -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/Icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/Icon-512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/Icon-192.png" />
+    <link rel="shortcut icon" href="/icons/Icon-192.png" />
+
+    <!-- Critical Font Preconnect & Non-Blocking Stylesheet -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <title>YVS Computer • Pusat Reparasi & Rekayasa Komputer</title>
+    <link
+        rel="preload"
+        as="style"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+    />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+        rel="stylesheet"
+        media="print"
+        onload="this.media='all'"
+    />
+    <noscript>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+            rel="stylesheet"
+        />
+    </noscript>
+
+    <!-- LocalBusiness Structured Data -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "name": "YVS Computer (Yangversa Computer)",
+            "alternateName": "Komputerawet.com by Yangversa Computer",
+            "description": "Layanan perbaikan dan perawatan laptop, MacBook, serta PC desktop di Pekayon, Bekasi Selatan dengan pelacakan status servis terbuka.",
+            "image": "/icons/Icon-512.png",
+            "telephone": "+62-21-8270005",
+            "url": "https://www.komputerawet.com",
+            "priceRange": "$$",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Raya Pekayon No. 25, RT.004/RW.001, Pekayon Jaya",
+                "addressLocality": "Bekasi Selatan",
+                "addressRegion": "Jawa Barat",
+                "postalCode": "17148",
+                "addressCountry": "ID"
+            },
+            "geo": {
+                "@type": "GeoCoordinates",
+                "latitude": -6.26064,
+                "longitude": 106.98744
+            },
+            "openingHoursSpecification": [
+                {
+                    "@type": "OpeningHoursSpecification",
+                    "dayOfWeek": [
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                        "Sunday"
+                    ],
+                    "opens": "09:00",
+                    "closes": "18:00"
+                }
+            ],
+            "sameAs": [
+                "https://www.komputerawet.com",
+                "https://instagram.com/komputerawet"
+            ]
+        }
+    </script>
 </head>
 
-<body class="bg-gray-50 font-sans">
+<body class="bg-slate-50 font-sans">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 </body>
