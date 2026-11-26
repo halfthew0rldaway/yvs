@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Search, MessageCircle, ArrowUpRight } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { MagneticWrap, smoothScrollToTarget } from "./MotionPrimitives";
 
 const NAV_LINKS = [
-    { id: "alur-servis", label: "Alur Servis" },
+    { id: "alur-servis", label: "Alur servis" },
     { id: "layanan", label: "Layanan" },
-    { id: "ulasan", label: "Bukti & Ulasan" },
-    { id: "estimasi-biaya", label: "Estimasi Biaya" },
+    { id: "ulasan", label: "Bukti & ulasan" },
+    { id: "estimasi-biaya", label: "Kisaran biaya" },
     { id: "lokasi", label: "Lokasi" },
 ];
 
@@ -16,9 +16,7 @@ export default function EditorialNavbar({ onFocusTrack }) {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     useEffect(() => {
-        const onScroll = () => {
-            setScrolled(window.scrollY > 28);
-        };
+        const onScroll = () => setScrolled(window.scrollY > 36);
         window.addEventListener("scroll", onScroll, { passive: true });
         onScroll();
 
@@ -27,11 +25,9 @@ export default function EditorialNavbar({ onFocusTrack }) {
                 const visible = entries
                     .filter((e) => e.isIntersecting)
                     .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-                if (visible?.target?.id) {
-                    setActiveSection(visible.target.id);
-                }
+                if (visible?.target?.id) setActiveSection(visible.target.id);
             },
-            { rootMargin: "-28% 0px -55% 0px", threshold: [0.1, 0.35] }
+            { rootMargin: "-25% 0px -55% 0px", threshold: [0.1, 0.35] }
         );
 
         NAV_LINKS.forEach((item) => {
@@ -47,7 +43,7 @@ export default function EditorialNavbar({ onFocusTrack }) {
 
     const handleNavClick = (id) => {
         setMobileOpen(false);
-        smoothScrollToTarget(id, -72);
+        smoothScrollToTarget(id, -68);
     };
 
     return (
@@ -60,38 +56,32 @@ export default function EditorialNavbar({ onFocusTrack }) {
             </a>
 
             <header
-                className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+                className={`fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${
                     scrolled
-                        ? "bg-white/95 lg:backdrop-blur-md border-b border-slate-200 h-16 shadow-[0_1px_12px_rgba(11,22,44,0.06)]"
-                        : "bg-white/95 border-b border-slate-200/80 h-16 sm:h-[4.5rem]"
+                        ? "bg-[#EFEFEF]/92 lg:backdrop-blur-md border-b border-[#071124]/10 h-16"
+                        : "bg-transparent h-20"
                 }`}
             >
-                <div className="w-full max-w-[1600px] mx-auto h-full px-4 sm:px-6 lg:px-10 xl:px-14 flex items-center justify-between gap-3">
-                    {/* Brand Wordmark */}
+                <div className="w-full max-w-[1440px] mx-auto h-full px-5 sm:px-8 lg:px-12 flex items-center justify-between gap-4">
+                    {/* Edge-Aligned Wordmark */}
                     <button
                         type="button"
                         onClick={() => smoothScrollToTarget("top")}
-                        className="min-h-[44px] flex items-center gap-2.5 sm:gap-3 text-left group cursor-pointer min-w-0 shrink-0 rounded-lg"
+                        className="min-h-[44px] inline-flex items-center gap-2.5 text-left cursor-pointer shrink-0 rounded-lg"
                     >
                         <img
                             src="/logo-yangversa.png"
-                            alt="Logo YVS Computer"
-                            width="36"
-                            height="36"
-                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-contain bg-white border border-slate-200 p-0.5 shrink-0"
+                            alt="YVS Computer"
+                            width="32"
+                            height="32"
+                            className="w-8 h-8 rounded-lg object-contain bg-white p-0.5 border border-[#071124]/10 shrink-0"
                         />
-                        <div className="min-w-0">
-                            <span className="font-display font-bold text-sm sm:text-base tracking-tight text-slate-950 block leading-none">
-                                YVS Computer
-                            </span>
-                            <span className="text-xs font-mono text-slate-600 hidden sm:inline-flex items-center gap-1.5 mt-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" aria-hidden="true" />
-                                <span>Buka 09.00–18.00 WIB</span>
-                            </span>
-                        </div>
+                        <span className="font-display font-bold text-base tracking-[-0.02em] text-[#071124]">
+                            YVS Computer
+                        </span>
                     </button>
 
-                    {/* Desktop Editorial Links */}
+                    {/* Quiet Sentence-Case Editorial Links */}
                     <nav aria-label="Navigasi utama" className="hidden lg:flex items-center gap-1">
                         {NAV_LINKS.map((item) => {
                             const isActive = activeSection === item.id;
@@ -100,16 +90,16 @@ export default function EditorialNavbar({ onFocusTrack }) {
                                     key={item.id}
                                     type="button"
                                     onClick={() => handleNavClick(item.id)}
-                                    className={`relative min-h-[44px] px-3.5 py-2 text-sm font-medium transition-colors cursor-pointer rounded-lg ${
+                                    className={`relative min-h-[44px] px-4 py-2 text-sm transition-colors cursor-pointer rounded-lg ${
                                         isActive
-                                            ? "text-slate-950 font-semibold"
-                                            : "text-slate-600 hover:text-slate-950"
+                                            ? "text-[#071124] font-semibold"
+                                            : "text-[#071124]/70 hover:text-[#071124] font-medium"
                                     }`}
                                 >
                                     <span>{item.label}</span>
                                     <span
                                         aria-hidden="true"
-                                        className={`absolute left-3.5 right-3.5 bottom-1.5 h-[2px] bg-blue-600 transition-transform duration-300 origin-left ${
+                                        className={`absolute left-4 right-4 bottom-1.5 h-[1.5px] bg-[#2563EB] transition-transform duration-300 origin-left ${
                                             isActive ? "scale-x-100" : "scale-x-0"
                                         }`}
                                     />
@@ -118,7 +108,7 @@ export default function EditorialNavbar({ onFocusTrack }) {
                         })}
                     </nav>
 
-                    {/* Primary Actions (all >= 44px tap targets) */}
+                    {/* Single Focused Primary Action */}
                     <div className="flex items-center gap-2 shrink-0">
                         <MagneticWrap strength={0.18}>
                             <button
@@ -127,61 +117,47 @@ export default function EditorialNavbar({ onFocusTrack }) {
                                 onClick={() => {
                                     setMobileOpen(false);
                                     if (onFocusTrack) onFocusTrack();
-                                    else smoothScrollToTarget("track-lookup", -80);
+                                    else smoothScrollToTarget("track-lookup", -72);
                                 }}
-                                className="inline-flex items-center gap-1.5 min-h-[44px] px-3.5 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                                className="inline-flex items-center gap-2 min-h-[44px] px-4 sm:px-5 rounded-full bg-[#071124] hover:bg-[#2563EB] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap"
                             >
-                                <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
-                                <span>Cek Servis</span>
+                                <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                                <span>Lacak servis</span>
                             </button>
                         </MagneticWrap>
-
-                        <a
-                            href="https://wa.me/628121034212?text=Halo%20YVS%20Computer,%20saya%20ingin%20tanya%20soal%20perbaikan%20perangkat%20saya"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="hidden sm:inline-flex items-center gap-1.5 min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white hover:border-blue-600 hover:text-blue-700 text-slate-800 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap"
-                        >
-                            <MessageCircle className="w-4 h-4 text-blue-600 shrink-0" aria-hidden="true" />
-                            <span>WhatsApp</span>
-                            <ArrowUpRight className="w-3.5 h-3.5 text-slate-600 shrink-0" aria-hidden="true" />
-                        </a>
 
                         <button
                             type="button"
                             onClick={() => setMobileOpen((prev) => !prev)}
                             aria-label={mobileOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
                             aria-expanded={mobileOpen}
-                            className="lg:hidden min-w-[44px] min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 hover:text-slate-950 flex items-center justify-center cursor-pointer"
+                            className="lg:hidden min-w-[44px] min-h-[44px] rounded-full border border-[#071124]/15 bg-white text-[#071124] flex items-center justify-center cursor-pointer"
                         >
                             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
                     </div>
                 </div>
 
-                {/* Mobile Drawer (Pure CSS transitions — zero framer-motion on critical path) */}
+                {/* Mobile Drawer */}
                 {mobileOpen && (
                     <>
                         <div
                             onClick={() => setMobileOpen(false)}
-                            className="lg:hidden fixed inset-0 top-16 bg-[#0B162C]/35 z-40"
+                            className="lg:hidden fixed inset-0 top-16 bg-[#071124]/35 z-40"
                             aria-hidden="true"
                         />
                         <nav
                             aria-label="Navigasi seluler"
-                            className="lg:hidden absolute top-full inset-x-0 z-50 bg-white border-b border-slate-200 px-4 py-4 shadow-xl space-y-1 animate-fade-in"
+                            className="lg:hidden absolute top-full inset-x-0 z-50 bg-white border-b border-slate-200 px-5 py-5 shadow-2xl space-y-1 animate-fade-in"
                         >
-                            {NAV_LINKS.map((item, index) => (
+                            {NAV_LINKS.map((item) => (
                                 <button
                                     key={item.id}
                                     type="button"
                                     onClick={() => handleNavClick(item.id)}
-                                    className="w-full min-h-[48px] flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-900 hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
+                                    className="w-full min-h-[48px] flex items-center justify-between px-3 py-2.5 rounded-xl text-base font-semibold text-[#071124] hover:bg-slate-100 transition-colors cursor-pointer"
                                 >
                                     <span>{item.label}</span>
-                                    <span className="font-mono text-xs font-semibold text-slate-600">
-                                        0{index + 1}
-                                    </span>
                                 </button>
                             ))}
 
@@ -190,10 +166,9 @@ export default function EditorialNavbar({ onFocusTrack }) {
                                     href="https://wa.me/628121034212?text=Halo%20YVS%20Computer,%20saya%20ingin%20tanya%20soal%20perbaikan%20perangkat%20saya"
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-[#0B162C] hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
+                                    className="w-full min-h-[48px] flex items-center justify-center rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-semibold transition-colors"
                                 >
-                                    <MessageCircle className="w-4 h-4" aria-hidden="true" />
-                                    <span>Tanya via WhatsApp</span>
+                                    Tanya lewat WhatsApp
                                 </a>
                             </div>
                         </nav>

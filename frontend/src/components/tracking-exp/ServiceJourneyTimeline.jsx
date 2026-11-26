@@ -1,342 +1,355 @@
 import { useEffect, useRef, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import {
-    ClipboardList,
-    Search,
-    Wrench,
-    ShieldCheck,
-    PackageCheck,
-    ArrowRight,
-} from "lucide-react";
-import {
-    MaskedLines,
     usePrefersReducedMotion,
     smoothScrollToTarget,
 } from "./MotionPrimitives";
 import { SHARED_PROCESS_STEPS, loadGsapRuntime } from "./motionTokens";
 
-const STEP_ICONS = [ClipboardList, Search, Wrench, ShieldCheck, PackageCheck];
+// 30 evenly sampled frames from 001..240 for silky desktop canvas scrub
+const SCRUB_FRAMES = Array.from({ length: 30 }, (_, i) =>
+    String(Math.min(240, Math.max(1, Math.round(1 + (i * 239) / 29)))).padStart(3, "0")
+);
+
+// 5 dedicated crisp keyframe stills for instant mobile & reduced-motion stage switching
+const STAGE_STILLS = [
+    "/frames/001.webp",
+    "/frames/065.webp",
+    "/frames/150.webp",
+    "/frames/210.webp",
+    "/frames/240.webp",
+];
 
 /**
- * Section 02 — Pinned Scroll-Scrubbed Process Timeline
- * Uses the exact same 5-stage language (Diterima -> Diagnosa -> Pengerjaan -> QC -> Siap diambil)
- * as the Tracking Result page.
- * - Desktop (>= 1024px, non-reduced-motion): GSAP ScrollTrigger pinned scrub + SVG MotionPath draw.
- * - Mobile / reduced-motion: thumb-friendly 44px+ interactive step rail without scroll-trapping.
+ * ACT II — Native CSS Sticky + GSAP ScrollTrigger Pure-Scrub Disassembly Process
+ * Uses native `lg:sticky lg:top-0 lg:h-[100dvh]` inside a `lg:h-[320vh]` scroll runway
+ * instead of GSAP `pin: true` — eliminating pin-spacer conflicts, layout jumps, and broken
+ * scroll coordinates when lazy sections mount.
  */
 export default function ServiceJourneyTimeline() {
     const [activeIdx, setActiveIdx] = useState(0);
+    const [canvasReady, setCanvasReady] = useState(false);
     const sectionRef = useRef(null);
-    const pinWrapRef = useRef(null);
-    const pathRef = useRef(null);
-    const beaconRef = useRef(null);
-    const triggerRef = useRef(null);
+    const canvasRef = useRef(null);
+    const spineRef = useRef(null);
+    const dotRef = useRef(null);
+    const currentFrameRef = useRef(0);
     const reducedMotion = usePrefersReducedMotion();
 
     useEffect(() => {
-        if (reducedMotion || typeof window === "undefined" || !sectionRef.current || !pinWrapRef.current) {
+        if (reducedMotion || typeof window === "undefined" || !sectionRef.current) {
             return;
         }
         const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+        const saveData = navigator.connection?.saveData;
         if (!isDesktop) return;
 
         let cancelled = false;
-        let booted = false;
         let ctx = null;
+        let ro = null;
+        const frames = new Array(SCRUB_FRAMES.length).fill(null);
 
-        const boot = () => {
-            if (booted || cancelled) return;
-            booted = true;
-            loadGsapRuntime().then(({ gsap, ScrollTrigger }) => {
-                if (cancelled || !sectionRef.current || !pinWrapRef.current) return;
-
-                ctx = gsap.context(() => {
-                    const pathEl = pathRef.current;
-                    const totalLen = pathEl ? pathEl.getTotalLength() : 400;
-                    if (pathEl) {
-                        gsap.set(pathEl, {
-                            strokeDasharray: totalLen,
-                            strokeDashoffset: totalLen,
-                        });
-                    }
-
-                    const tl = gsap.timeline({
-                        scrollTrigger: {
-                            trigger: pinWrapRef.current,
-                            start: "top top",
-                            end: "+=210%",
-                            pin: true,
-                            scrub: 0.55,
-                            anticipatePin: 1,
-                            snap: {
-                                snapTo: 1 / (SHARED_PROCESS_STEPS.length - 1),
-                                duration: { min: 0.18, max: 0.4 },
-                                ease: "power2.out",
-                            },
-                            onUpdate: (self) => {
-                                const nextIdx = Math.min(
-                                    SHARED_PROCESS_STEPS.length - 1,
-                                    Math.round(self.progress * (SHARED_PROCESS_STEPS.length - 1))
-                                );
-                                setActiveIdx((prev) => (prev === nextIdx ? prev : nextIdx));
-                            },
-                        },
-                    });
-
-                    triggerRef.current = tl.scrollTrigger;
-
-                    if (pathEl) {
-                        tl.to(pathEl, { strokeDashoffset: 0, ease: "none", duration: 1 }, 0);
-                    }
-                    if (beaconRef.current && pathEl) {
-                        tl.to(
-                            beaconRef.current,
-                            {
-                                motionPath: {
-                                    path: pathEl,
-                                    align: pathEl,
-                                    alignOrigin: [0.5, 0.5],
-                                },
-                                ease: "none",
-                                duration: 1,
-                            },
-                            0
-                        );
-                    }
-                }, sectionRef);
-
-                window.requestAnimationFrame(() => ScrollTrigger.refresh());
-            });
+        const pickNearestLoaded = (targetIdx) => {
+            if (frames[targetIdx]) return frames[targetIdx];
+            for (let offset = 1; offset < frames.length; offset++) {
+                if (frames[targetIdx - offset]) return frames[targetIdx - offset];
+                if (frames[targetIdx + offset]) return frames[targetIdx + offset];
+            }
+            return null;
         };
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries.some((e) => e.isIntersecting)) {
-                    observer.disconnect();
-                    boot();
+        const drawFrame = (frameIdx) => {
+            currentFrameRef.current = frameIdx;
+            const canvas = canvasRef.current;
+            const img = pickNearestLoaded(frameIdx);
+            if (!canvas || !img || !img.complete || img.naturalWidth === 0) return;
+
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+
+            const w = Math.round(rect.width * dpr);
+            const h = Math.round(rect.height * dpr);
+            if (canvas.width !== w || canvas.height !== h) {
+                canvas.width = w;
+                canvas.height = h;
+            }
+            const c = canvas.getContext("2d");
+            if (!c) return;
+            c.clearRect(0, 0, w, h);
+
+            const imgRatio = img.naturalWidth / img.naturalHeight;
+            const boxRatio = w / h;
+            let dw = w;
+            let dh = h;
+            let ox = 0;
+            let oy = 0;
+            if (imgRatio > boxRatio) {
+                dh = w / imgRatio;
+                oy = (h - dh) / 2;
+            } else {
+                dw = h * imgRatio;
+                ox = (w - dw) / 2;
+            }
+            c.drawImage(img, ox, oy, dw, dh);
+        };
+
+        if (!saveData) {
+            SCRUB_FRAMES.forEach((num, idx) => {
+                const img = new Image();
+                img.decoding = "async";
+                img.onload = () => {
+                    if (cancelled) return;
+                    frames[idx] = img;
+                    if (idx === 0) {
+                        setCanvasReady(true);
+                        drawFrame(currentFrameRef.current);
+                    } else if (idx === currentFrameRef.current) {
+                        drawFrame(idx);
+                    }
+                };
+                img.src = `/frames/${num}.webp`;
+            });
+        }
+
+        if (canvasRef.current && typeof ResizeObserver !== "undefined") {
+            ro = new ResizeObserver(() => {
+                drawFrame(currentFrameRef.current);
+            });
+            ro.observe(canvasRef.current);
+        }
+
+        loadGsapRuntime().then(({ gsap, ScrollTrigger }) => {
+            if (cancelled || !sectionRef.current) return;
+
+            ctx = gsap.context(() => {
+                const pathEl = spineRef.current;
+                const totalLen = pathEl ? pathEl.getTotalLength() : 252;
+                if (pathEl) {
+                    gsap.set(pathEl, {
+                        strokeDasharray: totalLen,
+                        strokeDashoffset: totalLen,
+                    });
                 }
-            },
-            { rootMargin: "320px 0px" }
-        );
-        observer.observe(sectionRef.current);
+
+                const tl = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: sectionRef.current,
+                        start: "top top",
+                        end: "bottom bottom",
+                        scrub: 0.35,
+                        invalidateOnRefresh: true,
+                        onUpdate: (self) => {
+                            const p = self.progress;
+                            const fIdx = Math.min(
+                                SCRUB_FRAMES.length - 1,
+                                Math.round(p * (SCRUB_FRAMES.length - 1))
+                            );
+                            drawFrame(fIdx);
+
+                            const stepIdx = Math.min(
+                                SHARED_PROCESS_STEPS.length - 1,
+                                Math.round(p * (SHARED_PROCESS_STEPS.length - 1))
+                            );
+                            setActiveIdx((prev) => (prev === stepIdx ? prev : stepIdx));
+                        },
+                    },
+                });
+
+                if (pathEl) {
+                    tl.to(pathEl, { strokeDashoffset: 0, ease: "none", duration: 1 }, 0);
+                }
+                if (dotRef.current && pathEl) {
+                    tl.to(
+                        dotRef.current,
+                        {
+                            motionPath: {
+                                path: pathEl,
+                                align: pathEl,
+                                alignOrigin: [0.5, 0.5],
+                            },
+                            ease: "none",
+                            duration: 1,
+                        },
+                        0
+                    );
+                }
+            }, sectionRef);
+
+            window.requestAnimationFrame(() => ScrollTrigger.refresh());
+        });
 
         return () => {
             cancelled = true;
-            observer.disconnect();
-            triggerRef.current = null;
+            if (ro) ro.disconnect();
             if (ctx) ctx.revert();
         };
     }, [reducedMotion]);
 
-    const handleSelectStep = (idx) => {
+    const handleJumpStep = (idx) => {
         setActiveIdx(idx);
-        const st = triggerRef.current;
-        if (st && typeof window !== "undefined" && window.innerWidth >= 1024 && !reducedMotion) {
-            const targetScroll =
-                st.start + (st.end - st.start) * (idx / (SHARED_PROCESS_STEPS.length - 1));
+        const sec = sectionRef.current;
+        if (sec && typeof window !== "undefined" && window.innerWidth >= 1024 && !reducedMotion) {
+            const top = sec.getBoundingClientRect().top + window.scrollY;
+            const scrollable = Math.max(0, sec.offsetHeight - window.innerHeight);
+            const target = top + scrollable * (idx / (SHARED_PROCESS_STEPS.length - 1));
             const lenis = window.__yvsLenis;
-            if (lenis) lenis.scrollTo(targetScroll, { duration: 0.65 });
-            else window.scrollTo({ top: targetScroll, behavior: "smooth" });
+            if (lenis) lenis.scrollTo(target, { duration: 0.7 });
+            else window.scrollTo({ top: target, behavior: "smooth" });
         }
     };
 
     const current = SHARED_PROCESS_STEPS[activeIdx];
-    const ActiveIcon = STEP_ICONS[activeIdx] || ClipboardList;
 
     return (
         <section
             id="alur-servis"
             ref={sectionRef}
-            className="w-full bg-slate-50 border-b border-slate-200 scroll-mt-16 overflow-x-clip"
+            className={`relative w-full yvs-studio-canvas border-t border-[#071124]/10 scroll-mt-16 ${
+                reducedMotion ? "" : "lg:h-[320vh]"
+            }`}
         >
-            <div
-                ref={pinWrapRef}
-                className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-16 sm:py-24 lg:min-h-[100dvh] lg:flex lg:flex-col lg:justify-center"
-            >
-                {/* Editorial Section Header */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 items-end pb-7 sm:pb-9 mb-7 sm:mb-9 border-b border-slate-200">
-                    <div className="lg:col-span-7 space-y-2.5">
-                        <span className="font-mono text-xs text-blue-700 font-semibold block">
-                            01 / ALUR PENGERJAAN
-                        </span>
-                        <MaskedLines
-                            as="h2"
-                            lines={["Lima tahap pengerjaan,", "terbuka dari awal hingga selesai."]}
-                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.5rem] text-slate-950 tracking-[-0.03em] leading-[1.12]"
-                        />
-                    </div>
-                    <div className="lg:col-span-5">
-                        <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                            Urutan tahap yang sama digunakan di halaman pelacakan tiket Anda—gulir atau pilih tahap di bawah untuk melihat apa yang tercatat di tiap langkah.
-                        </p>
-                    </div>
-                </div>
+            <div className="lg:sticky lg:top-0 lg:h-[100dvh] lg:min-h-[680px] w-full overflow-hidden flex items-center">
+                <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-16 sm:py-20 lg:py-10 lg:h-full lg:flex lg:flex-col lg:justify-between">
+                    {/* Top Row: Quiet Editorial Statement + Interactive Step Index */}
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-[#071124]/10 lg:pt-12">
+                        <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-[2.65rem] text-[#071124] tracking-[-0.035em] leading-[1.08] max-w-xl">
+                            Lima tahap yang sama, langsung terlihat di tiket Anda.
+                        </h2>
 
-                {/* Desktop Scrubbed SVG Horizontal Track with MotionPath Beacon */}
-                <div className="hidden lg:block relative mb-6 px-2" aria-hidden="true">
-                    <svg viewBox="0 0 1000 24" className="w-full h-6 overflow-visible">
-                        <path
-                            d="M 12 12 L 988 12"
-                            fill="none"
-                            stroke="#CBD5E1"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                        />
-                        <path
-                            ref={pathRef}
-                            d="M 12 12 L 988 12"
-                            fill="none"
-                            stroke="#2563EB"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                        />
-                        <circle
-                            ref={beaconRef}
-                            cx="12"
-                            cy="12"
-                            r="6"
-                            fill="#2563EB"
-                            stroke="#FFFFFF"
-                            strokeWidth="2.5"
-                        />
-                    </svg>
-                </div>
+                        <div
+                            role="tablist"
+                            aria-label="Tahapan perbaikan perangkat"
+                            className="flex items-center gap-1.5 overflow-x-auto yvs-no-scrollbar pb-1"
+                        >
+                            {SHARED_PROCESS_STEPS.map((step, idx) => {
+                                const active = idx === activeIdx;
+                                return (
+                                    <button
+                                        key={step.key}
+                                        role="tab"
+                                        aria-selected={active}
+                                        type="button"
+                                        onClick={() => handleJumpStep(idx)}
+                                        className={`min-h-[44px] px-3.5 sm:px-4 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                                            active
+                                                ? "bg-[#071124] text-white"
+                                                : "bg-white/80 hover:bg-white text-[#071124]/75 hover:text-[#071124] border border-[#071124]/10"
+                                        }`}
+                                    >
+                                        <span className="font-mono text-xs mr-1.5 opacity-75">{step.num}</span>
+                                        <span>{step.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                {/* 5-Stage Shared Step Selector Rail (44px+ touch targets) */}
-                <div
-                    role="tablist"
-                    aria-label="Tahapan alur servis"
-                    className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mb-6"
-                >
-                    {SHARED_PROCESS_STEPS.map((step, idx) => {
-                        const isActive = idx === activeIdx;
-                        const isPassed = idx < activeIdx;
-                        const Icon = STEP_ICONS[idx] || ClipboardList;
-                        return (
-                            <button
-                                key={step.num}
-                                role="tab"
-                                aria-selected={isActive}
-                                type="button"
-                                onClick={() => handleSelectStep(idx)}
-                                className={`relative text-left min-h-[72px] p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer min-w-0 ${
-                                    isActive
-                                        ? "bg-[#0B162C] text-white border-[#0B162C] shadow-sm"
-                                        : isPassed
-                                        ? "bg-blue-50/70 text-slate-950 border-blue-200 hover:bg-blue-50"
-                                        : "bg-white hover:bg-blue-50/40 text-slate-900 border-slate-200 hover:border-blue-300"
+                    {/* Center Stage: Borderless Studio Exploded Laptop + Active Stage Narrative */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center flex-1 py-6 lg:py-4 min-h-0">
+                        {/* LEFT (7 cols): Full-Bleed Borderless Disassembly Canvas / Keyframe */}
+                        <div className="lg:col-span-7 relative flex items-center justify-center h-[280px] xs:h-[320px] sm:h-[420px] lg:h-full max-h-[520px] yvs-studio-canvas">
+                            <img
+                                src={STAGE_STILLS[activeIdx]}
+                                alt={`Tahap ${current.num}: ${current.label}`}
+                                width="1280"
+                                height="720"
+                                loading="lazy"
+                                decoding="async"
+                                className={`w-full h-full object-contain yvs-studio-frame transition-opacity duration-300 ${
+                                    canvasReady ? "lg:opacity-0" : "opacity-100"
                                 }`}
-                            >
-                                <div className="flex items-center justify-between gap-2 mb-1.5">
-                                    <span
-                                        className={`font-mono text-xs font-bold ${
-                                            isActive
-                                                ? "text-blue-300"
-                                                : isPassed
-                                                ? "text-blue-700"
-                                                : "text-slate-600"
-                                        }`}
-                                    >
-                                        {step.num}
-                                    </span>
-                                    <Icon
-                                        className={`w-4 h-4 shrink-0 ${
-                                            isActive
-                                                ? "text-blue-300"
-                                                : isPassed
-                                                ? "text-blue-600"
-                                                : "text-slate-600"
-                                        }`}
-                                        aria-hidden="true"
-                                    />
-                                </div>
-                                <span className="font-display font-bold text-xs sm:text-sm block leading-snug">
-                                    {step.label}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Active Stage Showcase Panel */}
-                <div className="rounded-2xl bg-white border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-[0_18px_40px_-28px_rgba(11,22,44,0.12)]">
-                    <div
-                        key={current.num}
-                        className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center animate-fade-in"
-                    >
-                        {/* Left Copy */}
-                        <div className="lg:col-span-7 space-y-3.5 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2.5">
-                                <span className="font-mono text-xs font-bold text-blue-700">
-                                    TAHAP {current.num} / 05
-                                </span>
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
-                                    <ActiveIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                                    <span>{current.label}</span>
-                                </span>
-                            </div>
-
-                            <h3 className="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-slate-950 tracking-tight leading-snug">
-                                {current.title}
-                            </h3>
-                            <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
-                                {current.desc}
-                            </p>
-
-                            <div className="pt-2">
-                                {activeIdx < SHARED_PROCESS_STEPS.length - 1 ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSelectStep(activeIdx + 1)}
-                                        className="min-h-[44px] inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-800 cursor-pointer"
-                                    >
-                                        <span>
-                                            Lanjut ke tahap {SHARED_PROCESS_STEPS[activeIdx + 1].label}
-                                        </span>
-                                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={() => smoothScrollToTarget("track-lookup", -80)}
-                                        className="min-h-[44px] inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-800 cursor-pointer"
-                                    >
-                                        <span>Cek nomor servis Anda sekarang</span>
-                                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                                    </button>
-                                )}
-                            </div>
+                            />
+                            <canvas
+                                ref={canvasRef}
+                                aria-hidden="true"
+                                className={`hidden lg:block absolute inset-0 w-full h-full yvs-studio-frame transition-opacity duration-300 ${
+                                    canvasReady ? "opacity-100" : "opacity-0"
+                                }`}
+                            />
                         </div>
 
-                        {/* Right Live Portal Preview Card */}
-                        <div className="lg:col-span-5 bg-[#0B162C] text-white rounded-2xl p-5 sm:p-6 space-y-4">
-                            <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/15">
-                                <span className="font-mono text-xs text-blue-200">
-                                    Yang muncul di halaman pelacakan
-                                </span>
-                                <span className="font-mono text-xs font-bold text-white tabular-nums">
-                                    {current.num} / 05
-                                </span>
-                            </div>
-
-                            {/* Segmented Progress Bar */}
-                            <div className="flex items-center gap-1.5" aria-hidden="true">
-                                {SHARED_PROCESS_STEPS.map((s, i) => (
-                                    <span
-                                        key={s.num}
-                                        className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-                                            i <= activeIdx ? "bg-blue-500" : "bg-white/20"
-                                        }`}
+                        {/* RIGHT (5 cols): Sculptural Stage Copy + Portal Preview */}
+                        <div className="lg:col-span-5 flex items-start gap-5 min-w-0">
+                            <div className="hidden lg:block pt-2 shrink-0" aria-hidden="true">
+                                <svg viewBox="0 0 20 260" className="w-5 h-[260px] overflow-visible">
+                                    <path
+                                        d="M 10 4 L 10 256"
+                                        fill="none"
+                                        stroke="rgba(7,17,36,0.14)"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
                                     />
-                                ))}
+                                    <path
+                                        ref={spineRef}
+                                        d="M 10 4 L 10 256"
+                                        fill="none"
+                                        stroke="#2563EB"
+                                        strokeWidth="2.5"
+                                        strokeLinecap="round"
+                                    />
+                                    <circle
+                                        ref={dotRef}
+                                        cx="10"
+                                        cy="4"
+                                        r="5"
+                                        fill="#2563EB"
+                                        stroke="#EFEFEF"
+                                        strokeWidth="2.5"
+                                    />
+                                </svg>
                             </div>
 
-                            <p className="text-sm text-slate-200 leading-relaxed">
-                                {current.portalNote}
-                            </p>
+                            <div key={current.num} className="space-y-4 min-w-0 animate-fade-in">
+                                <div className="flex items-baseline gap-3">
+                                    <span className="font-display font-extrabold text-5xl sm:text-6xl text-[#2563EB] tracking-[-0.04em] leading-none tabular-nums">
+                                        {current.num}
+                                    </span>
+                                    <span className="font-display font-bold text-lg text-[#071124]">
+                                        {current.label}
+                                    </span>
+                                </div>
 
-                            <div className="pt-3 border-t border-white/15 flex items-center justify-between text-xs">
-                                <span className="text-slate-300">Status di portal</span>
-                                <span className="font-semibold text-blue-300">{current.label}</span>
+                                <h3 className="font-display font-bold text-2xl sm:text-3xl text-[#071124] tracking-[-0.025em] leading-tight">
+                                    {current.title}
+                                </h3>
+
+                                <p className="text-sm sm:text-base text-[#071124]/75 leading-relaxed">
+                                    {current.desc}
+                                </p>
+
+                                <div className="pt-4 border-t border-[#071124]/12 space-y-1.5">
+                                    <span className="text-xs font-semibold text-[#071124]">
+                                        Tercatat di halaman pelacakan
+                                    </span>
+                                    <p className="text-sm text-[#475569] leading-relaxed">
+                                        {current.portalNote}
+                                    </p>
+                                </div>
+
+                                <div className="pt-1">
+                                    {activeIdx < SHARED_PROCESS_STEPS.length - 1 ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleJumpStep(activeIdx + 1)}
+                                            className="min-h-[44px] inline-flex items-center gap-2 text-sm font-semibold text-[#2563EB] hover:text-[#1D4ED8] cursor-pointer"
+                                        >
+                                            <span>
+                                                Tahap berikutnya: {SHARED_PROCESS_STEPS[activeIdx + 1].label}
+                                            </span>
+                                            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => smoothScrollToTarget("track-lookup", -72)}
+                                            className="min-h-[44px] inline-flex items-center gap-2 text-sm font-semibold text-[#2563EB] hover:text-[#1D4ED8] cursor-pointer"
+                                        >
+                                            <span>Cek status tiket Anda sekarang</span>
+                                            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

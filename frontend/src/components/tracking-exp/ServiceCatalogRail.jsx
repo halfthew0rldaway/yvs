@@ -1,236 +1,211 @@
-import { useState } from "react";
-import { Plus, Minus, ArrowUpRight } from "lucide-react";
-import { MaskedLines } from "./MotionPrimitives";
-
-const CATEGORIES = [
-    "Semua",
-    "Daya & Mesin",
-    "Layar & Fisik",
-    "Perawatan Suhu",
-    "Kena Cairan",
-    "Upgrade & Data",
-];
+import { useEffect, useRef } from "react";
+import { ArrowUpRight } from "lucide-react";
+import { MaskedLines, usePrefersReducedMotion } from "./MotionPrimitives";
+import { loadGsapRuntime } from "./motionTokens";
 
 const SERVICES = [
     {
-        id: "power",
         num: "01",
-        category: "Daya & Mesin",
-        title: "Perbaikan laptop & PC mati total atau bermasalah daya",
-        symptoms: "Perangkat tidak menyala, tidak mengisi daya, atau sering mati mendadak.",
+        category: "Daya & mesin",
+        title: "Mati total atau tidak mengisi daya",
+        symptoms: "Perangkat tidak menyala, lampu indikator mati, atau sering mati mendadak saat dipakai.",
         detail: "Pemeriksaan menyeluruh mulai dari adaptor, baterai, konektor daya, hingga komponen papan utama sesuai hasil pengecekan teknisi.",
-        devices: "Laptop berbagai merek, MacBook, dan PC desktop",
-        note: "Estimasi waktu & biaya diinfokan setelah diagnosa",
+        devices: "Laptop, MacBook & PC desktop",
     },
     {
-        id: "display",
         num: "02",
-        category: "Layar & Fisik",
-        title: "Perbaikan layar, keyboard, baterai & engsel",
-        symptoms: "Layar bergaris atau gelap, tombol macet, baterai cepat habis, atau engsel patah.",
-        detail: "Pengecekan kabel fleksibel, panel layar, modul keyboard, baterai, hingga perbaikan dudukan engsel dan casing dengan pilihan suku cadang sesuai kebutuhan.",
-        devices: "Laptop kerja, laptop gaming, dan MacBook",
-        note: "Pilihan suku cadang dibahas dulu bersama pemilik",
+        category: "Layar & fisik",
+        title: "Layar, keyboard, baterai & engsel",
+        symptoms: "Layar bergaris atau gelap, tombol macet, baterai cepat turun, atau engsel patah.",
+        detail: "Pengecekan kabel fleksibel, panel layar, modul keyboard, baterai, hingga perbaikan dudukan engsel dengan opsi suku cadang sesuai kebutuhan.",
+        devices: "Laptop kerja, gaming & MacBook",
     },
     {
-        id: "thermal",
         num: "03",
-        category: "Perawatan Suhu",
+        category: "Perawatan suhu",
         title: "Pembersihan debu & ganti pasta termal",
-        symptoms: "Kipas terdengar berisik, bodi terasa cepat panas, atau performa menurun saat dipakai lama.",
-        detail: "Pembersihan debu di jalur pendingin dan kipas, disertai penggantian pasta termal agar sirkulasi panas perangkat lebih terjaga.",
-        devices: "Laptop, MacBook, dan PC desktop",
-        note: "Disarankan secara berkala tiap 6–12 bulan",
+        symptoms: "Kipas berisik, bodi cepat panas, atau performa menurun ketika dipakai bekerja lama.",
+        detail: "Pembersihan debu pada kipas dan jalur pendingin serta penggantian pasta termal agar suhu perangkat lebih stabil.",
+        devices: "Disarankan tiap 6–12 bulan",
     },
     {
-        id: "liquid",
         num: "04",
-        category: "Kena Cairan",
+        category: "Kena cairan",
         title: "Penanganan perangkat terkena cairan",
         symptoms: "Tertumpah air, kopi, atau minuman lainnya ke area keyboard maupun mesin.",
-        detail: "Pembersihan sisa cairan dan pemeriksaan bagian yang terdampak untuk menekan risiko kerusakan lanjutan. Sebaiknya segera matikan unit dan jangan dinyalakan dulu sebelum diperiksa.",
-        devices: "Laptop & MacBook terkena tumpahan cairan",
-        note: "Penanganan bergantung tingkat kerusakan cairan",
+        detail: "Pembersihan sisa cairan dan evaluasi bagian terdampak untuk menekan risiko kerusakan lanjutan. Matikan perangkat dan jangan dinyalakan dulu.",
+        devices: "Laptop & MacBook",
     },
     {
-        id: "upgrade",
         num: "05",
-        category: "Upgrade & Data",
-        title: "Upgrade SSD, tambah RAM & instalasi sistem",
-        symptoms: "Perangkat terasa lambat saat membuka aplikasi atau ruang penyimpanan mulai penuh.",
-        detail: "Pemasangan SSD, penambahan RAM, pemindahan sistem serta file, hingga instalasi ulang sistem operasi dan perakitan PC desktop sesuai kebutuhan.",
-        devices: "Laptop yang mendukung upgrade & PC desktop",
-        note: "Bisa konsultasi spesifikasi terlebih dulu",
+        category: "Upgrade sistem",
+        title: "Upgrade SSD, tambah RAM & instalasi",
+        symptoms: "Membuka aplikasi terasa lambat atau ruang penyimpanan sudah hampir penuh.",
+        detail: "Pemasangan SSD, penambahan RAM, pemindahan sistem serta dokumen, hingga instalasi ulang OS dan perakitan PC desktop.",
+        devices: "Laptop & PC desktop",
     },
     {
-        id: "recovery",
         num: "06",
-        category: "Upgrade & Data",
+        category: "Data & penyimpanan",
         title: "Pengecekan & penyelamatan data",
-        symptoms: "SSD atau harddisk sulit terbaca, sistem gagal masuk, atau perlu memindahkan dokumen penting.",
-        detail: "Pemeriksaan kondisi media penyimpanan dan upaya penyelamatan file penting menyesuaikan tingkat kerusakan perangkat.",
-        devices: "SSD NVMe, SSD SATA, harddisk internal & eksternal",
-        note: "Kerahasiaan data pelanggan dijaga",
+        symptoms: "SSD atau harddisk sulit terbaca, sistem gagal masuk, atau perlu memindahkan file penting.",
+        detail: "Pemeriksaan media penyimpanan dan upaya penyelamatan dokumen penting sesuai tingkat kerusakan perangkat.",
+        devices: "SSD NVMe, SATA & harddisk eksternal",
     },
 ];
 
+/**
+ * ACT III — Native CSS Sticky + GSAP ScrollTrigger Pure-Scrub Horizontal Gallery
+ * Uses native `lg:sticky lg:top-0 lg:h-[100dvh]` inside a `lg:h-[240vh]` scroll runway
+ * (zero GSAP pin-spacer DOM mutations) so horizontal scrubbing never jumps or breaks.
+ */
 export default function ServiceCatalogRail() {
-    const [activeCat, setActiveCat] = useState("Semua");
-    const [openId, setOpenId] = useState("power");
+    const sectionRef = useRef(null);
+    const viewportRef = useRef(null);
+    const trackRef = useRef(null);
+    const progressRef = useRef(null);
+    const reducedMotion = usePrefersReducedMotion();
 
-    const list =
-        activeCat === "Semua"
-            ? SERVICES
-            : SERVICES.filter((item) => item.category === activeCat);
+    useEffect(() => {
+        if (reducedMotion || typeof window === "undefined" || !sectionRef.current || !trackRef.current) {
+            return;
+        }
+        const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+        if (!isDesktop) return;
+
+        let cancelled = false;
+        let ctx = null;
+
+        loadGsapRuntime().then(({ gsap, ScrollTrigger }) => {
+            if (cancelled || !sectionRef.current || !trackRef.current) return;
+
+            ctx = gsap.context(() => {
+                const getDistance = () => {
+                    const track = trackRef.current;
+                    const vp = viewportRef.current;
+                    if (!track || !vp) return 0;
+                    return Math.max(0, track.scrollWidth - vp.clientWidth);
+                };
+
+                gsap.to(trackRef.current, {
+                    x: () => -getDistance(),
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: sectionRef.current,
+                        start: "top top",
+                        end: "bottom bottom",
+                        scrub: 0.45,
+                        invalidateOnRefresh: true,
+                        onUpdate: (self) => {
+                            if (progressRef.current) {
+                                progressRef.current.style.transform = `scaleX(${self.progress})`;
+                            }
+                        },
+                    },
+                });
+            }, sectionRef);
+
+            window.requestAnimationFrame(() => ScrollTrigger.refresh());
+        });
+
+        return () => {
+            cancelled = true;
+            if (ctx) ctx.revert();
+        };
+    }, [reducedMotion]);
 
     return (
         <section
             id="layanan"
-            className="w-full bg-white border-b border-slate-200 py-16 sm:py-24 scroll-mt-16 overflow-x-clip"
+            ref={sectionRef}
+            className={`relative w-full bg-white scroll-mt-16 ${
+                reducedMotion ? "" : "lg:h-[240vh]"
+            }`}
         >
-            <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
-                {/* Editorial Section Header */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-end pb-8 sm:pb-10 border-b border-slate-200">
-                    <div className="lg:col-span-7 space-y-2.5">
-                        <span className="font-mono text-xs text-blue-700 font-semibold block">
-                            02 / LAYANAN PERBAIKAN
-                        </span>
-                        <MaskedLines
-                            as="h2"
-                            lines={["Layanan yang biasa", "kami tangani di bengkel."]}
-                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.65rem] text-slate-950 tracking-[-0.03em] leading-[1.12]"
-                        />
-                    </div>
-                    <div className="lg:col-span-5">
-                        <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                            Biaya dan lama pengerjaan selalu mengikuti hasil pemeriksaan unit. Anda bisa bertanya dulu lewat WhatsApp sebelum membawa perangkat.
-                        </p>
-                    </div>
+            <div
+                ref={viewportRef}
+                className="lg:sticky lg:top-0 lg:h-[100dvh] lg:min-h-[680px] w-full py-16 sm:py-24 lg:py-0 lg:flex lg:flex-col lg:justify-center overflow-hidden"
+            >
+                {/* Header */}
+                <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 pb-8 lg:pb-10 lg:pt-12 flex flex-col lg:flex-row lg:items-end justify-between gap-5">
+                    <MaskedLines
+                        as="h2"
+                        lines={["Layanan yang biasa", "kami tangani di bengkel."]}
+                        className="font-display font-extrabold text-3xl sm:text-4xl lg:text-[2.85rem] text-[#071124] tracking-[-0.035em] leading-[1.08] max-w-2xl"
+                    />
+                    <p className="text-sm sm:text-base text-[#475569] leading-relaxed max-w-sm">
+                        Setiap perbaikan dimulai dari pemeriksaan jelas. Anda bisa konsultasi dulu lewat WhatsApp sebelum membawa unit.
+                    </p>
                 </div>
 
-                {/* Filter Tabs (44px+ touch targets, WCAG AA contrast) */}
-                <div
-                    role="tablist"
-                    aria-label="Filter kategori layanan"
-                    className="flex items-center gap-2 overflow-x-auto yvs-no-scrollbar py-5 border-b border-slate-200"
-                >
-                    {CATEGORIES.map((cat) => {
-                        const active = cat === activeCat;
-                        return (
-                            <button
-                                key={cat}
-                                role="tab"
-                                aria-selected={active}
-                                type="button"
-                                onClick={() => {
-                                    setActiveCat(cat);
-                                    const firstMatch =
-                                        cat === "Semua"
-                                            ? SERVICES[0]
-                                            : SERVICES.find((s) => s.category === cat);
-                                    if (firstMatch) setOpenId(firstMatch.id);
-                                }}
-                                className={`min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
-                                    active
-                                        ? "bg-[#0B162C] text-white"
-                                        : "bg-slate-100 text-slate-800 hover:bg-blue-50 hover:text-blue-700"
-                                }`}
-                            >
-                                {cat}
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Editorial Ledger Rows (No icon-card grid) */}
-                <div className="divide-y divide-slate-200">
-                    {list.map((service) => {
-                        const isOpen = openId === service.id;
-                        const waText = encodeURIComponent(
-                            `Halo YVS Computer, saya ingin konsultasi soal ${service.title.toLowerCase()}.`
-                        );
-                        return (
-                            <div
-                                key={service.id}
-                                className={`transition-colors ${
-                                    isOpen
-                                        ? "bg-slate-50 rounded-2xl my-2 px-4 sm:px-6 border border-slate-200"
-                                        : "hover:bg-slate-50/70"
-                                }`}
-                            >
-                                <button
-                                    type="button"
-                                    aria-expanded={isOpen}
-                                    data-cursor={isOpen ? "Tutup" : "Buka"}
-                                    onClick={() => setOpenId(isOpen ? "" : service.id)}
-                                    className="w-full py-5 sm:py-6 grid grid-cols-12 gap-3 sm:gap-6 items-center text-left cursor-pointer group"
+                {/* Horizontal Editorial Plates */}
+                <div className="w-full overflow-x-auto lg:overflow-visible yvs-no-scrollbar snap-x snap-mandatory lg:snap-none">
+                    <div
+                        ref={trackRef}
+                        className="flex items-stretch gap-5 sm:gap-6 px-5 sm:px-8 lg:px-12 w-max"
+                    >
+                        {SERVICES.map((service) => {
+                            const waText = encodeURIComponent(
+                                `Halo YVS Computer, saya ingin tanya mengenai layanan ${service.title.toLowerCase()}.`
+                            );
+                            return (
+                                <article
+                                    key={service.num}
+                                    data-cursor="Lihat"
+                                    className="snap-start w-[300px] sm:w-[380px] lg:w-[420px] shrink-0 bg-[#F8FAFC] hover:bg-white border border-[#071124]/10 hover:border-[#2563EB]/40 rounded-2xl p-6 sm:p-8 flex flex-col justify-between gap-8 transition-colors duration-300"
                                 >
-                                    <span className="col-span-2 sm:col-span-1 font-mono text-xs sm:text-sm font-bold text-slate-600 group-hover:text-blue-700 transition-colors">
-                                        {service.num}
-                                    </span>
+                                    <div className="space-y-5">
+                                        <div className="flex items-baseline justify-between gap-3 pb-4 border-b border-[#071124]/10">
+                                            <span className="font-display font-extrabold text-4xl text-[#2563EB] tracking-[-0.04em] leading-none">
+                                                {service.num}
+                                            </span>
+                                            <span className="text-xs font-medium text-[#475569]">
+                                                {service.category}
+                                            </span>
+                                        </div>
 
-                                    <div className="col-span-8 sm:col-span-9 lg:col-span-7 min-w-0">
-                                        <h3 className="font-display font-bold text-base sm:text-xl text-slate-950 group-hover:text-blue-700 transition-colors leading-snug">
-                                            {service.title}
-                                        </h3>
-                                        <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
-                                            {service.symptoms}
-                                        </p>
-                                    </div>
-
-                                    <div className="hidden lg:block lg:col-span-3 text-xs font-medium text-slate-600">
-                                        {service.note}
-                                    </div>
-
-                                    <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex justify-end">
-                                        <span
-                                            aria-hidden="true"
-                                            className={`w-11 h-11 rounded-full border flex items-center justify-center transition-colors ${
-                                                isOpen
-                                                    ? "bg-blue-600 border-blue-600 text-white"
-                                                    : "bg-white border-slate-300 text-slate-800 group-hover:border-blue-600 group-hover:text-blue-600"
-                                            }`}
-                                        >
-                                            {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                        </span>
-                                    </div>
-                                </button>
-
-                                {/* Smooth CSS Grid Accordion (Zero layout thrash, zero framer-motion overhead) */}
-                                <div
-                                    className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
-                                        isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                                    }`}
-                                >
-                                    <div className="overflow-hidden">
-                                        <div className="pb-6 pt-1 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 border-t border-slate-200/80">
-                                            <div className="hidden lg:block lg:col-span-1" />
-                                            <div className="lg:col-span-7 space-y-2 pt-3">
-                                                <p className="text-sm sm:text-[15px] text-slate-700 leading-relaxed">
-                                                    {service.detail}
-                                                </p>
-                                                <p className="text-xs text-slate-600">
-                                                    <strong className="text-slate-900">Cakupan unit:</strong>{" "}
-                                                    {service.devices}
-                                                </p>
-                                            </div>
-                                            <div className="lg:col-span-4 flex lg:justify-end items-end pt-2">
-                                                <a
-                                                    href={`https://wa.me/628121034212?text=${waText}`}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors"
-                                                >
-                                                    <span>Tanya via WhatsApp</span>
-                                                    <ArrowUpRight className="w-4 h-4 shrink-0" aria-hidden="true" />
-                                                </a>
-                                            </div>
+                                        <div className="space-y-2.5">
+                                            <h3 className="font-display font-bold text-xl sm:text-2xl text-[#071124] tracking-[-0.02em] leading-snug">
+                                                {service.title}
+                                            </h3>
+                                            <p className="text-sm text-[#475569] leading-relaxed">
+                                                {service.symptoms}
+                                            </p>
+                                            <p className="text-sm text-[#071124]/80 leading-relaxed pt-1">
+                                                {service.detail}
+                                            </p>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+
+                                    <div className="pt-4 border-t border-[#071124]/10 flex items-center justify-between gap-3">
+                                        <span className="text-xs font-medium text-[#475569]">
+                                            {service.devices}
+                                        </span>
+                                        <a
+                                            href={`https://wa.me/628121034212?text=${waText}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="min-h-[44px] inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-[#071124] hover:text-[#2563EB] transition-colors shrink-0"
+                                        >
+                                            <span>Tanya WhatsApp</span>
+                                            <ArrowUpRight className="w-4 h-4 shrink-0" aria-hidden="true" />
+                                        </a>
+                                    </div>
+                                </article>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Desktop Horizontal Scroll Progress Hairline */}
+                <div className="hidden lg:block w-full max-w-[1440px] mx-auto px-12 pt-10" aria-hidden="true">
+                    <div className="h-[2px] w-full bg-[#071124]/10 overflow-hidden">
+                        <div
+                            ref={progressRef}
+                            className="h-full w-full bg-[#2563EB] origin-left"
+                            style={{ transform: "scaleX(0)" }}
+                        />
+                    </div>
                 </div>
             </div>
         </section>

@@ -1,7 +1,21 @@
 /* ============================================================================
    YVS Computer — Editorial Redesign Stylesheet
-   Palette: White (#FFFFFF / #F8FAFC) + Brand Blue (#2563EB) + Deep Navy (#0B162C)
+   Studio Alabaster (#EFEFEF) · Gallery White (#FFFFFF) · Obsidian Navy (#071124) · Brand Blue (#2563EB)
    ============================================================================ */
+
+:root {
+  --yvs-studio: #efefef;
+  --yvs-paper: #ffffff;
+  --yvs-surface: #f8fafc;
+  --yvs-obsidian: #071124;
+  --yvs-navy: #0e1c36;
+  --yvs-ink: #071124;
+  --yvs-ink-muted: #475569;
+  --yvs-blue: #2563eb;
+  --yvs-blue-hover: #1d4ed8;
+  --yvs-hairline: rgba(7, 17, 36, 0.11);
+  --yvs-hairline-dark: rgba(255, 255, 255, 0.13);
+}
 
 /* 1. Native CSS Scroll-Driven Reading Progress Indicator */
 .yvs-exp-progress-bar {
@@ -10,10 +24,10 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: #2563eb;
+  background: var(--yvs-blue);
   transform-origin: 0 50%;
   transform: scaleX(0);
-  z-index: 70;
+  z-index: 80;
   pointer-events: none;
 }
 
@@ -30,7 +44,6 @@
 
     .yvs-exp-progress-bar {
       animation: yvs-exp-grow-progress auto linear;
-      /* animation-timeline MUST follow animation shorthand */
       animation-timeline: scroll(root block);
     }
   }
@@ -57,10 +70,10 @@
     animation: yvs-intro-sweep 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  /* LCP-safe hero line rise: stays opacity 1 throughout so LCP fires at 0ms */
+  /* LCP-safe hero line rise: opacity stays 1 so LCP fires immediately */
   @keyframes yvs-hero-line-rise {
     from {
-      transform: translate3d(0, 18%, 0);
+      transform: translate3d(0, 16%, 0);
     }
     to {
       transform: translate3d(0, 0, 0);
@@ -68,14 +81,14 @@
   }
 
   .yvs-exp-hero-line {
-    animation: yvs-hero-line-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: yvs-hero-line-rise 0.68s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }
 
 /* 3. Same-Document View Transitions between Landing and Tracking Results */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.34s;
+  animation-duration: 0.38s;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -94,61 +107,73 @@
 
 /* 4. Custom Editorial Cursor (Desktop Fine Pointer Only) */
 .yvs-exp-cursor {
-  width: 12px;
-  height: 12px;
-  margin-left: -6px;
-  margin-top: -6px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
   border-radius: 9999px;
-  background: rgba(37, 99, 235, 0.85);
+  background: var(--yvs-blue);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-    margin 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 0.22s ease,
+  transition: width 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    margin 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.24s ease,
     opacity 0.2s ease;
 }
 
 .yvs-exp-cursor[data-state="interactive"] {
-  width: 28px;
-  height: 28px;
-  margin-left: -14px;
-  margin-top: -14px;
-  background: rgba(37, 99, 235, 0.14);
-  border: 1.5px solid #2563eb;
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  margin-top: -16px;
+  background: rgba(37, 99, 235, 0.12);
+  border: 1.5px solid var(--yvs-blue);
 }
 
 .yvs-exp-cursor[data-state="label"] {
-  width: 68px;
-  height: 68px;
-  margin-left: -34px;
-  margin-top: -34px;
-  background: #0b162c;
+  width: 76px;
+  height: 76px;
+  margin-left: -38px;
+  margin-top: -38px;
+  background: var(--yvs-obsidian);
   color: #ffffff;
+  box-shadow: 0 12px 30px rgba(7, 17, 36, 0.28);
 }
 
 .yvs-exp-cursor-label {
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   color: #ffffff;
   white-space: nowrap;
 }
 
-/* 5. Pausable Velocity-Linked Review Marquee (WCAG 2.2.2) */
+/* 5. Seamless Studio Alabaster Canvas matching /frames/*.webp cyclorama */
+.yvs-studio-canvas {
+  background-color: var(--yvs-studio);
+}
+
+.yvs-studio-frame {
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 86% 84% at 50% 50%, #000 66%, transparent 100%);
+  mask-image: radial-gradient(ellipse 86% 84% at 50% 50%, #000 66%, transparent 100%);
+}
+
+/* 6. Pausable Velocity-Linked Review Marquee (WCAG 2.2.2) */
 .yvs-exp-review-track {
   display: flex;
   width: max-content;
 }
 
-/* 6. Editorial Tracking Input Focus Override (readable 16px on mobile avoids iOS auto-zoom) */
+/* 7. Editorial Tracking Input Focus Override (16px on mobile avoids iOS auto-zoom) */
 .yvs-exp-track-input {
   font-size: 1rem !important;
   line-height: 1.5rem !important;
 }
 
-/* 7. Semantic Active Pulse for Current Tracking Stage */
+/* 8. Semantic Active Pulse for Current Tracking Stage */
 @media (prefers-reduced-motion: no-preference) {
   @keyframes yvs-stage-pulse {
     0% {
@@ -156,11 +181,11 @@
       opacity: 0.55;
     }
     70% {
-      transform: scale(1.75);
+      transform: scale(1.8);
       opacity: 0;
     }
     100% {
-      transform: scale(1.75);
+      transform: scale(1.8);
       opacity: 0;
     }
   }
@@ -170,13 +195,13 @@
   }
 }
 
-/* 8. Visible Accessible Focus Rings */
+/* 9. Visible Accessible Focus Rings */
 .yvs-exp-scope :is(a, button, input, [tabindex="0"]):focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--yvs-blue);
   outline-offset: 2px;
 }
 
-/* 9. Hide native scrollbar on horizontal interactive filter rails */
+/* 10. Hide native scrollbar on horizontal rails */
 .yvs-no-scrollbar::-webkit-scrollbar {
   display: none;
 }

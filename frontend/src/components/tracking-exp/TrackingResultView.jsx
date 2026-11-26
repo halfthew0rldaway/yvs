@@ -957,77 +957,77 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
     const hasWarrantyCountdown = Number.isFinite(warrantyRemaining);
 
     return (
-        <div ref={rootRef} className="space-y-6 pb-24 lg:pb-8">
-            {/* 1. Primary Ticket Summary Card */}
+        <div ref={rootRef} className="space-y-8 pb-24 lg:pb-12">
+            {/* 1. Monumental Obsidian Navy Ticket Hero Band */}
             <section
                 data-result-stagger
-                className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 shadow-[0_18px_40px_-28px_rgba(11,22,44,0.12)] space-y-5"
+                className="bg-[#071124] text-white rounded-3xl p-6 sm:p-9 lg:p-11 shadow-[0_28px_70px_-28px_rgba(7,17,36,0.35)] space-y-7"
             >
-                <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-slate-200">
-                    <div className="space-y-1.5 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-white/12">
+                    <div className="space-y-2.5 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2.5">
                             {onBackToList && (
                                 <button
                                     type="button"
                                     onClick={onBackToList}
-                                    className="min-h-[44px] inline-flex items-center gap-1 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs font-semibold cursor-pointer"
+                                    className="min-h-[44px] inline-flex items-center gap-1 px-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer"
                                 >
                                     <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                                     <span>Semua tiket</span>
                                 </button>
                             )}
-                            <span className="font-mono font-bold text-base sm:text-lg text-slate-950">
+                            <span className="font-mono font-bold text-sm sm:text-base text-blue-300 tracking-wide">
                                 {t.nomor_tiket}
                             </span>
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
-                                <MonitorSmartphone className="w-3.5 h-3.5" aria-hidden="true" />
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-slate-200 text-xs font-medium">
+                                <MonitorSmartphone className="w-3.5 h-3.5 text-blue-300" aria-hidden="true" />
                                 <span>{t.jenis_perangkat || "Perangkat"}</span>
                             </span>
                         </div>
-                        <h1 className="font-display font-extrabold text-xl sm:text-2xl lg:text-3xl text-slate-950 tracking-tight break-words">
+                        <h1 className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.75rem] text-white tracking-[-0.035em] leading-[1.08] break-words">
                             {t.perangkat}
                         </h1>
                     </div>
 
-                    {/* Semantic Status Badge */}
+                    {/* Semantic Status Pill */}
                     <span
-                        className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold border shrink-0 ${statusMeta.badge}`}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-bold border shrink-0 ${statusMeta.badge}`}
                     >
                         <span className={`w-2 h-2 rounded-full ${statusMeta.dot}`} aria-hidden="true" />
                         <span>{statusMeta.label}</span>
                     </span>
                 </div>
 
-                {/* Metadata Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                        <span className="text-xs text-slate-600 flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-blue-600" aria-hidden="true" />
+                {/* Hairline 3-Column Metadata Strip */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-8 text-sm">
+                    <div className="space-y-1">
+                        <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-blue-400" aria-hidden="true" />
                             <span>Tanggal masuk</span>
                         </span>
-                        <p className="font-semibold text-slate-950 mt-1">
+                        <p className="font-display font-bold text-base text-white">
                             {formatDateSafe(t.created_at)}
                         </p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                        <span className="text-xs text-slate-600 flex items-center gap-1.5">
-                            <User className="w-3.5 h-3.5 text-blue-600" aria-hidden="true" />
+                    <div className="sm:border-l sm:border-white/12 sm:pl-6 space-y-1">
+                        <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5 text-blue-400" aria-hidden="true" />
                             <span>Teknisi penanggung jawab</span>
                         </span>
-                        <p className="font-semibold text-slate-950 mt-1">
+                        <p className="font-display font-bold text-base text-white">
                             {t.teknisi || "Menunggu penugasan"}
                         </p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                        <span className="text-xs text-slate-600 flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-blue-600" aria-hidden="true" />
-                            <span>Estimasi / Garansi</span>
+                    <div className="sm:border-l sm:border-white/12 sm:pl-6 space-y-1">
+                        <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-blue-400" aria-hidden="true" />
+                            <span>Estimasi &amp; garansi</span>
                         </span>
-                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <div className="pt-0.5 flex flex-wrap items-center gap-2">
                             {t.sla_paket ? (
                                 <SlaBadge tiket={t} />
                             ) : (
-                                <span className="font-semibold text-slate-950">
+                                <span className="font-display font-bold text-base text-white">
                                     {["selesai", "diambil"].includes(t.status)
                                         ? `Garansi ${t.durasi_garansi || "1 Bulan"}`
                                         : "Menunggu konfirmasi"}
@@ -1037,17 +1037,17 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                     </div>
                 </div>
 
-                {/* Desktop & Tablet Action Row (all >= 44px) */}
-                <div className="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
+                {/* Crisp Editorial Pill Action Bar (all >= 44px) */}
+                <div className="pt-5 border-t border-white/12 flex flex-wrap items-center justify-between gap-2.5">
                     <div className="flex flex-wrap items-center gap-2">
                         <button
                             type="button"
                             onClick={handleRefreshStatus}
                             disabled={refreshing}
-                            className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                            className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50"
                         >
                             <RefreshCw
-                                className={`w-4 h-4 text-blue-600 ${refreshing ? "animate-spin" : ""}`}
+                                className={`w-4 h-4 text-blue-300 ${refreshing ? "animate-spin" : ""}`}
                                 aria-hidden="true"
                             />
                             <span>{refreshing ? "Memperbarui..." : "Segarkan"}</span>
@@ -1055,17 +1055,17 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                         <button
                             type="button"
                             onClick={handleShareTracking}
-                            className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                            className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                         >
-                            <Share2 className="w-4 h-4 text-slate-700" aria-hidden="true" />
-                            <span>Salin / Bagikan</span>
+                            <Share2 className="w-4 h-4 text-slate-300" aria-hidden="true" />
+                            <span>Bagikan</span>
                         </button>
                         <button
                             type="button"
                             onClick={() => setIsQrModalOpen(true)}
-                            className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                            className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                         >
-                            <QrCode className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                            <QrCode className="w-4 h-4 text-blue-300" aria-hidden="true" />
                             <span>QR Tiket</span>
                         </button>
                     </div>
@@ -1075,9 +1075,9 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                             <button
                                 type="button"
                                 onClick={() => setIsInvoiceModalOpen(true)}
-                                className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                                className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-[#071124] hover:bg-blue-50 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                             >
-                                <FileText className="w-4 h-4" aria-hidden="true" />
+                                <FileText className="w-4 h-4 text-[#2563EB]" aria-hidden="true" />
                                 <span>Faktur Nota</span>
                             </button>
                         )}
@@ -1085,7 +1085,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                             <button
                                 type="button"
                                 onClick={() => setIsWarrantyModalOpen(true)}
-                                className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                                className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                             >
                                 <Printer className="w-4 h-4" aria-hidden="true" />
                                 <span>Kartu Garansi</span>
@@ -1096,7 +1096,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                                 href={waUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors"
+                                className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs sm:text-sm font-semibold transition-colors"
                             >
                                 <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                                 <span>WhatsApp Admin</span>

@@ -10,20 +10,15 @@ import {
 import EditorialNavbar from "./EditorialNavbar";
 import HeroTrackingStage from "./HeroTrackingStage";
 
-// Lazy-load below-the-fold sections on scroll proximity so initial load only mounts Hero + Navbar
-const EditorialPromoStrip = lazy(() => import("./EditorialPromoStrip"));
+// Lazy-load below-the-fold chapters on scroll proximity so Hero LCP stays < 2.2s
 const ServiceJourneyTimeline = lazy(() => import("./ServiceJourneyTimeline"));
 const ServiceCatalogRail = lazy(() => import("./ServiceCatalogRail"));
 const ProofReviewsStrip = lazy(() => import("./ProofReviewsStrip"));
+const EditorialPromoStrip = lazy(() => import("./EditorialPromoStrip"));
 const TransparentPricingSection = lazy(() => import("./TransparentPricingSection"));
 const WorkshopVisitSection = lazy(() => import("./WorkshopVisitSection"));
 
-/**
- * Defers mounting heavy below-the-fold sections until they approach the viewport
- * (or when the user clicks a navbar anchor / scrolls), eliminating initial TBT spikes
- * while keeping CLS at 0 via stable placeholder height.
- */
-function DeferredSection({ id, minHeight = 520, dark = false, forceMount = false, children }) {
+function DeferredSection({ id, minHeight = 560, bgClass = "bg-white", forceMount = false, children }) {
     const hostRef = useRef(null);
     const [mounted, setMounted] = useState(forceMount);
 
@@ -51,12 +46,7 @@ function DeferredSection({ id, minHeight = 520, dark = false, forceMount = false
         return (
             <Suspense
                 fallback={
-                    <div
-                        id={id}
-                        aria-hidden="true"
-                        style={{ minHeight }}
-                        className={dark ? "w-full bg-[#0B162C]" : "w-full bg-white"}
-                    />
+                    <div id={id} aria-hidden="true" style={{ minHeight }} className={`w-full ${bgClass}`} />
                 }
             >
                 {children}
@@ -68,8 +58,8 @@ function DeferredSection({ id, minHeight = 520, dark = false, forceMount = false
         <div
             ref={hostRef}
             id={id}
-            style={{ minHeight, contentVisibility: "auto", containIntrinsicSize: `auto ${minHeight}px` }}
-            className={dark ? "w-full bg-[#0B162C]" : "w-full bg-white"}
+            style={{ minHeight }}
+            className={`w-full ${bgClass}`}
         />
     );
 }
@@ -94,14 +84,12 @@ export default function ExperimentalTrackingLanding({
     const trackInputRef = useRef(null);
     const [mountAll, setMountAll] = useState(false);
 
-    // Pause Lenis while QR camera modal is open so modal scroll/focus behaves natively
     useLenisSmoothScroll(!isScannerOpen);
 
-    // Mount remaining sections immediately on first scroll or nav click so anchor scrolling is instant
     useEffect(() => {
         if (mountAll) return;
         const onScroll = () => {
-            if (window.scrollY > 40) setMountAll(true);
+            if (window.scrollY > 36) setMountAll(true);
         };
         window.addEventListener("scroll", onScroll, { passive: true });
         return () => window.removeEventListener("scroll", onScroll);
@@ -111,25 +99,18 @@ export default function ExperimentalTrackingLanding({
         smoothScrollToTarget("track-lookup", -72);
         window.setTimeout(() => {
             trackInputRef.current?.focus({ preventScroll: true });
-        }, 380);
+        }, 360);
     };
 
     return (
-        <div className="yvs-exp-scope min-h-screen bg-white text-slate-950 font-sans selection:bg-blue-600 selection:text-white">
-            {/* Short Non-Blocking Intro Accent (< 0.8s, skipped on repeat visit) */}
+        <div className="yvs-exp-scope min-h-screen yvs-studio-canvas text-[#071124] font-sans selection:bg-[#2563EB] selection:text-white">
             <IntroReveal />
-
-            {/* Desktop Fine-Pointer Custom Cursor */}
             <EditorialCursor />
-
-            {/* Scroll Progress Indicator */}
             <ScrollProgressBar />
-
-            {/* Shrinking Editorial Navbar + Skip Link */}
             <EditorialNavbar onFocusTrack={handleFocusTrack} />
 
             <main id="main-content">
-                {/* 1. Editorial Hero + Primary Tracking CTA + Scroll-Scrubbed Visual */}
+                {/* ACT I — Seamless Studio Hero + Primary Tracking Command Bar */}
                 <HeroTrackingStage
                     trackMethod={trackMethod}
                     setTrackMethod={setTrackMethod}
@@ -148,34 +129,34 @@ export default function ExperimentalTrackingLanding({
                     inputRef={trackInputRef}
                 />
 
-                {/* Active Store Promotions (Auto-hides if none active) */}
-                <DeferredSection id="promo-aktif" minHeight={0} forceMount={mountAll}>
-                    <EditorialPromoStrip />
-                </DeferredSection>
-
-                {/* 2. Pinned Scroll-Scrubbed 5-Stage Process (Shared language with Tracking Result) */}
-                <DeferredSection id="alur-servis" minHeight={640} forceMount={mountAll}>
+                {/* ACT II — Pinned Full-Screen Disassembly Process (Seamless #EFEFEF continuation) */}
+                <DeferredSection id="alur-servis" minHeight={720} bgClass="yvs-studio-canvas" forceMount={mountAll}>
                     <ServiceJourneyTimeline />
                 </DeferredSection>
 
-                {/* 3. Editorial Services Ledger */}
-                <DeferredSection id="layanan" minHeight={680} forceMount={mountAll}>
+                {/* ACT III — Horizontal Scroll Editorial Services Showcase */}
+                <DeferredSection id="layanan" minHeight={680} bgClass="bg-white" forceMount={mountAll}>
                     <ServiceCatalogRail />
                 </DeferredSection>
 
-                {/* 4. Proof: Before/After Drag Slider, Verified Counters, Warranty Terms & Velocity Marquee */}
-                <DeferredSection id="ulasan" minHeight={720} forceMount={mountAll}>
+                {/* ACT IV — Full-Bleed Obsidian Navy Proof, Real Visual Comparison & Velocity Reviews */}
+                <DeferredSection id="ulasan" minHeight={760} bgClass="bg-[#071124]" forceMount={mountAll}>
                     <ProofReviewsStrip />
                 </DeferredSection>
 
-                {/* 5. Transparent Pricing ("Mulai dari" ranges on Deep Navy contrast section) */}
-                <DeferredSection id="estimasi-biaya" minHeight={640} dark forceMount={mountAll}>
+                {/* Active Promotions (Auto-hides if none active) */}
+                <DeferredSection id="promo-aktif" minHeight={0} bgClass="bg-white" forceMount={mountAll}>
+                    <EditorialPromoStrip />
+                </DeferredSection>
+
+                {/* ACT V — Swiss Editorial Pricing Ledger */}
+                <DeferredSection id="estimasi-biaya" minHeight={620} bgClass="bg-white" forceMount={mountAll}>
                     <TransparentPricingSection />
                 </DeferredSection>
             </main>
 
-            {/* 6. Large Editorial Footer, Map, Hours & Magnetic CTAs */}
-            <DeferredSection id="lokasi" minHeight={580} forceMount={mountAll}>
+            {/* ACT VI — Monumental Obsidian Navy Footer */}
+            <DeferredSection id="lokasi" minHeight={620} bgClass="bg-[#071124]" forceMount={mountAll}>
                 <WorkshopVisitSection onFocusTrack={handleFocusTrack} />
             </DeferredSection>
         </div>
