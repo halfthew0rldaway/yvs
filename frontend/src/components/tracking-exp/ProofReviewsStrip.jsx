@@ -4,69 +4,35 @@ import { MaskedLines, usePrefersReducedMotion } from "./MotionPrimitives";
 import { loadGsapRuntime } from "./motionTokens";
 import VerticalMarquee from "./VerticalMarquee";
 
+// Ulasan 5-bintang aktual dari profil resmi Komputerawet.Com By: Yangversa Computer di Google Maps
 const REVIEWS = [
     {
-        id: "rizky",
-        initials: "RF",
-        name: "Rizky Fajar",
-        service: "Laptop & SSD",
-        quote: "Pelayanannya jujur dan transparan. Teknisi menjelaskan kerusakannya detail tanpa biaya tambahan yang ditutup-tutupi.",
+        id: "deddy",
+        initials: "DM",
+        name: "Deddy Muchtaridy",
+        dateText: "3 bulan lalu",
+        quote: "Sering lihat papan namanya cukup aneh Yangversa, sekali waktu laptop rusak jadinya mampir ke sini. Bagus pelayanan FO dan hasil kerja teknisinya juga bagus.. Setiap ada progres dilaporkan sebelum diambil tindakan yg berkonsekuensi biaya.",
     },
     {
-        id: "dewi",
-        initials: "DA",
-        name: "Dewi Anggraini",
-        service: "Pasta Termal",
-        quote: "Buat yang awam teknis sangat terbantu karena dijelaskan pelan-pelan. Setiap ganti sparepart selalu dikonfirmasi dulu.",
+        id: "rizka",
+        initials: "RE",
+        name: "rizka elinda",
+        dateText: "2 minggu lalu",
+        quote: "Di rekomendasi oleh rekan kerja untuk service di yangversa computer untuk service engsel laptop yang rusak. Alhamdulillah pelayanannya baik, ramah dan sangat membantu sekali. Terima kasih.",
     },
     {
-        id: "dimas",
-        initials: "DP",
-        name: "Dimas Prasetyo",
-        service: "Mesin & Engsel",
-        quote: "Laptop mati total dan engsel patah diperbaiki rapi. Komponen bekasnya juga dikembalikan lengkap dengan garansi.",
+        id: "pelita",
+        initials: "PM",
+        name: "pelita menembak",
+        dateText: "3 minggu lalu",
+        quote: "Layanan maksimal. Ramah dan customer diajak diskusi dulu ttg kerusakan. Jadi bisa paham ttg komputer juga. Recomended untuk wil. Bekasi",
     },
     {
-        id: "hendro",
-        initials: "HW",
-        name: "Hendro Wijaya",
-        service: "PC Desktop",
-        quote: "PC kantor sering restart sendiri, langsung dicek dan diberi opsi solusi sesuai anggaran. Komunikatif lewat WhatsApp.",
-    },
-    {
-        id: "bagus",
-        initials: "BP",
-        name: "Bagus Pratama",
-        service: "Servis MacBook",
-        quote: "MacBook tidak mau menyala ditangani rapi. Progres jelas di halaman lacak, biaya pas sesuai estimasi awal.",
-    },
-    {
-        id: "siti",
-        initials: "SN",
-        name: "Siti Nurhaliza",
-        service: "Keyboard",
-        quote: "Sebelum dikerjakan selalu diinfokan perkiraan biayanya dulu jadi tenang. Garansi jelas dan teknisinya ramah.",
-    },
-    {
-        id: "fajar",
-        initials: "FA",
-        name: "Fajar Ardiansyah",
-        service: "Layar LCD",
-        quote: "Layar bergaris langsung dicek tipe panelnya dulu. Pengerjaan cepat, hasil rapi, dan nota digital langsung tercatat.",
-    },
-    {
-        id: "nadia",
-        initials: "NK",
-        name: "Nadia Kusuma",
-        service: "Kena Cairan",
-        quote: "Ketumpahan kopi panik banget, langsung ditangani tim YVS. Board dibersihkan detail sebelum diuji nyala lagi.",
-    },
-    {
-        id: "arief",
+        id: "aulia",
         initials: "AR",
-        name: "Arief Budiman",
-        service: "RAM & OS",
-        quote: "Migrasi data aman semua tanpa hilang satu file pun. Laptop kerja berasa baru lagi dan suhunya jauh lebih adem.",
+        name: "Aulia Rahma",
+        dateText: "2 minggu lalu",
+        quote: "Pertama kali service laptop di yangversa computer, Alhamdulillah pelayanan sangat memuaskan dan sangat amat membantu. Terima kasih yangversa computer.",
     },
 ];
 
@@ -153,7 +119,7 @@ function EditorialReviewCard({ review }) {
                         ))}
                     </div>
                     <span className="text-[10px] sm:text-[11px] font-mono text-blue-300 bg-blue-500/12 border border-blue-400/20 px-2 py-0.5 rounded-full whitespace-nowrap">
-                        {review.service}
+                        {review.dateText}
                     </span>
                 </div>
 
@@ -174,7 +140,7 @@ function EditorialReviewCard({ review }) {
                         {review.name}
                     </p>
                     <p className="text-[10px] sm:text-[11px] text-slate-300 truncate">
-                        Google Maps
+                        Ulasan Google Maps
                     </p>
                 </div>
             </figcaption>
@@ -194,30 +160,30 @@ export default function ProofReviewsStrip() {
             {
                 id: "lane-1",
                 reverse: false,
-                duration: "44s",
+                duration: "34s",
                 className: "flex",
                 items: rotateReviews(REVIEWS, 0),
             },
             {
                 id: "lane-2",
                 reverse: true,
-                duration: "48s",
+                duration: "38s",
                 className: "flex",
-                items: rotateReviews(REVIEWS, 3),
+                items: rotateReviews(REVIEWS, 1),
             },
             {
                 id: "lane-3",
                 reverse: false,
-                duration: "42s",
+                duration: "36s",
                 className: "hidden md:flex",
-                items: rotateReviews(REVIEWS, 6),
+                items: rotateReviews(REVIEWS, 2),
             },
             {
                 id: "lane-4",
                 reverse: true,
-                duration: "50s",
+                duration: "40s",
                 className: "hidden lg:flex",
-                items: rotateReviews(REVIEWS, 2),
+                items: rotateReviews(REVIEWS, 3),
             },
         ],
         []
@@ -252,10 +218,10 @@ export default function ProofReviewsStrip() {
                             </div>
                             <div className="pl-8 sm:pl-12 border-l border-white/15">
                                 <p className="font-display font-extrabold text-5xl sm:text-7xl text-white tracking-[-0.04em] leading-none">
-                                    <ScrollCounter to={350} suffix="+" />
+                                    <ScrollCounter to={355} />
                                 </p>
                                 <p className="text-xs sm:text-sm text-slate-300 mt-2.5">
-                                    Ulasan pelanggan
+                                    Ulasan di Google Maps
                                 </p>
                             </div>
                         </div>
@@ -319,8 +285,8 @@ export default function ProofReviewsStrip() {
 
                 {/* Architectural 3D Perspective Tiled Vertical Review Wall */}
                 {reducedMotion ? (
-                    <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {REVIEWS.slice(0, 6).map((rev) => (
+                    <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {REVIEWS.map((rev) => (
                             <EditorialReviewCard key={rev.id} review={rev} />
                         ))}
                     </div>
@@ -338,7 +304,7 @@ export default function ProofReviewsStrip() {
                                             reverse={lane.reverse}
                                             paused={isPaused}
                                             pauseOnHover
-                                            repeat={2}
+                                            repeat={3}
                                             duration={lane.duration}
                                             gap="1rem"
                                             className="h-full"

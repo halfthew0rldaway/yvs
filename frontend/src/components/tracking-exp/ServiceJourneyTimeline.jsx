@@ -4,7 +4,7 @@ import {
     usePrefersReducedMotion,
     smoothScrollToTarget,
 } from "./MotionPrimitives";
-import { SHARED_PROCESS_STEPS, loadGsapRuntime } from "./motionTokens";
+import { SHARED_PROCESS_STEPS, loadGsapMotionPathRuntime } from "./motionTokens";
 
 const TOTAL_SOURCE_FRAMES = 240;
 const SAMPLED_COUNT = 80;
@@ -68,12 +68,14 @@ export default function ServiceJourneyTimeline() {
         let spineTl = null;
 
         const bitmaps = new Array(SAMPLED_COUNT).fill(null);
+        let ctx2d = null;
         let boxW = 0;
         let boxH = 0;
         let dpr = 1;
         let targetProgress = 0;
         let smoothProgress = 0;
         let lastDrawnIdx = -1;
+        let lastTickTime = 0;
 
         const pickNearestLoaded = (targetIdx) => {
             if (bitmaps[targetIdx]) return { img: bitmaps[targetIdx], idx: targetIdx };
@@ -93,13 +95,16 @@ export default function ServiceJourneyTimeline() {
             if (!canvas) return;
             const rect = canvas.getBoundingClientRect();
             if (rect.width === 0 || rect.height === 0) return;
-            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            dpr = Math.min(window.devicePixelRatio || 1, 1.5);
             boxW = Math.round(rect.width * dpr);
             boxH = Math.round(rect.height * dpr);
             if (canvas.width !== boxW || canvas.height !== boxH) {
                 canvas.width = boxW;
                 canvas.height = boxH;
+                ctx2d = canvas.getContext("2d", { desynchronized: true });
                 lastDrawnIdx = -1;
+            } else if (!ctx2d) {
+                ctx2d = canvas.getContext("2d", { desynchronized: true });
             }
         };
 
@@ -115,8 +120,9 @@ export default function ServiceJourneyTimeline() {
             const ih = img.height || img.naturalHeight;
             if (!iw || !ih) return;
 
-            const c = canvas.getContext("2d");
+            const c = ctx2d || canvas.getContext("2d", { desynchronized: true });
             if (!c) return;
+            ctx2d = c;
             c.clearRect(0, 0, boxW, boxH);
 
             const scale = Math.min(boxW / iw, boxH / ih);
@@ -199,13 +205,17 @@ export default function ServiceJourneyTimeline() {
             await Promise.all(workers);
         };
 
-        const tickLerp = () => {
+        const tickLerp = (now) => {
             rafId = null;
             if (cancelled) return;
 
+            const dt = lastTickTime ? Math.min(0.05, (now - lastTickTime) / 1000) : 1 / 60;
+            lastTickTime = now;
+
             const delta = targetProgress - smoothProgress;
             if (Math.abs(delta) > 0.00025) {
-                smoothProgress += delta * 0.16;
+                // Frame-rate independent damping so 60Hz, 120Hz, and 144Hz feel identical
+                smoothProgress += delta * (1 - Math.exp(-dt * 14));
                 const frameIdx = Math.min(
                     SAMPLED_COUNT - 1,
                     Math.max(0, Math.round(smoothProgress * (SAMPLED_COUNT - 1)))
@@ -214,6 +224,7 @@ export default function ServiceJourneyTimeline() {
                 if (spineTl) spineTl.progress(smoothProgress);
                 if (inView) rafId = window.requestAnimationFrame(tickLerp);
             } else if (smoothProgress !== targetProgress) {
+                lastTickTime = 0;
                 smoothProgress = targetProgress;
                 const frameIdx = Math.min(
                     SAMPLED_COUNT - 1,
@@ -221,6 +232,8 @@ export default function ServiceJourneyTimeline() {
                 );
                 drawFrame(frameIdx);
                 if (spineTl) spineTl.progress(smoothProgress);
+            } else {
+                lastTickTime = 0;
             }
         };
 
@@ -253,11 +266,11 @@ export default function ServiceJourneyTimeline() {
                     ensureTicker();
                 }
             },
-            { rootMargin: "160px 0px" }
+            { rootMargin: "220px 0px" }
         );
         io.observe(sectionRef.current);
 
-        loadGsapRuntime().then(({ gsap, ScrollTrigger }) => {
+        loadGsapMotionPathRuntime().then(({ gsap, ScrollTrigger }) => {
             if (cancelled || !sectionRef.current) return;
 
             ctx = gsap.context(() => {

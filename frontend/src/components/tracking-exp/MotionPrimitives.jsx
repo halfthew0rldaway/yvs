@@ -220,7 +220,8 @@ export function IntroReveal() {
 
 /**
  * Subtle magnetic button/link wrapper for fine pointers (desktop).
- * Loads GSAP lazily only on pointerenter so initial page load has zero GSAP cost.
+ * Caches rect on pointerenter and reuses GSAP quickTo setters for zero layout
+ * reads and zero tween GC allocations during mouse movement.
  */
 export function MagneticWrap({ children, strength = 0.2, className = "" }) {
     const wrapRef = useRef(null);
@@ -233,46 +234,48 @@ export function MagneticWrap({ children, strength = 0.2, className = "" }) {
         if (!el) return;
 
         let gsapRef = null;
+        let quickX = null;
+        let quickY = null;
+        let cachedRect = null;
         let loading = false;
         let cancelled = false;
 
         const ensureGsap = () => {
+            cachedRect = el.getBoundingClientRect();
             if (gsapRef || loading) return;
             loading = true;
             loadGsapRuntime().then(({ gsap }) => {
-                if (!cancelled) gsapRef = gsap;
+                if (cancelled) return;
+                gsapRef = gsap;
+                quickX = gsap.quickTo(el, "x", { duration: 0.28, ease: "power3.out" });
+                quickY = gsap.quickTo(el, "y", { duration: 0.28, ease: "power3.out" });
             });
         };
 
         const onMove = (e) => {
-            ensureGsap();
-            if (!gsapRef) return;
-            const rect = el.getBoundingClientRect();
-            const relX = e.clientX - (rect.left + rect.width / 2);
-            const relY = e.clientY - (rect.top + rect.height / 2);
-            gsapRef.to(el, {
-                x: relX * strength,
-                y: relY * strength,
-                duration: 0.32,
-                ease: "power3.out",
-                overwrite: "auto",
-            });
+            if (!quickX || !quickY) return;
+            if (!cachedRect) cachedRect = el.getBoundingClientRect();
+            const relX = e.clientX - (cachedRect.left + cachedRect.width / 2);
+            const relY = e.clientY - (cachedRect.top + cachedRect.height / 2);
+            quickX(relX * strength);
+            quickY(relY * strength);
         };
 
         const onLeave = () => {
+            cachedRect = null;
             if (!gsapRef) return;
             gsapRef.to(el, {
                 x: 0,
                 y: 0,
-                duration: 0.58,
+                duration: 0.55,
                 ease: "elastic.out(1, 0.45)",
                 overwrite: "auto",
             });
         };
 
-        el.addEventListener("pointerenter", ensureGsap, { passive: true, once: true });
-        el.addEventListener("pointermove", onMove);
-        el.addEventListener("pointerleave", onLeave);
+        el.addEventListener("pointerenter", ensureGsap, { passive: true });
+        el.addEventListener("pointermove", onMove, { passive: true });
+        el.addEventListener("pointerleave", onLeave, { passive: true });
         return () => {
             cancelled = true;
             el.removeEventListener("pointerenter", ensureGsap);
@@ -290,11 +293,8 @@ export function MagneticWrap({ children, strength = 0.2, className = "" }) {
 }
 
 /**
- * Editorial Masked Typography Reveal powered by GSAP SplitText + CustomEase.
- * - Hero `trigger="mount"` stays visible immediately at opacity 1 for instant LCP.
- * - Below-the-fold `trigger="scroll"` activates via IntersectionObserver so GSAP
- *   never runs during initial load, and passes `aria: "none"` to SplitText so ARIA
- *   audits score 100/100.
+ * Editorial Masked Typography Reveal powered purely by IntersectionObserver + CSS compositor transitions.
+ * Zero DOM node tearing (SplitText removed), zero mid-scroll layout reflow, 120fps smooth.
  */
 export function MaskedLines({
     lines = [],
@@ -308,75 +308,29 @@ export function MaskedLines({
 }) {
     const containerRef = useRef(null);
     const reducedMotion = usePrefersReducedMotion();
+    const [revealed, setRevealed] = useState(() => trigger === "mount" || reducedMotion);
 
     useEffect(() => {
-        if (reducedMotion || !containerRef.current || trigger === "mount") return;
+        if (reducedMotion || trigger === "mount") {
+            setRevealed(true);
+            return;
+        }
+        if (revealed || !containerRef.current) return;
 
-        let cancelled = false;
-        let ctx = null;
-        let splitInstances = [];
         const el = containerRef.current;
-
-        const runReveal = () => {
-            loadGsapRuntime().then(({ gsap, SplitText }) => {
-                if (cancelled || !containerRef.current) return;
-                const innerLines = containerRef.current.querySelectorAll("[data-mask-line]");
-                if (!innerLines.length) return;
-
-                ctx = gsap.context(() => {
-                    const targets = [];
-                    innerLines.forEach((lineEl) => {
-                        try {
-                            const split = new SplitText(lineEl, { type: "words", aria: "none" });
-                            splitInstances.push(split);
-                            if (split.words?.length) {
-                                targets.push(...split.words);
-                                return;
-                            }
-                        } catch (_) {}
-                        targets.push(lineEl);
-                    });
-
-                    gsap.fromTo(
-                        targets,
-                        { yPercent: 105, opacity: 0.001 },
-                        {
-                            yPercent: 0,
-                            opacity: 1,
-                            duration: MOTION_TOKENS.duration.slow,
-                            stagger: MOTION_TOKENS.stagger.tight,
-                            delay,
-                            ease: MOTION_TOKENS.ease.gsapEditorial,
-                            clearProps: "transform",
-                        }
-                    );
-                }, containerRef);
-            });
-        };
-
         const observer = new IntersectionObserver(
             (entries) => {
                 if (entries.some((e) => e.isIntersecting)) {
+                    setRevealed(true);
                     observer.disconnect();
-                    runReveal();
                 }
             },
-            { rootMargin: "0px 0px -8% 0px", threshold: 0.05 }
+            { rootMargin: "0px 0px -6% 0px", threshold: 0.05 }
         );
-
         observer.observe(el);
 
-        return () => {
-            cancelled = true;
-            observer.disconnect();
-            splitInstances.forEach((s) => {
-                try {
-                    s.revert();
-                } catch (_) {}
-            });
-            if (ctx) ctx.revert();
-        };
-    }, [reducedMotion, trigger, delay]);
+        return () => observer.disconnect();
+    }, [reducedMotion, trigger, revealed]);
 
     return (
         <Tag ref={containerRef} className={className}>
@@ -388,12 +342,20 @@ export function MaskedLines({
                     <span
                         data-mask-line
                         style={
-                            trigger === "mount" && !reducedMotion
-                                ? { animationDelay: `${idx * 65 + delay * 1000}ms` }
+                            !reducedMotion
+                                ? {
+                                      transitionDelay: `${idx * 65 + Math.round(delay * 1000)}ms`,
+                                  }
                                 : undefined
                         }
                         className={`block ${
-                            trigger === "mount" && !reducedMotion ? "yvs-exp-hero-line" : ""
+                            trigger === "mount"
+                                ? !reducedMotion
+                                    ? "yvs-exp-hero-line"
+                                    : ""
+                                : !reducedMotion
+                                  ? `yvs-exp-scroll-line ${revealed ? "is-revealed" : ""}`
+                                  : ""
                         } ${lineClassName} ${idx === accentLineIndex ? accentClassName : ""}`}
                     >
                         {line}

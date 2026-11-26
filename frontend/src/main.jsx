@@ -3,13 +3,15 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./hooks/useAuth";
-import { Capacitor } from "@capacitor/core";
 import "./index.css";
+
+const isNativeCapacitor = () =>
+    Boolean(typeof window !== "undefined" && window.Capacitor?.isNativePlatform?.());
 
 // If running in Capacitor Android Native App, purge any service worker & caches completely
 // so WebView network calls to staging API are never intercepted or broken.
 if (typeof window !== "undefined") {
-    if (Capacitor.isNativePlatform()) {
+    if (isNativeCapacitor()) {
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.getRegistrations().then((registrations) => {
                 for (const registration of registrations) {
@@ -50,7 +52,7 @@ if (typeof window !== "undefined") {
             .catch((e) => console.warn("[AppInit] offlineSyncManager.init warning:", e));
     };
 
-    if (Capacitor.isNativePlatform()) {
+    if (isNativeCapacitor()) {
         scheduleBackgroundInit();
     } else if (typeof window.requestIdleCallback === "function") {
         window.requestIdleCallback(scheduleBackgroundInit, { timeout: 2500 });

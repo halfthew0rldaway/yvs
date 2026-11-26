@@ -93,50 +93,39 @@ export const SHARED_PROCESS_STEPS = [
 ];
 
 /**
- * Lazy-loaded GSAP + plugins singleton so heavy animation scripts never block
- * initial LCP paint on mobile networks.
+ * Lazy-loaded core GSAP + ScrollTrigger singleton so heavy animation scripts
+ * never block initial LCP paint and avoid pulling unused plugins (SplitText/Flip/CustomEase).
  */
 let gsapRuntimePromise = null;
+let gsapMotionPathPromise = null;
 
 export function loadGsapRuntime() {
     if (!gsapRuntimePromise) {
         gsapRuntimePromise = Promise.all([
             import("gsap"),
             import("gsap/ScrollTrigger"),
-            import("gsap/SplitText"),
-            import("gsap/Flip"),
-            import("gsap/MotionPathPlugin"),
-            import("gsap/CustomEase"),
-        ]).then(
-            ([
-                gsapMod,
-                scrollTriggerMod,
-                splitTextMod,
-                flipMod,
-                motionPathMod,
-                customEaseMod,
-            ]) => {
-                const gsap = gsapMod.default || gsapMod.gsap;
-                const ScrollTrigger = scrollTriggerMod.ScrollTrigger || scrollTriggerMod.default;
-                const SplitText = splitTextMod.SplitText || splitTextMod.default;
-                const Flip = flipMod.Flip || flipMod.default;
-                const MotionPathPlugin = motionPathMod.MotionPathPlugin || motionPathMod.default;
-                const CustomEase = customEaseMod.CustomEase || customEaseMod.default;
-
-                gsap.registerPlugin(ScrollTrigger, SplitText, Flip, MotionPathPlugin, CustomEase);
-
-                try {
-                    CustomEase.create(MOTION_TOKENS.ease.gsapEditorial, "0.22, 1, 0.36, 1");
-                    CustomEase.create(MOTION_TOKENS.ease.gsapSnappy, "0.16, 1, 0.3, 1");
-                } catch (_) {
-                    // Already registered
-                }
-
-                return { gsap, ScrollTrigger, SplitText, Flip, MotionPathPlugin, CustomEase };
-            }
-        );
+        ]).then(([gsapMod, scrollTriggerMod]) => {
+            const gsap = gsapMod.default || gsapMod.gsap;
+            const ScrollTrigger = scrollTriggerMod.ScrollTrigger || scrollTriggerMod.default;
+            gsap.registerPlugin(ScrollTrigger);
+            return { gsap, ScrollTrigger };
+        });
     }
     return gsapRuntimePromise;
+}
+
+export function loadGsapMotionPathRuntime() {
+    if (!gsapMotionPathPromise) {
+        gsapMotionPathPromise = Promise.all([
+            loadGsapRuntime(),
+            import("gsap/MotionPathPlugin"),
+        ]).then(([{ gsap, ScrollTrigger }, motionPathMod]) => {
+            const MotionPathPlugin = motionPathMod.MotionPathPlugin || motionPathMod.default;
+            gsap.registerPlugin(MotionPathPlugin);
+            return { gsap, ScrollTrigger, MotionPathPlugin };
+        });
+    }
+    return gsapMotionPathPromise;
 }
 
 /**

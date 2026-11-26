@@ -108,6 +108,19 @@
   .yvs-exp-hero-line {
     animation: yvs-hero-line-rise 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
+
+  .yvs-exp-scroll-line {
+    transform: translate3d(0, 108%, 0);
+    opacity: 0.001;
+    transition:
+      transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .yvs-exp-scroll-line.is-revealed {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -115,6 +128,12 @@
   .yvs-exp-hero-line,
   .yvs-stage-pulse-ring {
     animation: none !important;
+  }
+
+  .yvs-exp-scroll-line {
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
   }
 }
 
@@ -211,8 +230,13 @@
 /* 10. Hardware-composited physical card deck shadow */
 .yvs-stack-card {
   box-shadow: var(--yvs-stack-shadow);
-  will-change: transform;
   transform-origin: top center;
+}
+
+@media (min-width: 1024px) {
+  .yvs-stack-card {
+    will-change: transform;
+  }
 }
 
 /* 11. GPU-Composited 3D Vertical Review Marquee (Tailwind v3 compatible) */
@@ -411,12 +435,18 @@
   );
   transform: translate3d(-135%, 0, 0);
   transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
 }
 
 .yvs-btn-shimmer:not(:disabled):hover::after,
 .yvs-btn-shimmer:not(:disabled):focus-visible::after {
+  will-change: transform;
   transform: translate3d(135%, 0, 0);
+}
+
+/* 16. Offscreen Layout/Paint Containment for Non-Sticky Heavy Chapters */
+.yvs-cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 760px;
 }
 
 /* 15. Zero-Reflow Cursor Spotlight Service Card */

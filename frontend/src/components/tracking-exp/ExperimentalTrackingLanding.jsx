@@ -159,14 +159,18 @@ export default function ExperimentalTrackingLanding({
                 </DeferredSection>
 
                 {/* ACT IV — Full-Bleed Obsidian Navy Proof & Velocity Reviews */}
-                <DeferredSection id="ulasan" minHeight={760} bgClass="bg-[var(--yvs-obsidian)]" armed={armed} forceMount={mountAll}>
-                    <ProofReviewsStrip />
-                </DeferredSection>
+                <div className="yvs-cv-auto">
+                    <DeferredSection id="ulasan" minHeight={760} bgClass="bg-[var(--yvs-obsidian)]" armed={armed} forceMount={mountAll}>
+                        <ProofReviewsStrip />
+                    </DeferredSection>
+                </div>
 
                 {/* Active Promotions (Auto-hides if none active) */}
-                <DeferredSection id="promo-aktif" minHeight={0} bgClass="bg-white" armed={armed} forceMount={mountAll}>
-                    <EditorialPromoStrip />
-                </DeferredSection>
+                <div className="yvs-cv-auto" style={{ containIntrinsicSize: "auto 0px" }}>
+                    <DeferredSection id="promo-aktif" minHeight={0} bgClass="bg-white" armed={armed} forceMount={mountAll}>
+                        <EditorialPromoStrip />
+                    </DeferredSection>
+                </div>
 
                 {/* ACT V — Swiss Editorial Pricing Ledger */}
                 <DeferredSection id="estimasi-biaya" minHeight={620} bgClass="bg-white" armed={armed} forceMount={mountAll}>
@@ -175,9 +179,11 @@ export default function ExperimentalTrackingLanding({
             </main>
 
             {/* ACT VI — Monumental Obsidian Navy Footer */}
-            <DeferredSection id="lokasi" minHeight={620} bgClass="bg-[var(--yvs-obsidian)]" armed={armed} forceMount={mountAll}>
-                <WorkshopVisitSection onFocusTrack={handleFocusTrack} />
-            </DeferredSection>
+            <div className="yvs-cv-auto" style={{ containIntrinsicSize: "auto 620px" }}>
+                <DeferredSection id="lokasi" minHeight={620} bgClass="bg-[var(--yvs-obsidian)]" armed={armed} forceMount={mountAll}>
+                    <WorkshopVisitSection onFocusTrack={handleFocusTrack} />
+                </DeferredSection>
+            </div>
         </div>
     );
 }
