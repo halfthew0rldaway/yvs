@@ -1,227 +1,328 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import {
     ClipboardList,
     Search,
-    CheckSquare,
     Wrench,
+    ShieldCheck,
     PackageCheck,
     ArrowRight,
 } from "lucide-react";
-import { MaskedLines, usePrefersReducedMotion, smoothScrollToTarget } from "./MotionPrimitives";
+import {
+    MaskedLines,
+    usePrefersReducedMotion,
+    smoothScrollToTarget,
+} from "./MotionPrimitives";
+import { SHARED_PROCESS_STEPS, loadGsapRuntime } from "./motionTokens";
 
-const JOURNEY_STEPS = [
-    {
-        num: "01",
-        status: "Diterima",
-        badgeCls: "bg-blue-50 text-blue-700 border-blue-200",
-        title: "Unit dicatat & difoto saat masuk",
-        desc: "Keluhan, kelengkapan seperti charger atau tas, serta foto kondisi fisik perangkat dicatat di meja penerimaan. Anda langsung mendapat nomor servis untuk melacaknya.",
-        whatYouSee: "Nomor servis aktif, daftar kelengkapan yang dititipkan, dan foto kondisi awal perangkat.",
-        icon: ClipboardList,
-    },
-    {
-        num: "02",
-        status: "Diperiksa",
-        badgeCls: "bg-slate-100 text-slate-700 border-slate-200",
-        title: "Teknisi mengecek sumber kendala",
-        desc: "Perangkat diperiksa secara bertahap untuk mengetahui bagian yang bermasalah dan apakah perlu penggantian suku cadang atau cukup perbaikan.",
-        whatYouSee: "Catatan temuan awal teknisi dan status pengerjaan diperbarui di portal pelacakan.",
-        icon: Search,
-    },
-    {
-        num: "03",
-        status: "Menunggu Persetujuan",
-        badgeCls: "bg-amber-50 text-amber-800 border-amber-200",
-        title: "Estimasi biaya dikonfirmasi dulu",
-        desc: "Sebelum pengerjaan dilanjutkan, kami menghubungi Anda dengan perkiraan biaya dan opsi penanganannya. Perbaikan baru berjalan setelah Anda setuju.",
-        whatYouSee: "Rincian estimasi biaya dan pilihan suku cadang jika ada bagian yang perlu diganti.",
-        icon: CheckSquare,
-    },
-    {
-        num: "04",
-        status: "Dalam Perbaikan",
-        badgeCls: "bg-indigo-50 text-indigo-700 border-indigo-200",
-        title: "Pengerjaan & pengecekan ulang",
-        desc: "Teknisi mengerjakan perbaikan sesuai kesepakatan, lalu memeriksa kembali fungsi-fungsi utama perangkat sebelum unit dinyatakan siap diambil.",
-        whatYouSee: "Riwayat tindakan perbaikan, daftar suku cadang yang dipakai, dan foto hasil pengerjaan.",
-        icon: Wrench,
-    },
-    {
-        num: "05",
-        status: "Selesai & Diambil",
-        badgeCls: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        title: "Serah terima, nota & garansi tercatat",
-        desc: "Unit diuji bersama saat pengambilan. Nota pembayaran dan catatan garansi sesuai jenis perbaikan tersimpan rapi di nomor servis Anda.",
-        whatYouSee: "Faktur pembayaran, kartu garansi digital, dan kolom penilaian untuk layanan kami.",
-        icon: PackageCheck,
-    },
-];
+const STEP_ICONS = [ClipboardList, Search, Wrench, ShieldCheck, PackageCheck];
 
+/**
+ * Section 02 — Pinned Scroll-Scrubbed Process Timeline
+ * Uses the exact same 5-stage language (Diterima -> Diagnosa -> Pengerjaan -> QC -> Siap diambil)
+ * as the Tracking Result page.
+ * - Desktop (>= 1024px, non-reduced-motion): GSAP ScrollTrigger pinned scrub + SVG MotionPath draw.
+ * - Mobile / reduced-motion: thumb-friendly 44px+ interactive step rail without scroll-trapping.
+ */
 export default function ServiceJourneyTimeline() {
     const [activeIdx, setActiveIdx] = useState(0);
+    const sectionRef = useRef(null);
+    const pinWrapRef = useRef(null);
+    const pathRef = useRef(null);
+    const beaconRef = useRef(null);
+    const triggerRef = useRef(null);
     const reducedMotion = usePrefersReducedMotion();
-    const current = JOURNEY_STEPS[activeIdx];
-    const ActiveIcon = current.icon;
+
+    useEffect(() => {
+        if (reducedMotion || typeof window === "undefined" || !sectionRef.current || !pinWrapRef.current) {
+            return;
+        }
+        const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+        if (!isDesktop) return;
+
+        let cancelled = false;
+        let ctx = null;
+
+        loadGsapRuntime().then(({ gsap, ScrollTrigger }) => {
+            if (cancelled || !sectionRef.current || !pinWrapRef.current) return;
+
+            ctx = gsap.context(() => {
+                const pathEl = pathRef.current;
+                const totalLen = pathEl ? pathEl.getTotalLength() : 400;
+                if (pathEl) {
+                    gsap.set(pathEl, {
+                        strokeDasharray: totalLen,
+                        strokeDashoffset: totalLen,
+                    });
+                }
+
+                const tl = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: pinWrapRef.current,
+                        start: "top top",
+                        end: "+=210%",
+                        pin: true,
+                        scrub: 0.55,
+                        anticipatePin: 1,
+                        snap: {
+                            snapTo: 1 / (SHARED_PROCESS_STEPS.length - 1),
+                            duration: { min: 0.18, max: 0.4 },
+                            ease: "power2.out",
+                        },
+                        onUpdate: (self) => {
+                            const nextIdx = Math.min(
+                                SHARED_PROCESS_STEPS.length - 1,
+                                Math.round(self.progress * (SHARED_PROCESS_STEPS.length - 1))
+                            );
+                            setActiveIdx((prev) => (prev === nextIdx ? prev : nextIdx));
+                        },
+                    },
+                });
+
+                triggerRef.current = tl.scrollTrigger;
+
+                if (pathEl) {
+                    tl.to(pathEl, { strokeDashoffset: 0, ease: "none", duration: 1 }, 0);
+                }
+                if (beaconRef.current && pathEl) {
+                    tl.to(
+                        beaconRef.current,
+                        {
+                            motionPath: {
+                                path: pathEl,
+                                align: pathEl,
+                                alignOrigin: [0.5, 0.5],
+                            },
+                            ease: "none",
+                            duration: 1,
+                        },
+                        0
+                    );
+                }
+            }, sectionRef);
+
+            window.requestAnimationFrame(() => ScrollTrigger.refresh());
+        });
+
+        return () => {
+            cancelled = true;
+            triggerRef.current = null;
+            if (ctx) ctx.revert();
+        };
+    }, [reducedMotion]);
+
+    const handleSelectStep = (idx) => {
+        setActiveIdx(idx);
+        const st = triggerRef.current;
+        if (st && typeof window !== "undefined" && window.innerWidth >= 1024 && !reducedMotion) {
+            const targetScroll =
+                st.start + (st.end - st.start) * (idx / (SHARED_PROCESS_STEPS.length - 1));
+            const lenis = window.__yvsLenis;
+            if (lenis) lenis.scrollTo(targetScroll, { duration: 0.65 });
+            else window.scrollTo({ top: targetScroll, behavior: "smooth" });
+        }
+    };
+
+    const current = SHARED_PROCESS_STEPS[activeIdx];
+    const ActiveIcon = STEP_ICONS[activeIdx] || ClipboardList;
 
     return (
         <section
             id="alur-servis"
-            className="w-full bg-white border-b border-slate-200 py-16 sm:py-24 scroll-mt-16 overflow-x-clip"
+            ref={sectionRef}
+            className="w-full bg-slate-50 border-b border-slate-200 scroll-mt-16 overflow-x-clip"
         >
-            <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
-                {/* Editorial Header */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-end pb-8 sm:pb-10 mb-8 sm:mb-10 border-b border-slate-200">
+            <div
+                ref={pinWrapRef}
+                className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-16 sm:py-24 lg:min-h-[100dvh] lg:flex lg:flex-col lg:justify-center"
+            >
+                {/* Editorial Section Header */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 items-end pb-7 sm:pb-9 mb-7 sm:mb-9 border-b border-slate-200">
                     <div className="lg:col-span-7 space-y-2.5">
-                        <span className="font-mono text-xs text-blue-600 font-semibold block">
+                        <span className="font-mono text-xs text-blue-700 font-semibold block">
                             01 / ALUR PENGERJAAN
                         </span>
                         <MaskedLines
                             as="h2"
-                            lines={["Dari masuk sampai selesai,", "setiap tahap bisa dipantau."]}
-                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.65rem] text-slate-950 tracking-[-0.03em] leading-[1.12]"
+                            lines={["Lima tahap pengerjaan,", "terbuka dari awal hingga selesai."]}
+                            className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.5rem] text-slate-950 tracking-[-0.03em] leading-[1.12]"
                         />
                     </div>
                     <div className="lg:col-span-5">
                         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                            Status di halaman pelacakan mengikuti alur kerja bengkel secara langsung, jadi Anda tahu posisi perangkat tanpa perlu menebak-nebak.
+                            Urutan tahap yang sama digunakan di halaman pelacakan tiket Anda—gulir atau pilih tahap di bawah untuk melihat apa yang tercatat di tiap langkah.
                         </p>
                     </div>
                 </div>
 
-                {/* Horizontal Step Selector Rail (Scrollable cleanly on mobile, 5 columns on desktop) */}
+                {/* Desktop Scrubbed SVG Horizontal Track with MotionPath Beacon */}
+                <div className="hidden lg:block relative mb-6 px-2" aria-hidden="true">
+                    <svg viewBox="0 0 1000 24" className="w-full h-6 overflow-visible">
+                        <path
+                            d="M 12 12 L 988 12"
+                            fill="none"
+                            stroke="#CBD5E1"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                        />
+                        <path
+                            ref={pathRef}
+                            d="M 12 12 L 988 12"
+                            fill="none"
+                            stroke="#2563EB"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                        />
+                        <circle
+                            ref={beaconRef}
+                            cx="12"
+                            cy="12"
+                            r="6"
+                            fill="#2563EB"
+                            stroke="#FFFFFF"
+                            strokeWidth="2.5"
+                        />
+                    </svg>
+                </div>
+
+                {/* 5-Stage Shared Step Selector Rail (44px+ touch targets) */}
                 <div
                     role="tablist"
                     aria-label="Tahapan alur servis"
                     className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mb-6"
                 >
-                    {JOURNEY_STEPS.map((step, idx) => {
+                    {SHARED_PROCESS_STEPS.map((step, idx) => {
                         const isActive = idx === activeIdx;
-                        const Icon = step.icon;
+                        const isPassed = idx < activeIdx;
+                        const Icon = STEP_ICONS[idx] || ClipboardList;
                         return (
                             <button
                                 key={step.num}
                                 role="tab"
                                 aria-selected={isActive}
                                 type="button"
-                                onClick={() => setActiveIdx(idx)}
-                                className={`relative text-left p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer min-w-0 ${
+                                onClick={() => handleSelectStep(idx)}
+                                className={`relative text-left min-h-[72px] p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer min-w-0 ${
                                     isActive
-                                        ? "bg-slate-950 text-white border-slate-950 shadow-sm"
-                                        : "bg-slate-50 hover:bg-white text-slate-800 border-slate-200 hover:border-slate-300"
+                                        ? "bg-[#0B162C] text-white border-[#0B162C] shadow-sm"
+                                        : isPassed
+                                        ? "bg-blue-50/70 text-slate-950 border-blue-200 hover:bg-blue-50"
+                                        : "bg-white hover:bg-blue-50/40 text-slate-900 border-slate-200 hover:border-blue-300"
                                 }`}
                             >
-                                <div className="flex items-center justify-between gap-2 mb-2">
+                                <div className="flex items-center justify-between gap-2 mb-1.5">
                                     <span
                                         className={`font-mono text-xs font-bold ${
-                                            isActive ? "text-blue-400" : "text-slate-400"
+                                            isActive
+                                                ? "text-blue-300"
+                                                : isPassed
+                                                ? "text-blue-700"
+                                                : "text-slate-600"
                                         }`}
                                     >
                                         {step.num}
                                     </span>
                                     <Icon
                                         className={`w-4 h-4 shrink-0 ${
-                                            isActive ? "text-blue-400" : "text-slate-400"
+                                            isActive
+                                                ? "text-blue-300"
+                                                : isPassed
+                                                ? "text-blue-600"
+                                                : "text-slate-600"
                                         }`}
+                                        aria-hidden="true"
                                     />
                                 </div>
                                 <span className="font-display font-bold text-xs sm:text-sm block leading-snug">
-                                    {step.status}
+                                    {step.label}
                                 </span>
                             </button>
                         );
                     })}
                 </div>
 
-                {/* Active Stage Editorial Panel */}
-                <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5 sm:p-8 lg:p-10">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={current.num}
-                            initial={reducedMotion ? false : { opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
-                            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                            className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center"
-                        >
-                            {/* Left Explanation */}
-                            <div className="lg:col-span-7 space-y-3.5 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2.5">
-                                    <span className="font-mono text-xs font-bold text-slate-400">
-                                        TAHAP {current.num} / 05
-                                    </span>
-                                    <span
-                                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold border ${current.badgeCls}`}
+                {/* Active Stage Showcase Panel */}
+                <div className="rounded-2xl bg-white border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-[0_18px_40px_-28px_rgba(11,22,44,0.12)]">
+                    <div
+                        key={current.num}
+                        className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center animate-fade-in"
+                    >
+                        {/* Left Copy */}
+                        <div className="lg:col-span-7 space-y-3.5 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2.5">
+                                <span className="font-mono text-xs font-bold text-blue-700">
+                                    TAHAP {current.num} / 05
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+                                    <ActiveIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                                    <span>{current.label}</span>
+                                </span>
+                            </div>
+
+                            <h3 className="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-slate-950 tracking-tight leading-snug">
+                                {current.title}
+                            </h3>
+                            <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
+                                {current.desc}
+                            </p>
+
+                            <div className="pt-2">
+                                {activeIdx < SHARED_PROCESS_STEPS.length - 1 ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSelectStep(activeIdx + 1)}
+                                        className="min-h-[44px] inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-800 cursor-pointer"
                                     >
-                                        <ActiveIcon className="w-3.5 h-3.5 shrink-0" />
-                                        <span>{current.status}</span>
-                                    </span>
-                                </div>
+                                        <span>
+                                            Lanjut ke tahap {SHARED_PROCESS_STEPS[activeIdx + 1].label}
+                                        </span>
+                                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => smoothScrollToTarget("track-lookup", -80)}
+                                        className="min-h-[44px] inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-800 cursor-pointer"
+                                    >
+                                        <span>Cek nomor servis Anda sekarang</span>
+                                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
 
-                                <h3 className="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-slate-950 tracking-tight leading-snug">
-                                    {current.title}
-                                </h3>
-                                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
-                                    {current.desc}
-                                </p>
-
-                                <div className="pt-2 flex flex-wrap items-center gap-4">
-                                    {activeIdx < JOURNEY_STEPS.length - 1 ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => setActiveIdx(activeIdx + 1)}
-                                            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
-                                        >
-                                            <span>Lihat tahap berikutnya ({JOURNEY_STEPS[activeIdx + 1].status})</span>
-                                            <ArrowRight className="w-4 h-4" />
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => smoothScrollToTarget("track-lookup", -80)}
-                                            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
-                                        >
-                                            <span>Coba lacak nomor servis Anda sekarang</span>
-                                            <ArrowRight className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                </div>
+                        {/* Right Live Portal Preview Card */}
+                        <div className="lg:col-span-5 bg-[#0B162C] text-white rounded-2xl p-5 sm:p-6 space-y-4">
+                            <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/15">
+                                <span className="font-mono text-xs text-blue-200">
+                                    Yang muncul di halaman pelacakan
+                                </span>
+                                <span className="font-mono text-xs font-bold text-white tabular-nums">
+                                    {current.num} / 05
+                                </span>
                             </div>
 
-                            {/* Right Clean Preview Card: What appears on the tracking portal */}
-                            <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-4">
-                                <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                                    <span className="font-mono text-xs text-slate-400">
-                                        Yang tampil di portal pelacakan
-                                    </span>
-                                    <span className="font-mono text-xs font-semibold text-slate-800">
-                                        {current.num} / 05
-                                    </span>
-                                </div>
-
-                                {/* Progress Stepper Bar */}
-                                <div className="flex items-center gap-1.5" aria-hidden="true">
-                                    {JOURNEY_STEPS.map((s, i) => (
-                                        <span
-                                            key={s.num}
-                                            className={`h-1.5 flex-1 rounded-full transition-colors ${
-                                                i <= activeIdx ? "bg-blue-600" : "bg-slate-200"
-                                            }`}
-                                        />
-                                    ))}
-                                </div>
-
-                                <p className="text-sm text-slate-700 leading-relaxed">
-                                    {current.whatYouSee}
-                                </p>
-
-                                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                                    <span>Status saat ini</span>
-                                    <span className="font-semibold text-slate-900">{current.status}</span>
-                                </div>
+                            {/* Segmented Progress Bar */}
+                            <div className="flex items-center gap-1.5" aria-hidden="true">
+                                {SHARED_PROCESS_STEPS.map((s, i) => (
+                                    <span
+                                        key={s.num}
+                                        className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                                            i <= activeIdx ? "bg-blue-500" : "bg-white/20"
+                                        }`}
+                                    />
+                                ))}
                             </div>
-                        </motion.div>
-                    </AnimatePresence>
+
+                            <p className="text-sm text-slate-200 leading-relaxed">
+                                {current.portalNote}
+                            </p>
+
+                            <div className="pt-3 border-t border-white/15 flex items-center justify-between text-xs">
+                                <span className="text-slate-300">Status di portal</span>
+                                <span className="font-semibold text-blue-300">{current.label}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
