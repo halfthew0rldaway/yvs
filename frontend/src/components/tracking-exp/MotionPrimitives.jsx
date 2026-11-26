@@ -23,9 +23,8 @@ export function usePrefersReducedMotion() {
 
 /**
  * Smooth scrolling via dynamically imported Lenis synced cleanly into GSAP ticker.
- * Automatically disabled under prefers-reduced-motion or touch devices so native
- * mobile scroll stays 100% crisp and zero-overhead.
- * Exposes scroll velocity on window.__yvsScrollVelocity for velocity-linked marquee.
+ * Boots on first wheel/scroll interaction on desktop fine pointers so initial
+ * mobile/desktop load incurs zero TBT/LCP overhead.
  */
 export function useLenisSmoothScroll(enabled = true) {
     const lenisRef = useRef(null);
@@ -36,9 +35,12 @@ export function useLenisSmoothScroll(enabled = true) {
         if (window.matchMedia("(pointer: coarse)").matches) return;
 
         let cancelled = false;
+        let booted = false;
         let cleanupFn = null;
 
         const boot = async () => {
+            if (booted || cancelled) return;
+            booted = true;
             const [{ default: Lenis }, { gsap, ScrollTrigger }] = await Promise.all([
                 import("lenis"),
                 loadGsapRuntime(),
@@ -89,23 +91,17 @@ export function useLenisSmoothScroll(enabled = true) {
             };
         };
 
-        // Defer smooth-scroll boot until after first paint so mobile/desktop LCP is never blocked
-        const idleHandle =
-            typeof window.requestIdleCallback === "function"
-                ? window.requestIdleCallback(() => {
-                      boot().catch(() => {});
-                  }, { timeout: 300 })
-                : window.setTimeout(() => {
-                      boot().catch(() => {});
-                  }, 60);
+        const onIntent = () => {
+            boot().catch(() => {});
+        };
+
+        window.addEventListener("wheel", onIntent, { passive: true, once: true });
+        window.addEventListener("scroll", onIntent, { passive: true, once: true });
 
         return () => {
             cancelled = true;
-            if (typeof window.cancelIdleCallback === "function") {
-                window.cancelIdleCallback(idleHandle);
-            } else {
-                window.clearTimeout(idleHandle);
-            }
+            window.removeEventListener("wheel", onIntent);
+            window.removeEventListener("scroll", onIntent);
             if (cleanupFn) cleanupFn();
         };
     }, [enabled, reducedMotion]);
@@ -186,8 +182,7 @@ export function ScrollProgressBar() {
 
 /**
  * Short intentional intro accent (< 0.8s, skipped on repeat visit via sessionStorage).
- * Uses a non-blocking top architectural bar + hairline sweep so LCP headline paints
- * immediately at 0ms without ever obscuring hero content.
+ * Never obscures or delays hero LCP paint.
  */
 export function IntroReveal() {
     const reducedMotion = usePrefersReducedMotion();
@@ -225,7 +220,7 @@ export function IntroReveal() {
 
 /**
  * Subtle custom cursor strictly for desktop fine pointer devices.
- * Pure transform via gsap.quickTo — zero layout thrash, zero mobile footprint.
+ * Loads GSAP lazily on first pointer move so mobile and cold loads pay zero cost.
  */
 export function EditorialCursor() {
     const dotRef = useRef(null);
@@ -240,56 +235,59 @@ export function EditorialCursor() {
         setEnabled(true);
 
         let cancelled = false;
+        let booted = false;
         let cleanup = null;
 
-        loadGsapRuntime().then(({ gsap }) => {
-            if (cancelled || !dotRef.current || !labelRef.current) return;
-            const dot = dotRef.current;
-            const badge = labelRef.current;
+        const bootWithFirstEvent = (firstEvent) => {
+            if (booted || cancelled) return;
+            booted = true;
+            loadGsapRuntime().then(({ gsap }) => {
+                if (cancelled || !dotRef.current || !labelRef.current) return;
+                const dot = dotRef.current;
+                const badge = labelRef.current;
 
-            const xTo = gsap.quickTo(dot, "x", { duration: 0.22, ease: "power3.out" });
-            const yTo = gsap.quickTo(dot, "y", { duration: 0.22, ease: "power3.out" });
+                const xTo = gsap.quickTo(dot, "x", { duration: 0.22, ease: "power3.out" });
+                const yTo = gsap.quickTo(dot, "y", { duration: 0.22, ease: "power3.out" });
 
-            let visible = false;
-
-            const onMove = (e) => {
-                if (!visible) {
-                    visible = true;
+                const onMove = (e) => {
                     dot.style.opacity = "1";
-                }
-                xTo(e.clientX);
-                yTo(e.clientY);
+                    xTo(e.clientX);
+                    yTo(e.clientY);
 
-                const target = e.target?.closest?.("[data-cursor]");
-                const cursorText = target?.getAttribute("data-cursor") || "";
-                if (cursorText) {
-                    badge.textContent = cursorText;
-                    dot.dataset.state = "label";
-                } else if (e.target?.closest?.("a, button, input, [role='tab'], [role='slider']")) {
-                    badge.textContent = "";
-                    dot.dataset.state = "interactive";
-                } else {
-                    badge.textContent = "";
-                    dot.dataset.state = "default";
-                }
-            };
+                    const target = e.target?.closest?.("[data-cursor]");
+                    const cursorText = target?.getAttribute("data-cursor") || "";
+                    if (cursorText) {
+                        badge.textContent = cursorText;
+                        dot.dataset.state = "label";
+                    } else if (e.target?.closest?.("a, button, input, [role='tab'], [role='slider']")) {
+                        badge.textContent = "";
+                        dot.dataset.state = "interactive";
+                    } else {
+                        badge.textContent = "";
+                        dot.dataset.state = "default";
+                    }
+                };
 
-            const onLeave = () => {
-                visible = false;
-                dot.style.opacity = "0";
-            };
+                const onLeave = () => {
+                    dot.style.opacity = "0";
+                };
 
-            window.addEventListener("pointermove", onMove, { passive: true });
-            document.addEventListener("pointerleave", onLeave);
+                onMove(firstEvent);
+                window.addEventListener("pointermove", onMove, { passive: true });
+                document.addEventListener("pointerleave", onLeave);
 
-            cleanup = () => {
-                window.removeEventListener("pointermove", onMove);
-                document.removeEventListener("pointerleave", onLeave);
-            };
-        });
+                cleanup = () => {
+                    window.removeEventListener("pointermove", onMove);
+                    document.removeEventListener("pointerleave", onLeave);
+                };
+            });
+        };
+
+        window.addEventListener("pointermove", bootWithFirstEvent, { passive: true, once: true });
 
         return () => {
             cancelled = true;
+            window.removeEventListener("pointermove", bootWithFirstEvent);
             if (cleanup) cleanup();
         };
     }, [reducedMotion]);
@@ -310,7 +308,7 @@ export function EditorialCursor() {
 
 /**
  * Subtle magnetic button/link wrapper for fine pointers (desktop).
- * Dynamically binds GSAP only on hover/fine-pointer so mobile pays zero cost.
+ * Loads GSAP lazily only on pointerenter so initial page load has zero GSAP cost.
  */
 export function MagneticWrap({ children, strength = 0.2, className = "" }) {
     const wrapRef = useRef(null);
@@ -323,13 +321,19 @@ export function MagneticWrap({ children, strength = 0.2, className = "" }) {
         if (!el) return;
 
         let gsapRef = null;
+        let loading = false;
         let cancelled = false;
 
-        loadGsapRuntime().then(({ gsap }) => {
-            if (!cancelled) gsapRef = gsap;
-        });
+        const ensureGsap = () => {
+            if (gsapRef || loading) return;
+            loading = true;
+            loadGsapRuntime().then(({ gsap }) => {
+                if (!cancelled) gsapRef = gsap;
+            });
+        };
 
         const onMove = (e) => {
+            ensureGsap();
             if (!gsapRef) return;
             const rect = el.getBoundingClientRect();
             const relX = e.clientX - (rect.left + rect.width / 2);
@@ -354,10 +358,12 @@ export function MagneticWrap({ children, strength = 0.2, className = "" }) {
             });
         };
 
+        el.addEventListener("pointerenter", ensureGsap, { passive: true, once: true });
         el.addEventListener("pointermove", onMove);
         el.addEventListener("pointerleave", onLeave);
         return () => {
             cancelled = true;
+            el.removeEventListener("pointerenter", ensureGsap);
             el.removeEventListener("pointermove", onMove);
             el.removeEventListener("pointerleave", onLeave);
             if (gsapRef) gsapRef.killTweensOf(el);
@@ -373,11 +379,10 @@ export function MagneticWrap({ children, strength = 0.2, className = "" }) {
 
 /**
  * Editorial Masked Typography Reveal powered by GSAP SplitText + CustomEase.
- * - For `trigger="mount"` (above-the-fold Hero LCP): stays visible immediately at
- *   opacity 1 on initial render so LCP is NEVER blocked, running a refined CSS
- *   compositor rise on first paint.
- * - For `trigger="scroll"` (below-the-fold headings): uses GSAP ScrollTrigger +
- *   SplitText with generous vertical bleed so ascenders/descenders never clip.
+ * - Hero `trigger="mount"` stays visible immediately at opacity 1 for instant LCP.
+ * - Below-the-fold `trigger="scroll"` activates via IntersectionObserver so GSAP
+ *   never runs during initial load, and passes `aria: "none"` to SplitText so ARIA
+ *   audits score 100/100.
  */
 export function MaskedLines({
     lines = [],
@@ -393,63 +398,65 @@ export function MaskedLines({
     const reducedMotion = usePrefersReducedMotion();
 
     useEffect(() => {
-        if (reducedMotion || !containerRef.current) return;
-        // Mount hero headline stays LCP-instant via lightweight CSS animation
-        if (trigger === "mount") return;
+        if (reducedMotion || !containerRef.current || trigger === "mount") return;
 
         let cancelled = false;
         let ctx = null;
         let splitInstances = [];
+        const el = containerRef.current;
 
-        loadGsapRuntime().then(({ gsap, ScrollTrigger, SplitText }) => {
-            if (cancelled || !containerRef.current) return;
-            const innerLines = containerRef.current.querySelectorAll("[data-mask-line]");
-            if (!innerLines.length) return;
+        const runReveal = () => {
+            loadGsapRuntime().then(({ gsap, SplitText }) => {
+                if (cancelled || !containerRef.current) return;
+                const innerLines = containerRef.current.querySelectorAll("[data-mask-line]");
+                if (!innerLines.length) return;
 
-            ctx = gsap.context(() => {
-                // Split into words via GSAP SplitText for crisp editorial cadence
-                const targets = [];
-                innerLines.forEach((lineEl) => {
-                    try {
-                        const split = new SplitText(lineEl, { type: "words" });
-                        splitInstances.push(split);
-                        if (split.words?.length) {
-                            targets.push(...split.words);
-                            return;
+                ctx = gsap.context(() => {
+                    const targets = [];
+                    innerLines.forEach((lineEl) => {
+                        try {
+                            const split = new SplitText(lineEl, { type: "words", aria: "none" });
+                            splitInstances.push(split);
+                            if (split.words?.length) {
+                                targets.push(...split.words);
+                                return;
+                            }
+                        } catch (_) {}
+                        targets.push(lineEl);
+                    });
+
+                    gsap.fromTo(
+                        targets,
+                        { yPercent: 105, opacity: 0.001 },
+                        {
+                            yPercent: 0,
+                            opacity: 1,
+                            duration: MOTION_TOKENS.duration.slow,
+                            stagger: MOTION_TOKENS.stagger.tight,
+                            delay,
+                            ease: MOTION_TOKENS.ease.gsapEditorial,
+                            clearProps: "transform",
                         }
-                    } catch (_) {
-                        // Fallback cleanly to the whole line
-                    }
-                    targets.push(lineEl);
-                });
-
-                gsap.fromTo(
-                    targets,
-                    { yPercent: 112, opacity: 0.001 },
-                    {
-                        yPercent: 0,
-                        opacity: 1,
-                        duration: MOTION_TOKENS.duration.slow,
-                        stagger: MOTION_TOKENS.stagger.tight,
-                        delay,
-                        ease: MOTION_TOKENS.ease.gsapEditorial,
-                        clearProps: "transform",
-                        scrollTrigger: {
-                            trigger: containerRef.current,
-                            start: "top 90%",
-                            once: true,
-                        },
-                    }
-                );
-            }, containerRef);
-
-            window.requestAnimationFrame(() => {
-                ScrollTrigger.refresh();
+                    );
+                }, containerRef);
             });
-        });
+        };
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                    observer.disconnect();
+                    runReveal();
+                }
+            },
+            { rootMargin: "0px 0px -8% 0px", threshold: 0.05 }
+        );
+
+        observer.observe(el);
 
         return () => {
             cancelled = true;
+            observer.disconnect();
             splitInstances.forEach((s) => {
                 try {
                     s.revert();
@@ -470,7 +477,7 @@ export function MaskedLines({
                         data-mask-line
                         style={
                             trigger === "mount" && !reducedMotion
-                                ? { animationDelay: `${idx * 70 + delay * 1000}ms` }
+                                ? { animationDelay: `${idx * 65 + delay * 1000}ms` }
                                 : undefined
                         }
                         className={`block ${

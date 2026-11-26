@@ -108,7 +108,12 @@ export default defineConfig({
                         if (id.includes("xlsx")) {
                             return "vendor-xlsx";
                         }
-                        if (id.includes("react-dom") || id.includes("react-router-dom") || id.includes("react/")) {
+                        if (
+                            id.includes("/node_modules/react/") ||
+                            id.includes("/node_modules/react-dom/") ||
+                            id.includes("/node_modules/react-router") ||
+                            id.includes("/node_modules/scheduler/")
+                        ) {
                             return "vendor-react";
                         }
                         if (id.includes("lucide-react")) {

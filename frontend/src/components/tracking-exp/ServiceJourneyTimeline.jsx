@@ -40,71 +40,88 @@ export default function ServiceJourneyTimeline() {
         if (!isDesktop) return;
 
         let cancelled = false;
+        let booted = false;
         let ctx = null;
 
-        loadGsapRuntime().then(({ gsap, ScrollTrigger }) => {
-            if (cancelled || !sectionRef.current || !pinWrapRef.current) return;
+        const boot = () => {
+            if (booted || cancelled) return;
+            booted = true;
+            loadGsapRuntime().then(({ gsap, ScrollTrigger }) => {
+                if (cancelled || !sectionRef.current || !pinWrapRef.current) return;
 
-            ctx = gsap.context(() => {
-                const pathEl = pathRef.current;
-                const totalLen = pathEl ? pathEl.getTotalLength() : 400;
-                if (pathEl) {
-                    gsap.set(pathEl, {
-                        strokeDasharray: totalLen,
-                        strokeDashoffset: totalLen,
-                    });
-                }
+                ctx = gsap.context(() => {
+                    const pathEl = pathRef.current;
+                    const totalLen = pathEl ? pathEl.getTotalLength() : 400;
+                    if (pathEl) {
+                        gsap.set(pathEl, {
+                            strokeDasharray: totalLen,
+                            strokeDashoffset: totalLen,
+                        });
+                    }
 
-                const tl = gsap.timeline({
-                    scrollTrigger: {
-                        trigger: pinWrapRef.current,
-                        start: "top top",
-                        end: "+=210%",
-                        pin: true,
-                        scrub: 0.55,
-                        anticipatePin: 1,
-                        snap: {
-                            snapTo: 1 / (SHARED_PROCESS_STEPS.length - 1),
-                            duration: { min: 0.18, max: 0.4 },
-                            ease: "power2.out",
-                        },
-                        onUpdate: (self) => {
-                            const nextIdx = Math.min(
-                                SHARED_PROCESS_STEPS.length - 1,
-                                Math.round(self.progress * (SHARED_PROCESS_STEPS.length - 1))
-                            );
-                            setActiveIdx((prev) => (prev === nextIdx ? prev : nextIdx));
-                        },
-                    },
-                });
-
-                triggerRef.current = tl.scrollTrigger;
-
-                if (pathEl) {
-                    tl.to(pathEl, { strokeDashoffset: 0, ease: "none", duration: 1 }, 0);
-                }
-                if (beaconRef.current && pathEl) {
-                    tl.to(
-                        beaconRef.current,
-                        {
-                            motionPath: {
-                                path: pathEl,
-                                align: pathEl,
-                                alignOrigin: [0.5, 0.5],
+                    const tl = gsap.timeline({
+                        scrollTrigger: {
+                            trigger: pinWrapRef.current,
+                            start: "top top",
+                            end: "+=210%",
+                            pin: true,
+                            scrub: 0.55,
+                            anticipatePin: 1,
+                            snap: {
+                                snapTo: 1 / (SHARED_PROCESS_STEPS.length - 1),
+                                duration: { min: 0.18, max: 0.4 },
+                                ease: "power2.out",
                             },
-                            ease: "none",
-                            duration: 1,
+                            onUpdate: (self) => {
+                                const nextIdx = Math.min(
+                                    SHARED_PROCESS_STEPS.length - 1,
+                                    Math.round(self.progress * (SHARED_PROCESS_STEPS.length - 1))
+                                );
+                                setActiveIdx((prev) => (prev === nextIdx ? prev : nextIdx));
+                            },
                         },
-                        0
-                    );
-                }
-            }, sectionRef);
+                    });
 
-            window.requestAnimationFrame(() => ScrollTrigger.refresh());
-        });
+                    triggerRef.current = tl.scrollTrigger;
+
+                    if (pathEl) {
+                        tl.to(pathEl, { strokeDashoffset: 0, ease: "none", duration: 1 }, 0);
+                    }
+                    if (beaconRef.current && pathEl) {
+                        tl.to(
+                            beaconRef.current,
+                            {
+                                motionPath: {
+                                    path: pathEl,
+                                    align: pathEl,
+                                    alignOrigin: [0.5, 0.5],
+                                },
+                                ease: "none",
+                                duration: 1,
+                            },
+                            0
+                        );
+                    }
+                }, sectionRef);
+
+                window.requestAnimationFrame(() => ScrollTrigger.refresh());
+            });
+        };
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                    observer.disconnect();
+                    boot();
+                }
+            },
+            { rootMargin: "320px 0px" }
+        );
+        observer.observe(sectionRef.current);
 
         return () => {
             cancelled = true;
+            observer.disconnect();
             triggerRef.current = null;
             if (ctx) ctx.revert();
         };

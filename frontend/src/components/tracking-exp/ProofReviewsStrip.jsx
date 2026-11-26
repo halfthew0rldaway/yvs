@@ -61,34 +61,38 @@ function ScrollCounter({ to, decimals = 0, suffix = "" }) {
         if (reducedMotion || !ref.current) return;
         let cancelled = false;
         let ctx = null;
+        const el = ref.current;
 
-        loadGsapRuntime().then(({ gsap, ScrollTrigger }) => {
-            if (cancelled || !ref.current) return;
-            const obj = { val: 0 };
-            ctx = gsap.context(() => {
-                gsap.to(obj, {
-                    val: to,
-                    duration: 1.15,
-                    ease: "power3.out",
-                    scrollTrigger: {
-                        trigger: ref.current,
-                        start: "top 90%",
-                        once: true,
-                    },
-                    onUpdate: () => {
-                        setDisplay(
-                            decimals > 0
-                                ? obj.val.toFixed(decimals).replace(".", ",")
-                                : String(Math.round(obj.val))
-                        );
-                    },
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (!entries.some((e) => e.isIntersecting)) return;
+                observer.disconnect();
+                loadGsapRuntime().then(({ gsap }) => {
+                    if (cancelled || !ref.current) return;
+                    const obj = { val: 0 };
+                    ctx = gsap.context(() => {
+                        gsap.to(obj, {
+                            val: to,
+                            duration: 1.05,
+                            ease: "power3.out",
+                            onUpdate: () => {
+                                setDisplay(
+                                    decimals > 0
+                                        ? obj.val.toFixed(decimals).replace(".", ",")
+                                        : String(Math.round(obj.val))
+                                );
+                            },
+                        });
+                    }, ref);
                 });
-            }, ref);
-            window.requestAnimationFrame(() => ScrollTrigger.refresh());
-        });
+            },
+            { threshold: 0.2 }
+        );
+        observer.observe(el);
 
         return () => {
             cancelled = true;
+            observer.disconnect();
             if (ctx) ctx.revert();
         };
     }, [to, decimals, reducedMotion]);
@@ -245,52 +249,76 @@ function BeforeAfterSlider() {
 export default function ProofReviewsStrip() {
     const reducedMotion = usePrefersReducedMotion();
     const [isPlaying, setIsPlaying] = useState(true);
+    const sectionRef = useRef(null);
     const trackRef = useRef(null);
     const shouldAnimate = isPlaying && !reducedMotion;
 
-    // Velocity-linked smooth marquee using GSAP ticker (transform-only, zero layout thrash)
+    // Velocity-linked smooth marquee using GSAP ticker.
+    // Strictly caches halfWidth via ResizeObserver (zero forced reflow per frame)
+    // and only runs while the section is visible in viewport.
     useEffect(() => {
-        if (!shouldAnimate || !trackRef.current) return;
+        if (!shouldAnimate || !trackRef.current || !sectionRef.current) return;
         let cancelled = false;
+        let booted = false;
+        let isVisible = false;
         let cleanup = null;
 
-        loadGsapRuntime().then(({ gsap }) => {
-            if (cancelled || !trackRef.current) return;
-            const track = trackRef.current;
-            let offset = 0;
-            let hovered = false;
+        const bootMarquee = () => {
+            if (booted || cancelled) return;
+            booted = true;
+            loadGsapRuntime().then(({ gsap }) => {
+                if (cancelled || !trackRef.current) return;
+                const track = trackRef.current;
+                let offset = 0;
+                let hovered = false;
+                let halfWidth = track.scrollWidth / 2;
 
-            const onEnter = () => {
-                hovered = true;
-            };
-            const onLeave = () => {
-                hovered = false;
-            };
-            track.addEventListener("pointerenter", onEnter);
-            track.addEventListener("pointerleave", onLeave);
+                const ro = new ResizeObserver(() => {
+                    halfWidth = track.scrollWidth / 2;
+                });
+                ro.observe(track);
 
-            const tick = () => {
-                if (hovered) return;
-                const halfWidth = track.scrollWidth / 2;
-                if (halfWidth <= 0) return;
-                const velocityBoost = Math.min(3.5, Math.abs(window.__yvsScrollVelocity || 0) * 0.08);
-                offset += 0.65 + velocityBoost;
-                if (offset >= halfWidth) offset -= halfWidth;
-                track.style.transform = `translate3d(${-offset}px, 0, 0)`;
-            };
+                const onEnter = () => {
+                    hovered = true;
+                };
+                const onLeave = () => {
+                    hovered = false;
+                };
+                track.addEventListener("pointerenter", onEnter);
+                track.addEventListener("pointerleave", onLeave);
 
-            gsap.ticker.add(tick);
+                const tick = () => {
+                    if (hovered || !isVisible || halfWidth <= 0) return;
+                    const velocityBoost = Math.min(3.5, Math.abs(window.__yvsScrollVelocity || 0) * 0.08);
+                    offset += 0.65 + velocityBoost;
+                    if (offset >= halfWidth) offset -= halfWidth;
+                    track.style.transform = `translate3d(${-offset}px, 0, 0)`;
+                };
 
-            cleanup = () => {
-                gsap.ticker.remove(tick);
-                track.removeEventListener("pointerenter", onEnter);
-                track.removeEventListener("pointerleave", onLeave);
-                track.style.transform = "";
-            };
-        });
+                gsap.ticker.add(tick);
+
+                cleanup = () => {
+                    ro.disconnect();
+                    gsap.ticker.remove(tick);
+                    track.removeEventListener("pointerenter", onEnter);
+                    track.removeEventListener("pointerleave", onLeave);
+                    track.style.transform = "";
+                };
+            });
+        };
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                isVisible = entries.some((e) => e.isIntersecting);
+                if (isVisible) bootMarquee();
+            },
+            { rootMargin: "120px 0px" }
+        );
+        observer.observe(sectionRef.current);
 
         return () => {
             cancelled = true;
+            observer.disconnect();
             if (cleanup) cleanup();
         };
     }, [shouldAnimate]);
@@ -298,6 +326,7 @@ export default function ProofReviewsStrip() {
     return (
         <section
             id="ulasan"
+            ref={sectionRef}
             className="w-full bg-slate-50 border-b border-slate-200 py-16 sm:py-24 scroll-mt-16 overflow-x-clip"
         >
             <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">

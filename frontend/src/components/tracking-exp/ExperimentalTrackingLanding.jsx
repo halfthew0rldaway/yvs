@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import "./TrackingExp.css";
 import {
     ScrollProgressBar,
@@ -10,7 +10,7 @@ import {
 import EditorialNavbar from "./EditorialNavbar";
 import HeroTrackingStage from "./HeroTrackingStage";
 
-// Lazy-load below-the-fold sections so the initial hero & tracking form stay instant (LCP < 2.0s)
+// Lazy-load below-the-fold sections on scroll proximity so initial load only mounts Hero + Navbar
 const EditorialPromoStrip = lazy(() => import("./EditorialPromoStrip"));
 const ServiceJourneyTimeline = lazy(() => import("./ServiceJourneyTimeline"));
 const ServiceCatalogRail = lazy(() => import("./ServiceCatalogRail"));
@@ -18,11 +18,58 @@ const ProofReviewsStrip = lazy(() => import("./ProofReviewsStrip"));
 const TransparentPricingSection = lazy(() => import("./TransparentPricingSection"));
 const WorkshopVisitSection = lazy(() => import("./WorkshopVisitSection"));
 
-function SectionSkeleton({ dark = false }) {
+/**
+ * Defers mounting heavy below-the-fold sections until they approach the viewport
+ * (or when the user clicks a navbar anchor / scrolls), eliminating initial TBT spikes
+ * while keeping CLS at 0 via stable placeholder height.
+ */
+function DeferredSection({ id, minHeight = 520, dark = false, forceMount = false, children }) {
+    const hostRef = useRef(null);
+    const [mounted, setMounted] = useState(forceMount);
+
+    useEffect(() => {
+        if (forceMount) {
+            setMounted(true);
+            return;
+        }
+        if (mounted || !hostRef.current) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                    setMounted(true);
+                    observer.disconnect();
+                }
+            },
+            { rootMargin: "420px 0px" }
+        );
+        observer.observe(hostRef.current);
+        return () => observer.disconnect();
+    }, [mounted, forceMount]);
+
+    if (mounted) {
+        return (
+            <Suspense
+                fallback={
+                    <div
+                        id={id}
+                        aria-hidden="true"
+                        style={{ minHeight }}
+                        className={dark ? "w-full bg-[#0B162C]" : "w-full bg-white"}
+                    />
+                }
+            >
+                {children}
+            </Suspense>
+        );
+    }
+
     return (
         <div
-            aria-hidden="true"
-            className={`w-full py-20 ${dark ? "bg-[#0B162C]" : "bg-white"}`}
+            ref={hostRef}
+            id={id}
+            style={{ minHeight, contentVisibility: "auto", containIntrinsicSize: `auto ${minHeight}px` }}
+            className={dark ? "w-full bg-[#0B162C]" : "w-full bg-white"}
         />
     );
 }
@@ -45,9 +92,20 @@ export default function ExperimentalTrackingLanding({
     isScannerOpen,
 }) {
     const trackInputRef = useRef(null);
+    const [mountAll, setMountAll] = useState(false);
 
     // Pause Lenis while QR camera modal is open so modal scroll/focus behaves natively
     useLenisSmoothScroll(!isScannerOpen);
+
+    // Mount remaining sections immediately on first scroll or nav click so anchor scrolling is instant
+    useEffect(() => {
+        if (mountAll) return;
+        const onScroll = () => {
+            if (window.scrollY > 40) setMountAll(true);
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, [mountAll]);
 
     const handleFocusTrack = () => {
         smoothScrollToTarget("track-lookup", -72);
@@ -91,35 +149,35 @@ export default function ExperimentalTrackingLanding({
                 />
 
                 {/* Active Store Promotions (Auto-hides if none active) */}
-                <Suspense fallback={null}>
+                <DeferredSection id="promo-aktif" minHeight={0} forceMount={mountAll}>
                     <EditorialPromoStrip />
-                </Suspense>
+                </DeferredSection>
 
                 {/* 2. Pinned Scroll-Scrubbed 5-Stage Process (Shared language with Tracking Result) */}
-                <Suspense fallback={<SectionSkeleton />}>
+                <DeferredSection id="alur-servis" minHeight={640} forceMount={mountAll}>
                     <ServiceJourneyTimeline />
-                </Suspense>
+                </DeferredSection>
 
                 {/* 3. Editorial Services Ledger */}
-                <Suspense fallback={<SectionSkeleton />}>
+                <DeferredSection id="layanan" minHeight={680} forceMount={mountAll}>
                     <ServiceCatalogRail />
-                </Suspense>
+                </DeferredSection>
 
                 {/* 4. Proof: Before/After Drag Slider, Verified Counters, Warranty Terms & Velocity Marquee */}
-                <Suspense fallback={<SectionSkeleton />}>
+                <DeferredSection id="ulasan" minHeight={720} forceMount={mountAll}>
                     <ProofReviewsStrip />
-                </Suspense>
+                </DeferredSection>
 
                 {/* 5. Transparent Pricing ("Mulai dari" ranges on Deep Navy contrast section) */}
-                <Suspense fallback={<SectionSkeleton dark />}>
+                <DeferredSection id="estimasi-biaya" minHeight={640} dark forceMount={mountAll}>
                     <TransparentPricingSection />
-                </Suspense>
+                </DeferredSection>
             </main>
 
             {/* 6. Large Editorial Footer, Map, Hours & Magnetic CTAs */}
-            <Suspense fallback={<SectionSkeleton />}>
+            <DeferredSection id="lokasi" minHeight={580} forceMount={mountAll}>
                 <WorkshopVisitSection onFocusTrack={handleFocusTrack} />
-            </Suspense>
+            </DeferredSection>
         </div>
     );
 }

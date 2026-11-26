@@ -2,12 +2,14 @@
 import { Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
-import Layout from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Toaster } from 'react-hot-toast';
 import { lazyWithRetry } from "./utils/lazyWithRetry";
 import api from "./services/api";
 import { landingRouteFor } from "./utils/landingRoute";
+
+// Lazy-load authenticated ERP Layout so public pages (/tracking, /login, 404) pay zero ERP shell cost
+const Layout = lazyWithRetry(() => import("./components/Layout"));
 
 // Lazy-loaded route pages with automatic chunk refresh retry on new deployments
 const Login = lazyWithRetry(() => import("./pages/Login"));
