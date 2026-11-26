@@ -1,22 +1,28 @@
 import { lazy, Suspense, useRef } from "react";
 import "./TrackingExp.css";
-import { ScrollProgressBar, useLenisSmoothScroll, smoothScrollToTarget } from "./MotionPrimitives";
+import {
+    ScrollProgressBar,
+    IntroReveal,
+    EditorialCursor,
+    useLenisSmoothScroll,
+    smoothScrollToTarget,
+} from "./MotionPrimitives";
 import EditorialNavbar from "./EditorialNavbar";
 import HeroTrackingStage from "./HeroTrackingStage";
 
-// Lazy-load below-the-fold sections so the initial tracking hero & form stay instant
-const ServiceJourneyTimeline = lazy(() => import("./ServiceJourneyTimeline"));
+// Lazy-load below-the-fold sections so the initial hero & tracking form stay instant (LCP < 2.0s)
 const EditorialPromoStrip = lazy(() => import("./EditorialPromoStrip"));
+const ServiceJourneyTimeline = lazy(() => import("./ServiceJourneyTimeline"));
 const ServiceCatalogRail = lazy(() => import("./ServiceCatalogRail"));
-const CraftStandardsStack = lazy(() => import("./CraftStandardsStack"));
 const ProofReviewsStrip = lazy(() => import("./ProofReviewsStrip"));
+const TransparentPricingSection = lazy(() => import("./TransparentPricingSection"));
 const WorkshopVisitSection = lazy(() => import("./WorkshopVisitSection"));
 
 function SectionSkeleton({ dark = false }) {
     return (
         <div
             aria-hidden="true"
-            className={`w-full py-24 ${dark ? "bg-[#0B1220]" : "bg-white"}`}
+            className={`w-full py-20 ${dark ? "bg-[#0B162C]" : "bg-white"}`}
         />
     );
 }
@@ -47,19 +53,25 @@ export default function ExperimentalTrackingLanding({
         smoothScrollToTarget("track-lookup", -72);
         window.setTimeout(() => {
             trackInputRef.current?.focus({ preventScroll: true });
-        }, 420);
+        }, 380);
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
-            {/* Native CSS Scroll-Driven Progress Indicator (with JS fallback) */}
+        <div className="yvs-exp-scope min-h-screen bg-white text-slate-950 font-sans selection:bg-blue-600 selection:text-white">
+            {/* Short Non-Blocking Intro Accent (< 0.8s, skipped on repeat visit) */}
+            <IntroReveal />
+
+            {/* Desktop Fine-Pointer Custom Cursor */}
+            <EditorialCursor />
+
+            {/* Scroll Progress Indicator */}
             <ScrollProgressBar />
 
-            {/* 1. Always-Accessible Shrinking Editorial Navbar */}
+            {/* Shrinking Editorial Navbar + Skip Link */}
             <EditorialNavbar onFocusTrack={handleFocusTrack} />
 
-            <main>
-                {/* 2. Above-the-Fold Editorial Hero + Immediate Tracking Instrument */}
+            <main id="main-content">
+                {/* 1. Editorial Hero + Primary Tracking CTA + Scroll-Scrubbed Visual */}
                 <HeroTrackingStage
                     trackMethod={trackMethod}
                     setTrackMethod={setTrackMethod}
@@ -78,36 +90,36 @@ export default function ExperimentalTrackingLanding({
                     inputRef={trackInputRef}
                 />
 
-                {/* 3. Active Store Promotions (Auto-hides if none active; Zero PII) */}
+                {/* Active Store Promotions (Auto-hides if none active) */}
                 <Suspense fallback={null}>
                     <EditorialPromoStrip />
                 </Suspense>
 
-                {/* 4. Grounded Interactive 5-Stage Service Journey */}
+                {/* 2. Pinned Scroll-Scrubbed 5-Stage Process (Shared language with Tracking Result) */}
                 <Suspense fallback={<SectionSkeleton />}>
                     <ServiceJourneyTimeline />
                 </Suspense>
 
-                {/* 5. Interactive Service Catalog Ledger */}
+                {/* 3. Editorial Services Ledger */}
                 <Suspense fallback={<SectionSkeleton />}>
                     <ServiceCatalogRail />
                 </Suspense>
 
-                {/* 6. Sticky Manifesto + Progressively Stacking Standards Cards */}
-                <Suspense fallback={<SectionSkeleton />}>
-                    <CraftStandardsStack />
-                </Suspense>
-
-                {/* 7. Verified Google Maps Metrics & Pausable Review Stream */}
+                {/* 4. Proof: Before/After Drag Slider, Verified Counters, Warranty Terms & Velocity Marquee */}
                 <Suspense fallback={<SectionSkeleton />}>
                     <ProofReviewsStrip />
                 </Suspense>
 
-                {/* 8. Workshop Visit Guide, Vector Pekayon Locator & Minimal Footer */}
-                <Suspense fallback={<SectionSkeleton />}>
-                    <WorkshopVisitSection onFocusTrack={handleFocusTrack} />
+                {/* 5. Transparent Pricing ("Mulai dari" ranges on Deep Navy contrast section) */}
+                <Suspense fallback={<SectionSkeleton dark />}>
+                    <TransparentPricingSection />
                 </Suspense>
             </main>
+
+            {/* 6. Large Editorial Footer, Map, Hours & Magnetic CTAs */}
+            <Suspense fallback={<SectionSkeleton />}>
+                <WorkshopVisitSection onFocusTrack={handleFocusTrack} />
+            </Suspense>
         </div>
     );
 }

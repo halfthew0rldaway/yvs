@@ -139,14 +139,14 @@ export default function EditorialPromoStrip() {
                                 {/* Dashed Ticket Code + Copy Action */}
                                 <div className="lg:col-span-4 lg:border-l lg:border-dashed lg:border-slate-300 lg:pl-7 flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center justify-between gap-3">
                                     <div className="min-w-0">
-                                        <span className="font-mono text-[11px] text-slate-400 block">
+                                        <span className="font-mono text-xs text-slate-600 block">
                                             Kode di kasir
                                         </span>
                                         <span className="font-mono font-bold text-base sm:text-lg text-slate-950 tracking-wide block break-words">
                                             {p.kode_promo}
                                         </span>
-                                        <span className="inline-flex items-center gap-1 text-xs text-slate-500 mt-0.5">
-                                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                        <span className="inline-flex items-center gap-1 text-xs text-slate-600 mt-0.5">
+                                            <Calendar className="w-3.5 h-3.5 text-slate-600 shrink-0" aria-hidden="true" />
                                             <span>s/d {formatDate(p.tanggal_selesai)}</span>
                                         </span>
                                     </div>
@@ -154,10 +154,10 @@ export default function EditorialPromoStrip() {
                                     <button
                                         type="button"
                                         onClick={() => handleCopy(p.kode_promo)}
-                                        className={`min-h-[42px] px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
+                                        className={`min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
                                             isCopied
                                                 ? "bg-emerald-600 text-white"
-                                                : "bg-slate-900 hover:bg-blue-600 text-white"
+                                                : "bg-[#0B162C] hover:bg-blue-700 text-white"
                                         }`}
                                     >
                                         {isCopied ? (
