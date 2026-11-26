@@ -4,7 +4,7 @@ import { MaskedLines, usePrefersReducedMotion } from "./MotionPrimitives";
 import { loadGsapRuntime } from "./motionTokens";
 import VerticalMarquee from "./VerticalMarquee";
 
-// Ulasan 5-bintang aktual dari profil resmi Komputerawet.Com By: Yangversa Computer di Google Maps
+// 16 ulasan bintang-5 aktual & utuh dari listing resmi Google Maps Komputerawet.Com By: Yangversa Computer
 const REVIEWS = [
     {
         id: "deddy",
@@ -34,6 +34,90 @@ const REVIEWS = [
         dateText: "2 minggu lalu",
         quote: "Pertama kali service laptop di yangversa computer, Alhamdulillah pelayanan sangat memuaskan dan sangat amat membantu. Terima kasih yangversa computer.",
     },
+    {
+        id: "emil",
+        initials: "EI",
+        name: "Emil Iskandar",
+        dateText: "4 bulan lalu",
+        quote: "Service keyboard laptop Infinix anak saya dikerjakan dengan cepat dan rapi. Hasilnya bagus, harga wajar, dan pelayanannya ramah. Terima kasih!",
+    },
+    {
+        id: "alfiraas",
+        initials: "AB",
+        name: "Alfiraas Bagdja",
+        dateText: "1 tahun lalu",
+        quote: "mantap! udah bertahun tahun benerin komputer, laptop, dll. ga pernah ngecewain. cepet ngerjainnya, dan hasilnya bagus banget!",
+    },
+    {
+        id: "rustam",
+        initials: "RF",
+        name: "Rustam Effendi",
+        dateText: "5 tahun lalu",
+        quote: "Tempat service laptop yang kompeten, dengan analisa kerusakan yang detail dan menyeluruh. Di tangani teknisi yang handal. Jika hanya di analisa dan pengecekan kerusakan laptop FREE alias gratis, ga selesai ga usah bayar, garansi service ditangani dengan baik setelah service. Mantap, jujur dan terpercaya....Recommended banget",
+    },
+    {
+        id: "surya",
+        initials: "SP",
+        name: "Surya Perkasa",
+        dateText: "3 bulan lalu",
+        quote: "Alhamdulillah pelayanannya ramah, dan hasil kerjanya baik.",
+    },
+    {
+        id: "ariyanto",
+        initials: "AS",
+        name: "Ariyanto Sie",
+        dateText: "2 tahun lalu",
+        quote: "Proses nya sangat profesional.. pengecekan kerusakan dg laporan yg detail dan kita di beri beberapa alternatif perbaikan dg biayanya..serta garansi... top & memuaskan",
+    },
+    {
+        id: "dhimas",
+        initials: "DH",
+        name: "Dhimas Harjanto",
+        dateText: "2 tahun lalu",
+        quote: "Sudah 2 kali service laptop di sini. Hasil pengecekan dijelaskan dengan sangat baik Hasil pengerjaan rapih dan cepat. Jadi kepercayaan kalau ada masalah dengan komputer.",
+    },
+    {
+        id: "yulina",
+        initials: "YL",
+        name: "Yulina",
+        dateText: "2 tahun lalu",
+        quote: "Pelayanan baik. Admin fast respon. Harga minimalis. Mengerti akan mahasiswi heheheh sukses terus yangversa",
+    },
+    {
+        id: "lukky",
+        initials: "LM",
+        name: "lukky man",
+        dateText: "8 bulan lalu",
+        quote: "service nya memuaskan dan di cek detail lptop dsebelum dan sesudahnya keren.puas rekomen banget",
+    },
+    {
+        id: "joanes",
+        initials: "JL",
+        name: "Joanes Leonardi",
+        dateText: "8 bulan lalu",
+        quote: "Petugas servis berpengalaman dan mahir di bidang nya, bisa servis printer canon, laptop, layar monitor, isi ulang catridge dan lain-lain. Serta parkiran luas",
+    },
+    {
+        id: "lucky",
+        initials: "LM",
+        name: "lucky meeting",
+        dateText: "9 bulan lalu",
+        quote: "Sudah berkali kali sy service disini dan merasa puas baik service dan harga. Rekomen banget deh",
+    },
+    {
+        id: "sanli",
+        initials: "SS",
+        name: "Sanli Sanjaya",
+        dateText: "3 bulan lalu",
+        quote: "Servis printer sudah 2 kali... Sgt puas",
+    },
+    {
+        id: "djunaidy",
+        initials: "DS",
+        name: "Djunaidy Small",
+        dateText: "1 tahun lalu",
+        quote: "Sangat cepat murah tepat waktu ...komunikasi baik, sblm dikerjakan dikonfirmasi trlbh dahulu hingga persetujuan.. terima kasih Yangversa Pekayon ..",
+    },
 ];
 
 const WARRANTY_POINTS = [
@@ -42,8 +126,12 @@ const WARRANTY_POINTS = [
     "Klaim cukup menunjukkan nomor servis atau kartu garansi di halaman pelacakan.",
 ];
 
-function rotateReviews(items, offset) {
-    return [...items.slice(offset), ...items.slice(0, offset)];
+function partitionReviews(items, colCount = 4) {
+    const buckets = Array.from({ length: colCount }, () => []);
+    items.forEach((item, idx) => {
+        buckets[idx % colCount].push(item);
+    });
+    return buckets;
 }
 
 function ScrollCounter({ to, decimals = 0, suffix = "" }) {
@@ -155,39 +243,39 @@ export default function ProofReviewsStrip() {
     const reducedMotion = usePrefersReducedMotion();
     const [isPlaying, setIsPlaying] = useState(true);
 
-    const lanes = useMemo(
-        () => [
+    const lanes = useMemo(() => {
+        const [col1, col2, col3, col4] = partitionReviews(REVIEWS, 4);
+        return [
             {
                 id: "lane-1",
                 reverse: false,
-                duration: "34s",
+                duration: "38s",
                 className: "flex",
-                items: rotateReviews(REVIEWS, 0),
+                items: col1,
             },
             {
                 id: "lane-2",
                 reverse: true,
-                duration: "38s",
+                duration: "42s",
                 className: "flex",
-                items: rotateReviews(REVIEWS, 1),
+                items: col2,
             },
             {
                 id: "lane-3",
                 reverse: false,
-                duration: "36s",
+                duration: "40s",
                 className: "hidden md:flex",
-                items: rotateReviews(REVIEWS, 2),
+                items: col3,
             },
             {
                 id: "lane-4",
                 reverse: true,
-                duration: "40s",
+                duration: "44s",
                 className: "hidden lg:flex",
-                items: rotateReviews(REVIEWS, 3),
+                items: col4,
             },
-        ],
-        []
-    );
+        ];
+    }, []);
 
     const isPaused = !isPlaying || reducedMotion;
 
@@ -286,7 +374,7 @@ export default function ProofReviewsStrip() {
                 {/* Architectural 3D Perspective Tiled Vertical Review Wall */}
                 {reducedMotion ? (
                     <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        {REVIEWS.map((rev) => (
+                        {REVIEWS.slice(0, 8).map((rev) => (
                             <EditorialReviewCard key={rev.id} review={rev} />
                         ))}
                     </div>
@@ -304,7 +392,7 @@ export default function ProofReviewsStrip() {
                                             reverse={lane.reverse}
                                             paused={isPaused}
                                             pauseOnHover
-                                            repeat={3}
+                                            repeat={2}
                                             duration={lane.duration}
                                             gap="1rem"
                                             className="h-full"
