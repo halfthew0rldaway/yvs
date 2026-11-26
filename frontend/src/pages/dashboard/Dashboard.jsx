@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import useRealtimeEvent from "../../hooks/useRealtime";
@@ -28,32 +28,9 @@ import {
     Calendar,
     MessageCircle
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, AreaChart, Area, LineChart, Line } from 'recharts';
 import toast from 'react-hot-toast';
 import DashboardAttendanceCard from "../../components/DashboardAttendanceCard";
-
-const SlaDonutChart = lazy(() =>
-    import("./DashboardCharts").then((m) => ({ default: m.SlaDonutChart }))
-);
-const StatusBarChart = lazy(() =>
-    import("./DashboardCharts").then((m) => ({ default: m.StatusBarChart }))
-);
-const RevenueTrendAreaChart = lazy(() =>
-    import("./DashboardCharts").then((m) => ({ default: m.RevenueTrendAreaChart }))
-);
-const TeknisiTaskDonutChart = lazy(() =>
-    import("./DashboardCharts").then((m) => ({ default: m.TeknisiTaskDonutChart }))
-);
-
-function ChartPlaceholder({ rounded = false }) {
-    return (
-        <div
-            className={`w-full h-full flex items-center justify-center bg-slate-50/80 border border-slate-100 ${
-                rounded ? "rounded-full max-w-[180px] max-h-[180px]" : "rounded-xl"
-            }`}
-            aria-hidden="true"
-        />
-    );
-}
 
 function StatCard({ label, value, icon: Icon, color = "blue", to, className = "" }) {
     const colors = {
@@ -116,6 +93,20 @@ function formatTimeAgo(dateString) {
     if (diffHrs < 48) return `Kemarin`;
     return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(date);
 }
+
+const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white text-slate-700 text-sm rounded-lg px-4 py-3 shadow-lg border border-slate-100">
+                <p className="font-medium text-slate-500 mb-1">{payload[0].payload.name}</p>
+                <p className="font-bold text-lg text-slate-800" style={{ color: payload[0].payload.fillColor || "#3b82f6" }}>
+                    {payload[0].value} <span className="text-sm font-medium text-slate-500">Tiket</span>
+                </p>
+            </div>
+        );
+    }
+    return null;
+};
 
 // Mapping warna soft sesuai status tiket
 const STATUS_COLORS = {
@@ -206,13 +197,49 @@ function SlaMonitoringCard({ slaSummary, isTeknisi = false }) {
                 {/* Donut Chart */}
                 <div className="w-full lg:w-5/12 flex flex-col items-center">
                     <div className="w-full h-[195px] relative flex items-center justify-center">
-                        <Suspense fallback={<ChartPlaceholder rounded />}>
-                            <SlaDonutChart
-                                chartSegments={chartSegments}
-                                hasData={hasData}
-                                onSliceClick={handleSliceClick}
-                            />
-                        </Suspense>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={chartSegments}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={58}
+                                    outerRadius={82}
+                                    paddingAngle={hasData ? 3 : 0}
+                                    dataKey="value"
+                                    stroke="none"
+                                    isAnimationActive={false}
+                                    className={hasData ? "cursor-pointer" : ""}
+                                    onClick={(e) => e && handleSliceClick(e)}
+                                >
+                                    {chartSegments.map((entry, index) => (
+                                        <Cell 
+                                            key={`sla-cell-${index}`} 
+                                            fill={entry.color} 
+                                            className={hasData ? "hover:opacity-80 transition-opacity cursor-pointer" : ""} 
+                                        />
+                                    ))}
+                                </Pie>
+                                {hasData && (
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length && !payload[0].payload.isDummy) {
+                                                const item = payload[0].payload;
+                                                return (
+                                                    <div className="bg-white text-slate-700 text-xs rounded-xl px-3 py-2 shadow-lg border border-slate-100">
+                                                        <p className="font-semibold text-slate-800">{item.name}</p>
+                                                        <p className="font-bold text-sm mt-0.5" style={{ color: item.color }}>
+                                                            {item.value} <span className="text-xs font-normal text-slate-500">tiket ({item.percent}%)</span>
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                )}
+                            </PieChart>
+                        </ResponsiveContainer>
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                             <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                                 {totalActive}
@@ -568,13 +595,50 @@ export default function Dashboard() {
                         </div>
                         {data?.chartData?.length > 0 ? (
                             <div className="w-full h-[260px] sm:h-[280px] lg:flex-1">
-                                <Suspense fallback={<ChartPlaceholder />}>
-                                    <StatusBarChart
-                                        data={data.chartData}
-                                        canViewTickets={hasPermission("tickets.view")}
-                                        onBarClick={(statusKey) => navigate(`/tiket-servis?status=${statusKey}`)}
-                                    />
-                                </Suspense>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart 
+                                        data={data.chartData} 
+                                        margin={{ top: 10, right: 10, left: -20, bottom: 12 }}
+                                        onClick={(e) => {
+                                            if (hasPermission("tickets.view") && e && e.activePayload && e.activePayload.length > 0) {
+                                                const clicked = e.activePayload[0].payload;
+                                                const statusKey = (clicked.name || "").toLowerCase().replace(/ /g, "_");
+                                                if (statusKey) {
+                                                    navigate(`/tiket-servis?status=${statusKey}`);
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis 
+                                            dataKey="shortName" 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            interval={0}
+                                            tick={{ fill: '#475569', fontSize: 11, fontWeight: 600 }} 
+                                            dy={8} 
+                                        />
+                                        <YAxis 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} 
+                                            allowDecimals={false} 
+                                            dx={-10} 
+                                        />
+                                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                                        <Bar 
+                                            dataKey="value" 
+                                            radius={[4, 4, 0, 0]} 
+                                            maxBarSize={38}
+                                            className="cursor-pointer"
+                                            isAnimationActive={false}
+                                        >
+                                            {data.chartData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.fillColor} className="hover:opacity-80 transition-opacity cursor-pointer" />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
                             </div>
                         ) : (
                             <div className="flex-1 min-h-[250px] flex items-center justify-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
@@ -654,9 +718,34 @@ export default function Dashboard() {
                         </div>
                         {data?.trendPendapatan?.length > 0 ? (
                             <div className="w-full h-[240px] sm:h-[260px] lg:flex-1">
-                                <Suspense fallback={<ChartPlaceholder />}>
-                                    <RevenueTrendAreaChart data={data.trendPendapatan} formatRupiah={formatRupiah} />
-                                </Suspense>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={data.trendPendapatan} margin={{ top: 10, right: 10, left: -10, bottom: 8 }}>
+                                        <defs>
+                                            <linearGradient id="colorPendapatan" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="bulan" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 11, fontWeight: 600 }} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(1)}jt` : v >= 1000 ? `${(v/1000).toFixed(0)}rb` : v} />
+                                        <Tooltip
+                                            formatter={(value) => [formatRupiah(value), "Pendapatan"]}
+                                            contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                                            labelStyle={{ fontWeight: 600, color: '#334155' }}
+                                        />
+                                        <Area 
+                                            type="monotone" 
+                                            dataKey="pendapatan" 
+                                            stroke="#3b82f6" 
+                                            strokeWidth={2.5} 
+                                            fill="url(#colorPendapatan)" 
+                                            dot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} 
+                                            activeDot={{ r: 6 }} 
+                                            isAnimationActive={false}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
                             </div>
                         ) : (
                             <div className="flex-1 flex items-center justify-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
@@ -788,12 +877,33 @@ export default function Dashboard() {
                     <div className="flex flex-col md:flex-row items-center gap-8 h-auto md:h-[300px]">
                         {/* Donut Chart */}
                         <div className="w-full md:w-1/2 h-[250px] md:h-full flex items-center justify-center relative">
-                            <Suspense fallback={<ChartPlaceholder rounded />}>
-                                <TeknisiTaskDonutChart
-                                    data={data.chartData}
-                                    onSliceClick={(statusKey) => navigate(`/tiket-servis?scope=my&status=${statusKey}`)}
-                                />
-                            </Suspense>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={data.chartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={75}
+                                        outerRadius={105}
+                                        paddingAngle={4}
+                                        dataKey="value"
+                                        stroke="none"
+                                        isAnimationActive={false}
+                                        className="cursor-pointer"
+                                        onClick={(e) => {
+                                            if (e && e.name) {
+                                                const statusKey = e.name.toLowerCase().replace(/ /g, "_");
+                                                navigate(`/tiket-servis?scope=my&status=${statusKey}`);
+                                            }
+                                        }}
+                                    >
+                                        {data.chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.fillColor} className="hover:opacity-80 transition-opacity cursor-pointer" />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip content={<CustomTooltip />} />
+                                </PieChart>
+                            </ResponsiveContainer>
                             {/* Inner Circle Text */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                 <span className="text-3xl font-extrabold text-slate-800">

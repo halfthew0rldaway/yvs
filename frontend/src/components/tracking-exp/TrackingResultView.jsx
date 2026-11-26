@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import QRCode from "qrcode";
 import api from "../../services/api";
-import "../../erp.css";
 import {
     Search,
     ChevronLeft,

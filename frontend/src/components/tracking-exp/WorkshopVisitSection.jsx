@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import {
     Navigation,
     Copy,
@@ -8,7 +9,6 @@ import {
     ArrowUp,
 } from "lucide-react";
 import { MagneticWrap, MaskedLines, smoothScrollToTarget } from "./MotionPrimitives";
-import { showPublicToast } from "../../utils/publicToast";
 
 const ADDRESS_TEXT =
     "Jl. Raya Pekayon No. 25, RT.004/RW.001, Pekayon Jaya, Kec. Bekasi Selatan, Kota Bekasi 17148";
@@ -25,10 +25,10 @@ export default function WorkshopVisitSection({ onFocusTrack }) {
         try {
             await navigator.clipboard.writeText(ADDRESS_TEXT);
             setCopied(true);
-            showPublicToast("success", "Alamat bengkel disalin");
+            toast.success("Alamat bengkel disalin");
             setTimeout(() => setCopied(false), 2400);
         } catch {
-            showPublicToast("error", "Gagal menyalin alamat");
+            toast.error("Gagal menyalin alamat");
         }
     };
 

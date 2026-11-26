@@ -1,13 +1,10 @@
 import { lazy, Suspense, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
+import api from "../../services/api";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import ExperimentalTrackingLanding from "../../components/tracking-exp/ExperimentalTrackingLanding";
 import TrackingSkeleton from "../../components/tracking-exp/TrackingSkeleton";
-import { showPublicToast, subscribePublicToast } from "../../utils/publicToast";
-
-const LazyToaster = lazy(() =>
-    import("react-hot-toast").then((m) => ({ default: m.Toaster }))
-);
 
 const importTrackingResultView = () => import("../../components/tracking-exp/TrackingResultView");
 
@@ -78,10 +75,7 @@ export default function Tracking() {
     const [loading, setLoading] = useState(Boolean(queryTiket || queryPhone));
     const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
     const [recentSearches, setRecentSearches] = useState(() => getRecentSearches());
-    const [toasterMounted, setToasterMounted] = useState(false);
     const trackingResultHeadingRef = useRef(null);
-
-    useEffect(() => subscribePublicToast(() => setToasterMounted(true)), []);
 
     // Non-blocking transition helper: never holds keyboard/input frames with flushSync
     const switchViewSmoothly = useCallback((updateFn, onFinished) => {
@@ -103,12 +97,11 @@ export default function Tracking() {
             setLoading(true);
 
             try {
-                // Lazy-load axios/api & warm result module only when user submits a tracking lookup
-                const [{ default: api }] = await Promise.all([
-                    import("../../services/api"),
+                // Warm result module in parallel with API lookup so Suspense resolves immediately
+                const [res] = await Promise.all([
+                    api.post("/tracking", payload),
                     importTrackingResultView().catch(() => {}),
                 ]);
-                const res = await api.post("/tracking", payload);
                 const data = Array.isArray(res.data) ? res.data : res.data ? [res.data] : [];
                 const applyResult = () => {
                     setResults(data);
@@ -162,10 +155,10 @@ export default function Tracking() {
             if (ticketId) {
                 setTrackMethod("tiket");
                 setNomorTiket(ticketId);
-                showPublicToast("success", `Nota terdeteksi: ${ticketId}`);
+                toast.success(`Nota terdeteksi: ${ticketId}`);
                 executeTrack({ nomorTiket: ticketId });
             } else {
-                showPublicToast("error", "Kode QR / Barcode nota tidak dikenali");
+                toast.error("Kode QR / Barcode nota tidak dikenali");
             }
         },
         [executeTrack]
@@ -228,21 +221,6 @@ export default function Tracking() {
 
     const isViewingTracking = selectedTicket || (results && results.length > 0);
 
-    const renderPublicToaster = () => (
-        (toasterMounted || isViewingTracking) && (
-            <Suspense fallback={null}>
-                <LazyToaster
-                    position={typeof window !== "undefined" && window.innerWidth < 640 ? "top-center" : "top-right"}
-                    containerStyle={{ zIndex: 100000, top: 16 }}
-                    toastOptions={{
-                        className: 'text-sm font-medium text-slate-900 shadow-lg',
-                        style: { borderRadius: '12px', padding: '14px 18px', maxWidth: '92vw' }
-                    }}
-                />
-            </Suspense>
-        )
-    );
-
     // Structured skeleton while loading via deep-link or active lookup
     if (loading && (queryTiket || queryPhone || isViewingTracking)) {
         return <TrackingSkeleton ticketCode={nomorTiket || queryTiket} />;
@@ -252,7 +230,6 @@ export default function Tracking() {
     if (isViewingTracking) {
         return (
             <ErrorBoundary>
-                {renderPublicToaster()}
                 <Suspense
                     fallback={
                         <TrackingSkeleton ticketCode={selectedTicket?.nomor_tiket || nomorTiket} />
@@ -284,7 +261,6 @@ export default function Tracking() {
     // VIEW 2: Continuous Editorial Landing + Primary Tracking Hero
     return (
         <>
-            {renderPublicToaster()}
             <ExperimentalTrackingLanding
                 initialMethod={trackMethod}
                 initialTiket={nomorTiket}

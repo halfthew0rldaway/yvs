@@ -108,9 +108,6 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks(id) {
-                    if (id.includes("vite/preload-helper") || id.includes("vite/modulepreload-polyfill")) {
-                        return "vite-preload";
-                    }
                     if (id.includes("node_modules")) {
                         if (id.includes("xlsx")) {
                             return "vendor-xlsx";
@@ -134,6 +131,9 @@ export default defineConfig({
                         }
                         if (id.includes("jspdf") || id.includes("html2canvas")) {
                             return "vendor-pdf";
+                        }
+                        if (id.includes("@capacitor")) {
+                            return "vendor-capacitor";
                         }
                     }
                 },

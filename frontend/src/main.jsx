@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
+import { AuthProvider } from "./hooks/useAuth";
 import "./index.css";
 
 const isNativeCapacitor = () =>
@@ -24,20 +25,11 @@ if (typeof window !== "undefined") {
             }).catch(() => {});
         }
     } else if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
-        // Defer PWA service worker registration & 5MB precache well past FCP/LCP/TTI
+        // Defer PWA service worker registration past first paint
         window.addEventListener("load", () => {
-            const registerDeferred = () => {
-                import("virtual:pwa-register").then(({ registerSW }) => {
-                    registerSW({ immediate: true });
-                }).catch(() => {});
-            };
-            window.setTimeout(() => {
-                if (typeof window.requestIdleCallback === "function") {
-                    window.requestIdleCallback(registerDeferred, { timeout: 3000 });
-                } else {
-                    registerDeferred();
-                }
-            }, 2500);
+            import("virtual:pwa-register").then(({ registerSW }) => {
+                registerSW({ immediate: true });
+            }).catch(() => {});
         }, { once: true });
     }
 
@@ -69,13 +61,9 @@ if (typeof window !== "undefined") {
         }
     })();
 
-    const isPublicTrackingPath =
-        window.location.pathname === "/tracking" ||
-        window.location.pathname.startsWith("/tracking/");
-
     if (isNativeCapacitor()) {
         scheduleBackgroundInit();
-    } else if (hasStaffSession && !isPublicTrackingPath) {
+    } else if (hasStaffSession) {
         if (typeof window.requestIdleCallback === "function") {
             window.requestIdleCallback(scheduleBackgroundInit, { timeout: 2500 });
         } else {
@@ -94,7 +82,9 @@ window.addEventListener("vite:preloadError", (event) => {
 ReactDOM.createRoot(document.getElementById("root")).render(
     <React.StrictMode>
         <BrowserRouter>
-            <App />
+            <AuthProvider>
+                <App />
+            </AuthProvider>
         </BrowserRouter>
     </React.StrictMode>
 );
