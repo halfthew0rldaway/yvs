@@ -1,16 +1,15 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import "./TrackingExp.css";
 import {
     ScrollProgressBar,
     IntroReveal,
-    EditorialCursor,
     useLenisSmoothScroll,
     smoothScrollToTarget,
 } from "./MotionPrimitives";
 import EditorialNavbar from "./EditorialNavbar";
 import HeroTrackingStage from "./HeroTrackingStage";
 
-// Lazy-load below-the-fold chapters on scroll proximity so Hero LCP stays < 2.2s
+// Lazy-load below-the-fold chapters on scroll proximity so Hero LCP & keyboard INP stay ultra-fast
 const ServiceJourneyTimeline = lazy(() => import("./ServiceJourneyTimeline"));
 const ServiceCatalogRail = lazy(() => import("./ServiceCatalogRail"));
 const ProofReviewsStrip = lazy(() => import("./ProofReviewsStrip"));
@@ -36,7 +35,7 @@ function DeferredSection({ id, minHeight = 560, bgClass = "bg-white", forceMount
                     observer.disconnect();
                 }
             },
-            { rootMargin: "420px 0px" }
+            { rootMargin: "320px 0px" }
         );
         observer.observe(hostRef.current);
         return () => observer.disconnect();
@@ -65,19 +64,17 @@ function DeferredSection({ id, minHeight = 560, bgClass = "bg-white", forceMount
 }
 
 export default function ExperimentalTrackingLanding({
-    trackMethod,
-    setTrackMethod,
-    nomorTiket,
-    setNomorTiket,
-    nomorTelepon,
-    setNomorTelepon,
+    initialMethod,
+    initialTiket,
+    initialTelepon,
     loading,
     error,
     results,
     recentSearches,
-    onSubmit,
+    onLookupSubmit,
     onQuickSearch,
     onClearRecent,
+    onWarmResult,
     onOpenScanner,
     isScannerOpen,
 }) {
@@ -89,47 +86,44 @@ export default function ExperimentalTrackingLanding({
     useEffect(() => {
         if (mountAll) return;
         const onScroll = () => {
-            if (window.scrollY > 36) setMountAll(true);
+            if (window.scrollY > 120) setMountAll(true);
         };
         window.addEventListener("scroll", onScroll, { passive: true });
         return () => window.removeEventListener("scroll", onScroll);
     }, [mountAll]);
 
-    const handleFocusTrack = () => {
+    const handleFocusTrack = useCallback(() => {
         smoothScrollToTarget("track-lookup", -72);
         window.setTimeout(() => {
             trackInputRef.current?.focus({ preventScroll: true });
         }, 360);
-    };
+    }, []);
 
     return (
-        <div className="yvs-exp-scope min-h-screen yvs-studio-canvas text-[#071124] font-sans selection:bg-[#2563EB] selection:text-white">
+        <div className="yvs-exp-scope min-h-screen bg-[var(--yvs-paper)] text-[var(--yvs-ink)] font-sans">
             <IntroReveal />
-            <EditorialCursor />
             <ScrollProgressBar />
             <EditorialNavbar onFocusTrack={handleFocusTrack} />
 
             <main id="main-content">
                 {/* ACT I — Seamless Studio Hero + Primary Tracking Command Bar */}
                 <HeroTrackingStage
-                    trackMethod={trackMethod}
-                    setTrackMethod={setTrackMethod}
-                    nomorTiket={nomorTiket}
-                    setNomorTiket={setNomorTiket}
-                    nomorTelepon={nomorTelepon}
-                    setNomorTelepon={setNomorTelepon}
+                    initialMethod={initialMethod}
+                    initialTiket={initialTiket}
+                    initialTelepon={initialTelepon}
                     loading={loading}
                     error={error}
                     results={results}
                     recentSearches={recentSearches}
-                    onSubmit={onSubmit}
+                    onLookupSubmit={onLookupSubmit}
                     onQuickSearch={onQuickSearch}
                     onClearRecent={onClearRecent}
+                    onWarmResult={onWarmResult}
                     onOpenScanner={onOpenScanner}
                     inputRef={trackInputRef}
                 />
 
-                {/* ACT II — Pinned Full-Screen Disassembly Process (Seamless #EFEFEF continuation) */}
+                {/* ACT II — Viewport-Gated Disassembly Process */}
                 <DeferredSection id="alur-servis" minHeight={720} bgClass="yvs-studio-canvas" forceMount={mountAll}>
                     <ServiceJourneyTimeline />
                 </DeferredSection>
@@ -139,8 +133,8 @@ export default function ExperimentalTrackingLanding({
                     <ServiceCatalogRail />
                 </DeferredSection>
 
-                {/* ACT IV — Full-Bleed Obsidian Navy Proof, Real Visual Comparison & Velocity Reviews */}
-                <DeferredSection id="ulasan" minHeight={760} bgClass="bg-[#071124]" forceMount={mountAll}>
+                {/* ACT IV — Full-Bleed Obsidian Navy Proof & Velocity Reviews */}
+                <DeferredSection id="ulasan" minHeight={760} bgClass="bg-[var(--yvs-obsidian)]" forceMount={mountAll}>
                     <ProofReviewsStrip />
                 </DeferredSection>
 
@@ -156,7 +150,7 @@ export default function ExperimentalTrackingLanding({
             </main>
 
             {/* ACT VI — Monumental Obsidian Navy Footer */}
-            <DeferredSection id="lokasi" minHeight={620} bgClass="bg-[#071124]" forceMount={mountAll}>
+            <DeferredSection id="lokasi" minHeight={620} bgClass="bg-[var(--yvs-obsidian)]" forceMount={mountAll}>
                 <WorkshopVisitSection onFocusTrack={handleFocusTrack} />
             </DeferredSection>
         </div>

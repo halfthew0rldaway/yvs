@@ -118,8 +118,8 @@ export default function ServiceCatalogRail() {
         <section
             id="layanan"
             ref={sectionRef}
-            className={`relative w-full bg-white scroll-mt-16 ${
-                reducedMotion ? "" : "lg:h-[240vh]"
+            className={`relative w-full bg-[var(--yvs-paper)] scroll-mt-16 ${
+                reducedMotion ? "" : "lg:min-h-[240svh]"
             }`}
         >
             <div
@@ -131,9 +131,9 @@ export default function ServiceCatalogRail() {
                     <MaskedLines
                         as="h2"
                         lines={["Layanan yang biasa", "kami tangani di bengkel."]}
-                        className="font-display font-extrabold text-3xl sm:text-4xl lg:text-[2.85rem] text-[#071124] tracking-[-0.035em] leading-[1.08] max-w-2xl"
+                        className="font-display font-extrabold text-3xl sm:text-4xl lg:text-[2.85rem] text-[var(--yvs-ink)] tracking-[-0.035em] leading-[1.08] max-w-2xl"
                     />
-                    <p className="text-sm sm:text-base text-[#475569] leading-relaxed max-w-sm">
+                    <p className="text-sm sm:text-base text-[var(--yvs-muted)] leading-relaxed max-w-sm">
                         Setiap perbaikan dimulai dari pemeriksaan jelas. Anda bisa konsultasi dulu lewat WhatsApp sebelum membawa unit.
                     </p>
                 </div>
@@ -151,41 +151,40 @@ export default function ServiceCatalogRail() {
                             return (
                                 <article
                                     key={service.num}
-                                    data-cursor="Lihat"
-                                    className="snap-start w-[300px] sm:w-[380px] lg:w-[420px] shrink-0 bg-[#F8FAFC] hover:bg-white border border-[#071124]/10 hover:border-[#2563EB]/40 rounded-2xl p-6 sm:p-8 flex flex-col justify-between gap-8 transition-colors duration-300"
+                                    className="snap-start w-[300px] sm:w-[380px] lg:w-[420px] shrink-0 bg-[var(--yvs-paper-2)] hover:bg-white border border-[var(--yvs-rule)] hover:border-blue-300 rounded-2xl p-6 sm:p-8 flex flex-col justify-between gap-8 transition-colors duration-300"
                                 >
                                     <div className="space-y-5">
-                                        <div className="flex items-baseline justify-between gap-3 pb-4 border-b border-[#071124]/10">
-                                            <span className="font-display font-extrabold text-4xl text-[#2563EB] tracking-[-0.04em] leading-none">
+                                        <div className="flex items-baseline justify-between gap-3 pb-4 border-b border-[var(--yvs-rule)]">
+                                            <span className="font-display font-extrabold text-4xl text-[var(--yvs-accent)] tracking-[-0.04em] leading-none">
                                                 {service.num}
                                             </span>
-                                            <span className="text-xs font-medium text-[#475569]">
+                                            <span className="text-xs font-medium text-[var(--yvs-muted)]">
                                                 {service.category}
                                             </span>
                                         </div>
 
                                         <div className="space-y-2.5">
-                                            <h3 className="font-display font-bold text-xl sm:text-2xl text-[#071124] tracking-[-0.02em] leading-snug">
+                                            <h3 className="font-display font-bold text-xl sm:text-2xl text-[var(--yvs-ink)] tracking-[-0.02em] leading-snug">
                                                 {service.title}
                                             </h3>
-                                            <p className="text-sm text-[#475569] leading-relaxed">
+                                            <p className="text-sm text-[var(--yvs-muted)] leading-relaxed">
                                                 {service.symptoms}
                                             </p>
-                                            <p className="text-sm text-[#071124]/80 leading-relaxed pt-1">
+                                            <p className="text-sm text-[var(--yvs-ink)] leading-relaxed pt-1">
                                                 {service.detail}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="pt-4 border-t border-[#071124]/10 flex items-center justify-between gap-3">
-                                        <span className="text-xs font-medium text-[#475569]">
+                                    <div className="pt-4 border-t border-[var(--yvs-rule)] flex items-center justify-between gap-3">
+                                        <span className="text-xs font-medium text-[var(--yvs-muted)]">
                                             {service.devices}
                                         </span>
                                         <a
                                             href={`https://wa.me/628121034212?text=${waText}`}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="min-h-[44px] inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-[#071124] hover:text-[#2563EB] transition-colors shrink-0"
+                                            className="min-h-[44px] inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-[var(--yvs-ink)] hover:text-[var(--yvs-accent)] transition-colors shrink-0 whitespace-nowrap"
                                         >
                                             <span>Tanya WhatsApp</span>
                                             <ArrowUpRight className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -199,10 +198,10 @@ export default function ServiceCatalogRail() {
 
                 {/* Desktop Horizontal Scroll Progress Hairline */}
                 <div className="hidden lg:block w-full max-w-[1440px] mx-auto px-12 pt-10" aria-hidden="true">
-                    <div className="h-[2px] w-full bg-[#071124]/10 overflow-hidden">
+                    <div className="h-[2px] w-full bg-[var(--yvs-rule)] overflow-hidden">
                         <div
                             ref={progressRef}
-                            className="h-full w-full bg-[#2563EB] origin-left"
+                            className="h-full w-full bg-[var(--yvs-accent)] origin-left"
                             style={{ transform: "scaleX(0)" }}
                         />
                     </div>

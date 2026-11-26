@@ -63,16 +63,13 @@ export default function EditorialPromoStrip() {
             className="w-full bg-white border-b border-slate-200 py-14 sm:py-20 overflow-x-clip scroll-mt-16"
         >
             <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-8 border-b border-slate-200">
-                    <div className="space-y-2 max-w-2xl">
-                        <span className="font-mono text-xs text-blue-600 font-semibold block">
-                            PENAWARAN BULAN INI
-                        </span>
-                        <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl text-slate-950 tracking-tight leading-tight">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-8 border-b border-[var(--yvs-rule)]">
+                    <div className="max-w-2xl">
+                        <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl text-[var(--yvs-ink)] tracking-tight leading-tight">
                             Potongan biaya servis yang sedang berlaku.
                         </h2>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-500 max-w-sm leading-relaxed">
+                    <p className="text-xs sm:text-sm text-[var(--yvs-muted)] max-w-sm leading-relaxed">
                         Salin kode di bawah dan sebutkan ke kasir saat pengambilan atau pembayaran unit.
                     </p>
                 </div>
@@ -112,8 +109,8 @@ export default function EditorialPromoStrip() {
                                     </span>
                                     {p.sisa_kuota !== null && (
                                         <span
-                                            className={`font-mono text-xs font-semibold ${
-                                                p.sisa_kuota <= 5 ? "text-amber-700" : "text-slate-500"
+                                            className={`text-xs font-semibold tabular-nums ${
+                                                p.sisa_kuota <= 5 ? "text-amber-700" : "text-[var(--yvs-muted)]"
                                             }`}
                                         >
                                             Sisa {p.sisa_kuota} kuota
@@ -139,14 +136,14 @@ export default function EditorialPromoStrip() {
                                 {/* Dashed Ticket Code + Copy Action */}
                                 <div className="lg:col-span-4 lg:border-l lg:border-dashed lg:border-slate-300 lg:pl-7 flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center justify-between gap-3">
                                     <div className="min-w-0">
-                                        <span className="font-mono text-xs text-slate-600 block">
+                                        <span className="text-xs font-medium text-[var(--yvs-muted)] block">
                                             Kode di kasir
                                         </span>
-                                        <span className="font-mono font-bold text-base sm:text-lg text-slate-950 tracking-wide block break-words">
+                                        <span className="font-mono font-bold text-base sm:text-lg text-[var(--yvs-ink)] tracking-wide block break-words">
                                             {p.kode_promo}
                                         </span>
-                                        <span className="inline-flex items-center gap-1 text-xs text-slate-600 mt-0.5">
-                                            <Calendar className="w-3.5 h-3.5 text-slate-600 shrink-0" aria-hidden="true" />
+                                        <span className="inline-flex items-center gap-1 text-xs text-[var(--yvs-muted)] mt-0.5">
+                                            <Calendar className="w-3.5 h-3.5 text-[var(--yvs-muted)] shrink-0" aria-hidden="true" />
                                             <span>s/d {formatDate(p.tanggal_selesai)}</span>
                                         </span>
                                     </div>
@@ -154,10 +151,10 @@ export default function EditorialPromoStrip() {
                                     <button
                                         type="button"
                                         onClick={() => handleCopy(p.kode_promo)}
-                                        className={`min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
+                                        className={`min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap ${
                                             isCopied
                                                 ? "bg-emerald-600 text-white"
-                                                : "bg-[#0B162C] hover:bg-blue-700 text-white"
+                                                : "bg-[var(--yvs-obsidian)] hover:bg-[var(--yvs-accent)] text-white"
                                         }`}
                                     >
                                         {isCopied ? (

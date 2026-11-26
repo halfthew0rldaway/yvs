@@ -178,7 +178,7 @@ export default function ProofReviewsStrip() {
         <section
             id="ulasan"
             ref={sectionRef}
-            className="w-full bg-[#071124] text-white py-20 sm:py-28 scroll-mt-16 overflow-x-clip"
+            className="w-full bg-[var(--yvs-obsidian)] text-white py-20 sm:py-28 scroll-mt-16 overflow-x-clip"
         >
             <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12">
                 {/* Clean Asymmetric Proof & Warranty Band */}
@@ -237,7 +237,7 @@ export default function ProofReviewsStrip() {
                                 href="https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="min-h-[46px] inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-semibold transition-colors"
+                                className="min-h-[46px] inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--yvs-accent)] hover:bg-[var(--yvs-accent-hover)] text-[var(--yvs-accent-ink)] text-sm font-semibold transition-colors whitespace-nowrap"
                             >
                                 <span>Lihat ulasan di Google Maps</span>
                                 <ArrowUpRight className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -281,7 +281,7 @@ export default function ProofReviewsStrip() {
                         <figure
                             key={`${rev.name}-${idx}`}
                             aria-hidden={shouldAnimate && idx >= REVIEWS.length ? "true" : undefined}
-                            className="w-[310px] sm:w-[390px] shrink-0 bg-[#0E1C36] border border-white/10 rounded-2xl p-6 flex flex-col justify-between gap-6"
+                            className="w-[310px] sm:w-[390px] shrink-0 bg-[var(--yvs-obsidian-2)] border border-white/10 rounded-2xl p-6 flex flex-col justify-between gap-6"
                         >
                             <div className="space-y-3.5">
                                 <div

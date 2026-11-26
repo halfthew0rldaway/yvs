@@ -56,42 +56,42 @@ const DigitalSignaturePadModal = lazy(() => import("../DigitalSignaturePadModal"
 const SEMANTIC_STATUS = {
     diterima: {
         label: "Diterima",
-        badge: "bg-blue-50 text-blue-800 border-blue-200",
+        badge: "bg-blue-50 text-blue-700 border-blue-200",
         dot: "bg-blue-600",
     },
     didiagnosis: {
         label: "Diagnosa",
-        badge: "bg-blue-50 text-blue-800 border-blue-200",
+        badge: "bg-blue-50 text-blue-700 border-blue-200",
         dot: "bg-blue-600",
     },
     menunggu_persetujuan: {
         label: "Menunggu Persetujuan",
-        badge: "bg-amber-50 text-amber-900 border-amber-300",
+        badge: "bg-amber-50 text-amber-800 border-amber-200",
         dot: "bg-amber-500",
     },
     disetujui: {
         label: "Disetujui",
-        badge: "bg-emerald-50 text-emerald-800 border-emerald-200",
+        badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
         dot: "bg-emerald-600",
     },
     dalam_perbaikan: {
         label: "Pengerjaan",
-        badge: "bg-blue-50 text-blue-800 border-blue-200",
+        badge: "bg-blue-50 text-blue-700 border-blue-200",
         dot: "bg-blue-600",
     },
     selesai: {
-        label: "Lulus QC · Siap Diambil",
-        badge: "bg-emerald-50 text-emerald-800 border-emerald-200",
+        label: "Siap Diambil",
+        badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
         dot: "bg-emerald-600",
     },
     diambil: {
         label: "Sudah Diambil",
-        badge: "bg-emerald-50 text-emerald-800 border-emerald-200",
+        badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
         dot: "bg-emerald-600",
     },
     dibatalkan: {
         label: "Dibatalkan",
-        badge: "bg-rose-50 text-rose-800 border-rose-200",
+        badge: "bg-rose-50 text-rose-700 border-rose-200",
         dot: "bg-rose-600",
     },
 };
@@ -173,7 +173,7 @@ function safeParseUrls(val) {
     return [];
 }
 
-function TicketQrImage({ nomorTiket, size = 160 }) {
+function TicketQrImage({ nomorTiket, size = 140 }) {
     const [qrUrl, setQrUrl] = useState("");
     const targetUrl =
         typeof window !== "undefined"
@@ -186,7 +186,7 @@ function TicketQrImage({ nomorTiket, size = 160 }) {
         QRCode.toDataURL(targetUrl, {
             width: size * 2,
             margin: 1,
-            color: { dark: "#0B162C", light: "#FFFFFF" },
+            color: { dark: "#0F172A", light: "#FFFFFF" },
             errorCorrectionLevel: "M",
         })
             .then((url) => {
@@ -202,7 +202,7 @@ function TicketQrImage({ nomorTiket, size = 160 }) {
         return (
             <div
                 style={{ width: size, height: size }}
-                className="rounded-xl bg-slate-100 animate-pulse"
+                className="rounded-xl bg-slate-100 motion-safe:animate-pulse"
                 aria-label="Memuat kode QR"
             />
         );
@@ -221,19 +221,18 @@ function TicketQrImage({ nomorTiket, size = 160 }) {
 }
 
 /**
- * Vertical Progress Path built from SHARED_PROCESS_STEPS
- * Features SVG stroke draw + GSAP MotionPath active marker + semantic pulse on current stage.
+ * Pixel-aligned Vertical 5-Stage Progress Path (shared process language).
+ * Every connector passes cleanly through the exact center of each node circle.
  */
 function VerticalProcessPath({ currentStatus, tiket, activeStepKey, onSelectStep }) {
-    const svgPathRef = useRef(null);
-    const markerRef = useRef(null);
+    const railRef = useRef(null);
     const reducedMotion = usePrefersReducedMotion();
 
     if (currentStatus === "dibatalkan") {
         return (
             <div
                 role="alert"
-                className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3"
+                className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3"
             >
                 <SearchX className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
@@ -266,62 +265,31 @@ function VerticalProcessPath({ currentStatus, tiket, activeStepKey, onSelectStep
     let currentIdx = SHARED_PROCESS_STEPS.findIndex((s) => s.statuses.includes(currentStatus));
     if (currentIdx === -1) currentIdx = 0;
 
-    const progressRatio = currentIdx / (SHARED_PROCESS_STEPS.length - 1);
-
     useEffect(() => {
-        const pathEl = svgPathRef.current;
-        if (!pathEl) return;
-        const totalLen = pathEl.getTotalLength();
-
-        if (reducedMotion) {
-            pathEl.style.strokeDasharray = String(totalLen);
-            pathEl.style.strokeDashoffset = String(totalLen * (1 - progressRatio));
-            return;
-        }
-
+        if (reducedMotion || !railRef.current) return;
         let cancelled = false;
-        let tween = null;
-
+        let ctx = null;
         loadGsapRuntime().then(({ gsap }) => {
-            if (cancelled || !svgPathRef.current) return;
-            gsap.set(svgPathRef.current, {
-                strokeDasharray: totalLen,
-                strokeDashoffset: totalLen,
-            });
-            tween = gsap.timeline();
-            tween.to(
-                svgPathRef.current,
-                {
-                    strokeDashoffset: totalLen * (1 - progressRatio),
-                    duration: 0.95,
-                    ease: MOTION_TOKENS.ease.gsapEditorial,
-                },
-                0
-            );
-            if (markerRef.current) {
-                tween.to(
-                    markerRef.current,
+            if (cancelled || !railRef.current) return;
+            ctx = gsap.context(() => {
+                gsap.fromTo(
+                    "[data-step-fill]",
+                    { scaleY: 0 },
                     {
-                        motionPath: {
-                            path: svgPathRef.current,
-                            align: svgPathRef.current,
-                            alignOrigin: [0.5, 0.5],
-                            start: 0,
-                            end: Math.max(0.01, progressRatio),
-                        },
-                        duration: 0.95,
+                        scaleY: 1,
+                        duration: 0.45,
+                        stagger: 0.1,
                         ease: MOTION_TOKENS.ease.gsapEditorial,
-                    },
-                    0
+                        transformOrigin: "top center",
+                    }
                 );
-            }
+            }, railRef);
         });
-
         return () => {
             cancelled = true;
-            if (tween) tween.kill();
+            if (ctx) ctx.revert();
         };
-    }, [progressRatio, reducedMotion]);
+    }, [currentIdx, reducedMotion]);
 
     const formatStepTime = (dateStr) => {
         if (!dateStr) return null;
@@ -340,114 +308,104 @@ function VerticalProcessPath({ currentStatus, tiket, activeStepKey, onSelectStep
     };
 
     return (
-        <nav aria-label="Tahapan perbaikan perangkat" className="relative pl-1">
-            {/* Vertical SVG Spine + MotionPath Progress Beacon */}
-            <svg
-                viewBox="0 0 24 400"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-                className="absolute left-[19px] top-6 bottom-6 w-6 h-[calc(100%-3rem)] pointer-events-none overflow-visible"
-            >
-                <path d="M 12 0 L 12 400" fill="none" stroke="#E2E8F0" strokeWidth="2.5" strokeLinecap="round" />
-                <path
-                    ref={svgPathRef}
-                    d="M 12 0 L 12 400"
-                    fill="none"
-                    stroke="#2563EB"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                />
-                <circle
-                    ref={markerRef}
-                    cx="12"
-                    cy="0"
-                    r="4.5"
-                    fill="#2563EB"
-                    stroke="#FFFFFF"
-                    strokeWidth="2"
-                />
-            </svg>
-
-            <ol className="space-y-2.5 relative z-10">
+        <nav ref={railRef} aria-label="Tahapan perbaikan perangkat">
+            <ol className="space-y-0">
                 {SHARED_PROCESS_STEPS.map((step, idx) => {
                     const isCompleted = idx < currentIdx;
                     const isCurrent = idx === currentIdx;
                     const isReached = idx <= currentIdx;
                     const isSelected = activeStepKey === step.key;
+                    const isLast = idx === SHARED_PROCESS_STEPS.length - 1;
                     const timeStr = formatStepTime(timestamps[step.key]);
 
                     return (
-                        <li key={step.key}>
+                        <li key={step.key} className="relative">
                             <button
                                 type="button"
                                 disabled={!isReached}
                                 onClick={() => isReached && onSelectStep(step.key)}
                                 aria-current={isCurrent ? "step" : undefined}
-                                className={`w-full min-h-[64px] text-left flex items-start gap-3.5 p-3 rounded-xl border transition-all ${
+                                className={`w-full text-left flex items-stretch gap-3 px-2.5 py-1 rounded-xl transition-colors ${
                                     isSelected
-                                        ? "bg-blue-50/80 border-blue-300 shadow-2xs"
+                                        ? "bg-white shadow-2xs ring-1 ring-blue-200"
                                         : isReached
-                                        ? "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50 cursor-pointer"
-                                        : "bg-transparent border-transparent opacity-55 cursor-not-allowed"
+                                        ? "hover:bg-white/80 cursor-pointer"
+                                        : "opacity-50 cursor-not-allowed"
                                 }`}
                             >
-                                {/* Node Circle */}
-                                <div className="relative mt-0.5 shrink-0">
-                                    {isCurrent && (
-                                        <span
-                                            aria-hidden="true"
-                                            className={`absolute inset-0 rounded-full yvs-stage-pulse-ring ${
-                                                currentStatus === "menunggu_persetujuan"
-                                                    ? "bg-amber-400"
-                                                    : currentStatus === "selesai" || currentStatus === "diambil"
-                                                    ? "bg-emerald-400"
-                                                    : "bg-blue-400"
-                                            }`}
-                                        />
-                                    )}
-                                    <span
-                                        className={`relative w-9 h-9 rounded-full flex items-center justify-center font-mono text-xs font-bold border-2 transition-colors ${
-                                            isCurrent
-                                                ? currentStatus === "menunggu_persetujuan"
-                                                    ? "bg-amber-500 border-amber-200 text-white"
-                                                    : currentStatus === "selesai" || currentStatus === "diambil"
-                                                    ? "bg-emerald-600 border-emerald-200 text-white"
-                                                    : "bg-blue-600 border-blue-200 text-white"
-                                                : isCompleted
-                                                ? "bg-blue-600 border-blue-200 text-white"
-                                                : "bg-white border-slate-300 text-slate-600"
-                                        }`}
-                                    >
-                                        {isCompleted ? (
-                                            <Check className="w-4 h-4" aria-hidden="true" />
-                                        ) : (
-                                            step.num
+                                {/* Left Rail Column: Exact Centered Node + Continuous Vertical Connector */}
+                                <div className="flex flex-col items-center shrink-0 w-7">
+                                    <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+                                        {isCurrent && (
+                                            <span
+                                                aria-hidden="true"
+                                                className={`absolute inset-0 rounded-full yvs-stage-pulse-ring ${
+                                                    currentStatus === "menunggu_persetujuan"
+                                                        ? "bg-amber-400"
+                                                        : currentStatus === "selesai" || currentStatus === "diambil"
+                                                        ? "bg-emerald-400"
+                                                        : "bg-blue-400"
+                                                }`}
+                                            />
                                         )}
-                                    </span>
+                                        <span
+                                            className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center font-mono text-xs font-bold border-2 transition-colors ${
+                                                isCurrent
+                                                    ? currentStatus === "menunggu_persetujuan"
+                                                        ? "bg-amber-500 border-amber-200 text-white"
+                                                        : currentStatus === "selesai" || currentStatus === "diambil"
+                                                        ? "bg-emerald-600 border-emerald-200 text-white"
+                                                        : "bg-blue-600 border-blue-200 text-white"
+                                                    : isCompleted
+                                                    ? "bg-blue-600 border-blue-100 text-white"
+                                                    : "bg-white border-slate-300 text-slate-600"
+                                            }`}
+                                        >
+                                            {isCompleted ? (
+                                                <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                                            ) : (
+                                                step.num
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    {!isLast && (
+                                        <div
+                                            aria-hidden="true"
+                                            className="relative w-[2px] flex-1 min-h-[10px] -mb-2.5 mt-0.5 bg-slate-200 overflow-hidden"
+                                        >
+                                            {isCompleted && (
+                                                <span
+                                                    data-step-fill
+                                                    className="absolute inset-0 bg-blue-600"
+                                                />
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Stage Label & Timestamp */}
-                                <div className="min-w-0 flex-1">
+                                {/* Step Text */}
+                                <div className="min-w-0 flex-1 pt-0.5 pb-1">
                                     <div className="flex items-center justify-between gap-2">
                                         <span
                                             className={`font-display font-bold text-sm ${
                                                 isSelected
-                                                    ? "text-blue-800"
+                                                    ? "text-blue-700"
                                                     : isReached
-                                                    ? "text-slate-950"
-                                                    : "text-slate-600"
+                                                    ? "text-slate-900"
+                                                    : "text-slate-500"
                                             }`}
                                         >
                                             {step.label}
                                         </span>
                                         {isCurrent && (
-                                            <span className="font-mono text-xs font-semibold text-blue-700 shrink-0">
+                                            <span className="text-xs font-semibold text-blue-600 shrink-0">
                                                 Saat ini
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                                        {timeStr || (isReached ? "Ketuk untuk lihat rincian" : "Menunggu tahap sebelumnya")}
+                                    <p className="text-xs text-slate-600 mt-0.5 leading-snug">
+                                        {timeStr || (isReached ? "Lihat rincian" : "Belum dimulai")}
                                     </p>
                                 </div>
                             </button>
@@ -460,9 +418,17 @@ function VerticalProcessPath({ currentStatus, tiket, activeStepKey, onSelectStep
 }
 
 /**
- * Clean Photo & Video Gallery with Lightbox (Zero hover-only UI on mobile)
+ * Clean Photo & Video Gallery with Lightbox (supports flat strip or compact card panel)
  */
-function MediaDocumentation({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbaikan, filterCategory, heading }) {
+function MediaDocumentation({
+    fotoKondisi,
+    fotoDiagnosis,
+    fotoSelesai,
+    logPerbaikan,
+    filterCategory,
+    heading,
+    variant = "section",
+}) {
     const [lightboxIdx, setLightboxIdx] = useState(-1);
     const [imgErrors, setImgErrors] = useState({});
 
@@ -492,17 +458,33 @@ function MediaDocumentation({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbai
     const visible = filterCategory ? items.filter((it) => it.cat === filterCategory) : items;
     if (!visible.length) return null;
 
+    const isCard = variant === "card";
+
     return (
-        <div className="space-y-3 pt-4 border-t border-slate-200">
+        <div
+            className={
+                isCard
+                    ? "bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 h-full"
+                    : "space-y-3 pt-4 border-t border-slate-200"
+            }
+        >
             <div className="flex items-center justify-between gap-2">
-                <h4 className="font-display font-bold text-sm sm:text-base text-slate-950 flex items-center gap-2">
+                <h3 className="font-display font-bold text-sm sm:text-base text-slate-900 flex items-center gap-2 min-w-0">
                     <ImageIcon className="w-4 h-4 text-blue-600 shrink-0" aria-hidden="true" />
-                    <span>{heading || "Dokumentasi Foto & Video"}</span>
-                </h4>
-                <span className="font-mono text-xs text-slate-600">{visible.length} berkas</span>
+                    <span className="truncate">{heading || "Dokumentasi foto & video"}</span>
+                </h3>
+                <span className="text-xs font-medium tabular-nums text-slate-600 shrink-0">
+                    {visible.length} berkas
+                </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div
+                className={
+                    isCard
+                        ? `grid gap-2.5 flex-1 content-start ${visible.length === 1 ? "grid-cols-1" : "grid-cols-2"}`
+                        : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+                }
+            >
                 {visible.map((item, idx) => {
                     const url = getMediaUrl(item.url);
                     const vid = isVideo(item.url);
@@ -512,10 +494,12 @@ function MediaDocumentation({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbai
                             key={`${item.url}-${idx}`}
                             type="button"
                             onClick={() => setLightboxIdx(idx)}
-                            className="group relative aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 hover:border-blue-500 transition-colors cursor-pointer text-left"
+                            className={`group relative rounded-xl overflow-hidden bg-slate-100 border border-slate-200 hover:border-blue-500 transition-colors cursor-pointer text-left ${
+                                isCard ? "aspect-[4/3]" : "aspect-[4/3]"
+                            }`}
                         >
                             {vid ? (
-                                <div className="w-full h-full bg-[#0B162C] flex items-center justify-center">
+                                <div className="w-full h-full bg-slate-900 flex items-center justify-center">
                                     <Play className="w-7 h-7 text-white fill-white" aria-hidden="true" />
                                 </div>
                             ) : hasErr ? (
@@ -533,7 +517,7 @@ function MediaDocumentation({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbai
                                     className="w-full h-full object-cover"
                                 />
                             )}
-                            <span className="absolute bottom-2 left-2 right-2 px-2 py-1 rounded-md bg-[#0B162C]/80 text-white text-xs font-medium truncate">
+                            <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-900/75 text-white text-xs font-medium">
                                 {item.catLabel}
                             </span>
                         </button>
@@ -546,7 +530,7 @@ function MediaDocumentation({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbai
                     role="dialog"
                     aria-modal="true"
                     aria-label="Pratinjau dokumentasi"
-                    className="fixed inset-0 z-[9999] bg-[#0B162C]/95 flex items-center justify-center p-4"
+                    className="fixed inset-0 z-[9999] bg-slate-950/95 flex items-center justify-center p-4"
                     onClick={() => setLightboxIdx(-1)}
                 >
                     <div
@@ -564,8 +548,9 @@ function MediaDocumentation({ fotoKondisi, fotoDiagnosis, fotoSelesai, logPerbai
                         {isVideo(visible[lightboxIdx].url) ? (
                             <video
                                 src={getMediaUrl(visible[lightboxIdx].url)}
+                                poster="/logo-yangversa.png"
                                 controls
-                                autoPlay
+                                muted
                                 playsInline
                                 className="max-h-[72vh] max-w-full rounded-xl bg-black"
                             />
@@ -640,50 +625,63 @@ function TechnicianRatingCard({ ticket }) {
     }
 
     return (
-        <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-5 sm:p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h4 className="font-display font-bold text-base text-slate-950">
-                        Penilaian Layanan Teknisi
-                    </h4>
-                    <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+        <section className="rounded-xl bg-slate-50/80 border border-slate-200 px-4 py-3 space-y-2.5 shrink-0">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div className="min-w-0">
+                    <h2 className="font-display font-bold text-sm text-slate-900">
+                        Penilaian layanan teknisi
+                    </h2>
+                    <p className="text-xs text-slate-600 mt-0.5">
                         {submitted
                             ? "Terima kasih, penilaian Anda sudah tercatat."
                             : `Berikan penilaian untuk kinerja teknisi (${ticket.teknisi || "Tim YVS"}).`}
                     </p>
                 </div>
-                <div className="flex items-center gap-1" role="group" aria-label="Pilih bintang penilaian">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                            key={star}
-                            type="button"
-                            disabled={submitting || submitted}
-                            aria-label={`${star} dari 5 bintang`}
-                            onClick={() => {
-                                setSelectedStars(star);
-                                setShowVerify(true);
-                            }}
-                            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-white cursor-pointer disabled:cursor-default"
-                        >
-                            <Star
-                                className={`w-6 h-6 ${
-                                    selectedStars >= star
-                                        ? "text-amber-500 fill-amber-400"
-                                        : "text-slate-300"
-                                }`}
-                                aria-hidden="true"
-                            />
-                        </button>
-                    ))}
+
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-0.5" role="group" aria-label="Pilih bintang penilaian">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                                key={star}
+                                type="button"
+                                disabled={submitting || submitted}
+                                aria-label={`${star} dari 5 bintang`}
+                                onClick={() => {
+                                    setSelectedStars(star);
+                                    setShowVerify(true);
+                                }}
+                                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-slate-200/70 cursor-pointer disabled:cursor-default"
+                            >
+                                <Star
+                                    className={`w-5 h-5 ${
+                                        selectedStars >= star
+                                            ? "text-amber-500 fill-amber-400"
+                                            : "text-slate-300"
+                                    }`}
+                                    aria-hidden="true"
+                                />
+                            </button>
+                        ))}
+                    </div>
+
+                    <a
+                        href={ticket.googleMapsUrl || "https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-300 text-slate-900 hover:text-blue-700 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap"
+                    >
+                        <MapPin className="w-4 h-4 text-blue-600 shrink-0" aria-hidden="true" />
+                        <span>Ulas YVS di Google Maps</span>
+                    </a>
                 </div>
             </div>
 
             {showVerify && !submitted && (
                 <form
                     onSubmit={handleConfirmRating}
-                    className="pt-4 border-t border-blue-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                    className="pt-2.5 border-t border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
                 >
-                    <label htmlFor="rating-phone4" className="text-xs font-semibold text-slate-800 shrink-0">
+                    <label htmlFor="rating-phone4" className="text-xs font-semibold text-slate-700 shrink-0">
                         4 digit terakhir No. WA:
                     </label>
                     <input
@@ -700,9 +698,9 @@ function TechnicianRatingCard({ ticket }) {
                         <button
                             type="submit"
                             disabled={submitting || phoneLast4.length !== 4}
-                            className="min-h-[44px] flex-1 sm:flex-none px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-semibold cursor-pointer"
+                            className="min-h-[44px] flex-1 sm:flex-none px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-semibold cursor-pointer whitespace-nowrap"
                         >
-                            {submitting ? "Mengirim..." : "Kirim Penilaian"}
+                            {submitting ? "Mengirim..." : "Kirim penilaian"}
                         </button>
                         <button
                             type="button"
@@ -714,22 +712,7 @@ function TechnicianRatingCard({ ticket }) {
                     </div>
                 </form>
             )}
-
-            <div className="pt-4 border-t border-blue-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <span className="text-sm text-slate-700 font-medium">
-                    Puas dengan hasil servis perangkat Anda?
-                </span>
-                <a
-                    href={ticket.googleMapsUrl || "https://maps.app.goo.gl/A82Vw4qNW4N2oeqPA"}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#0B162C] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors"
-                >
-                    <MapPin className="w-4 h-4 shrink-0" aria-hidden="true" />
-                    <span>Ulas YVS di Google Maps</span>
-                </a>
-            </div>
-        </div>
+        </section>
     );
 }
 
@@ -767,7 +750,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
     const [catatanBatal, setCatatanBatal] = useState("");
     const [submittingApproval, setSubmittingApproval] = useState(false);
 
-    // Choreographed result entrance via GSAP (transform + opacity only)
+    // Subtle entrance stagger
     useEffect(() => {
         if (reducedMotion || !rootRef.current) return;
         let cancelled = false;
@@ -778,7 +761,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
             ctx = gsap.context(() => {
                 gsap.fromTo(
                     "[data-result-stagger]",
-                    { y: 18, opacity: 0 },
+                    { y: 14, opacity: 0 },
                     {
                         y: 0,
                         opacity: 1,
@@ -815,9 +798,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                 hash === "#garansi")
         ) {
             setActiveStepKey("diambil");
-            if (params.get("open") === "true") {
-                setIsWarrantyModalOpen(true);
-            }
+            if (params.get("open") === "true") setIsWarrantyModalOpen(true);
         }
     }, [t.status, t.invoice]);
 
@@ -928,7 +909,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
 
     const statusMeta = SEMANTIC_STATUS[t.status] || {
         label: String(t.status || "Dalam Proses").replace(/_/g, " "),
-        badge: "bg-slate-100 text-slate-800 border-slate-300",
+        badge: "bg-slate-100 text-slate-800 border-slate-200",
         dot: "bg-slate-600",
     };
 
@@ -955,79 +936,144 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
     const inv = t.invoice;
     const warrantyRemaining = Number(t.warranty_status?.sisaHari);
     const hasWarrantyCountdown = Number.isFinite(warrantyRemaining);
+    const allMediaCount =
+        safeParseUrls(t.foto_kondisi).length +
+        safeParseUrls(t.foto_diagnosis).length +
+        safeParseUrls(t.foto_selesai).length +
+        logs.filter((l) => l?.foto_url).length;
 
     return (
-        <div ref={rootRef} className="space-y-8 pb-24 lg:pb-12">
-            {/* 1. Monumental Obsidian Navy Ticket Hero Band */}
+        <div ref={rootRef} className="lg:flex-1 lg:min-h-0 flex flex-col gap-3.5 pb-24 lg:pb-0">
+            {/* 1. Edge-to-Edge Compact Ticket Summary Strip */}
             <section
                 data-result-stagger
-                className="bg-[#071124] text-white rounded-3xl p-6 sm:p-9 lg:p-11 shadow-[0_28px_70px_-28px_rgba(7,17,36,0.35)] space-y-7"
+                className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs shrink-0"
             >
-                <div className="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-white/12">
-                    <div className="space-y-2.5 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2.5">
+                <div className="h-1 w-full bg-blue-600" aria-hidden="true" />
+                <div className="px-4 py-2.5 sm:px-6 sm:py-3 space-y-2">
+                    {/* Top Row: Identity + Status + Action Buttons (Single line on >= lg / 1280px) */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
                             {onBackToList && (
                                 <button
                                     type="button"
                                     onClick={onBackToList}
-                                    className="min-h-[44px] inline-flex items-center gap-1 px-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer"
+                                    className="min-h-[44px] inline-flex items-center gap-1 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs font-semibold cursor-pointer whitespace-nowrap"
                                 >
                                     <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                                     <span>Semua tiket</span>
                                 </button>
                             )}
-                            <span className="font-mono font-bold text-sm sm:text-base text-blue-300 tracking-wide">
-                                {t.nomor_tiket}
-                            </span>
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-slate-200 text-xs font-medium">
-                                <MonitorSmartphone className="w-3.5 h-3.5 text-blue-300" aria-hidden="true" />
-                                <span>{t.jenis_perangkat || "Perangkat"}</span>
+                            <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 text-xs">
+                                    <span className="font-mono font-bold text-blue-600">
+                                        {t.nomor_tiket}
+                                    </span>
+                                    <span className="text-slate-300" aria-hidden="true">/</span>
+                                    <span className="inline-flex items-center gap-1.5 font-medium text-slate-600">
+                                        <MonitorSmartphone className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
+                                        <span>{t.jenis_perangkat || "Perangkat"}</span>
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                                    <h1 className="font-display font-extrabold text-lg sm:text-xl lg:text-2xl text-slate-900 tracking-tight break-words">
+                                        {t.perangkat}
+                                    </h1>
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border shrink-0 whitespace-nowrap ${statusMeta.badge}`}
+                                    >
+                                        <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`} aria-hidden="true" />
+                                        <span>{statusMeta.label}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Uniform Action Bar (Inline on wide desktop) */}
+                        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                            <button
+                                type="button"
+                                onClick={handleRefreshStatus}
+                                disabled={refreshing}
+                                className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 text-xs sm:text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                            >
+                                <RefreshCw
+                                    className={`w-4 h-4 text-blue-600 ${refreshing ? "animate-spin" : ""}`}
+                                    aria-hidden="true"
+                                />
+                                <span>{refreshing ? "Memperbarui..." : "Segarkan"}</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleShareTracking}
+                                className="hidden lg:inline-flex min-h-[44px] items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                            >
+                                <Share2 className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                                <span>Bagikan</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsQrModalOpen(true)}
+                                className="hidden lg:inline-flex min-h-[44px] items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                            >
+                                <QrCode className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                                <span>QR Tiket</span>
+                            </button>
+                            {["selesai", "diambil"].includes(t.status) && inv && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsInvoiceModalOpen(true)}
+                                    className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-800 hover:text-blue-700 text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                                >
+                                    <FileText className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                                    <span>Faktur Nota</span>
+                                </button>
+                            )}
+                            {["selesai", "diambil"].includes(t.status) && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsWarrantyModalOpen(true)}
+                                    className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-800 hover:text-blue-700 text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                                >
+                                    <Printer className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                                    <span>Kartu Garansi</span>
+                                </button>
+                            )}
+                            <MagneticWrap strength={0.14} className="hidden lg:inline-block">
+                                <a
+                                    href={waUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="min-h-[44px] inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors whitespace-nowrap"
+                                >
+                                    <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                                    <span>WhatsApp Admin</span>
+                                </a>
+                            </MagneticWrap>
+                        </div>
+                    </div>
+
+                    {/* Compact Single-Line Hairline Metadata Strip */}
+                    <div className="pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-3 lg:flex lg:flex-wrap lg:items-center gap-2.5 lg:gap-x-7 lg:gap-y-1 text-xs sm:text-sm">
+                        <div className="flex items-center gap-2">
+                            <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" aria-hidden="true" />
+                            <span className="text-slate-500">Masuk:</span>
+                            <span className="font-semibold text-slate-900">{formatDateSafe(t.created_at)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <User className="w-3.5 h-3.5 text-blue-600 shrink-0" aria-hidden="true" />
+                            <span className="text-slate-500">Teknisi:</span>
+                            <span className="font-semibold text-slate-900">
+                                {t.teknisi || "Menunggu penugasan"}
                             </span>
                         </div>
-                        <h1 className="font-display font-extrabold text-2xl sm:text-4xl lg:text-[2.75rem] text-white tracking-[-0.035em] leading-[1.08] break-words">
-                            {t.perangkat}
-                        </h1>
-                    </div>
-
-                    {/* Semantic Status Pill */}
-                    <span
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-bold border shrink-0 ${statusMeta.badge}`}
-                    >
-                        <span className={`w-2 h-2 rounded-full ${statusMeta.dot}`} aria-hidden="true" />
-                        <span>{statusMeta.label}</span>
-                    </span>
-                </div>
-
-                {/* Hairline 3-Column Metadata Strip */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-8 text-sm">
-                    <div className="space-y-1">
-                        <span className="text-xs text-slate-400 flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-blue-400" aria-hidden="true" />
-                            <span>Tanggal masuk</span>
-                        </span>
-                        <p className="font-display font-bold text-base text-white">
-                            {formatDateSafe(t.created_at)}
-                        </p>
-                    </div>
-                    <div className="sm:border-l sm:border-white/12 sm:pl-6 space-y-1">
-                        <span className="text-xs text-slate-400 flex items-center gap-1.5">
-                            <User className="w-3.5 h-3.5 text-blue-400" aria-hidden="true" />
-                            <span>Teknisi penanggung jawab</span>
-                        </span>
-                        <p className="font-display font-bold text-base text-white">
-                            {t.teknisi || "Menunggu penugasan"}
-                        </p>
-                    </div>
-                    <div className="sm:border-l sm:border-white/12 sm:pl-6 space-y-1">
-                        <span className="text-xs text-slate-400 flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-blue-400" aria-hidden="true" />
-                            <span>Estimasi &amp; garansi</span>
-                        </span>
-                        <div className="pt-0.5 flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" aria-hidden="true" />
+                            <span className="text-slate-500">Estimasi &amp; garansi:</span>
                             {t.sla_paket ? (
                                 <SlaBadge tiket={t} />
                             ) : (
-                                <span className="font-display font-bold text-base text-white">
+                                <span className="font-semibold text-slate-900">
                                     {["selesai", "diambil"].includes(t.status)
                                         ? `Garansi ${t.durasi_garansi || "1 Bulan"}`
                                         : "Menunggu konfirmasi"}
@@ -1036,107 +1082,27 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                         </div>
                     </div>
                 </div>
-
-                {/* Crisp Editorial Pill Action Bar (all >= 44px) */}
-                <div className="pt-5 border-t border-white/12 flex flex-wrap items-center justify-between gap-2.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={handleRefreshStatus}
-                            disabled={refreshing}
-                            className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                            <RefreshCw
-                                className={`w-4 h-4 text-blue-300 ${refreshing ? "animate-spin" : ""}`}
-                                aria-hidden="true"
-                            />
-                            <span>{refreshing ? "Memperbarui..." : "Segarkan"}</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleShareTracking}
-                            className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-                        >
-                            <Share2 className="w-4 h-4 text-slate-300" aria-hidden="true" />
-                            <span>Bagikan</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setIsQrModalOpen(true)}
-                            className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-                        >
-                            <QrCode className="w-4 h-4 text-blue-300" aria-hidden="true" />
-                            <span>QR Tiket</span>
-                        </button>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                        {["selesai", "diambil"].includes(t.status) && inv && (
-                            <button
-                                type="button"
-                                onClick={() => setIsInvoiceModalOpen(true)}
-                                className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-[#071124] hover:bg-blue-50 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-                            >
-                                <FileText className="w-4 h-4 text-[#2563EB]" aria-hidden="true" />
-                                <span>Faktur Nota</span>
-                            </button>
-                        )}
-                        {["selesai", "diambil"].includes(t.status) && (
-                            <button
-                                type="button"
-                                onClick={() => setIsWarrantyModalOpen(true)}
-                                className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-                            >
-                                <Printer className="w-4 h-4" aria-hidden="true" />
-                                <span>Kartu Garansi</span>
-                            </button>
-                        )}
-                        <MagneticWrap strength={0.14}>
-                            <a
-                                href={waUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs sm:text-sm font-semibold transition-colors"
-                            >
-                                <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
-                                <span>WhatsApp Admin</span>
-                            </a>
-                        </MagneticWrap>
-                    </div>
-                </div>
             </section>
-
-            {/* SLA Countdown (when ticket is still in progress) */}
-            {["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui", "dalam_perbaikan"].includes(
-                t.status
-            ) && (
-                <div data-result-stagger>
-                    <SlaCountdownCard tiket={t} />
-                </div>
-            )}
 
             {/* Approval Required Priority Banner (Semantic Amber) */}
             {t.status === "menunggu_persetujuan" && t.diagnosis && (
                 <section
                     data-result-stagger
                     aria-label="Persetujuan estimasi biaya"
-                    className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 sm:p-6 space-y-4"
+                    className="bg-amber-50 border border-amber-300 rounded-2xl px-5 py-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shrink-0"
                 >
                     <div className="flex items-start gap-3">
-                        <Clock className="w-6 h-6 text-amber-700 shrink-0 mt-0.5" aria-hidden="true" />
+                        <Clock className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" aria-hidden="true" />
                         <div>
-                            <p className="font-mono text-xs font-bold text-amber-900">
-                                KONFIRMASI DIPERLUKAN
-                            </p>
-                            <h2 className="font-display font-bold text-lg text-slate-950 mt-0.5">
-                                Setujui estimasi biaya {formatRupiah(t.diagnosis.estimasi_biaya)}?
+                            <h2 className="font-display font-bold text-sm sm:text-base text-slate-900">
+                                Konfirmasi estimasi biaya {formatRupiah(t.diagnosis.estimasi_biaya)}
                             </h2>
-                            <p className="text-sm text-slate-700 mt-1 leading-relaxed">
-                                Pemeriksaan selesai. Pengerjaan perbaikan baru kami lanjutkan setelah Anda menyetujui estimasi di bawah.
+                            <p className="text-xs sm:text-sm text-slate-700 mt-0.5 leading-relaxed">
+                                Pemeriksaan selesai. Pengerjaan perbaikan baru kami lanjutkan setelah Anda menyetujuinya.
                             </p>
                         </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+                    <div className="flex flex-col sm:flex-row gap-2 shrink-0">
                         <button
                             type="button"
                             onClick={() => {
@@ -1144,10 +1110,10 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                                 setPhoneLast4("");
                                 setIsApprovalModalOpen(true);
                             }}
-                            className="min-h-[48px] flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-colors cursor-pointer"
+                            className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap"
                         >
                             <Check className="w-4 h-4" aria-hidden="true" />
-                            <span>Setujui &amp; lanjutkan perbaikan</span>
+                            <span>Setujui &amp; lanjutkan</span>
                         </button>
                         <button
                             type="button"
@@ -1157,26 +1123,26 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                                 setCatatanBatal("");
                                 setIsApprovalModalOpen(true);
                             }}
-                            className="min-h-[48px] inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-rose-50 border border-rose-300 text-rose-800 text-sm font-bold transition-colors cursor-pointer"
+                            className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap"
                         >
                             <X className="w-4 h-4" aria-hidden="true" />
-                            <span>Batalkan servis</span>
+                            <span>Batalkan</span>
                         </button>
                     </div>
                 </section>
             )}
 
-            {/* 2. Main Split: Vertical SVG Process Path (Left) + Stage Details & Price Breakdown (Right) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* LEFT: Vertical Process Path + Warranty Countdown */}
-                <aside data-result-stagger className="lg:col-span-4 space-y-5 lg:sticky lg:top-24">
-                    <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4">
-                        <div className="pb-3 border-b border-slate-200">
-                            <span className="font-mono text-xs font-semibold text-blue-700 block">
-                                ALUR PERBAIKAN
-                            </span>
-                            <h2 className="font-display font-bold text-base sm:text-lg text-slate-950 mt-0.5">
-                                Progres 5 tahap unit Anda
+            {/* 2. Edge-to-Edge Balanced Split Cockpit (Zero Unnecessary Vertical Scroll on Desktop) */}
+            <div
+                data-result-stagger
+                className="lg:flex-1 lg:min-h-0 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs grid grid-cols-1 lg:grid-cols-[290px_minmax(0,1fr)] xl:grid-cols-[330px_minmax(0,1fr)] items-stretch lg:divide-x lg:divide-slate-200"
+            >
+                {/* LEFT RAIL: Fixed-Discipline Process Spine + Anchored Cost Breakdown */}
+                <aside className="bg-slate-50/75 p-4 lg:px-4 lg:py-3.5 xl:p-5 flex flex-col justify-between gap-3 border-b lg:border-b-0 border-slate-200 lg:h-full lg:min-h-0 lg:overflow-y-auto custom-scrollbar">
+                    <div className="space-y-2.5">
+                        <div className="pb-2 border-b border-slate-200">
+                            <h2 className="font-display font-bold text-sm sm:text-base text-slate-900">
+                                Progres 5 tahap perbaikan
                             </h2>
                         </div>
 
@@ -1188,23 +1154,23 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                         />
                     </div>
 
-                    {/* Price Breakdown Summary Card (Always visible if estimate or invoice exists) */}
+                    {/* Anchored Price Breakdown at Foot of Left Rail */}
                     {(t.diagnosis?.estimasi_biaya > 0 || inv) && (
-                        <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-3.5">
-                            <span className="font-mono text-xs font-semibold text-blue-700 block">
-                                RINCIAN BIAYA
-                            </span>
+                        <div className="pt-3 border-t border-slate-200 space-y-1.5 shrink-0">
+                            <h3 className="font-display font-bold text-sm text-slate-900">
+                                Rincian biaya
+                            </h3>
                             {inv ? (
-                                <dl className="space-y-2 text-sm">
+                                <dl className="space-y-1 text-xs sm:text-sm">
                                     <div className="flex justify-between gap-2">
                                         <dt className="text-slate-600">Biaya jasa</dt>
-                                        <dd className="font-mono font-semibold text-slate-950">
+                                        <dd className="font-mono font-semibold text-slate-900">
                                             {formatRupiah(inv.biaya_jasa)}
                                         </dd>
                                     </div>
                                     <div className="flex justify-between gap-2">
                                         <dt className="text-slate-600">Suku cadang</dt>
-                                        <dd className="font-mono font-semibold text-slate-950">
+                                        <dd className="font-mono font-semibold text-slate-900">
                                             {formatRupiah(inv.biaya_sparepart)}
                                         </dd>
                                     </div>
@@ -1220,9 +1186,9 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                                             </dd>
                                         </div>
                                     )}
-                                    <div className="pt-2.5 border-t border-slate-200 flex justify-between gap-2 text-base">
-                                        <dt className="font-bold text-slate-950">Total</dt>
-                                        <dd className="font-mono font-extrabold text-blue-700">
+                                    <div className="pt-1.5 border-t border-slate-200 flex justify-between gap-2 text-sm sm:text-base">
+                                        <dt className="font-bold text-slate-900">Total</dt>
+                                        <dd className="font-mono font-extrabold text-blue-600">
                                             {formatRupiah(inv.total_biaya)}
                                         </dd>
                                     </div>
@@ -1230,7 +1196,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                             ) : (
                                 <div className="flex items-baseline justify-between gap-2">
                                     <span className="text-sm text-slate-600">Estimasi awal</span>
-                                    <span className="font-mono font-extrabold text-lg text-blue-700">
+                                    <span className="font-mono font-extrabold text-base text-blue-600">
                                         {formatRupiah(t.diagnosis.estimasi_biaya)}
                                     </span>
                                 </div>
@@ -1239,526 +1205,580 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                     )}
                 </aside>
 
-                {/* RIGHT: Selected Stage Details */}
-                <div data-result-stagger className="lg:col-span-8 space-y-6 min-w-0">
+                {/* RIGHT COCKPIT: Edge-Expanding Multi-Column Stage Details */}
+                <div className="bg-white p-4 lg:p-4 xl:p-5 min-w-0 flex flex-col justify-between gap-3.5 lg:h-full lg:min-h-0 lg:overflow-y-auto custom-scrollbar">
                     {/* STAGE 1: DITERIMA */}
                     {activeStepKey === "diterima" && (
-                        <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-5">
-                            <div className="pb-4 border-b border-slate-200">
-                                <span className="font-mono text-xs font-semibold text-blue-700 block">
-                                    TAHAP 01 · DITERIMA
-                                </span>
-                                <h2 className="font-display font-bold text-lg sm:text-xl text-slate-950 mt-0.5">
+                        <div className="space-y-4">
+                            <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3 border-b border-slate-200">
+                                <h2 className="font-display font-bold text-base sm:text-lg text-slate-900">
                                     Catatan penerimaan &amp; kondisi awal
                                 </h2>
+                                <span className="text-xs font-semibold text-blue-600">
+                                    Tahap 01 · Diterima
+                                </span>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                                    <h3 className="text-xs font-semibold text-slate-600">Keluhan pelanggan</h3>
-                                    <p className="text-sm text-slate-950 leading-relaxed whitespace-pre-line">
-                                        {t.keluhan || "-"}
-                                    </p>
-                                </div>
-                                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                                    <h3 className="text-xs font-semibold text-slate-600">Catatan kelengkapan</h3>
-                                    <p className="text-sm text-slate-950 leading-relaxed whitespace-pre-line">
-                                        {t.kelengkapan || "-"}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {kelengkapanList.length > 0 && (
-                                <div className="space-y-2.5">
-                                    <h3 className="font-display font-bold text-sm text-slate-950">
-                                        Daftar barang titipan
-                                    </h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        {kelengkapanList.map((item, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm"
-                                            >
-                                                <span
-                                                    className={
-                                                        item?.ada
-                                                            ? "text-slate-900 font-medium"
-                                                            : "text-slate-500 line-through"
-                                                    }
-                                                >
-                                                    {item?.item || "Barang"}
-                                                </span>
-                                                <span
-                                                    className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
-                                                        item?.ada
-                                                            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                                            : "bg-slate-200 text-slate-700"
-                                                    }`}
-                                                >
-                                                    {item?.ada ? "Ada" : "Tidak"}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {t.defect_map && (
-                                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <PenTool className="w-5 h-5 text-blue-600 shrink-0" aria-hidden="true" />
-                                        <div>
-                                            <p className="font-bold text-sm text-slate-950">Peta kondisi fisik unit</p>
-                                            <p className="text-xs text-slate-600">
-                                                Catatan goresan/fisik yang diperiksa bersama saat penerimaan.
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+                                <div className="xl:col-span-6 space-y-4 min-w-0">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <h3 className="text-xs font-semibold text-slate-500">Keluhan pelanggan</h3>
+                                            <p className="text-sm text-slate-900 leading-relaxed whitespace-pre-line">
+                                                {t.keluhan || "-"}
+                                            </p>
+                                        </div>
+                                        <div className="space-y-1 md:border-l md:border-slate-200 md:pl-4">
+                                            <h3 className="text-xs font-semibold text-slate-500">Catatan kelengkapan</h3>
+                                            <p className="text-sm text-slate-900 leading-relaxed whitespace-pre-line">
+                                                {t.kelengkapan || "-"}
                                             </p>
                                         </div>
                                     </div>
-                                    <DefectMapBadge
-                                        value={
-                                            typeof t.defect_map === "string"
-                                                ? (() => {
-                                                      try {
-                                                          return JSON.parse(t.defect_map);
-                                                      } catch {
-                                                          return null;
-                                                      }
-                                                  })()
-                                                : t.defect_map
-                                        }
-                                        onClick={() => setIsDefectModalOpen(true)}
-                                    />
-                                </div>
-                            )}
 
-                            {t.checklist_intake && (() => {
-                                const obj =
-                                    typeof t.checklist_intake === "string"
-                                        ? (() => {
-                                              try {
-                                                  return JSON.parse(t.checklist_intake);
-                                              } catch {
-                                                  return {};
-                                              }
-                                          })()
-                                        : t.checklist_intake;
-                                const cat = getDeviceCategory(t.jenis_perangkat);
-                                const items = getHardwareChecklistForCategory(cat) || [];
-                                if (!items.length) return null;
-                                return (
-                                    <div className="space-y-3 pt-4 border-t border-slate-200">
-                                        <h3 className="font-display font-bold text-sm text-slate-950 flex items-center gap-2">
-                                            <ClipboardCheck className="w-4 h-4 text-blue-600" aria-hidden="true" />
-                                            <span>Pengecekan fungsi saat diterima ({cat})</span>
-                                        </h3>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
-                                            {items.map((item) => {
-                                                const ok = getChecklistValue(obj, item.key, item.legacyKey);
-                                                return (
+                                    {kelengkapanList.length > 0 && (
+                                        <div className="space-y-2 pt-3 border-t border-slate-200">
+                                            <h3 className="font-display font-bold text-sm text-slate-900">
+                                                Daftar barang titipan
+                                            </h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {kelengkapanList.map((item, idx) => (
                                                     <div
-                                                        key={item.key}
-                                                        className={`p-3 rounded-xl border ${
-                                                            ok
-                                                                ? "bg-emerald-50/70 border-emerald-200 text-emerald-950"
-                                                                : "bg-rose-50/70 border-rose-200 text-rose-950"
-                                                        }`}
+                                                        key={idx}
+                                                        className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm"
                                                     >
-                                                        <span className="font-bold block">
-                                                            {ok ? "Normal" : "Bermasalah"}
+                                                        <span
+                                                            className={
+                                                                item?.ada
+                                                                    ? "text-slate-900 font-medium"
+                                                                    : "text-slate-600 line-through"
+                                                            }
+                                                        >
+                                                            {item?.item || "Barang"}
                                                         </span>
-                                                        <span className="text-slate-800 block mt-0.5">
-                                                            {item.label}
+                                                        <span
+                                                            className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
+                                                                item?.ada
+                                                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                                                    : "bg-slate-200 text-slate-600"
+                                                            }`}
+                                                        >
+                                                            {item?.ada ? "Ada" : "Tidak"}
                                                         </span>
                                                     </div>
-                                                );
-                                            })}
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })()}
+                                    )}
 
-                            <MediaDocumentation
-                                fotoKondisi={t.foto_kondisi}
-                                fotoDiagnosis={t.foto_diagnosis}
-                                fotoSelesai={t.foto_selesai}
-                                logPerbaikan={t.log_perbaikan}
-                                filterCategory="intake"
-                                heading="Foto kondisi awal (Sebelum)"
-                            />
-                        </section>
-                    )}
-
-                    {/* STAGE 2: DIAGNOSA */}
-                    {activeStepKey === "diagnosis" && (
-                        <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-5">
-                            <div className="pb-4 border-b border-slate-200">
-                                <span className="font-mono text-xs font-semibold text-blue-700 block">
-                                    TAHAP 02 · DIAGNOSA
-                                </span>
-                                <h2 className="font-display font-bold text-lg sm:text-xl text-slate-950 mt-0.5">
-                                    Hasil pemeriksaan &amp; rekomendasi teknisi
-                                </h2>
-                            </div>
-
-                            {t.diagnosis ? (
-                                <>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                                            <h3 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                                                <AlertTriangle className="w-4 h-4 text-amber-600" aria-hidden="true" />
-                                                <span>Temuan pemeriksaan</span>
-                                            </h3>
-                                            <p className="text-sm text-slate-900 leading-relaxed whitespace-pre-line">
-                                                {t.diagnosis.masalah}
-                                            </p>
+                                    {t.defect_map && (
+                                        <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <PenTool className="w-4 h-4 text-blue-600 shrink-0" aria-hidden="true" />
+                                                <div>
+                                                    <p className="font-bold text-sm text-slate-900">Peta kondisi fisik unit</p>
+                                                    <p className="text-xs text-slate-600">
+                                                        Catatan goresan/fisik saat penerimaan.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <DefectMapBadge
+                                                value={
+                                                    typeof t.defect_map === "string"
+                                                        ? (() => {
+                                                              try {
+                                                                  return JSON.parse(t.defect_map);
+                                                              } catch {
+                                                                  return null;
+                                                              }
+                                                          })()
+                                                        : t.defect_map
+                                                }
+                                                onClick={() => setIsDefectModalOpen(true)}
+                                            />
                                         </div>
-                                        <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200 space-y-1.5">
-                                            <h3 className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
-                                                <Wrench className="w-4 h-4 text-blue-600" aria-hidden="true" />
-                                                <span>Rencana penanganan</span>
-                                            </h3>
-                                            <p className="text-sm text-slate-900 leading-relaxed whitespace-pre-line">
-                                                {t.diagnosis.solusi}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    )}
+                                </div>
 
-                                    <div className="p-4 rounded-xl bg-[#0B162C] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                        <div>
-                                            <span className="text-xs text-blue-200 block">
-                                                Estimasi biaya jasa &amp; komponen
-                                            </span>
-                                            <span className="text-xs text-slate-300">
-                                                Disampaikan sebelum perbaikan dimulai
-                                            </span>
-                                        </div>
-                                        <span className="font-mono font-extrabold text-xl text-white">
-                                            {formatRupiah(t.diagnosis.estimasi_biaya)}
-                                        </span>
-                                    </div>
+                                <div className="xl:col-span-6 space-y-4 min-w-0">
+                                    {t.checklist_intake && (() => {
+                                        const obj =
+                                            typeof t.checklist_intake === "string"
+                                                ? (() => {
+                                                      try {
+                                                          return JSON.parse(t.checklist_intake);
+                                                      } catch {
+                                                          return {};
+                                                      }
+                                                  })()
+                                                : t.checklist_intake;
+                                        const cat = getDeviceCategory(t.jenis_perangkat);
+                                        const items = getHardwareChecklistForCategory(cat) || [];
+                                        if (!items.length) return null;
+                                        return (
+                                            <div className="space-y-2.5">
+                                                <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
+                                                    <ClipboardCheck className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                                                    <span>Pengecekan fungsi saat diterima ({cat})</span>
+                                                </h3>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                                                    {items.map((item) => {
+                                                        const ok = getChecklistValue(obj, item.key, item.legacyKey);
+                                                        return (
+                                                            <div
+                                                                key={item.key}
+                                                                className={`p-2.5 rounded-xl border ${
+                                                                    ok
+                                                                        ? "bg-emerald-50/60 border-emerald-200 text-emerald-900"
+                                                                        : "bg-rose-50/60 border-rose-200 text-rose-900"
+                                                                }`}
+                                                            >
+                                                                <span className="font-bold block">
+                                                                    {ok ? "Normal" : "Bermasalah"}
+                                                                </span>
+                                                                <span className="text-slate-800 block mt-0.5 truncate">
+                                                                    {item.label}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     <MediaDocumentation
                                         fotoKondisi={t.foto_kondisi}
                                         fotoDiagnosis={t.foto_diagnosis}
                                         fotoSelesai={t.foto_selesai}
                                         logPerbaikan={t.log_perbaikan}
-                                        filterCategory="diagnosis"
-                                        heading="Dokumentasi temuan diagnosa"
+                                        filterCategory="intake"
+                                        heading="Foto kondisi awal (Sebelum)"
+                                        variant="card"
                                     />
-                                </>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STAGE 2: DIAGNOSA */}
+                    {activeStepKey === "diagnosis" && (
+                        <div className="space-y-4">
+                            <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3 border-b border-slate-200">
+                                <h2 className="font-display font-bold text-base sm:text-lg text-slate-900">
+                                    Hasil pemeriksaan &amp; rekomendasi teknisi
+                                </h2>
+                                <span className="text-xs font-semibold text-blue-600">
+                                    Tahap 02 · Diagnosa
+                                </span>
+                            </div>
+
+                            {t.diagnosis ? (
+                                <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+                                    <div
+                                        className={`space-y-4 min-w-0 ${
+                                            safeParseUrls(t.foto_diagnosis).length > 0
+                                                ? "xl:col-span-7"
+                                                : "xl:col-span-12"
+                                        }`}
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <div className="space-y-1.5">
+                                                <h3 className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                                                    <AlertTriangle className="w-4 h-4 text-amber-600" aria-hidden="true" />
+                                                    <span>Temuan pemeriksaan</span>
+                                                </h3>
+                                                <p className="text-sm text-slate-900 leading-relaxed whitespace-pre-line">
+                                                    {t.diagnosis.masalah}
+                                                </p>
+                                            </div>
+                                            <div className="space-y-1.5 md:border-l md:border-slate-200 md:pl-5">
+                                                <h3 className="text-xs font-semibold text-blue-700 flex items-center gap-1.5">
+                                                    <Wrench className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                                                    <span>Rencana penanganan</span>
+                                                </h3>
+                                                <p className="text-sm text-slate-900 leading-relaxed whitespace-pre-line">
+                                                    {t.diagnosis.solusi}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                            <div>
+                                                <span className="text-sm font-semibold text-slate-900 block">
+                                                    Estimasi biaya jasa &amp; komponen
+                                                </span>
+                                                <span className="text-xs text-slate-600">
+                                                    Disampaikan sebelum pengerjaan perbaikan dimulai
+                                                </span>
+                                            </div>
+                                            <span className="font-mono font-extrabold text-xl text-blue-700">
+                                                {formatRupiah(t.diagnosis.estimasi_biaya)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {safeParseUrls(t.foto_diagnosis).length > 0 && (
+                                        <div className="xl:col-span-5 min-w-0">
+                                            <MediaDocumentation
+                                                fotoKondisi={t.foto_kondisi}
+                                                fotoDiagnosis={t.foto_diagnosis}
+                                                fotoSelesai={t.foto_selesai}
+                                                logPerbaikan={t.log_perbaikan}
+                                                filterCategory="diagnosis"
+                                                heading="Dokumentasi temuan diagnosa"
+                                                variant="card"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
                                     <p className="font-semibold text-slate-900">Unit sedang dalam pemeriksaan</p>
-                                    <p className="text-xs sm:text-sm text-slate-600">
-                                        Hasil diagnosa dan perkiraan biaya akan muncul di sini segera setelah pengecekan selesai.
+                                    <p className="text-sm text-slate-600">
+                                        Hasil diagnosa dan perkiraan biaya akan muncul di sini setelah pengecekan selesai.
                                     </p>
                                 </div>
                             )}
-                        </section>
+                        </div>
                     )}
 
                     {/* STAGE 3: PENGERJAAN */}
                     {activeStepKey === "perbaikan" && (
-                        <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-5">
-                            <div className="pb-4 border-b border-slate-200">
-                                <span className="font-mono text-xs font-semibold text-blue-700 block">
-                                    TAHAP 03 · PENGERJAAN
-                                </span>
-                                <h2 className="font-display font-bold text-lg sm:text-xl text-slate-950 mt-0.5">
+                        <div className="space-y-4">
+                            <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3 border-b border-slate-200">
+                                <h2 className="font-display font-bold text-base sm:text-lg text-slate-900">
                                     Catatan teknisi &amp; suku cadang terpasang
                                 </h2>
+                                <span className="text-xs font-semibold text-blue-600">
+                                    Tahap 03 · Pengerjaan
+                                </span>
                             </div>
 
-                            {/* Sparepart Used */}
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between gap-2">
-                                    <h3 className="font-display font-bold text-sm text-slate-950 flex items-center gap-2">
-                                        <Package className="w-4 h-4 text-blue-600" aria-hidden="true" />
-                                        <span>Suku cadang yang digunakan</span>
-                                    </h3>
-                                    <span className="font-mono text-xs text-slate-600">
-                                        {parts.length} item
-                                    </span>
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+                                <div className="xl:col-span-6 space-y-3 min-w-0">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
+                                            <Package className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                                            <span>Suku cadang yang digunakan</span>
+                                        </h3>
+                                        <span className="text-xs font-medium tabular-nums text-slate-600">{parts.length} item</span>
+                                    </div>
+
+                                    {parts.length > 0 ? (
+                                        <div className="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden">
+                                            {parts.map((p, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="p-3.5 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                                >
+                                                    <div>
+                                                        <p className="font-bold text-sm text-slate-900">
+                                                            {p.sparepart?.nama || p.nama || "Suku Cadang"}
+                                                        </p>
+                                                        <p className="text-xs text-slate-600 mt-0.5">
+                                                            Jumlah: {p.jumlah || 1} unit
+                                                            {p.serial_number ? ` · S/N: ${p.serial_number}` : ""}
+                                                            {" · Komponen lama dikembalikan"}
+                                                        </p>
+                                                    </div>
+                                                    <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg w-fit">
+                                                        Tercatat di garansi
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 leading-relaxed">
+                                            Pengerjaan ditangani tanpa penggantian komponen baru sesuai hasil pemeriksaan teknisi.
+                                        </p>
+                                    )}
                                 </div>
 
-                                {parts.length > 0 ? (
-                                    <div className="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden">
-                                        {parts.map((p, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="p-4 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                                            >
-                                                <div>
-                                                    <p className="font-bold text-sm text-slate-950">
-                                                        {p.sparepart?.nama || p.nama || "Suku Cadang"}
-                                                    </p>
-                                                    <p className="text-xs text-slate-600 mt-0.5">
-                                                        Jumlah: {p.jumlah || 1} unit
-                                                        {p.serial_number ? ` · S/N: ${p.serial_number}` : ""}
-                                                        {" · Komponen lama dikembalikan"}
-                                                    </p>
-                                                </div>
-                                                <span className="text-xs font-semibold text-blue-800 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg w-fit">
-                                                    Tercatat di garansi
-                                                </span>
+                                <div className="xl:col-span-6 space-y-4 min-w-0">
+                                    {logs.length > 0 && (
+                                        <div className="space-y-2.5">
+                                            <h3 className="font-display font-bold text-sm text-slate-900">
+                                                Riwayat catatan teknisi
+                                            </h3>
+                                            <div className="divide-y divide-slate-200 border-y border-slate-200">
+                                                {logs.map((log, i) => (
+                                                    <div key={log.id || i} className="py-2.5 space-y-1">
+                                                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                                                            <span className="font-bold text-blue-600">
+                                                                {log.fase || "Catatan Pengerjaan"}
+                                                            </span>
+                                                            <span className="font-mono text-slate-500">
+                                                                {formatDateSafe(log.created_at, {
+                                                                    day: "numeric",
+                                                                    month: "short",
+                                                                    hour: "2-digit",
+                                                                    minute: "2-digit",
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm text-slate-800 leading-relaxed">
+                                                            {log.catatan}
+                                                        </p>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 leading-relaxed">
-                                        Pengerjaan ditangani tanpa penggantian komponen baru sesuai hasil pemeriksaan teknisi.
-                                    </p>
-                                )}
+                                        </div>
+                                    )}
+
+                                    <MediaDocumentation
+                                        fotoKondisi={t.foto_kondisi}
+                                        fotoDiagnosis={t.foto_diagnosis}
+                                        fotoSelesai={t.foto_selesai}
+                                        logPerbaikan={t.log_perbaikan}
+                                        filterCategory="repair"
+                                        heading="Foto selama pengerjaan"
+                                        variant="card"
+                                    />
+                                </div>
                             </div>
-
-                            {/* Repair Log Timeline */}
-                            {logs.length > 0 && (
-                                <div className="space-y-3 pt-4 border-t border-slate-200">
-                                    <h3 className="font-display font-bold text-sm text-slate-950">
-                                        Riwayat catatan teknisi
-                                    </h3>
-                                    <div className="space-y-2.5">
-                                        {logs.map((log, i) => (
-                                            <div
-                                                key={log.id || i}
-                                                className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1"
-                                            >
-                                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                                                    <span className="font-bold text-blue-700">
-                                                        {log.fase || "Catatan Pengerjaan"}
-                                                    </span>
-                                                    <span className="font-mono text-slate-600">
-                                                        {formatDateSafe(log.created_at, {
-                                                            day: "numeric",
-                                                            month: "short",
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        })}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-slate-800 leading-relaxed">
-                                                    {log.catatan}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <MediaDocumentation
-                                fotoKondisi={t.foto_kondisi}
-                                fotoDiagnosis={t.foto_diagnosis}
-                                fotoSelesai={t.foto_selesai}
-                                logPerbaikan={t.log_perbaikan}
-                                filterCategory="repair"
-                                heading="Foto selama pengerjaan"
-                            />
-                        </section>
+                        </div>
                     )}
 
                     {/* STAGE 4: QC */}
                     {activeStepKey === "selesai" && (
-                        <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-5">
-                            <div className="pb-4 border-b border-slate-200">
-                                <span className="font-mono text-xs font-semibold text-blue-700 block">
-                                    TAHAP 04 · QC
-                                </span>
-                                <h2 className="font-display font-bold text-lg sm:text-xl text-slate-950 mt-0.5">
-                                    Hasil pengecekan akhir (Quality Control)
-                                </h2>
-                            </div>
+                        <div className="space-y-4 flex-1 flex flex-col justify-between">
+                            <div className="space-y-4">
+                                <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3 border-b border-slate-200">
+                                    <h2 className="font-display font-bold text-base sm:text-lg text-slate-900">
+                                        Hasil pengecekan akhir (Quality Control)
+                                    </h2>
+                                    <span className="text-xs font-semibold text-blue-600">
+                                        Tahap 04 · QC
+                                    </span>
+                                </div>
 
-                            {t.checklist_qc ? (() => {
-                                const obj =
-                                    typeof t.checklist_qc === "string"
-                                        ? (() => {
-                                              try {
-                                                  return JSON.parse(t.checklist_qc);
-                                              } catch {
-                                                  return {};
-                                              }
-                                          })()
-                                        : t.checklist_qc;
-                                const cat = getDeviceCategory(t.jenis_perangkat);
-                                const qcItems = getQcChecklistForCategory(cat) || [];
-                                return (
-                                    <div className="space-y-4">
-                                        {obj.passed_qc && (
-                                            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex items-start gap-3">
-                                                <CheckCircle2
-                                                    className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"
-                                                    aria-hidden="true"
-                                                />
-                                                <p className="text-sm leading-relaxed">
-                                                    <strong>Unit lulus pengecekan akhir.</strong> Seluruh fungsi utama telah diuji kembali sebelum serah terima.
+                                <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+                                    <div className="xl:col-span-7 space-y-3 min-w-0">
+                                        {t.checklist_qc ? (() => {
+                                            const obj =
+                                                typeof t.checklist_qc === "string"
+                                                    ? (() => {
+                                                          try {
+                                                              return JSON.parse(t.checklist_qc);
+                                                          } catch {
+                                                              return {};
+                                                          }
+                                                      })()
+                                                    : t.checklist_qc;
+                                            const cat = getDeviceCategory(t.jenis_perangkat);
+                                            const qcItems = getQcChecklistForCategory(cat) || [];
+                                            return (
+                                                <div className="space-y-3">
+                                                    {obj.passed_qc && (
+                                                        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-start gap-2.5">
+                                                            <CheckCircle2
+                                                                className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"
+                                                                aria-hidden="true"
+                                                            />
+                                                            <p className="text-xs sm:text-sm leading-relaxed">
+                                                                <strong>Unit lulus pengecekan akhir.</strong> Seluruh fungsi utama telah diuji sebelum serah terima.
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                                                        {qcItems.map((item) => {
+                                                            const ok = getChecklistValue(obj, item.key, item.legacyKey);
+                                                            return (
+                                                                <div
+                                                                    key={item.key}
+                                                                    className={`p-2.5 rounded-xl border ${
+                                                                        ok
+                                                                            ? "bg-emerald-50/60 border-emerald-200 text-emerald-900"
+                                                                            : "bg-slate-50 border-slate-200 text-slate-600"
+                                                                    }`}
+                                                                >
+                                                                    <span className="font-bold block">
+                                                                        {ok ? "Lulus uji" : "Belum diuji"}
+                                                                    </span>
+                                                                    <span className="text-slate-900 font-semibold block mt-0.5 truncate">
+                                                                        {item.label}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })() : (
+                                            <p className="text-sm text-slate-600">
+                                                Pengecekan akhir dilakukan setelah perbaikan selesai.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="xl:col-span-5 space-y-4 min-w-0">
+                                        {t.tips_perawatan && (
+                                            <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200 space-y-1.5">
+                                                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                                    <Lightbulb className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                                                    <span>Saran perawatan dari teknisi</span>
+                                                </h3>
+                                                <p className="text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-line">
+                                                    {t.tips_perawatan}
                                                 </p>
                                             </div>
                                         )}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                                            {qcItems.map((item) => {
-                                                const ok = getChecklistValue(obj, item.key, item.legacyKey);
-                                                return (
-                                                    <div
-                                                        key={item.key}
-                                                        className={`p-3 rounded-xl border ${
-                                                            ok
-                                                                ? "bg-emerald-50/70 border-emerald-200 text-emerald-950"
-                                                                : "bg-slate-50 border-slate-200 text-slate-600"
-                                                        }`}
-                                                    >
-                                                        <span className="font-bold block">
-                                                            {ok ? "Lulus uji" : "Belum diuji"}
-                                                        </span>
-                                                        <span className="text-slate-900 font-semibold block mt-0.5">
-                                                            {item.label}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+
+                                        <MediaDocumentation
+                                            fotoKondisi={t.foto_kondisi}
+                                            fotoDiagnosis={t.foto_diagnosis}
+                                            fotoSelesai={t.foto_selesai}
+                                            logPerbaikan={t.log_perbaikan}
+                                            filterCategory="completed"
+                                            heading="Foto hasil akhir (Sesudah)"
+                                            variant="card"
+                                        />
                                     </div>
-                                );
-                            })() : (
-                                <p className="text-sm text-slate-600">
-                                    Pengecekan akhir dilakukan setelah perbaikan selesai.
-                                </p>
-                            )}
-
-                            {t.tips_perawatan && (
-                                <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-1.5">
-                                    <h3 className="text-sm font-bold text-slate-950 flex items-center gap-2">
-                                        <Lightbulb className="w-4 h-4 text-blue-600" aria-hidden="true" />
-                                        <span>Saran perawatan dari teknisi</span>
-                                    </h3>
-                                    <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-line">
-                                        {t.tips_perawatan}
-                                    </p>
                                 </div>
-                            )}
+                            </div>
 
-                            <MediaDocumentation
-                                fotoKondisi={t.foto_kondisi}
-                                fotoDiagnosis={t.foto_diagnosis}
-                                fotoSelesai={t.foto_selesai}
-                                logPerbaikan={t.log_perbaikan}
-                                filterCategory="completed"
-                                heading="Foto hasil akhir (Sesudah)"
-                            />
-                        </section>
+                            {["selesai", "diambil"].includes(t.status) && (
+                                <TechnicianRatingCard ticket={t} />
+                            )}
+                        </div>
                     )}
 
                     {/* STAGE 5: SIAP DIAMBIL / SERAH TERIMA */}
                     {activeStepKey === "diambil" && (
-                        <section className="space-y-5">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {/* QR Reopen & Pickup Verification Card (Crisp white + blue, no holographic gimmick) */}
-                                <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between gap-4">
-                                    <div>
-                                        <span className="font-mono text-xs font-semibold text-blue-700 block">
-                                            QR VERIFIKASI TIKET
-                                        </span>
-                                        <h2 className="font-display font-bold text-lg text-slate-950 mt-0.5">
-                                            Tunjukkan saat pengambilan
-                                        </h2>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 shrink-0">
-                                            <TicketQrImage nomorTiket={t.nomor_tiket} size={104} />
-                                        </div>
-                                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                                            Pindai untuk membuka ulang halaman tiket ini kapan saja atau tunjukkan ke kasir saat serah terima unit.
-                                        </p>
-                                    </div>
-                                    <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
-                                        <span className="font-mono font-bold text-slate-900">{t.nomor_tiket}</span>
-                                        <button
-                                            type="button"
-                                            onClick={handleShareTracking}
-                                            className="min-h-[36px] inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline cursor-pointer"
-                                        >
-                                            <Copy className="w-3.5 h-3.5" aria-hidden="true" />
-                                            <span>Salin tautan</span>
-                                        </button>
-                                    </div>
+                        <div className="space-y-4 flex-1 flex flex-col justify-between">
+                            <div className="space-y-4">
+                                <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3 border-b border-slate-200">
+                                    <h2 className="font-display font-bold text-base sm:text-lg text-slate-900">
+                                        Serah terima, QR verifikasi &amp; garansi
+                                    </h2>
+                                    <span className="text-xs font-semibold text-blue-600">
+                                        Tahap 05 · Siap diambil
+                                    </span>
                                 </div>
 
-                                {/* Warranty Countdown Card (Semantic green/rose only for warranty state) */}
-                                <div
-                                    className={`rounded-2xl p-6 border flex flex-col justify-between gap-4 ${
-                                        t.status === "diambil" && t.warranty_status?.isExpired
-                                            ? "bg-rose-50/70 border-rose-200"
-                                            : "bg-emerald-50/70 border-emerald-200"
-                                    }`}
-                                >
-                                    <div>
-                                        <span
-                                            className={`font-mono text-xs font-bold block ${
-                                                t.status === "diambil" && t.warranty_status?.isExpired
-                                                    ? "text-rose-800"
-                                                    : "text-emerald-800"
-                                            }`}
-                                        >
-                                            {t.status === "diambil"
-                                                ? t.warranty_status?.isExpired
-                                                    ? "MASA GARANSI BERAKHIR"
-                                                    : hasWarrantyCountdown
-                                                    ? `GARANSI AKTIF · SISA ${warrantyRemaining} HARI`
-                                                    : "GARANSI AKTIF"
-                                                : "GARANSI SIAP DIAKTIFKAN"}
-                                        </span>
-                                        <h2 className="font-display font-bold text-lg text-slate-950 mt-0.5 flex items-center gap-2">
-                                            <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0" aria-hidden="true" />
-                                            <span>Garansi {t.durasi_garansi || "1 Bulan"}</span>
-                                        </h2>
-                                    </div>
-
-                                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                                        {t.status === "diambil" && t.warranty_status?.garansi_berakhir_at
-                                            ? `Berlaku hingga ${formatDateSafe(
-                                                  t.warranty_status.garansi_berakhir_at
-                                              )} untuk pengerjaan dan suku cadang yang tertera di nota.`
-                                            : "Masa garansi mulai aktif sejak tanggal serah terima perangkat di bengkel."}
-                                    </p>
-
-                                    <div className="pt-3 border-t border-slate-200/80 flex flex-wrap gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsWarrantyModalOpen(true)}
-                                            className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-1.5 px-4 rounded-xl bg-[#0B162C] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-                                        >
-                                            <Award className="w-4 h-4" aria-hidden="true" />
-                                            <span>Buka Kartu Garansi</span>
-                                        </button>
-                                        {inv && !inv.ttd_customer && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-stretch">
+                                    {/* QR Verification */}
+                                    <div
+                                        className={`bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 ${
+                                            allMediaCount > 0 ? "lg:col-span-4" : "lg:col-span-6"
+                                        }`}
+                                    >
+                                        <h3 className="font-display font-bold text-sm sm:text-base text-slate-900">
+                                            QR verifikasi pengambilan
+                                        </h3>
+                                        <div className="flex items-center gap-3.5">
+                                            <div className="p-2 rounded-xl bg-white border border-slate-200 shrink-0">
+                                                <TicketQrImage nomorTiket={t.nomor_tiket} size={88} />
+                                            </div>
+                                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                                                Pindai untuk membuka ulang tiket ini atau tunjukkan ke kasir saat serah terima.
+                                            </p>
+                                        </div>
+                                        <div className="pt-2.5 border-t border-slate-200 flex items-center justify-between text-xs">
+                                            <span className="font-mono font-bold text-slate-900">{t.nomor_tiket}</span>
                                             <button
                                                 type="button"
-                                                onClick={() => setIsSignInvoiceModalOpen(true)}
-                                                className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-1.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                                                onClick={handleShareTracking}
+                                                className="min-h-[44px] inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline cursor-pointer"
                                             >
-                                                <PenTool className="w-4 h-4" aria-hidden="true" />
-                                                <span>Tanda Tangan</span>
+                                                <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                                                <span>Salin tautan</span>
                                             </button>
-                                        )}
+                                        </div>
                                     </div>
+
+                                    {/* Warranty Status Card */}
+                                    <div
+                                        className={`rounded-2xl p-4 sm:p-5 border flex flex-col justify-between gap-3 ${
+                                            allMediaCount > 0 ? "lg:col-span-4" : "lg:col-span-6"
+                                        } ${
+                                            t.status === "diambil" && t.warranty_status?.isExpired
+                                                ? "bg-rose-50/60 border-rose-200"
+                                                : "bg-emerald-50/60 border-emerald-200"
+                                        }`}
+                                    >
+                                        <div className="space-y-1">
+                                            <h3 className="font-display font-bold text-sm sm:text-base text-slate-900 flex items-center gap-2">
+                                                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden="true" />
+                                                <span>Garansi {t.durasi_garansi || "1 Bulan"}</span>
+                                            </h3>
+                                            <p
+                                                className={`text-xs font-semibold ${
+                                                    t.status === "diambil" && t.warranty_status?.isExpired
+                                                        ? "text-rose-700"
+                                                        : "text-emerald-700"
+                                                }`}
+                                            >
+                                                {t.status === "diambil"
+                                                    ? t.warranty_status?.isExpired
+                                                        ? "Masa garansi berakhir"
+                                                        : hasWarrantyCountdown
+                                                        ? `Garansi aktif · sisa ${warrantyRemaining} hari`
+                                                        : "Garansi aktif"
+                                                    : "Garansi aktif saat serah terima"}
+                                            </p>
+                                        </div>
+
+                                        <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                                            {t.status === "diambil" && t.warranty_status?.garansi_berakhir_at
+                                                ? `Berlaku hingga ${formatDateSafe(
+                                                      t.warranty_status.garansi_berakhir_at
+                                                  )} untuk pengerjaan & suku cadang di nota.`
+                                                : "Masa garansi mulai berlaku sejak tanggal serah terima perangkat di bengkel."}
+                                        </p>
+
+                                        <div className="pt-2.5 border-t border-slate-200/80 flex flex-wrap gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsWarrantyModalOpen(true)}
+                                                className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-1.5 px-3 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                                            >
+                                                <Award className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+                                                <span>Kartu Garansi</span>
+                                            </button>
+                                            {inv && !inv.ttd_customer && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsSignInvoiceModalOpen(true)}
+                                                    className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-1.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                                                >
+                                                    <PenTool className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                                                    <span>Tanda Tangan</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Integrated Compact Documentation Card beside QR & Warranty */}
+                                    {allMediaCount > 0 && (
+                                        <div className="md:col-span-2 lg:col-span-4 min-w-0">
+                                            <MediaDocumentation
+                                                fotoKondisi={t.foto_kondisi}
+                                                fotoDiagnosis={t.foto_diagnosis}
+                                                fotoSelesai={t.foto_selesai}
+                                                logPerbaikan={t.log_perbaikan}
+                                                heading="Dokumentasi unit"
+                                                variant="card"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* All Photos Comparison when completed */}
-                            <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7">
-                                <MediaDocumentation
-                                    fotoKondisi={t.foto_kondisi}
-                                    fotoDiagnosis={t.foto_diagnosis}
-                                    fotoSelesai={t.foto_selesai}
-                                    logPerbaikan={t.log_perbaikan}
-                                    heading="Seluruh dokumentasi sebelum & sesudah"
-                                />
-                            </div>
-                        </section>
+                            {["selesai", "diambil"].includes(t.status) && (
+                                <TechnicianRatingCard ticket={t} />
+                            )}
+                        </div>
                     )}
 
-                    {/* Rating Card (when selesai or diambil) */}
-                    {["selesai", "diambil"].includes(t.status) && (
-                        <TechnicianRatingCard ticket={t} />
+                    {/* Compact SLA Schedule Bar at foot of Right Cockpit for Active In-Progress Tickets */}
+                    {["diterima", "didiagnosis", "menunggu_persetujuan", "disetujui", "dalam_perbaikan"].includes(
+                        t.status
+                    ) && (
+                        <div className="pt-2 shrink-0">
+                            <SlaCountdownCard tiket={t} />
+                        </div>
                     )}
                 </div>
             </div>
@@ -1766,7 +1786,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
             {/* Mobile-First Thumb-Reachable Bottom Action Bar (44px+ targets) */}
             <div
                 aria-label="Aksi cepat pelacakan"
-                className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 border-t border-slate-200 px-3 py-2.5 shadow-[0_-8px_24px_rgba(11,22,44,0.08)]"
+                className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 px-3 py-2.5 [box-shadow:var(--yvs-bar-shadow)]"
                 style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom, 10px))" }}
             >
                 <div className="grid grid-cols-3 gap-2">
@@ -1790,9 +1810,9 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                     <button
                         type="button"
                         onClick={() => setIsQrModalOpen(true)}
-                        className="min-h-[46px] inline-flex items-center justify-center gap-1.5 px-2.5 rounded-xl bg-[#0B162C] text-white text-xs font-semibold cursor-pointer"
+                        className="min-h-[46px] inline-flex items-center justify-center gap-1.5 px-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs font-semibold cursor-pointer"
                     >
-                        <QrCode className="w-4 h-4 shrink-0" aria-hidden="true" />
+                        <QrCode className="w-4 h-4 text-blue-600 shrink-0" aria-hidden="true" />
                         <span>QR Tiket</span>
                     </button>
                 </div>
@@ -1804,7 +1824,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                     role="dialog"
                     aria-modal="true"
                     aria-label={`Kode QR tiket ${t.nomor_tiket}`}
-                    className="modal-shell bg-[#0B162C]/65"
+                    className="modal-shell bg-slate-900/60"
                     onClick={() => setIsQrModalOpen(false)}
                 >
                     <div
@@ -1812,7 +1832,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between">
-                            <span className="font-mono text-xs font-bold text-blue-700">QR PELACAKAN</span>
+                            <span className="font-display font-bold text-sm text-slate-900">QR Pelacakan</span>
                             <button
                                 type="button"
                                 onClick={() => setIsQrModalOpen(false)}
@@ -1826,7 +1846,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                             <TicketQrImage nomorTiket={t.nomor_tiket} size={184} />
                         </div>
                         <div className="space-y-1">
-                            <p className="font-mono font-bold text-lg text-slate-950">{t.nomor_tiket}</p>
+                            <p className="font-mono font-bold text-lg text-slate-900">{t.nomor_tiket}</p>
                             <p className="text-xs text-slate-600 leading-relaxed">
                                 Pindai dengan kamera ponsel untuk membuka ulang status tiket ini atau tunjukkan saat pengambilan unit.
                             </p>
@@ -1844,10 +1864,10 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
 
             {/* Approval / Cancellation Modal */}
             {isApprovalModalOpen && (
-                <div className="modal-shell bg-[#0B162C]/65">
+                <div className="modal-shell bg-slate-900/60">
                     <div className="modal-panel max-w-lg border-slate-200 my-auto">
                         <div className="modal-header shrink-0 px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-3">
-                            <h3 className="font-display font-bold text-base text-slate-950">
+                            <h3 className="font-display font-bold text-base text-slate-900">
                                 {approvalAction === "approve"
                                     ? "Konfirmasi Persetujuan Perbaikan"
                                     : "Konfirmasi Pembatalan Servis"}
@@ -1935,7 +1955,7 @@ function TicketDetailExperience({ initialTicket, onBackToList, onUpdateTicket })
                                         value={phoneLast4}
                                         onChange={(e) => setPhoneLast4(e.target.value.replace(/\D/g, ""))}
                                         placeholder="Contoh: 7890"
-                                        className="yvs-exp-track-input w-full min-h-[48px] text-center tracking-widest font-mono font-bold px-4 bg-slate-50 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:bg-white outline-none"
+                                        className="yvs-exp-track-input w-full min-h-[48px] text-center font-mono font-bold px-4 bg-slate-50 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:bg-white outline-none"
                                     />
                                 </div>
                             </div>
@@ -2025,7 +2045,11 @@ export default function TrackingResultView({
     headingRef,
 }) {
     return (
-        <div className="yvs-exp-scope min-h-screen bg-slate-50 font-sans text-slate-950">
+        <div
+            className={`yvs-exp-scope min-h-screen bg-slate-50 font-sans text-slate-900 ${
+                selectedTicket ? "lg:h-[100dvh] lg:flex lg:flex-col lg:overflow-hidden" : ""
+            }`}
+        >
             <a
                 href="#tracking-result-main"
                 className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[120] focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-blue-600 focus:text-white focus:text-sm focus:font-semibold"
@@ -2033,15 +2057,15 @@ export default function TrackingResultView({
                 Lewati ke detail servis
             </a>
 
-            <header className="bg-white/95 lg:backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 h-16 flex items-center justify-between gap-3">
+            <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shrink-0">
+                <div className="w-full px-4 sm:px-6 lg:px-8 h-16 lg:h-14 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                         <button
                             type="button"
                             onClick={onBackToLanding}
-                            className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shrink-0"
+                            className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shrink-0 whitespace-nowrap"
                         >
-                            <ChevronLeft className="w-4 h-4 text-slate-700" aria-hidden="true" />
+                            <ChevronLeft className="w-4 h-4 text-slate-600" aria-hidden="true" />
                             <span>Beranda</span>
                         </button>
                         <div
@@ -2056,11 +2080,11 @@ export default function TrackingResultView({
                                 height="24"
                                 className="w-6 h-6 rounded object-contain bg-white border border-slate-200 p-0.5 shrink-0"
                             />
-                            <span className="font-display font-bold text-sm text-slate-950 truncate">
+                            <span className="font-display font-bold text-sm text-slate-900 truncate">
                                 YVS Computer
                             </span>
                             <span className="text-slate-300" aria-hidden="true">/</span>
-                            <span className="text-xs font-mono font-semibold text-slate-700 truncate">
+                            <span className="text-xs font-mono font-semibold text-blue-600 truncate">
                                 {selectedTicket
                                     ? selectedTicket.nomor_tiket
                                     : `${results?.length || 0} tiket ditemukan`}
@@ -2071,9 +2095,9 @@ export default function TrackingResultView({
                     <button
                         type="button"
                         onClick={onSearchAnother}
-                        className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B162C] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer shrink-0"
+                        className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--yvs-paper-2)] hover:bg-blue-50 border border-[var(--yvs-rule)] hover:border-blue-300 text-[var(--yvs-ink)] hover:text-[var(--yvs-accent)] text-xs sm:text-sm font-semibold transition-colors cursor-pointer shrink-0 whitespace-nowrap"
                     >
-                        <Search className="w-4 h-4" aria-hidden="true" />
+                        <Search className="w-4 h-4 text-[var(--yvs-accent)]" aria-hidden="true" />
                         <span>Lacak tiket lain</span>
                     </button>
                 </div>
@@ -2082,12 +2106,14 @@ export default function TrackingResultView({
             <main
                 id="tracking-result-main"
                 style={{ viewTransitionName: "yvs-tracking-shell" }}
-                className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10"
+                className={`w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-3.5 ${
+                    selectedTicket ? "lg:flex-1 lg:min-h-0 lg:flex lg:flex-col" : ""
+                }`}
             >
                 {results && results.length > 0 && !selectedTicket && (
                     <div className="space-y-5 max-w-4xl mx-auto">
                         <div className="pb-4 border-b border-slate-200">
-                            <h1 className="font-display font-extrabold text-xl sm:text-2xl text-slate-950">
+                            <h1 className="font-display font-extrabold text-xl sm:text-2xl text-slate-900">
                                 Ditemukan {results.length} tiket servis
                             </h1>
                             <p className="text-sm text-slate-600 mt-1">
@@ -2099,7 +2125,7 @@ export default function TrackingResultView({
                             {results.map((item, idx) => {
                                 const meta = SEMANTIC_STATUS[item?.status] || {
                                     label: item?.status || "Dalam Proses",
-                                    badge: "bg-slate-100 text-slate-800 border-slate-300",
+                                    badge: "bg-slate-100 text-slate-800 border-slate-200",
                                 };
                                 return (
                                     <button
@@ -2110,14 +2136,14 @@ export default function TrackingResultView({
                                     >
                                         <div className="space-y-1 min-w-0">
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <span className="font-mono font-bold text-base text-slate-950">
+                                                <span className="font-mono font-bold text-base text-blue-600">
                                                     {item.nomor_tiket}
                                                 </span>
-                                                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                                                <span className="text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                                                     {item.jenis_perangkat || "Perangkat"}
                                                 </span>
                                             </div>
-                                            <p className="font-display font-bold text-base sm:text-lg text-slate-950">
+                                            <p className="font-display font-bold text-base sm:text-lg text-slate-900">
                                                 {item.perangkat}
                                             </p>
                                             <p className="text-xs text-slate-600">
@@ -2126,7 +2152,7 @@ export default function TrackingResultView({
                                             </p>
                                         </div>
                                         <span
-                                            className={`inline-flex px-3 py-1.5 rounded-full text-xs font-bold border w-fit shrink-0 ${meta.badge}`}
+                                            className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold border w-fit shrink-0 ${meta.badge}`}
                                         >
                                             {meta.label}
                                         </span>

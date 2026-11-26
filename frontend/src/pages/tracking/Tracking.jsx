@@ -1,5 +1,4 @@
-import { lazy, Suspense, useState, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
+import { lazy, Suspense, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../services/api";
@@ -7,10 +6,10 @@ import ErrorBoundary from "../../components/ErrorBoundary";
 import ExperimentalTrackingLanding from "../../components/tracking-exp/ExperimentalTrackingLanding";
 import TrackingSkeleton from "../../components/tracking-exp/TrackingSkeleton";
 
+const importTrackingResultView = () => import("../../components/tracking-exp/TrackingResultView");
+
 // Lazy-load heavy Tracking Result View & QR Camera Scanner so initial /tracking LCP stays < 2.0s
-const TrackingResultView = lazy(() =>
-    import("../../components/tracking-exp/TrackingResultView")
-);
+const TrackingResultView = lazy(importTrackingResultView);
 const CameraScannerModal = lazy(() =>
     import("../../components/CameraScannerModal")
 );
@@ -78,30 +77,64 @@ export default function Tracking() {
     const [recentSearches, setRecentSearches] = useState(() => getRecentSearches());
     const trackingResultHeadingRef = useRef(null);
 
-    // Progressive-enhancement Same-Document View Transition between Landing <-> Results
-    const runViewTransition = (updateFn, onFinished) => {
-        const reduced =
-            typeof window !== "undefined" &&
-            window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-
-        if (typeof document === "undefined" || !document.startViewTransition || reduced) {
+    // Non-blocking transition helper: never holds keyboard/input frames with flushSync
+    const switchViewSmoothly = useCallback((updateFn, onFinished) => {
+        startTransition(() => {
             updateFn();
-            if (onFinished) window.requestAnimationFrame(onFinished);
-            return;
-        }
-
-        const transition = document.startViewTransition(() => {
-            flushSync(() => {
-                updateFn();
+        });
+        if (onFinished) {
+            window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(onFinished);
             });
-        });
+        }
+    }, []);
 
-        transition.ready.catch(() => {});
-        transition.updateCallbackDone.catch(() => {});
-        transition.finished.catch(() => {}).finally(() => {
-            if (onFinished) onFinished();
-        });
-    };
+    const executeTrack = useCallback(
+        async (payload) => {
+            setError("");
+            setResults(null);
+            setSelectedTicket(null);
+            setLoading(true);
+
+            try {
+                // Warm result module in parallel with API lookup so Suspense resolves immediately
+                const [res] = await Promise.all([
+                    api.post("/tracking", payload),
+                    importTrackingResultView().catch(() => {}),
+                ]);
+                const data = Array.isArray(res.data) ? res.data : res.data ? [res.data] : [];
+                const applyResult = () => {
+                    setResults(data);
+                    if (data.length === 1) {
+                        setSelectedTicket(data[0]);
+                    }
+                };
+                if (data.length > 0) {
+                    switchViewSmoothly(applyResult, () => {
+                        window.scrollTo({ top: 0, behavior: "auto" });
+                        trackingResultHeadingRef.current?.focus();
+                    });
+                } else {
+                    applyResult();
+                }
+
+                if (payload.nomorTiket) {
+                    saveRecentSearch("tiket", payload.nomorTiket);
+                    setRecentSearches(getRecentSearches());
+                } else if (payload.nomorTelepon) {
+                    saveRecentSearch("telepon", payload.nomorTelepon);
+                    setRecentSearches(getRecentSearches());
+                }
+            } catch (err) {
+                setError(
+                    err.response?.data?.message || "Gagal melacak servis. Coba beberapa saat lagi."
+                );
+            } finally {
+                setLoading(false);
+            }
+        },
+        [switchViewSmoothly]
+    );
 
     useEffect(() => {
         if (queryTiket) {
@@ -113,70 +146,64 @@ export default function Tracking() {
             setNomorTelepon(queryPhone);
             executeTrack({ nomorTelepon: queryPhone });
         }
-    }, [queryTiket, queryPhone]);
+    }, [queryTiket, queryPhone, executeTrack]);
 
-    async function executeTrack(payload) {
-        setError("");
-        setResults(null);
-        setSelectedTicket(null);
-        setLoading(true);
-
-        try {
-            const res = await api.post("/tracking", payload);
-            const data = Array.isArray(res.data) ? res.data : res.data ? [res.data] : [];
-            const applyResult = () => {
-                setResults(data);
-                if (data.length === 1) {
-                    setSelectedTicket(data[0]);
-                }
-            };
-            if (data.length > 0) {
-                runViewTransition(applyResult, () => {
-                    window.scrollTo({ top: 0, behavior: "auto" });
-                    trackingResultHeadingRef.current?.focus();
-                });
+    const handleScanReceipt = useCallback(
+        (scannedText) => {
+            setIsCameraScannerOpen(false);
+            const ticketId = extractTicketFromScan(scannedText);
+            if (ticketId) {
+                setTrackMethod("tiket");
+                setNomorTiket(ticketId);
+                toast.success(`Nota terdeteksi: ${ticketId}`);
+                executeTrack({ nomorTiket: ticketId });
             } else {
-                applyResult();
+                toast.error("Kode QR / Barcode nota tidak dikenali");
             }
+        },
+        [executeTrack]
+    );
 
-            if (payload.nomorTiket) {
-                saveRecentSearch("tiket", payload.nomorTiket);
-                setRecentSearches(getRecentSearches());
-            } else if (payload.nomorTelepon) {
-                saveRecentSearch("telepon", payload.nomorTelepon);
-                setRecentSearches(getRecentSearches());
+    const handleLookupSubmit = useCallback(
+        (method, value) => {
+            const clean = String(value || "").trim();
+            setTrackMethod(method);
+            if (method === "telepon") {
+                setNomorTelepon(clean);
+                executeTrack({ nomorTelepon: clean });
+            } else {
+                setNomorTiket(clean);
+                executeTrack({ nomorTiket: clean });
             }
-        } catch (err) {
-            setError(err.response?.data?.message || "Gagal melacak servis. Coba beberapa saat lagi.");
-        } finally {
-            setLoading(false);
-        }
-    }
+        },
+        [executeTrack]
+    );
 
-    const handleScanReceipt = (scannedText) => {
-        setIsCameraScannerOpen(false);
-        const ticketId = extractTicketFromScan(scannedText);
-        if (ticketId) {
-            setTrackMethod("tiket");
-            setNomorTiket(ticketId);
-            toast.success(`Nota terdeteksi: ${ticketId}`);
-            executeTrack({ nomorTiket: ticketId });
-        } else {
-            toast.error("Kode QR / Barcode nota tidak dikenali");
-        }
-    };
+    const handleQuickSearch = useCallback(
+        (item) => {
+            setTrackMethod(item.type);
+            if (item.type === "tiket") {
+                setNomorTiket(item.value);
+                executeTrack({ nomorTiket: item.value });
+            } else {
+                setNomorTelepon(item.value);
+                executeTrack({ nomorTelepon: item.value });
+            }
+        },
+        [executeTrack]
+    );
 
-    async function handleTrack(e) {
-        e.preventDefault();
-        const payload = {
-            nomorTelepon: trackMethod === "telepon" ? nomorTelepon.trim() : undefined,
-            nomorTiket: trackMethod === "tiket" ? nomorTiket.trim() : undefined,
-        };
-        await executeTrack(payload);
-    }
+    const handleClearRecent = useCallback(() => {
+        clearRecentSearches();
+        setRecentSearches([]);
+    }, []);
 
-    const handleBackToLanding = () => {
-        runViewTransition(
+    const handleWarmResult = useCallback(() => {
+        importTrackingResultView().catch(() => {});
+    }, []);
+
+    const handleBackToLanding = useCallback(() => {
+        switchViewSmoothly(
             () => {
                 setSelectedTicket(null);
                 setResults(null);
@@ -190,7 +217,7 @@ export default function Tracking() {
                 document.getElementById("yvs-exp-track-field")?.focus();
             }
         );
-    };
+    }, [switchViewSmoothly]);
 
     const isViewingTracking = selectedTicket || (results && results.length > 0);
 
@@ -203,7 +230,11 @@ export default function Tracking() {
     if (isViewingTracking) {
         return (
             <ErrorBoundary>
-                <Suspense fallback={<TrackingSkeleton ticketCode={selectedTicket?.nomor_tiket || nomorTiket} />}>
+                <Suspense
+                    fallback={
+                        <TrackingSkeleton ticketCode={selectedTicket?.nomor_tiket || nomorTiket} />
+                    }
+                >
                     <TrackingResultView
                         results={results}
                         selectedTicket={selectedTicket}
@@ -231,31 +262,17 @@ export default function Tracking() {
     return (
         <>
             <ExperimentalTrackingLanding
-                trackMethod={trackMethod}
-                setTrackMethod={setTrackMethod}
-                nomorTiket={nomorTiket}
-                setNomorTiket={setNomorTiket}
-                nomorTelepon={nomorTelepon}
-                setNomorTelepon={setNomorTelepon}
+                initialMethod={trackMethod}
+                initialTiket={nomorTiket}
+                initialTelepon={nomorTelepon}
                 loading={loading}
                 error={error}
                 results={results}
                 recentSearches={recentSearches}
-                onSubmit={handleTrack}
-                onQuickSearch={(item) => {
-                    setTrackMethod(item.type);
-                    if (item.type === "tiket") {
-                        setNomorTiket(item.value);
-                        executeTrack({ nomorTiket: item.value });
-                    } else {
-                        setNomorTelepon(item.value);
-                        executeTrack({ nomorTelepon: item.value });
-                    }
-                }}
-                onClearRecent={() => {
-                    clearRecentSearches();
-                    setRecentSearches([]);
-                }}
+                onLookupSubmit={handleLookupSubmit}
+                onQuickSearch={handleQuickSearch}
+                onClearRecent={handleClearRecent}
+                onWarmResult={handleWarmResult}
                 onOpenScanner={() => setIsCameraScannerOpen(true)}
                 isScannerOpen={isCameraScannerOpen}
             />

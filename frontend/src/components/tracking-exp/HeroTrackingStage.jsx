@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
     Search,
     Camera,
@@ -8,7 +8,7 @@ import {
     MessageCircle,
     AlertCircle,
     RotateCcw,
-    ArrowDown,
+    ArrowUpRight,
 } from "lucide-react";
 import {
     MagneticWrap,
@@ -18,33 +18,47 @@ import {
 import { formatTicketInputMask } from "./motionTokens";
 
 /**
- * ACT I — Full-Viewport Seamless Studio Hero (#EFEFEF matches /frames/001.webp cyclorama)
- * - No boxed SaaS form card, no eyebrows, no middle-dot metadata clutter.
- * - Monumental display typography + floating borderless studio laptop + sleek inline tracking command bar.
- * - Instant LCP (< 1.8s) on mobile & desktop: hero headline + 43KB studio laptop paint immediately.
+ * ACT I — Unslopped Swiss-Editorial Hero on Cohesive Light Paper (--yvs-paper)
+ * - Localizes typing state inside HeroTrackingStage so keystrokes never trigger
+ *   root-level or below-the-fold re-renders (keeps keyboard INP < 16ms).
+ * - Semantic toggle buttons (`aria-pressed`) instead of orphaned ARIA tabs.
  */
-export default function HeroTrackingStage({
-    trackMethod,
-    setTrackMethod,
-    nomorTiket,
-    setNomorTiket,
-    nomorTelepon,
-    setNomorTelepon,
+const HeroTrackingStage = memo(function HeroTrackingStage({
+    initialMethod = "tiket",
+    initialTiket = "",
+    initialTelepon = "",
     loading,
     error,
     results,
     recentSearches,
-    onSubmit,
+    onLookupSubmit,
     onQuickSearch,
     onClearRecent,
+    onWarmResult,
     onOpenScanner,
     inputRef,
 }) {
+    const [trackMethod, setTrackMethod] = useState(initialMethod);
+    const [nomorTiket, setNomorTiket] = useState(initialTiket);
+    const [nomorTelepon, setNomorTelepon] = useState(initialTelepon);
     const [inlineError, setInlineError] = useState("");
+
+    useEffect(() => {
+        setTrackMethod(initialMethod);
+    }, [initialMethod]);
+
+    useEffect(() => {
+        if (initialTiket) setNomorTiket(initialTiket);
+    }, [initialTiket]);
+
+    useEffect(() => {
+        if (initialTelepon) setNomorTelepon(initialTelepon);
+    }, [initialTelepon]);
+
     const activeValue = trackMethod === "tiket" ? nomorTiket : nomorTelepon;
 
     const handleChange = (e) => {
-        setInlineError("");
+        if (inlineError) setInlineError("");
         const val = e.target.value;
         if (trackMethod === "tiket") {
             setNomorTiket(formatTicketInputMask(val));
@@ -71,7 +85,7 @@ export default function HeroTrackingStage({
             }
         }
         setInlineError("");
-        onSubmit(e);
+        onLookupSubmit?.(trackMethod, trimmed);
     };
 
     const notFoundWaMessage = encodeURIComponent(
@@ -83,282 +97,307 @@ export default function HeroTrackingStage({
     return (
         <section
             id="track-lookup"
-            className="relative w-full min-h-[100svh] yvs-studio-canvas flex flex-col justify-between pt-24 pb-10 sm:pt-28 sm:pb-12 overflow-x-clip scroll-mt-16"
+            className="relative w-full min-h-[92svh] lg:min-h-[100svh] bg-[var(--yvs-paper)] flex flex-col justify-between pt-24 pb-12 sm:pt-32 sm:pb-16 overflow-x-clip scroll-mt-16"
         >
-            <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 flex-1 flex flex-col justify-between gap-8 lg:gap-10">
-                {/* Main Asymmetric Stage: Monumental Type (Left) + Borderless Floating Studio Hardware (Right) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto">
-                    {/* LEFT: Monumental Display Headline + One Sentence + Quiet WhatsApp Link */}
-                    <div className="lg:col-span-6 space-y-5 sm:space-y-6 min-w-0 relative z-10">
+            <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 flex-1 flex flex-col justify-between gap-12 lg:gap-16">
+                {/* 1. Asymmetric Editorial Header: Monumental Display Left + Concise Lede Right */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-end pt-4 sm:pt-8">
+                    <div className="lg:col-span-8 min-w-0">
                         <MaskedLines
                             as="h1"
                             trigger="mount"
-                            lines={[
-                                "Perbaikan perangkat,",
-                                "terbuka di tiap tahap.",
-                            ]}
-                            className="font-display font-extrabold text-[2.45rem] xs:text-[2.85rem] sm:text-6xl lg:text-[4.15rem] xl:text-[4.85rem] text-[#071124] tracking-[-0.04em] leading-[1.03] break-words"
+                            lines={["Perbaikan perangkat,", "terbuka di tiap tahap."]}
+                            className="font-display font-extrabold text-[2.5rem] xs:text-[2.9rem] sm:text-6xl lg:text-[4.5rem] xl:text-[5.25rem] text-[var(--yvs-ink)] tracking-[-0.04em] leading-[1.03]"
                         />
+                    </div>
 
-                        <p className="text-[#071124]/75 text-base sm:text-lg lg:text-[1.15rem] leading-relaxed max-w-lg font-sans">
-                            Pantau hasil diagnosa, rincian biaya, foto pengerjaan, dan masa garansi langsung dari nomor servis Anda.
+                    <div className="lg:col-span-4 space-y-4 lg:pb-2 min-w-0">
+                        <p className="text-[var(--yvs-muted)] text-base sm:text-[1.0625rem] leading-relaxed max-w-[38ch]">
+                            Pantau hasil diagnosa, rincian biaya, foto pengerjaan, dan kartu garansi digital langsung dari nomor servis Anda.
                         </p>
 
-                        <div className="flex flex-wrap items-center gap-5 pt-1">
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                             <a
                                 href="https://wa.me/628121034212?text=Halo%20YVS%20Computer,%20saya%20ingin%20konsultasi%20keluhan%20perangkat%20saya"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="min-h-[44px] inline-flex items-center gap-2 text-sm font-semibold text-[#071124] hover:text-[#2563EB] underline decoration-[#071124]/30 hover:decoration-[#2563EB] underline-offset-4 transition-colors"
+                                className="min-h-[44px] inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--yvs-ink)] hover:text-[var(--yvs-accent)] underline decoration-[var(--yvs-rule)] hover:decoration-[var(--yvs-accent)] underline-offset-4 transition-colors"
                             >
-                                <MessageCircle className="w-4 h-4 text-[#2563EB] shrink-0" aria-hidden="true" />
-                                <span>Tanya teknisi lewat WhatsApp</span>
+                                <MessageCircle className="w-4 h-4 text-[var(--yvs-accent)] shrink-0" aria-hidden="true" />
+                                <span>Tanya lewat WhatsApp</span>
                             </a>
-
                             <button
                                 type="button"
                                 onClick={() => smoothScrollToTarget("alur-servis", 0)}
-                                className="hidden sm:inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-[#071124]/70 hover:text-[#071124] transition-colors cursor-pointer"
+                                className="min-h-[44px] inline-flex items-center text-sm font-medium text-[var(--yvs-muted)] hover:text-[var(--yvs-ink)] transition-colors cursor-pointer"
                             >
-                                <span>Lihat proses perbaikan</span>
-                                <ArrowDown className="w-4 h-4 shrink-0" aria-hidden="true" />
+                                Lihat alur pengerjaan
                             </button>
                         </div>
                     </div>
-
-                    {/* RIGHT: Borderless Studio Laptop Floating Directly on #EFEFEF Canvas */}
-                    <div className="lg:col-span-6 min-w-0 relative flex items-center justify-center">
-                        <img
-                            src="/frames/001.webp"
-                            alt="Perangkat laptop di meja pemeriksaan studio YVS Computer"
-                            width="1280"
-                            height="720"
-                            fetchPriority="high"
-                            decoding="async"
-                            className="w-full max-w-[680px] lg:max-w-none lg:scale-[1.12] xl:scale-[1.16] h-auto object-contain select-none pointer-events-none yvs-studio-frame"
-                        />
-                    </div>
                 </div>
 
-                {/* Bottom Architectural Tracking Command Bar (Primary CTA Inside First Screen) */}
-                <div className="relative z-20 w-full max-w-4xl">
-                    <div
-                        style={{ viewTransitionName: "yvs-tracking-shell" }}
-                        className="bg-white rounded-2xl sm:rounded-[22px] p-3 sm:p-4 shadow-[0_28px_70px_-24px_rgba(7,17,36,0.16)] border border-[#071124]/10 space-y-3"
-                    >
-                        {/* Top Slim Method Selector + Format Guide */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-                            <div
-                                role="tablist"
-                                aria-label="Metode pelacakan"
-                                className="inline-flex items-center gap-1 bg-[#F1F5F9] p-1 rounded-xl"
-                            >
-                                {[
-                                    { key: "tiket", label: "Nomor servis" },
-                                    { key: "telepon", label: "Nomor WhatsApp" },
-                                ].map((tab) => {
-                                    const active = trackMethod === tab.key;
-                                    return (
+                {/* 2. Full-Width Architectural Tracking Command Bar (Equal Left & Right Edges) */}
+                <div
+                    style={{ viewTransitionName: "yvs-tracking-shell" }}
+                    className="w-full pt-8 border-t border-[var(--yvs-rule)] space-y-4"
+                >
+                    {/* Method Switcher + Subtle Format & Recent Strip */}
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div
+                            role="group"
+                            aria-label="Metode pelacakan"
+                            className="inline-flex items-center gap-6"
+                        >
+                            {[
+                                { key: "tiket", label: "Nomor servis" },
+                                { key: "telepon", label: "Nomor WhatsApp" },
+                            ].map((tab) => {
+                                const active = trackMethod === tab.key;
+                                return (
+                                    <button
+                                        key={tab.key}
+                                        type="button"
+                                        aria-pressed={active}
+                                        onClick={() => {
+                                            setInlineError("");
+                                            setTrackMethod(tab.key);
+                                        }}
+                                        className={`relative min-h-[44px] py-2 text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                                            active
+                                                ? "text-[var(--yvs-ink)]"
+                                                : "text-[var(--yvs-muted)] hover:text-[var(--yvs-ink)]"
+                                        }`}
+                                    >
+                                        <span>{tab.label}</span>
+                                        <span
+                                            aria-hidden="true"
+                                            className={`absolute inset-x-0 bottom-0 h-[2px] bg-[var(--yvs-accent)] transition-transform duration-200 origin-left ${
+                                                active ? "scale-x-100" : "scale-x-0"
+                                            }`}
+                                        />
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--yvs-muted)]">
+                            {recentSearches.length > 0 ? (
+                                <>
+                                    <span className="inline-flex items-center gap-1">
+                                        <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                                        <span>Terakhir dicari:</span>
+                                    </span>
+                                    {recentSearches.map((item, idx) => (
                                         <button
-                                            key={tab.key}
-                                            role="tab"
-                                            aria-selected={active}
+                                            key={`${item.type}-${item.value}-${idx}`}
                                             type="button"
                                             onClick={() => {
                                                 setInlineError("");
-                                                setTrackMethod(tab.key);
+                                                onQuickSearch(item);
                                             }}
-                                            className={`min-h-[38px] px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${
-                                                active
-                                                    ? "bg-white text-[#071124] shadow-2xs"
-                                                    : "text-[#071124]/70 hover:text-[#071124]"
-                                            }`}
+                                            className="min-h-[44px] px-3 py-1 rounded-lg bg-[var(--yvs-paper-2)] hover:bg-blue-50 text-[var(--yvs-ink)] hover:text-[var(--yvs-accent)] font-mono font-semibold transition-colors cursor-pointer whitespace-nowrap"
                                         >
-                                            {tab.label}
+                                            {item.value}
                                         </button>
-                                    );
-                                })}
-                            </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={onClearRecent}
+                                        className="min-h-[44px] px-2 font-semibold text-[var(--yvs-muted)] hover:text-rose-700 transition-colors cursor-pointer"
+                                    >
+                                        Hapus
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setInlineError("");
+                                        onQuickSearch({ type: "tiket", value: "SRV-2026-073" });
+                                    }}
+                                    className="min-h-[44px] inline-flex items-center gap-1 font-medium text-[var(--yvs-muted)] hover:text-[var(--yvs-accent)] transition-colors cursor-pointer whitespace-nowrap"
+                                >
+                                    <span>Contoh: SRV-2026-073</span>
+                                    <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
 
-                            <span className="text-xs text-[#475569] font-mono hidden sm:inline">
+                    {/* Equal-Height Input + Primary Blue CTA Row (56px matched height) */}
+                    <form
+                        onSubmit={handleFormSubmit}
+                        noValidate
+                        className="flex flex-col sm:flex-row items-stretch gap-3"
+                    >
+                        <div className="relative flex-1 min-w-0">
+                            <label htmlFor="yvs-exp-track-field" className="sr-only">
                                 {trackMethod === "tiket"
-                                    ? "Format nota: SRV-2026-073"
-                                    : "Nomor terdaftar di nota"}
-                            </span>
+                                    ? "Masukkan nomor servis"
+                                    : "Masukkan nomor WhatsApp terdaftar"}
+                            </label>
+                            <input
+                                id="yvs-exp-track-field"
+                                ref={inputRef}
+                                type={trackMethod === "telepon" ? "tel" : "text"}
+                                inputMode={trackMethod === "telepon" ? "tel" : "text"}
+                                autoComplete="off"
+                                spellCheck={false}
+                                aria-invalid={Boolean(inlineError || error)}
+                                aria-describedby={inlineError ? "yvs-track-inline-error" : undefined}
+                                value={activeValue}
+                                onFocus={onWarmResult}
+                                onChange={handleChange}
+                                placeholder={
+                                    trackMethod === "tiket"
+                                        ? "Contoh: SRV-2026-073"
+                                        : "Contoh: 081234567890"
+                                }
+                                className={`yvs-exp-track-input w-full h-[56px] pl-4 pr-28 bg-white border rounded-xl font-mono font-semibold text-[var(--yvs-ink)] placeholder:font-sans placeholder:font-normal placeholder:text-[var(--yvs-muted)] transition-colors ${
+                                    inlineError
+                                        ? "border-rose-500"
+                                        : "border-[var(--yvs-rule)] hover:border-slate-400"
+                                }`}
+                            />
+                            <button
+                                type="button"
+                                onClick={onOpenScanner}
+                                aria-label="Pindai QR pada lembar nota"
+                                title="Pindai QR nota servis"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] px-3 rounded-lg bg-[var(--yvs-paper-2)] hover:bg-blue-50 text-[var(--yvs-ink)] hover:text-[var(--yvs-accent)] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                            >
+                                <Camera className="w-4 h-4 shrink-0" aria-hidden="true" />
+                                <span className="hidden xs:inline">Pindai QR</span>
+                            </button>
                         </div>
 
-                        {/* Single-Row Command Form on Desktop, Tactile Stack on Mobile */}
-                        <form
-                            onSubmit={handleFormSubmit}
-                            noValidate
-                            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5"
+                        <MagneticWrap strength={0.12} className="sm:w-auto w-full shrink-0">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                onPointerEnter={onWarmResult}
+                                className="w-full sm:w-auto h-[56px] px-8 rounded-xl bg-[var(--yvs-accent)] hover:bg-[var(--yvs-accent-hover)] text-[var(--yvs-accent-ink)] font-semibold text-sm sm:text-base transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-55 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+                            >
+                                {loading ? (
+                                    <>
+                                        <span
+                                            className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full motion-safe:animate-spin"
+                                            aria-hidden="true"
+                                        />
+                                        <span>Mencari…</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
+                                        <span>Cek status servis</span>
+                                    </>
+                                )}
+                            </button>
+                        </MagneticWrap>
+                    </form>
+
+                    {/* Reserved Helper / Inline Validation Row */}
+                    {inlineError && (
+                        <p
+                            id="yvs-track-inline-error"
+                            role="alert"
+                            className="flex items-start gap-1.5 text-xs font-medium text-rose-700"
                         >
-                            <div className="relative flex-1 min-w-0">
-                                <label htmlFor="yvs-exp-track-field" className="sr-only">
-                                    {trackMethod === "tiket"
-                                        ? "Masukkan nomor servis"
-                                        : "Masukkan nomor WhatsApp terdaftar"}
-                                </label>
-                                <input
-                                    id="yvs-exp-track-field"
-                                    ref={inputRef}
-                                    type={trackMethod === "telepon" ? "tel" : "text"}
-                                    inputMode={trackMethod === "telepon" ? "tel" : "text"}
-                                    autoComplete="off"
-                                    spellCheck={false}
-                                    aria-invalid={Boolean(inlineError || error)}
-                                    aria-describedby={inlineError ? "yvs-track-inline-error" : undefined}
-                                    value={activeValue}
-                                    onChange={handleChange}
-                                    placeholder={
-                                        trackMethod === "tiket"
-                                            ? "Contoh: SRV-2026-073"
-                                            : "Contoh: 081234567890"
-                                    }
-                                    className={`yvs-exp-track-input w-full min-h-[54px] pl-4 pr-14 py-3 bg-[#F8FAFC] focus:bg-white border rounded-xl font-mono font-semibold text-[#071124] placeholder:font-sans placeholder:font-normal placeholder:text-[#475569] focus:outline-none focus:ring-4 transition-colors ${
-                                        inlineError
-                                            ? "border-rose-500 focus:border-rose-600 focus:ring-rose-500/15"
-                                            : "border-slate-300 focus:border-[#2563EB] focus:ring-[#2563EB]/15"
-                                    }`}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={onOpenScanner}
-                                    aria-label="Pindai QR pada lembar nota"
-                                    title="Pindai QR nota servis"
-                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] rounded-lg text-[#071124]/70 hover:text-[#2563EB] hover:bg-blue-50 flex items-center justify-center transition-colors cursor-pointer"
-                                >
-                                    <Camera className="w-5 h-5" aria-hidden="true" />
-                                </button>
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                            <span>{inlineError}</span>
+                        </p>
+                    )}
+
+                    {/* Error State */}
+                    {error && (
+                        <div
+                            role="alert"
+                            className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm"
+                        >
+                            <div className="flex items-start gap-2">
+                                <SearchX className="w-4 h-4 shrink-0 text-rose-700 mt-0.5" aria-hidden="true" />
+                                <span className="font-semibold">{error}</span>
                             </div>
-
-                            <MagneticWrap strength={0.14} className="sm:w-auto w-full shrink-0">
-                                <button
-                                    type="submit"
-                                    data-cursor="Lacak"
-                                    disabled={loading}
-                                    className="w-full sm:w-auto min-h-[54px] px-7 py-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 text-white font-semibold text-sm sm:text-base transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer whitespace-nowrap"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <span
-                                                className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                                                aria-hidden="true"
-                                            />
-                                            <span>Mencari...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
-                                            <span>Cek status servis</span>
-                                        </>
-                                    )}
-                                </button>
-                            </MagneticWrap>
-                        </form>
-
-                        {/* Inline Validation */}
-                        {inlineError && (
-                            <p
-                                id="yvs-track-inline-error"
-                                role="alert"
-                                className="px-1 flex items-start gap-1.5 text-xs font-medium text-rose-700"
+                            <a
+                                href={`https://wa.me/628121034212?text=${notFoundWaMessage}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="min-h-[44px] inline-flex items-center font-semibold text-[var(--yvs-accent)] hover:underline shrink-0"
                             >
-                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
-                                <span>{inlineError}</span>
-                            </p>
-                        )}
+                                Tanya admin di WhatsApp
+                            </a>
+                        </div>
+                    )}
 
-                        {/* Recent Searches */}
-                        {recentSearches.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-1.5 px-1 pt-0.5 text-xs">
-                                <span className="inline-flex items-center gap-1 text-[#475569] font-medium mr-0.5">
-                                    <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-                                    <span>Terakhir:</span>
-                                </span>
-                                {recentSearches.map((item, idx) => (
-                                    <button
-                                        key={`${item.type}-${item.value}-${idx}`}
-                                        type="button"
-                                        onClick={() => {
-                                            setInlineError("");
-                                            onQuickSearch(item);
-                                        }}
-                                        className="min-h-[34px] px-2.5 py-1 rounded-lg bg-[#F1F5F9] hover:bg-blue-50 text-[#071124] hover:text-[#2563EB] font-mono text-xs font-semibold transition-colors cursor-pointer"
-                                    >
-                                        {item.value}
-                                    </button>
-                                ))}
-                                <button
-                                    type="button"
-                                    onClick={onClearRecent}
-                                    className="min-h-[34px] text-xs font-semibold text-[#475569] hover:text-rose-700 px-2 transition-colors cursor-pointer"
-                                >
-                                    Hapus
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Error State */}
-                        {error && (
-                            <div
-                                role="alert"
-                                className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm"
-                            >
-                                <div className="flex items-start gap-2">
-                                    <SearchX className="w-4 h-4 shrink-0 text-rose-700 mt-0.5" aria-hidden="true" />
-                                    <span className="font-semibold">{error}</span>
+                    {/* Helpful Not Found State */}
+                    {results && results.length === 0 && (
+                        <div
+                            role="status"
+                            className="p-4 rounded-xl bg-[var(--yvs-paper-2)] border border-[var(--yvs-rule)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm"
+                        >
+                            <div className="flex items-start gap-2.5">
+                                <PackageSearch className="w-5 h-5 shrink-0 text-[var(--yvs-accent)] mt-0.5" aria-hidden="true" />
+                                <div>
+                                    <p className="font-bold text-[var(--yvs-ink)]">Nomor servis belum ditemukan</p>
+                                    <p className="text-[var(--yvs-muted)] text-xs sm:text-sm mt-0.5">
+                                        Periksa kembali kode pada lembar nota atau hubungi admin lewat WhatsApp agar kami bantu cek.
+                                    </p>
                                 </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => inputRef?.current?.focus()}
+                                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 rounded-xl bg-white border border-[var(--yvs-rule)] text-[var(--yvs-ink)] text-xs font-semibold cursor-pointer whitespace-nowrap"
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                                    <span>Periksa ulang</span>
+                                </button>
                                 <a
                                     href={`https://wa.me/628121034212?text=${notFoundWaMessage}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="font-semibold text-[#2563EB] hover:underline shrink-0"
+                                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 rounded-xl bg-[var(--yvs-accent)] hover:bg-[var(--yvs-accent-hover)] text-[var(--yvs-accent-ink)] text-xs font-semibold transition-colors whitespace-nowrap"
                                 >
-                                    Tanya admin di WhatsApp
+                                    <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                                    <span>Tanya WhatsApp</span>
                                 </a>
                             </div>
-                        )}
-
-                        {/* Helpful Not Found State */}
-                        {results && results.length === 0 && (
-                            <div
-                                role="status"
-                                className="p-4 rounded-xl bg-[#F8FAFC] border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm"
-                            >
-                                <div className="flex items-start gap-2.5">
-                                    <PackageSearch className="w-5 h-5 shrink-0 text-[#2563EB] mt-0.5" aria-hidden="true" />
-                                    <div>
-                                        <p className="font-bold text-[#071124]">Nomor servis tidak ditemukan</p>
-                                        <p className="text-[#475569] mt-0.5">
-                                            Cek kembali kode di nota Anda atau hubungi admin agar kami bantu lacak.
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={() => inputRef?.current?.focus()}
-                                        className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 rounded-xl bg-white border border-slate-300 text-[#071124] text-xs font-semibold cursor-pointer"
-                                    >
-                                        <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-                                        <span>Cek ulang</span>
-                                    </button>
-                                    <a
-                                        href={`https://wa.me/628121034212?text=${notFoundWaMessage}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="min-h-[44px] inline-flex items-center gap-1.5 px-4 rounded-xl bg-[#071124] hover:bg-[#2563EB] text-white text-xs font-semibold transition-colors"
-                                    >
-                                        <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                                        <span>Tanya WhatsApp</span>
-                                    </a>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
+
+                {/* 3. Quiet 3-Column Hairline Facts Footer inside Hero */}
+                <dl className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0 sm:divide-x sm:divide-[var(--yvs-rule)] pt-7 border-t border-[var(--yvs-rule)]">
+                    <div className="sm:pr-8 space-y-1">
+                        <dt className="font-display font-bold text-sm text-[var(--yvs-ink)]">
+                            Konfirmasi biaya di awal
+                        </dt>
+                        <dd className="text-sm text-[var(--yvs-muted)] leading-relaxed">
+                            Perkiraan biaya disampaikan dulu setelah diagnosa, baru dikerjakan bila Anda setuju.
+                        </dd>
+                    </div>
+                    <div className="sm:px-8 space-y-1">
+                        <dt className="font-display font-bold text-sm text-[var(--yvs-ink)]">
+                            Dokumentasi &amp; suku cadang terbuka
+                        </dt>
+                        <dd className="text-sm text-[var(--yvs-muted)] leading-relaxed">
+                            Foto kondisi awal, catatan pengerjaan, dan komponen yang diganti tercatat di nomor servis.
+                        </dd>
+                    </div>
+                    <div className="sm:pl-8 space-y-1">
+                        <dt className="font-display font-bold text-sm text-[var(--yvs-ink)]">
+                            Workshop Pekayon, Bekasi Selatan
+                        </dt>
+                        <dd className="text-sm text-[var(--yvs-muted)] leading-relaxed">
+                            Jl. Raya Pekayon No. 25, buka setiap hari pukul 09.00 sampai 18.00 WIB.
+                        </dd>
+                    </div>
+                </dl>
             </div>
         </section>
     );
-}
+});
+
+export default HeroTrackingStage;

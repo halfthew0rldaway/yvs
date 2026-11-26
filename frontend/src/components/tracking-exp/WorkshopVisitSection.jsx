@@ -35,7 +35,7 @@ export default function WorkshopVisitSection({ onFocusTrack }) {
     return (
         <footer
             id="lokasi"
-            className="w-full bg-[#071124] text-white scroll-mt-16 overflow-x-clip"
+            className="w-full bg-[var(--yvs-obsidian)] text-white scroll-mt-16 overflow-x-clip"
         >
             {/* Monumental Closing Statement */}
             <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 pt-20 sm:pt-28 pb-16 border-b border-white/12">
@@ -53,7 +53,7 @@ export default function WorkshopVisitSection({ onFocusTrack }) {
                                 href="https://wa.me/628121034212?text=Halo%20YVS%20Computer,%20saya%20ingin%20tanya%20tentang%20perbaikan%20perangkat%20saya"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="min-h-[50px] inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-semibold transition-colors"
+                                className="min-h-[50px] inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--yvs-accent)] hover:bg-[var(--yvs-accent-hover)] text-[var(--yvs-accent-ink)] text-sm font-semibold transition-colors whitespace-nowrap"
                             >
                                 <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                                 <span>Chat WhatsApp</span>
@@ -109,10 +109,10 @@ export default function WorkshopVisitSection({ onFocusTrack }) {
                 <div className="space-y-4">
                     <h3 className="text-xs font-semibold text-slate-400">Jam operasional</h3>
                     <p className="font-display font-bold text-2xl text-white tabular-nums">
-                        09.00 – 18.00 WIB
+                        09.00 s.d. 18.00 WIB
                     </p>
                     <p className="text-sm text-slate-300 leading-relaxed">
-                        Buka setiap hari (Senin – Minggu). Parkir motor &amp; mobil tersedia di depan ruko, ruang tunggu ber-AC.
+                        Buka setiap hari (Senin sampai Minggu). Parkir motor &amp; mobil tersedia di depan ruko, ruang tunggu ber-AC.
                     </p>
                 </div>
 

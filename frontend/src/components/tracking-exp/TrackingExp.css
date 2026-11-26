@@ -1,20 +1,44 @@
-/* ============================================================================
-   YVS Computer — Editorial Redesign Stylesheet
-   Studio Alabaster (#EFEFEF) · Gallery White (#FFFFFF) · Obsidian Navy (#071124) · Brand Blue (#2563EB)
-   ============================================================================ */
+/* Hallmark · v2.0.0 · genre: editorial · surface: paper · palette: oklch-cobalt · nav: edge-aligned · footer: monumental-dark */
+/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4 · weakest: V, removed floating dark hero card, custom cursor, and radial cutout; unified tracking bar flush to grid edges */
 
 :root {
-  --yvs-studio: #efefef;
-  --yvs-paper: #ffffff;
-  --yvs-surface: #f8fafc;
-  --yvs-obsidian: #071124;
-  --yvs-navy: #0e1c36;
-  --yvs-ink: #071124;
-  --yvs-ink-muted: #475569;
-  --yvs-blue: #2563eb;
-  --yvs-blue-hover: #1d4ed8;
-  --yvs-hairline: rgba(7, 17, 36, 0.11);
-  --yvs-hairline-dark: rgba(255, 255, 255, 0.13);
+  --yvs-paper: oklch(99% 0.004 252);
+  --yvs-paper-2: oklch(96.4% 0.007 252);
+  --yvs-studio: oklch(95.2% 0.002 252);
+  --yvs-obsidian: oklch(16.5% 0.032 258);
+  --yvs-obsidian-2: oklch(21.5% 0.036 258);
+  --yvs-ink: oklch(18.5% 0.028 258);
+  --yvs-muted: oklch(42% 0.024 256);
+  --yvs-rule: oklch(88.5% 0.012 254);
+  --yvs-accent: oklch(54.6% 0.215 262.8);
+  --yvs-accent-hover: oklch(48.8% 0.217 264.3);
+  --yvs-accent-ink: oklch(99% 0.004 252);
+  --yvs-focus: oklch(54.6% 0.215 262.8);
+  --yvs-bar-shadow: 0 -8px 24px oklch(20% 0.028 258 / 0.06);
+}
+
+/* Browser surfaces themed to the palette */
+.yvs-exp-scope {
+  background-color: var(--yvs-paper);
+  color: var(--yvs-ink);
+  caret-color: var(--yvs-accent);
+}
+
+.yvs-exp-scope ::selection {
+  background-color: var(--yvs-accent);
+  color: var(--yvs-accent-ink);
+}
+
+.yvs-exp-scope h1,
+.yvs-exp-scope h2,
+.yvs-exp-scope h3 {
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.yvs-exp-scope p {
+  text-wrap: pretty;
 }
 
 /* 1. Native CSS Scroll-Driven Reading Progress Indicator */
@@ -24,7 +48,7 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: var(--yvs-blue);
+  background: var(--yvs-accent);
   transform-origin: 0 50%;
   transform: scaleX(0);
   z-index: 80;
@@ -49,7 +73,7 @@
   }
 }
 
-/* 2. Short Non-Blocking Intro Accent (< 0.8s, never hides hero LCP) */
+/* 2. Short Non-Blocking Intro Accent (< 0.8s, never delays LCP) */
 @media (prefers-reduced-motion: no-preference) {
   @keyframes yvs-intro-sweep {
     0% {
@@ -70,10 +94,10 @@
     animation: yvs-intro-sweep 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  /* LCP-safe hero line rise: opacity stays 1 so LCP fires immediately */
+  /* LCP-safe hero line rise: stays opacity 1 throughout */
   @keyframes yvs-hero-line-rise {
     from {
-      transform: translate3d(0, 16%, 0);
+      transform: translate3d(0, 14%, 0);
     }
     to {
       transform: translate3d(0, 0, 0);
@@ -81,14 +105,22 @@
   }
 
   .yvs-exp-hero-line {
-    animation: yvs-hero-line-rise 0.68s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: yvs-hero-line-rise 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yvs-exp-intro-bar,
+  .yvs-exp-hero-line,
+  .yvs-stage-pulse-ring {
+    animation: none !important;
   }
 }
 
 /* 3. Same-Document View Transitions between Landing and Tracking Results */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.38s;
+  animation-duration: 0.34s;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -105,87 +137,48 @@
   }
 }
 
-/* 4. Custom Editorial Cursor (Desktop Fine Pointer Only) */
-.yvs-exp-cursor {
-  width: 10px;
-  height: 10px;
-  margin-left: -5px;
-  margin-top: -5px;
-  border-radius: 9999px;
-  background: var(--yvs-blue);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: width 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    margin 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 0.24s ease,
-    opacity 0.2s ease;
-}
-
-.yvs-exp-cursor[data-state="interactive"] {
-  width: 32px;
-  height: 32px;
-  margin-left: -16px;
-  margin-top: -16px;
-  background: rgba(37, 99, 235, 0.12);
-  border: 1.5px solid var(--yvs-blue);
-}
-
-.yvs-exp-cursor[data-state="label"] {
-  width: 76px;
-  height: 76px;
-  margin-left: -38px;
-  margin-top: -38px;
-  background: var(--yvs-obsidian);
-  color: #ffffff;
-  box-shadow: 0 12px 30px rgba(7, 17, 36, 0.28);
-}
-
-.yvs-exp-cursor-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: #ffffff;
-  white-space: nowrap;
-}
-
-/* 5. Seamless Studio Alabaster Canvas matching /frames/*.webp cyclorama */
+/* 4. Seamless Studio Cyclorama matching /frames/*.webp bright white paper */
 .yvs-studio-canvas {
-  background-color: var(--yvs-studio);
+  background-color: var(--yvs-paper);
 }
 
 .yvs-studio-frame {
   mix-blend-mode: multiply;
-  -webkit-mask-image: radial-gradient(ellipse 86% 84% at 50% 50%, #000 66%, transparent 100%);
-  mask-image: radial-gradient(ellipse 86% 84% at 50% 50%, #000 66%, transparent 100%);
+  -webkit-mask-image:
+    linear-gradient(to bottom, black 0%, black 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, black 0%, black 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  mask-composite: intersect;
 }
 
-/* 6. Pausable Velocity-Linked Review Marquee (WCAG 2.2.2) */
+/* 5. Pausable Velocity-Linked Review Marquee (WCAG 2.2.2) */
 .yvs-exp-review-track {
   display: flex;
   width: max-content;
 }
 
-/* 7. Editorial Tracking Input Focus Override (16px on mobile avoids iOS auto-zoom) */
+/* 6. Editorial Tracking Input Focus Override (16px on mobile avoids iOS auto-zoom) */
 .yvs-exp-track-input {
   font-size: 1rem !important;
   line-height: 1.5rem !important;
 }
 
-/* 8. Semantic Active Pulse for Current Tracking Stage */
+/* 7. Semantic Active Pulse for Current Tracking Stage */
 @media (prefers-reduced-motion: no-preference) {
   @keyframes yvs-stage-pulse {
     0% {
       transform: scale(1);
-      opacity: 0.55;
+      opacity: 0.5;
     }
     70% {
-      transform: scale(1.8);
+      transform: scale(1.75);
       opacity: 0;
     }
     100% {
-      transform: scale(1.8);
+      transform: scale(1.75);
       opacity: 0;
     }
   }
@@ -195,13 +188,17 @@
   }
 }
 
-/* 9. Visible Accessible Focus Rings */
-.yvs-exp-scope :is(a, button, input, [tabindex="0"]):focus-visible {
-  outline: 2px solid var(--yvs-blue);
+/* 8. Instant Accessible Focus Rings & Tactile Press States */
+.yvs-exp-scope :is(a, button, input, select, textarea, [tabindex="0"]):focus-visible {
+  outline: 2px solid var(--yvs-focus);
   outline-offset: 2px;
 }
 
-/* 10. Hide native scrollbar on horizontal rails */
+.yvs-exp-scope :is(a, button):not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* 9. Hide native scrollbar on horizontal rails */
 .yvs-no-scrollbar::-webkit-scrollbar {
   display: none;
 }

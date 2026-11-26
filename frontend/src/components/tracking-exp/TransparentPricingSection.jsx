@@ -43,7 +43,7 @@ export default function TransparentPricingSection() {
     return (
         <section
             id="estimasi-biaya"
-            className="w-full bg-white text-[#071124] py-20 sm:py-28 scroll-mt-16 overflow-x-clip border-t border-[#071124]/10"
+            className="w-full bg-[var(--yvs-paper)] text-[var(--yvs-ink)] py-20 sm:py-28 scroll-mt-16 overflow-x-clip border-t border-[var(--yvs-rule)]"
         >
             <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
@@ -52,10 +52,10 @@ export default function TransparentPricingSection() {
                         <MaskedLines
                             as="h2"
                             lines={["Biaya disampaikan dulu,", "baru dikerjakan."]}
-                            className="font-display font-extrabold text-3xl sm:text-4xl lg:text-[2.85rem] text-[#071124] tracking-[-0.035em] leading-[1.08]"
+                            className="font-display font-extrabold text-3xl sm:text-4xl lg:text-[2.85rem] text-[var(--yvs-ink)] tracking-[-0.035em] leading-[1.08]"
                         />
 
-                        <p className="text-sm sm:text-base text-[#475569] leading-relaxed max-w-md">
+                        <p className="text-sm sm:text-base text-[var(--yvs-muted)] leading-relaxed max-w-md">
                             Tarif perbaikan mengikuti merek perangkat, tingkat kerusakan, dan pilihan suku cadang. Anda selalu menerima rincian biayanya lebih dulu sebelum pengerjaan dimulai.
                         </p>
 
@@ -65,7 +65,7 @@ export default function TransparentPricingSection() {
                                     href="https://wa.me/628121034212?text=Halo%20YVS%20Computer,%20saya%20ingin%20tanya%20kisaran%20biaya%20perbaikan%20untuk%20perangkat%20saya."
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="min-h-[48px] inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#071124] hover:bg-[#2563EB] text-white text-sm font-semibold transition-colors"
+                                    className="min-h-[48px] inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--yvs-obsidian)] hover:bg-[var(--yvs-accent)] text-white text-sm font-semibold transition-colors whitespace-nowrap"
                                 >
                                     <span>Tanya kisaran untuk seri perangkat Anda</span>
                                     <ArrowUpRight className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -75,25 +75,25 @@ export default function TransparentPricingSection() {
                     </div>
 
                     {/* Right Swiss Hairline Ledger */}
-                    <div className="lg:col-span-7 divide-y divide-[#071124]/12 border-y border-[#071124]/12">
+                    <div className="lg:col-span-7 divide-y divide-[var(--yvs-rule)] border-y border-[var(--yvs-rule)]">
                         {PRICING_ROWS.map((row, idx) => (
                             <div
                                 key={row.service}
-                                className="py-6 flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 sm:gap-6 hover:bg-[#F8FAFC] transition-colors px-3 -mx-3 rounded-xl"
+                                className="py-6 flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 sm:gap-6 hover:bg-[var(--yvs-paper-2)] transition-colors px-3 -mx-3 rounded-xl"
                             >
                                 <div className="flex items-baseline gap-4 min-w-0">
-                                    <span className="font-mono text-xs font-bold text-[#2563EB] shrink-0">
+                                    <span className="font-mono text-xs font-bold text-[var(--yvs-accent)] shrink-0">
                                         0{idx + 1}
                                     </span>
                                     <div className="space-y-1 min-w-0">
-                                        <h3 className="font-display font-bold text-base sm:text-lg text-[#071124] leading-snug">
+                                        <h3 className="font-display font-bold text-base sm:text-lg text-[var(--yvs-ink)] leading-snug">
                                             {row.service}
                                         </h3>
-                                        <p className="text-xs sm:text-sm text-[#475569]">{row.scope}</p>
+                                        <p className="text-xs sm:text-sm text-[var(--yvs-muted)]">{row.scope}</p>
                                     </div>
                                 </div>
 
-                                <span className="text-xs sm:text-sm font-semibold text-[#071124] sm:text-right pl-8 sm:pl-0 shrink-0">
+                                <span className="text-xs sm:text-sm font-semibold text-[var(--yvs-ink)] sm:text-right pl-8 sm:pl-0 shrink-0">
                                     {row.estimate}
                                 </span>
                             </div>
