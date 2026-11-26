@@ -342,9 +342,7 @@ export default function ServiceJourneyTimeline() {
             const top = sec.getBoundingClientRect().top + window.scrollY;
             const scrollable = Math.max(0, sec.offsetHeight - window.innerHeight);
             const target = top + scrollable * (idx / (SHARED_PROCESS_STEPS.length - 1));
-            const lenis = window.__yvsLenis;
-            if (lenis) lenis.scrollTo(target, { duration: 0.75 });
-            else window.scrollTo({ top: target, behavior: "smooth" });
+            window.scrollTo({ top: target, behavior: "smooth" });
         }
     };
 

@@ -1,4 +1,3 @@
-import { Capacitor } from "@capacitor/core";
 import { getAuthToken } from "../utils/authStorage";
 
 /**
@@ -21,9 +20,9 @@ export const AppConfig = {
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL || STAGING_API_BASE,
     assetBaseUrl: import.meta.env.VITE_API_ASSET_BASE_URL || STAGING_ASSET_BASE,
 
-    // Cek apakah platform native Capacitor (Android/iOS)
+    // Cek apakah platform native Capacitor (Android/iOS) tanpa menarik chunk Capacitor di web
     get isNative() {
-        return Capacitor.isNativePlatform();
+        return Boolean(typeof window !== "undefined" && window.Capacitor?.isNativePlatform?.());
     },
 
     /**

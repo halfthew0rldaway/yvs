@@ -33,7 +33,8 @@ if (typeof window !== "undefined") {
         }, { once: true });
     }
 
-    // Defer native bridges & offline ERP queue init out of initial public /tracking LCP waterfall
+    // Defer native bridges & offline ERP queue strictly to native Capacitor builds
+    // or signed-in ERP sessions so public /tracking visitors pay zero bundle/IndexedDB cost.
     const scheduleBackgroundInit = () => {
         import("./services/nativeServices")
             .then(({ DeviceService }) => {
@@ -52,12 +53,22 @@ if (typeof window !== "undefined") {
             .catch((e) => console.warn("[AppInit] offlineSyncManager.init warning:", e));
     };
 
+    const hasStaffSession = (() => {
+        try {
+            return Boolean(window.localStorage.getItem("token") || window.sessionStorage.getItem("token"));
+        } catch (_) {
+            return false;
+        }
+    })();
+
     if (isNativeCapacitor()) {
         scheduleBackgroundInit();
-    } else if (typeof window.requestIdleCallback === "function") {
-        window.requestIdleCallback(scheduleBackgroundInit, { timeout: 2500 });
-    } else {
-        window.addEventListener("load", () => window.setTimeout(scheduleBackgroundInit, 400), { once: true });
+    } else if (hasStaffSession) {
+        if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(scheduleBackgroundInit, { timeout: 2500 });
+        } else {
+            window.addEventListener("load", () => window.setTimeout(scheduleBackgroundInit, 400), { once: true });
+        }
     }
 }
 

@@ -8,9 +8,6 @@
  * - Mobile Browser / PWA: High-res PDF Download + Save as PDF
  */
 
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { isNativePlatform } from "./nativeServices";
 import toast from "react-hot-toast";
 
 export const DocumentPrintService = {
@@ -48,6 +45,11 @@ export const DocumentPrintService = {
             format = "a5", // default A5 (210x148mm = half A4 continuous form)
             marginMm = 0
         } = options;
+
+        const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+            import("html2canvas"),
+            import("jspdf"),
+        ]);
 
         const canvas = await html2canvas(element, {
             scale,

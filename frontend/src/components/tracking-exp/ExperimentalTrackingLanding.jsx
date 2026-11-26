@@ -3,7 +3,6 @@ import "./TrackingExp.css";
 import {
     ScrollProgressBar,
     IntroReveal,
-    useLenisSmoothScroll,
     smoothScrollToTarget,
 } from "./MotionPrimitives";
 import EditorialNavbar from "./EditorialNavbar";
@@ -35,7 +34,7 @@ function DeferredSection({ id, minHeight = 560, bgClass = "bg-white", armed = fa
                     observer.disconnect();
                 }
             },
-            { rootMargin: "200px 0px" }
+            { rootMargin: "360px 0px" }
         );
         observer.observe(hostRef.current);
         return () => observer.disconnect();
@@ -82,15 +81,13 @@ export default function ExperimentalTrackingLanding({
     const [armed, setArmed] = useState(false);
     const [mountAll, setMountAll] = useState(false);
 
-    useLenisSmoothScroll(!isScannerOpen);
-
-    // Arm below-the-fold sections strictly on real scroll/wheel/touch/nav intent
-    // so initial cold LCP never wastes network/CPU on offscreen chunks or /frames/.
+    // Arm progressive IntersectionObserver on real scroll/wheel/touch/nav intent
+    // (mounts each below-the-fold chapter incrementally as it nears the viewport,
+    // avoiding a 5-section mount stampede on the first scroll notch).
     useEffect(() => {
-        if (mountAll) return;
+        if (armed && mountAll) return;
         const armNow = () => {
             setArmed(true);
-            if (window.scrollY > 40) setMountAll(true);
         };
         const armAndMount = () => {
             setArmed(true);
@@ -102,7 +99,7 @@ export default function ExperimentalTrackingLanding({
             }
         };
 
-        window.addEventListener("scroll", armNow, { passive: true });
+        window.addEventListener("scroll", armNow, { passive: true, once: true });
         window.addEventListener("wheel", armNow, { passive: true, once: true });
         window.addEventListener("touchmove", armNow, { passive: true, once: true });
         window.addEventListener("keydown", onKeyScroll, { passive: true });
@@ -115,7 +112,7 @@ export default function ExperimentalTrackingLanding({
             window.removeEventListener("keydown", onKeyScroll);
             window.removeEventListener("yvs:arm-sections", armAndMount);
         };
-    }, [mountAll]);
+    }, [armed, mountAll]);
 
     const handleFocusTrack = useCallback(() => {
         smoothScrollToTarget("track-lookup", -72);

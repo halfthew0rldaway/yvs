@@ -345,26 +345,22 @@
   }
 }
 
-/* 12. Subtle Architectural Hero Dot Matrix with Soft Radial Mask */
+/* 12. Subtle Architectural Hero Dot Matrix (no offscreen CSS mask buffer) */
 .yvs-hero-dot-grid {
-  background-image: radial-gradient(
-    oklch(18.5% 0.028 258 / 0.11) 1px,
-    transparent 1px
-  );
-  background-size: 24px 24px;
-  -webkit-mask-image: radial-gradient(
-    ellipse 74% 62% at 50% 34%,
-    black 18%,
-    transparent 96%
-  );
-  mask-image: radial-gradient(
-    ellipse 74% 62% at 50% 34%,
-    black 18%,
-    transparent 96%
-  );
+  background-image:
+    radial-gradient(
+      ellipse 74% 62% at 50% 34%,
+      transparent 22%,
+      var(--yvs-paper) 94%
+    ),
+    radial-gradient(
+      oklch(18.5% 0.028 258 / 0.11) 1px,
+      transparent 1px
+    );
+  background-size: 100% 100%, 24px 24px;
 }
 
-/* 13. Precision Cobalt Border Beam (GPU transform rotation, zero repaint) */
+/* 13. Precision Cobalt Border Beam (pauses completely when idle for 0% cold GPU drain) */
 @keyframes yvs-beam-spin {
   from {
     transform: translate(-50%, -50%) rotate(0deg);
@@ -389,7 +385,7 @@
   -webkit-mask-composite: xor;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
-  opacity: 0.45;
+  opacity: 0;
   transition: opacity 0.25s ease;
 }
 
@@ -413,7 +409,13 @@
     transparent 360deg
   );
   animation: yvs-beam-spin 5.5s linear infinite;
+  animation-play-state: paused;
+}
+
+.yvs-border-beam-wrap:hover .yvs-border-beam-ring::before,
+.yvs-border-beam-wrap:focus-within .yvs-border-beam-ring::before {
   will-change: transform;
+  animation-play-state: running;
 }
 
 /* 14. Tactile CTA Shimmer Sweep (hover/focus only, GPU translate3d) */

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MOTION_TOKENS, loadGsapRuntime } from "./motionTokens";
+import { loadGsapRuntime } from "./motionTokens";
 
 /**
  * Detect prefers-reduced-motion reactively.
@@ -22,119 +22,24 @@ export function usePrefersReducedMotion() {
 }
 
 /**
- * Smooth scrolling via dynamically imported Lenis synced cleanly into GSAP ticker.
- * Boots on first wheel/scroll interaction on desktop fine pointers so initial
- * mobile/desktop load incurs zero TBT/LCP overhead.
- */
-export function useLenisSmoothScroll(enabled = true) {
-    const lenisRef = useRef(null);
-    const reducedMotion = usePrefersReducedMotion();
-
-    useEffect(() => {
-        if (!enabled || reducedMotion || typeof window === "undefined") return;
-        if (window.matchMedia("(pointer: coarse)").matches) return;
-
-        let cancelled = false;
-        let booted = false;
-        let cleanupFn = null;
-
-        const boot = async () => {
-            if (booted || cancelled) return;
-            booted = true;
-            const [{ default: Lenis }, { gsap, ScrollTrigger }] = await Promise.all([
-                import("lenis"),
-                loadGsapRuntime(),
-            ]);
-            if (cancelled) return;
-
-            const lenis = new Lenis({
-                duration: 1.0,
-                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                orientation: "vertical",
-                gestureOrientation: "vertical",
-                smoothWheel: true,
-                wheelMultiplier: 0.95,
-            });
-
-            lenisRef.current = lenis;
-            window.__yvsLenis = lenis;
-            window.__yvsScrollVelocity = 0;
-
-            lenis.on("scroll", (e) => {
-                window.__yvsScrollVelocity = e?.velocity || 0;
-                ScrollTrigger.update();
-            });
-
-            const tick = (time) => {
-                lenis.raf(time * 1000);
-            };
-            gsap.ticker.add(tick);
-            gsap.ticker.lagSmoothing(0);
-
-            let resizeTimer = null;
-            const onResize = () => {
-                if (resizeTimer) window.clearTimeout(resizeTimer);
-                resizeTimer = window.setTimeout(() => {
-                    ScrollTrigger.refresh();
-                }, 180);
-            };
-            window.addEventListener("resize", onResize, { passive: true });
-
-            cleanupFn = () => {
-                window.removeEventListener("resize", onResize);
-                if (resizeTimer) window.clearTimeout(resizeTimer);
-                gsap.ticker.remove(tick);
-                lenis.destroy();
-                lenisRef.current = null;
-                if (window.__yvsLenis === lenis) delete window.__yvsLenis;
-                window.__yvsScrollVelocity = 0;
-            };
-        };
-
-        const onIntent = () => {
-            boot().catch(() => {});
-        };
-
-        window.addEventListener("wheel", onIntent, { passive: true, once: true });
-        window.addEventListener("scroll", onIntent, { passive: true, once: true });
-
-        return () => {
-            cancelled = true;
-            window.removeEventListener("wheel", onIntent);
-            window.removeEventListener("scroll", onIntent);
-            if (cleanupFn) cleanupFn();
-        };
-    }, [enabled, reducedMotion]);
-
-    return lenisRef;
-}
-
-/**
- * Scroll smoothly to a target element or Y offset, respecting Lenis & reduced motion.
+ * Native compositor smooth-scroll helper (respects `prefers-reduced-motion`).
+ * Uses browser-native hardware vsync scrolling instead of JS wheel interception
+ * so scroll input stays instant even while lazy sections hydrate.
  */
 export function smoothScrollToTarget(target, offset = -72) {
     if (typeof window === "undefined") return;
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    const lenis = window.__yvsLenis;
 
     if (target === 0 || target === "top") {
-        if (lenis && !reduced) {
-            lenis.scrollTo(0, { duration: 0.95 });
-        } else {
-            window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
-        }
+        window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
         return;
     }
 
     const el = typeof target === "string" ? document.getElementById(target) : target;
     if (!el) return;
 
-    if (lenis && !reduced) {
-        lenis.scrollTo(el, { offset, duration: 1.0 });
-    } else {
-        const y = el.getBoundingClientRect().top + window.scrollY + offset;
-        window.scrollTo({ top: Math.max(0, y), behavior: reduced ? "auto" : "smooth" });
-    }
+    const y = el.getBoundingClientRect().top + window.scrollY + offset;
+    window.scrollTo({ top: Math.max(0, y), behavior: reduced ? "auto" : "smooth" });
 }
 
 /**
