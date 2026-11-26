@@ -234,8 +234,46 @@
   animation-direction: reverse;
 }
 
+/* Horizontal Dual-Track Kinetic Footer Mast */
+@keyframes yvs-marquee-horizontal {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(calc(-100% - var(--yvs-marquee-gap, 2.5rem)), 0, 0);
+  }
+}
+
+.yvs-marquee-h-lane {
+  animation: yvs-marquee-horizontal var(--yvs-marquee-duration, 42s) linear infinite;
+  will-change: transform;
+}
+
+.yvs-marquee-h-lane[data-reverse="true"] {
+  animation-direction: reverse;
+}
+
+.yvs-footer-mast-edge {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 7%,
+    black 93%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 7%,
+    black 93%,
+    transparent 100%
+  );
+}
+
 .yvs-marquee-group:hover .yvs-marquee-lane,
-.yvs-marquee-group[data-paused="true"] .yvs-marquee-lane {
+.yvs-marquee-group:hover .yvs-marquee-h-lane,
+.yvs-marquee-group[data-paused="true"] .yvs-marquee-lane,
+.yvs-marquee-group[data-paused="true"] .yvs-marquee-h-lane {
   animation-play-state: paused;
 }
 
@@ -256,7 +294,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .yvs-stack-card,
-  .yvs-marquee-lane {
+  .yvs-marquee-lane,
+  .yvs-marquee-h-lane {
     will-change: auto;
     animation: none !important;
   }

@@ -157,18 +157,79 @@ export default function WorkshopVisitSection({ onFocusTrack }) {
                 </div>
             </div>
 
-            {/* Oversized Bleed-Edge Brand Mast + Legal Bar */}
-            <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 pt-10 pb-8 space-y-8">
-                <p
-                    aria-hidden="true"
-                    className="font-display font-extrabold text-[clamp(3rem,11.5vw,10.5rem)] leading-[0.88] tracking-[-0.045em] text-white/[0.08] select-none"
+            {/* Full-Bleed Dual-Track Kinetic Brand Mast */}
+            <div
+                aria-hidden="true"
+                className="yvs-marquee-group yvs-footer-mast-edge w-full pt-10 sm:pt-12 pb-6 sm:pb-8 space-y-2.5 sm:space-y-3 select-none overflow-hidden"
+            >
+                {/* Track 1 — Monumental Upper Display Wordmark (flows left) */}
+                <div
+                    style={{
+                        "--yvs-marquee-duration": "44s",
+                        "--yvs-marquee-gap": "2.75rem",
+                    }}
+                    className="flex flex-row overflow-hidden [gap:var(--yvs-marquee-gap)]"
                 >
-                    YVS COMPUTER
-                </p>
+                    {[0, 1, 2].map((copyIdx) => (
+                        <div
+                            key={copyIdx}
+                            className="yvs-marquee-h-lane flex shrink-0 items-center [gap:var(--yvs-marquee-gap)]"
+                        >
+                            {[0, 1].map((itemIdx) => (
+                                <span
+                                    key={itemIdx}
+                                    className="inline-flex items-center gap-8 sm:gap-11 whitespace-nowrap"
+                                >
+                                    <span className="font-display font-extrabold text-[clamp(2.85rem,8.5vw,7.75rem)] leading-[0.88] tracking-[-0.045em] text-white/[0.11] transition-colors duration-300 hover:text-white/25">
+                                        YVS COMPUTER
+                                    </span>
+                                    <span className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full bg-blue-500/45 shrink-0" />
+                                </span>
+                            ))}
+                        </div>
+                    ))}
+                </div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+                {/* Track 2 — Architectural Counter-Track Attribution (flows right) */}
+                <div
+                    style={{
+                        "--yvs-marquee-duration": "52s",
+                        "--yvs-marquee-gap": "2.25rem",
+                    }}
+                    className="flex flex-row overflow-hidden [gap:var(--yvs-marquee-gap)]"
+                >
+                    {[0, 1, 2].map((copyIdx) => (
+                        <div
+                            key={copyIdx}
+                            data-reverse="true"
+                            className="yvs-marquee-h-lane flex shrink-0 items-center [gap:var(--yvs-marquee-gap)]"
+                        >
+                            {[0, 1].map((itemIdx) => (
+                                <span
+                                    key={itemIdx}
+                                    className="inline-flex items-center gap-5 sm:gap-8 whitespace-nowrap"
+                                >
+                                    <span className="inline-flex items-baseline gap-2.5 sm:gap-4">
+                                        <span className="font-mono font-medium text-xs sm:text-base tracking-[0.22em] uppercase text-slate-400/75">
+                                            BY
+                                        </span>
+                                        <span className="font-display font-extrabold text-[clamp(1.5rem,3.6vw,3.15rem)] leading-[0.95] tracking-[-0.03em] text-blue-400/55 transition-colors duration-300 hover:text-blue-400/85">
+                                            KOMPUTERAWET.COM
+                                        </span>
+                                    </span>
+                                    <span className="w-8 sm:w-14 h-px bg-white/15 shrink-0" />
+                                </span>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Grounded Legal & Navigation Bar */}
+            <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 pb-8 pt-2">
+                <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
                     <span>
-                        &copy; {new Date().getFullYear()} YVS Computer · Yangversa Computer, Bekasi Selatan.
+                        &copy; {new Date().getFullYear()} YVS Computer · by Komputerawet.com, Bekasi Selatan.
                     </span>
                     <button
                         type="button"
