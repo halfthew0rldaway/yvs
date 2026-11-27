@@ -32,6 +32,12 @@ jobs:
       - name: Install Android 35 platform
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Cache persistent staging debug keystore
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: yvs-staging-debug-keystore-v1
+
       - name: Build current staging APK
         working-directory: frontend
         env:

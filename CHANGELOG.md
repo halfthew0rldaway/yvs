@@ -32,6 +32,8 @@ This project follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PA
 - **Live CSAT KPI Broadcast (`tracking.controller.js`)**: Broadcast `dashboard:refresh` when a customer submits a technician rating via `/tracking` so live dashboards refresh immediately.
 - **Sparepart-to-Invoice Promo Recalculation (`sparepart.controller.js`)**: Recomputed linked promotion discounts via `calculatePromotionDiscount` when spareparts are added/removed on tickets that already have an invoice.
 - **PWA APK Download Protection (`frontend/vite.config.js`)**: Added `/^\/downloads\//` to Workbox `navigateFallbackDenylist` so installed PWAs never intercept `/downloads/servio-staging.apk` with `/index.html`.
+- **Android PWA Install & APK Delivery (`frontend/nginx.conf`, `frontend/vite.config.js`, `.github/workflows/deploy-staging.yml`)**: Served `/manifest.webmanifest` as `application/manifest+json` (previously `application/octet-stream`), added explicit `id: "/"`, `purpose: "any"`, and `Content-Disposition: attachment` for `.apk` downloads, plus cached `~/.android/debug.keystore` in staging CI for consistent APK upgrade signatures.
+- **Mobile Capacitor HTTPS CORS & Login Fallback (`backend/src/app.js`, `auth.controller.js`, `frontend/src/pages/Login.jsx`)**: Allowed `https://localhost`, `https://127.0.0.1`, `ionic://localhost`, and `*.komputerawet.com` origins so Capacitor Android (`androidScheme: "https"`) login/API calls succeed instead of failing preflight with CORS 500, added `siti` -> `siti.admin` login alias + demo button alignment, and separated connection errors from invalid-credential alerts in `Login.jsx`.
 - **Syntax Typo Guard (`TicketQrModal.jsx`)**: Removed accidental `DUHimport` prefix on line 1.
 
 ---

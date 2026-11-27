@@ -40,6 +40,7 @@ async function findLoginUser(identifier, client = prisma) {
         arni: ["arni"], owner2: ["arni"], "arni.owner": ["arni"],
         vivero: ["vivero"], owner3: ["vivero"], "vivero.owner": ["vivero"],
         manajer: ["manajer"], maryam: ["manajer"], admin: ["admin"],
+        siti: ["siti", "siti.admin"],
         teknisi1: ["teknisi1"], budi: ["teknisi1"]
     };
     for (const username of aliases[cleanId] || []) {
@@ -55,7 +56,9 @@ async function findLoginUser(identifier, client = prisma) {
         vivero: ["vivero@workshop.com"], owner3: ["vivero@workshop.com"],
         "vivero.owner": ["vivero@workshop.com"],
         manajer: ["manajer@workshop.com"], maryam: ["manajer@workshop.com"],
-        admin: ["admin@workshop.com"], teknisi1: ["teknisi1@workshop.com"],
+        admin: ["admin@workshop.com"],
+        siti: ["siti@workshop.com", "siti.admin@workshop.com"],
+        teknisi1: ["teknisi1@workshop.com"],
         budi: ["teknisi1@workshop.com"]
     };
     for (const email of aliasEmails[cleanId] || []) {

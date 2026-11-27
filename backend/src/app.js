@@ -62,10 +62,13 @@ const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:3000",
     "https://staging.101.32.127.55.sslip.io",
+    "https://staging.komputerawet.com",
     "https://komputerawet.com",
     "https://www.komputerawet.com",
     "capacitor://localhost",
-    "http://localhost"
+    "ionic://localhost",
+    "http://localhost",
+    "https://localhost"
 ].filter(Boolean);
 
 app.use(cors({
@@ -75,7 +78,8 @@ app.use(cors({
         if (
             allowedOrigins.includes(origin) || 
             origin.endsWith(".sslip.io") || 
-            /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+            origin.endsWith(".komputerawet.com") ||
+            /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
         ) {
             return callback(null, true);
         }

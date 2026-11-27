@@ -73,7 +73,11 @@ export default function Login() {
             login(res.data.user, res.data.token, rememberMe);
             navigate(redirectUrl || landingRouteFor(res.data.user), { replace: true });
         } catch (err) {
-            setError(err.response?.data?.message || "Kredensial tidak valid. Silakan coba lagi.");
+            if (!err.response) {
+                setError("Tidak dapat terhubung ke server staging. Periksa koneksi internet Anda lalu coba lagi.");
+            } else {
+                setError(err.response?.data?.message || "Username atau kata sandi salah. Silakan coba lagi.");
+            }
         } finally {
             setLoading(false);
         }
@@ -299,7 +303,7 @@ export default function Login() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => handleSelectDemoAccount("siti")}
+                                onClick={() => handleSelectDemoAccount("siti.admin")}
                                 className="text-left px-2 py-1.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer"
                             >
                                 <span className="block text-3xs font-semibold text-slate-700 group-hover:text-blue-700">Service Advisor</span>

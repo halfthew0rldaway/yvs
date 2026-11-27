@@ -28,3 +28,10 @@ test("leadership aliases use the current owner and the fictional Bambang alias i
     const vivero = { username: "vivero", email: "vivero@workshop.com" };
     assert.equal(await findLoginUser("pimpinan", users([formerOwner, vivero])), vivero);
 });
+
+test("siti alias falls back to siti.admin when exact siti username does not exist", async () => {
+    const sitiAdmin = { username: "siti.admin", email: "siti.admin@workshop.com" };
+    assert.equal(await findLoginUser("siti", users([sitiAdmin])), sitiAdmin);
+    const customSiti = { username: "siti", email: "custom@example.com" };
+    assert.equal(await findLoginUser("siti", users([sitiAdmin, customSiti])), customSiti);
+});
