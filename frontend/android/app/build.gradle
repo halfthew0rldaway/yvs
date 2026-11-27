@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 def servioVersionCode = (System.getenv('SERVIO_VERSION_CODE') ?: '1').toInteger()
+def pkgFile = file('../../package.json')
+def servioVersionName = '1.1.1'
+if (pkgFile.exists()) {
+    def parsedPkg = new groovy.json.JsonSlurper().parseText(pkgFile.text)
+    if (parsedPkg?.version) {
+        servioVersionName = parsedPkg.version.toString()
+    }
+}
 
 android {
     namespace "id.yangversa.servio"
@@ -9,7 +17,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode servioVersionCode
-        versionName "1.0.${servioVersionCode}"
+        versionName "${servioVersionName}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

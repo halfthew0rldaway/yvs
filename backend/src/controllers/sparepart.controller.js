@@ -2,6 +2,22 @@ const prisma = require("../config/database");
 const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
 const { normalizeText, normalizeSparepartCategory, normalizePhone } = require("../utils/normalize");
 const { hasPermission } = require("../services/authorization.service");
+const { calculatePromotionDiscount } = require("../utils/promotionMath");
+
+function computeSyncedInvoiceTotals(existingInvoice, biayaSparepart) {
+    const subtotal = (existingInvoice.biaya_jasa || 0) + biayaSparepart;
+    let diskon = existingInvoice.diskon || 0;
+    if (existingInvoice.promotion_id && existingInvoice.promotion) {
+        diskon = calculatePromotionDiscount(existingInvoice.promotion, {
+            biaya_jasa: existingInvoice.biaya_jasa || 0,
+            biaya_sparepart: biayaSparepart,
+        }).discount;
+    } else {
+        diskon = Math.min(subtotal, Math.max(0, diskon));
+    }
+    const total_biaya = Math.max(0, subtotal - diskon);
+    return { biaya_sparepart: biayaSparepart, diskon, total_biaya };
+}
 
 // Mengambil seluruh data sparepart
 async function getAll(req, res) {
@@ -533,18 +549,20 @@ async function use(req, res) {
             });
 
             // Sinkronisasi invoice jika sudah pernah diterbitkan sebelumnya
-            const existingInvoice = await tx.invoice.findUnique({ where: { tiket_id: Number(tiket_id) } });
+            const existingInvoice = await tx.invoice.findUnique({
+                where: { tiket_id: Number(tiket_id) },
+                include: { promotion: true },
+            });
             if (existingInvoice) {
                 const allPenggunaan = await tx.penggunaanSparepart.findMany({
                     where: { tiket_id: Number(tiket_id) },
                     include: { sparepart: true }
                 });
                 const biaya_sparepart = allPenggunaan.reduce((sum, p) => sum + (p.sparepart.harga * p.jumlah), 0);
-                const subtotal = existingInvoice.biaya_jasa + biaya_sparepart;
-                const total_biaya = Math.max(0, subtotal - (existingInvoice.diskon || 0));
+                const synced = computeSyncedInvoiceTotals(existingInvoice, biaya_sparepart);
                 await tx.invoice.update({
                     where: { id: existingInvoice.id },
-                    data: { biaya_sparepart, total_biaya }
+                    data: synced
                 });
             }
 
@@ -589,18 +607,20 @@ async function removeUsage(req, res) {
             await tx.penggunaanSparepart.delete({ where: { id } });
 
             // Update invoice jika sudah terbit
-            const existingInvoice = await tx.invoice.findUnique({ where: { tiket_id: penggunaan.tiket_id } });
+            const existingInvoice = await tx.invoice.findUnique({
+                where: { tiket_id: penggunaan.tiket_id },
+                include: { promotion: true },
+            });
             if (existingInvoice) {
                 const remainingPenggunaan = await tx.penggunaanSparepart.findMany({
                     where: { tiket_id: penggunaan.tiket_id },
                     include: { sparepart: true }
                 });
                 const biaya_sparepart = remainingPenggunaan.reduce((sum, p) => sum + (p.sparepart.harga * p.jumlah), 0);
-                const subtotal = existingInvoice.biaya_jasa + biaya_sparepart;
-                const total_biaya = Math.max(0, subtotal - (existingInvoice.diskon || 0));
+                const synced = computeSyncedInvoiceTotals(existingInvoice, biaya_sparepart);
                 await tx.invoice.update({
                     where: { id: existingInvoice.id },
-                    data: { biaya_sparepart, total_biaya }
+                    data: synced
                 });
             }
         });

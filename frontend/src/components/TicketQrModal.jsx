@@ -80,6 +80,7 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
     const [selectedSizeId, setSelectedSizeId] = useState("80x50");
     const [qrTarget, setQrTarget] = useState("erp"); // "erp" (Buka di ERP Teknisi) | "tracking" (Portal Publik Pelanggan) | "text" (Nomor Tiket Saja)
     const [printCount, setPrintCount] = useState(1);
+    const [showPhone, setShowPhone] = useState(true);
     const [qrDataUrl, setQrDataUrl] = useState("");
     const [copiedCode, setCopiedCode] = useState(false);
 
@@ -168,8 +169,51 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
         : "-";
 
     const customerName = tiket.perangkat?.customer?.nama || "-";
+    const customerPhone = (tiket.perangkat?.customer?.nomor_telepon || "").trim();
     const deviceName = `${tiket.perangkat?.merek || ""} ${tiket.perangkat?.model || ""}`.trim() || "Perangkat Unit";
     const complaints = tiket.keluhan || "-";
+    const isExpress = (tiket.sla_paket || "").toLowerCase() === "express";
+    const isClaim = Boolean(tiket.is_garansi_claim);
+    const priorityTag = isClaim ? "KLAIM" : isExpress ? "EXP" : "";
+
+    const snRaw = (tiket.perangkat?.serial_number || "").trim();
+    const snShort = snRaw ? (snRaw.length > 8 ? `…${snRaw.slice(-6)}` : snRaw) : "";
+
+    const kelengkapanSummary = useMemo(() => {
+        const items = [];
+        if (tiket.kelengkapan_detail) {
+            try {
+                let parsed =
+                    typeof tiket.kelengkapan_detail === "string"
+                        ? JSON.parse(tiket.kelengkapan_detail)
+                        : tiket.kelengkapan_detail;
+                if (typeof parsed === "string") parsed = JSON.parse(parsed);
+                if (Array.isArray(parsed)) {
+                    for (const entry of parsed) {
+                        if (typeof entry === "string" && entry.trim()) {
+                            items.push(entry.trim());
+                        } else if (entry && typeof entry === "object") {
+                            const active = entry.checked ?? entry.present ?? entry.ada ?? true;
+                            const label = entry.label || entry.name || entry.nama;
+                            if (active && label) items.push(String(label).trim());
+                        }
+                    }
+                } else if (parsed && typeof parsed === "object") {
+                    for (const [k, v] of Object.entries(parsed)) {
+                        if (typeof v === "boolean" && v) items.push(k);
+                        else if (typeof v === "string" && v.trim()) items.push(v.trim());
+                        else if (v && typeof v === "object" && (v.checked ?? v.present ?? v.ada ?? true)) {
+                            const label = v.label || v.name || v.nama || k;
+                            if (label) items.push(String(label).trim());
+                        }
+                    }
+                }
+            } catch (_) {}
+        }
+        if (items.length > 0) return items.join(", ");
+        const fallback = (tiket.kelengkapan || "").trim();
+        return fallback && fallback !== "-" ? fallback : "";
+    }, [tiket.kelengkapan_detail, tiket.kelengkapan]);
 
     const modalContent = (
         <div className="modal-shell z-[9999] bg-slate-950/75 backdrop-blur-xs qr-print-portal flex items-center justify-center p-3 sm:p-4">
@@ -386,24 +430,39 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                         </div>
                     </div>
 
-                    {/* Qty Cetak Multiplier */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-2xs text-slate-500 font-semibold">Qty Stiker:</span>
-                        <div className="flex items-center gap-1">
-                            {[1, 2, 3, 5].map((qty) => (
-                                <button
-                                    key={qty}
-                                    type="button"
-                                    onClick={() => setPrintCount(qty)}
-                                    className={`px-2 py-0.5 rounded-lg text-2xs font-mono font-bold transition-all border cursor-pointer ${
-                                        printCount === qty
-                                            ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
-                                    }`}
-                                >
-                                    {qty}x
-                                </button>
-                            ))}
+                    {/* Qty Cetak Multiplier & Toggle WA */}
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                        <button
+                            type="button"
+                            onClick={() => setShowPhone((v) => !v)}
+                            aria-pressed={showPhone}
+                            className={`px-2.5 py-0.5 rounded-lg text-2xs font-bold transition-all border cursor-pointer ${
+                                showPhone
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                            }`}
+                            title="Tampilkan nomor WhatsApp pelanggan pada stiker untuk respon cepat saat darurat/offline"
+                        >
+                            {showPhone ? "No. WA: Tampil" : "No. WA: Sembunyi"}
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <span className="text-2xs text-slate-500 font-semibold">Qty Stiker:</span>
+                            <div className="flex items-center gap-1">
+                                {[1, 2, 3, 5].map((qty) => (
+                                    <button
+                                        key={qty}
+                                        type="button"
+                                        onClick={() => setPrintCount(qty)}
+                                        className={`px-2 py-0.5 rounded-lg text-2xs font-mono font-bold transition-all border cursor-pointer ${
+                                            printCount === qty
+                                                ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
+                                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                                        }`}
+                                    >
+                                        {qty}x
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -443,13 +502,20 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                         {/* Meta Right */}
                                         <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
                                             <div>
-                                                <div className="flex items-center gap-1">
-                                                    <img src="/logo-yangversa.png" alt="YVS" className="w-2.5 h-2.5 object-contain shrink-0" />
-                                                    <span className="font-extrabold text-[6pt] uppercase tracking-wider text-slate-900 leading-none">
-                                                        YVS COMPUTER
-                                                    </span>
+                                                <div className="flex items-center justify-between gap-1">
+                                                    <div className="flex items-center gap-1 min-w-0">
+                                                        <img src="/logo-yangversa.png" alt="YVS" className="w-2.5 h-2.5 object-contain shrink-0" />
+                                                        <span className="font-extrabold text-[5.5pt] uppercase tracking-wider text-slate-900 leading-none whitespace-nowrap">
+                                                            {priorityTag ? "YVS COM" : "YVS COMPUTER"}
+                                                        </span>
+                                                    </div>
+                                                    {priorityTag && (
+                                                        <span className="px-1 py-0.2 border border-slate-900 text-slate-900 rounded font-mono font-black text-[4.5pt] leading-none shrink-0">
+                                                            {priorityTag}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <div className="mt-0.5 px-1 py-0.2 bg-slate-900 text-white rounded font-mono font-black text-[7pt] leading-tight text-center tracking-tight truncate">
+                                                <div className="mt-0.5 px-1 py-0.2 bg-slate-900 text-white rounded font-mono font-black text-[6.5pt] leading-tight text-center tracking-tight truncate">
                                                     {tiket.nomor_tiket}
                                                 </div>
                                             </div>
@@ -458,8 +524,8 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                                 <p className="font-bold text-slate-900 truncate">
                                                     {deviceName}
                                                 </p>
-                                                <p className="truncate text-slate-600">
-                                                    {customerName}
+                                                <p className={`truncate ${showPhone && customerPhone ? "font-mono font-bold text-slate-900" : "text-slate-600"}`}>
+                                                    {showPhone && customerPhone ? `WA ${customerPhone}` : customerName}
                                                 </p>
                                             </div>
                                         </div>
@@ -471,26 +537,33 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                    ======================================================== */}
                                 {selectedSize.id === "60x40" && (
                                     <div 
-                                        className="bg-white border-2 border-slate-900 rounded-xl p-2 text-slate-900 flex flex-col justify-between overflow-hidden shadow-sm"
+                                        className="bg-white border-2 border-slate-900 rounded-xl p-1.5 text-slate-900 flex flex-col justify-between overflow-hidden shadow-sm"
                                         style={{ width: "57mm", height: "37mm", boxSizing: "border-box" }}
                                     >
-                                        <div className="flex items-center justify-between pb-1 border-b border-dashed border-slate-300">
-                                            <div className="flex items-center gap-1.5">
-                                                <img src="/logo-yangversa.png" alt="YVS" className="w-3.5 h-3.5 object-contain shrink-0" />
-                                                <div>
-                                                    <h4 className="font-black text-[7pt] uppercase tracking-wider text-slate-900 leading-none">
-                                                        YVS COMPUTER
+                                        <div className="flex items-center justify-between gap-1 pb-1 border-b border-dashed border-slate-300 shrink-0">
+                                            <div className="flex items-center gap-1 min-w-0">
+                                                <img src="/logo-yangversa.png" alt="YVS" className="w-3 h-3 object-contain shrink-0" />
+                                                <div className="min-w-0">
+                                                    <h4 className="font-black text-[6.5pt] uppercase tracking-wide text-slate-900 leading-none whitespace-nowrap">
+                                                        YVS COM
                                                     </h4>
-                                                    <p className="text-[5pt] text-slate-500 font-medium mt-0.5">Workshop Servis Laptop</p>
+                                                    <p className="text-[4.5pt] text-slate-500 font-medium mt-0.5 truncate leading-none">Servis Laptop</p>
                                                 </div>
                                             </div>
-                                            <div className="px-1.5 py-0.5 bg-slate-900 text-white rounded font-mono font-black text-[7pt] shrink-0">
-                                                {tiket.nomor_tiket}
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                {priorityTag && (
+                                                    <span className="px-1 py-0.5 border border-slate-900 text-slate-900 rounded font-mono font-black text-[5pt] leading-none">
+                                                        {priorityTag}
+                                                    </span>
+                                                )}
+                                                <div className="px-1.5 py-0.5 bg-slate-900 text-white rounded font-mono font-black text-[6.5pt] leading-none shrink-0">
+                                                    {tiket.nomor_tiket}
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2 py-0.5">
-                                            <div className="w-[18mm] h-[18mm] shrink-0">
+                                        <div className="flex items-center gap-1.5 py-0.5 min-h-0">
+                                            <div className="w-[17mm] h-[17mm] shrink-0">
                                                 {qrDataUrl && (
                                                     <img 
                                                         src={qrDataUrl} 
@@ -503,18 +576,20 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                                 <p className="font-bold text-slate-900 truncate">
                                                     {deviceName}
                                                 </p>
-                                                <p className="truncate text-slate-600">
+                                                <p className="truncate text-slate-700 font-medium">
                                                     Cust: {customerName}
                                                 </p>
-                                                <p className="truncate text-slate-500 text-[5.5pt]">
+                                                <p className="truncate text-slate-600 text-[5.5pt]">
                                                     Kel: {complaints}
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="pt-0.5 border-t border-dashed border-slate-200 flex items-center justify-between text-[5pt] text-slate-500 font-mono">
-                                            <span>Scan untuk status</span>
-                                            <span>{tglMasuk}</span>
+                                        <div className="pt-0.5 border-t border-dashed border-slate-200 flex items-center justify-between gap-1 text-[5pt] text-slate-600 font-mono">
+                                            <span className="font-bold text-slate-900 truncate">
+                                                {showPhone && customerPhone ? `WA: ${customerPhone}` : "Scan untuk status"}
+                                            </span>
+                                            <span className="shrink-0">{tglMasuk}</span>
                                         </div>
                                     </div>
                                 )}
@@ -528,27 +603,34 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                         style={{ width: "76mm", height: "46mm", boxSizing: "border-box" }}
                                     >
                                         {/* Header */}
-                                        <div className="flex items-center justify-between pb-1 border-b border-dashed border-slate-300">
-                                            <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-dashed border-slate-300 shrink-0">
+                                            <div className="flex items-center gap-1.5 min-w-0">
                                                 <img 
                                                     src="/logo-yangversa.png" 
                                                     alt="YVS Computer" 
                                                     className="w-4 h-4 object-contain shrink-0" 
                                                 />
-                                                <div>
-                                                    <h4 className="font-black text-[8pt] uppercase tracking-wider text-slate-900 leading-none">
+                                                <div className="min-w-0">
+                                                    <h4 className="font-black text-[8pt] uppercase tracking-wider text-slate-900 leading-none whitespace-nowrap">
                                                         YVS COMPUTER
                                                     </h4>
-                                                    <p className="text-[5.5pt] text-slate-500 font-medium">Spesialis Servis Laptop & Gadget</p>
+                                                    <p className="text-[5pt] text-slate-500 font-medium truncate mt-0.5 leading-none">Spesialis Servis Laptop</p>
                                                 </div>
                                             </div>
-                                            <div className="px-1.5 py-0.5 bg-slate-900 text-white rounded font-mono font-black text-[8pt] tracking-wider shrink-0">
-                                                {tiket.nomor_tiket}
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                {priorityTag && (
+                                                    <span className="px-1.5 py-0.5 border border-slate-900 text-slate-900 rounded font-mono font-black text-[6.5pt] leading-none">
+                                                        {priorityTag}
+                                                    </span>
+                                                )}
+                                                <div className="px-1.5 py-0.5 bg-slate-900 text-white rounded font-mono font-black text-[8pt] tracking-wider shrink-0">
+                                                    {tiket.nomor_tiket}
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Body: QR Left + Meta Right */}
-                                        <div className="flex items-center gap-2.5 py-1">
+                                        <div className="flex items-center gap-2.5 py-0.5 min-h-0">
                                             <div className="w-[21mm] h-[21mm] shrink-0 bg-white border border-slate-200 rounded p-0.5 flex items-center justify-center">
                                                 {qrDataUrl && (
                                                     <img 
@@ -559,28 +641,40 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                                 )}
                                             </div>
 
-                                            <div className="flex-1 min-w-0 space-y-0.5 text-[6.5pt] text-slate-800 leading-snug">
+                                            <div className="flex-1 min-w-0 space-y-0.5 text-[6.5pt] text-slate-800 leading-tight">
                                                 <div className="flex items-start gap-1">
-                                                    <span className="text-slate-400 font-bold shrink-0">Unit:</span>
+                                                    <span className="text-slate-500 font-bold shrink-0">Unit:</span>
                                                     <span className="font-black text-slate-900 truncate">{deviceName}</span>
                                                 </div>
                                                 <div className="flex items-start gap-1">
-                                                    <span className="text-slate-400 font-bold shrink-0">Cust:</span>
+                                                    <span className="text-slate-500 font-bold shrink-0">Cust:</span>
                                                     <span className="font-semibold text-slate-800 truncate">{customerName}</span>
                                                 </div>
+                                                {showPhone && customerPhone && (
+                                                    <div className="flex items-start gap-1">
+                                                        <span className="text-slate-500 font-bold shrink-0">WA:</span>
+                                                        <span className="font-mono font-bold text-slate-900 truncate">{customerPhone}</span>
+                                                    </div>
+                                                )}
                                                 <div className="flex items-start gap-1">
-                                                    <span className="text-slate-400 font-bold shrink-0">Kel:</span>
-                                                    <span className="font-medium text-slate-600 line-clamp-2 text-[6pt]">{complaints}</span>
+                                                    <span className="text-slate-500 font-bold shrink-0">Kel:</span>
+                                                    <span className={`font-medium text-slate-600 text-[6pt] ${showPhone && customerPhone && kelengkapanSummary ? "truncate" : "line-clamp-2"}`}>{complaints}</span>
                                                 </div>
+                                                {kelengkapanSummary && (
+                                                    <div className="flex items-start gap-1">
+                                                        <span className="text-slate-500 font-bold shrink-0">Klkp:</span>
+                                                        <span className="font-medium text-slate-700 truncate text-[5.8pt]">{kelengkapanSummary}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
                                         {/* Footer */}
-                                        <div className="pt-0.5 border-t border-dashed border-slate-300 flex items-center justify-between text-[5.5pt] text-slate-500 font-mono">
-                                            <span className="font-semibold">
-                                                {qrTarget === "erp" ? "SCAN UNTUK LEMBAR KERJA ERP" : "SCAN UNTUK TRACKING PUBLIK"}
+                                        <div className="pt-0.5 border-t border-dashed border-slate-300 flex items-center justify-between gap-2 text-[5.5pt] text-slate-600 font-mono">
+                                            <span className="font-semibold truncate">
+                                                {snShort ? `SN: ${snShort}` : qrTarget === "erp" ? "SCAN LEMBAR KERJA ERP" : "SCAN TRACKING PUBLIK"}
                                             </span>
-                                            <span>Masuk: {tglMasuk}</span>
+                                            <span className="shrink-0">Masuk: {tglMasuk}</span>
                                         </div>
                                     </div>
                                 )}
@@ -590,75 +684,99 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                    ======================================================== */}
                                 {selectedSize.id === "100x75" && (
                                     <div 
-                                        className="bg-white border-2 border-slate-900 rounded-2xl p-3.5 text-slate-900 flex flex-col justify-between overflow-hidden shadow-sm"
+                                        className="bg-white border-2 border-slate-900 rounded-2xl p-2.5 text-slate-900 flex flex-col justify-between overflow-hidden shadow-sm"
                                         style={{ width: "95mm", height: "70mm", boxSizing: "border-box" }}
                                     >
                                         {/* Header Toko */}
-                                        <div className="flex items-center justify-between pb-1.5 border-b-2 border-dashed border-slate-300">
-                                            <div className="flex items-center gap-2.5">
-                                                <img src="/logo-yangversa.png" alt="YVS" className="w-6 h-6 object-contain shrink-0" />
-                                                <div>
-                                                    <h4 className="font-black text-[10pt] uppercase tracking-wider text-slate-900">
+                                        <div className="flex items-center justify-between gap-2 pb-1.5 border-b-2 border-dashed border-slate-300 shrink-0">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <img src="/logo-yangversa.png" alt="YVS" className="w-5 h-5 object-contain shrink-0" />
+                                                <div className="min-w-0">
+                                                    <h4 className="font-black text-[9.5pt] uppercase tracking-wide text-slate-900 leading-none whitespace-nowrap">
                                                         YVS COMPUTER
                                                     </h4>
-                                                    <p className="text-[6.5pt] text-slate-500 font-medium">Workshop Pusat Perbaikan & Rekayasa Komputer</p>
+                                                    <p className="text-[5.5pt] text-slate-500 font-medium truncate mt-0.5 leading-none">Workshop Servis Komputer</p>
                                                 </div>
                                             </div>
-                                            <div className="px-2.5 py-0.5 bg-slate-900 text-white rounded-lg font-mono font-black text-xs tracking-widest shrink-0">
-                                                {tiket.nomor_tiket}
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                {priorityTag && (
+                                                    <span className="px-1.5 py-0.5 border-2 border-slate-900 text-slate-900 rounded-md font-mono font-black text-[6.5pt] leading-none">
+                                                        {isClaim ? "KLAIM" : "EXPRESS"}
+                                                    </span>
+                                                )}
+                                                <div className="px-2 py-0.5 bg-slate-900 text-white rounded-md font-mono font-black text-[8.5pt] tracking-wider shrink-0 leading-tight">
+                                                    {tiket.nomor_tiket}
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Main Content Grid */}
-                                        <div className="grid grid-cols-12 gap-3 py-1.5 items-center">
+                                        <div className="grid grid-cols-12 gap-2.5 py-1 items-center flex-1 min-h-0">
                                             {/* QR Container */}
                                             <div className="col-span-5 flex flex-col items-center justify-center p-1.5 bg-white border border-slate-200 rounded-lg">
                                                 {qrDataUrl && (
                                                     <img 
                                                         src={qrDataUrl} 
                                                         alt={`QR ${tiket.nomor_tiket}`} 
-                                                        className="w-24 h-24 object-contain"
+                                                        className="w-20 h-20 object-contain"
                                                     />
                                                 )}
-                                                <span className="text-4xs font-mono font-bold text-slate-500 mt-0.5 uppercase text-center">
+                                                <span className="text-4xs font-mono font-bold text-slate-500 mt-0.5 uppercase text-center leading-none">
                                                     {qrTarget === "erp" ? "Buka di ERP" : "Portal Pelanggan"}
                                                 </span>
                                             </div>
 
                                             {/* Detailed Specs */}
-                                            <div className="col-span-7 space-y-1 text-xs">
+                                            <div className="col-span-7 space-y-1 text-xs min-w-0">
                                                 <div>
-                                                    <span className="text-3xs text-slate-400 font-bold uppercase block">Perangkat Unit</span>
-                                                    <p className="font-black text-xs text-slate-900 leading-tight truncate">
+                                                    <div className="flex items-center justify-between gap-1">
+                                                        <span className="text-[6pt] text-slate-500 font-bold uppercase leading-none">Perangkat Unit</span>
+                                                        {snShort && <span className="text-[6pt] font-mono font-bold text-slate-600 leading-none">SN: {snShort}</span>}
+                                                    </div>
+                                                    <p className="font-black text-[8pt] text-slate-900 leading-tight truncate mt-0.5">
                                                         {deviceName}
                                                     </p>
                                                 </div>
 
                                                 <div>
-                                                    <span className="text-3xs text-slate-400 font-bold uppercase block">Pemilik / Pelanggan</span>
-                                                    <p className="font-bold text-2xs text-slate-800 truncate">
+                                                    <span className="text-[6pt] text-slate-500 font-bold uppercase block leading-none">Pemilik / Kontak WA</span>
+                                                    <p className="font-bold text-[7.5pt] text-slate-800 truncate leading-tight mt-0.5">
                                                         {customerName}
                                                     </p>
+                                                    {showPhone && customerPhone && (
+                                                        <p className="font-mono font-bold text-[7.5pt] text-slate-900 truncate leading-tight">
+                                                            WA: {customerPhone}
+                                                        </p>
+                                                    )}
                                                 </div>
 
                                                 <div>
-                                                    <span className="text-3xs text-slate-400 font-bold uppercase block">Keluhan Utama</span>
-                                                    <p className="text-3xs text-slate-700 line-clamp-2 leading-tight">
+                                                    <span className="text-[6pt] text-slate-500 font-bold uppercase block leading-none">Keluhan Utama</span>
+                                                    <p className="text-[7pt] text-slate-700 leading-tight truncate mt-0.5">
                                                         {complaints}
                                                     </p>
                                                 </div>
 
-                                                <div className="pt-0.5 flex items-center justify-between text-3xs font-mono text-slate-500 border-t border-slate-100">
+                                                {kelengkapanSummary && (
+                                                    <div>
+                                                        <span className="text-[6pt] text-slate-500 font-bold uppercase block leading-none">Kelengkapan</span>
+                                                        <p className="text-[7pt] text-slate-700 truncate leading-tight mt-0.5">
+                                                            {kelengkapanSummary}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                <div className="pt-0.5 flex items-center justify-between text-[6.5pt] font-mono text-slate-600 border-t border-slate-100 leading-none">
                                                     <span>Tgl Masuk:</span>
-                                                    <span className="font-bold text-slate-700">{tglMasuk}</span>
+                                                    <span className="font-bold text-slate-800">{tglMasuk}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Footer Disclaimer */}
-                                        <div className="pt-1 border-t-2 border-dashed border-slate-300 flex items-center justify-between text-3xs text-slate-500">
-                                            <span>Tempel stiker identitas ini pada dus / unit perangkat</span>
-                                            <span className="font-mono font-bold">YVS Computer</span>
+                                        <div className="pt-1 border-t-2 border-dashed border-slate-300 flex items-center justify-between text-[6.5pt] text-slate-500 shrink-0 leading-none">
+                                            <span className="truncate">Tempel stiker identitas ini pada dus / unit</span>
+                                            <span className="font-mono font-bold shrink-0">YVS Computer</span>
                                         </div>
                                     </div>
                                 )}
@@ -679,8 +797,15 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
                                         </div>
                                         <p className="text-[6pt] text-slate-500 font-medium">Nota Identitas Unit Servis</p>
                                         
-                                        <div className="my-2 px-3 py-1 bg-slate-900 text-white rounded-lg font-mono font-black text-[10pt] tracking-widest">
-                                            {tiket.nomor_tiket}
+                                        <div className="my-2 flex items-center justify-center gap-1.5 flex-wrap">
+                                            <div className="px-3 py-1 bg-slate-900 text-white rounded-lg font-mono font-black text-[10pt] tracking-widest">
+                                                {tiket.nomor_tiket}
+                                            </div>
+                                            {priorityTag && (
+                                                <span className="px-2 py-0.5 border-2 border-slate-900 text-slate-900 rounded-lg font-mono font-black text-[7pt]">
+                                                    {isClaim ? "KLAIM GARANSI" : "EXPRESS"}
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* QR */}
@@ -703,18 +828,36 @@ export default function TicketQrModal({ isOpen, onClose, tiket }) {
 
                                         {/* List */}
                                         <div className="w-full space-y-1 text-[7.5pt] text-left">
-                                            <div className="flex justify-between">
-                                                <span className="text-slate-500">Unit:</span>
-                                                <span className="font-bold text-slate-900 text-right truncate max-w-[42mm]">{deviceName}</span>
+                                            <div className="flex justify-between gap-2">
+                                                <span className="text-slate-500 shrink-0">Unit:</span>
+                                                <span className="font-bold text-slate-900 text-right truncate max-w-[44mm]">{deviceName}</span>
                                             </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-slate-500">Pelanggan:</span>
-                                                <span className="font-semibold text-slate-800 text-right truncate max-w-[42mm]">{customerName}</span>
+                                            {snShort && (
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-slate-500 shrink-0">SN:</span>
+                                                    <span className="font-mono font-semibold text-slate-800 text-right truncate max-w-[44mm]">{snRaw}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between gap-2">
+                                                <span className="text-slate-500 shrink-0">Pelanggan:</span>
+                                                <span className="font-semibold text-slate-800 text-right truncate max-w-[44mm]">{customerName}</span>
                                             </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-slate-500">Keluhan:</span>
-                                                <span className="font-medium text-slate-700 text-right truncate max-w-[42mm]">{complaints}</span>
+                                            {showPhone && customerPhone && (
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-slate-500 shrink-0">No. WA:</span>
+                                                    <span className="font-mono font-bold text-slate-900 text-right truncate max-w-[44mm]">{customerPhone}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between gap-2">
+                                                <span className="text-slate-500 shrink-0">Keluhan:</span>
+                                                <span className="font-medium text-slate-700 text-right truncate max-w-[44mm]">{complaints}</span>
                                             </div>
+                                            {kelengkapanSummary && (
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-slate-500 shrink-0">Kelengkapan:</span>
+                                                    <span className="font-medium text-slate-700 text-right truncate max-w-[42mm]">{kelengkapanSummary}</span>
+                                                </div>
+                                            )}
                                             <div className="flex justify-between text-[6.5pt] font-mono text-slate-500 pt-1 border-t border-slate-100">
                                                 <span>Tgl:</span>
                                                 <span>{tglMasuk}</span>

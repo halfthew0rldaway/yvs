@@ -291,23 +291,28 @@ To maximize speed, maintain context, and avoid breaking production code:
 3. **Preserve Architecture & UI/UX**:
    - Never replace or simplify existing UI components with generic placeholders.
    - Respect established mobile Capacitor patterns and web styling conventions.
-4. **Synchronize Documentation**:
+4. **Synchronize Documentation & Release Versioning (`CHANGELOG.md`)**:
    - When introducing or altering business models, routes, or workflows, update `AGENTS.md`, `memory-bank/activeContext.md`, and `memory-bank/progress.md`.
+   - **Version Control & Release Tracking**: Always read [`CHANGELOG.md`](./CHANGELOG.md) before preparing a staging/production release. Bump semantic `version` (`MAJOR.MINOR.PATCH`) synchronously in both `frontend/package.json` and `backend/package.json`, and log all user-facing changes/fixes in `CHANGELOG.md`. `frontend/vite.config.js` (`__APP_VERSION__`), `frontend/src/pages/DownloadApp.jsx`, `frontend/android/app/build.gradle` (`versionName`), and `.github/workflows/deploy-staging.yml` (`servio-staging.json`) automatically inherit the version from `frontend/package.json`.
 
 ---
 
 ## 8. Testing & Quality Assurance
 
-The codebase includes comprehensive White Box & Black Box test coverage designed for rapid manual and automated execution:
+The codebase includes comprehensive White Box, E2E Business Flow & Black Box test coverage designed for rapid manual and automated execution:
 
-### Automated Unit Test Suites (`backend/tests/unit/`)
+### Automated Test Suites (`backend/tests/`)
 Tests run using the native Node.js test runner with zero extra dependencies:
 ```bash
-# Run all unit tests
-cd backend && node --test tests/unit/*.test.js
+# Run all unit + E2E flow tests
+npm --prefix backend test
+
+# Run the standalone A-to-Z business flow & KPI sync verification suite
+npm --prefix backend run test:flow
 ```
 
-Covered Domain Test Suites (**89/89 passing across 9 suites** via `npm --prefix backend test`):
+Covered Domain Test Suites (**90/90 passing across 10 suites** via `npm --prefix backend test`):
+0. **`E2E-A2Z`**: Full stateful workshop flow verification across real Express controllers (Intake -> Diagnosis -> Public WA ACC -> Atomic Sparepart Deduction -> QC/Loaner/Invoice Interlocks -> HPP-Safe Promo Invoice -> Sign-to-Unlock -> Handover + `completed_at` KPI preservation -> Admin/Technician KPI Sync -> Warranty H-3 & 6-Month Recall -> Cancellation Stock/Promo Rollback in `backend/tests/e2e/business_flow_a2z.test.js`).
 1. **`WB-AUT`**: JWT authentication validation, expiry codes, tampered signatures, and permission-based authorization independent of role names.
 2. **`WB-CHT`**: 1-on-1 staff direct chat pair canonicalization, self-chat blocking, reference token parsing, permission gating, deletion retention guard, and WIB export formatting (`direct_chat.test.js`).
 3. **`WB-DIA`**: Technician diagnosis input sanitization, non-negative cost enforcement, and error-free `LogPerbaikan` note formatting.

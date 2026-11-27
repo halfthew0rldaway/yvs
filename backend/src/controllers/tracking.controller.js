@@ -251,6 +251,7 @@ async function submitRating(req, res) {
         });
 
         broadcast("tiket:updated", { id: tiket.id, nomor_tiket: tiket.nomor_tiket });
+        broadcast("dashboard:refresh");
 
         return res.json({
             message: "Terima kasih atas penilaian Anda!",

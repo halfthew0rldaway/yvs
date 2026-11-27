@@ -5,6 +5,7 @@ import AppConfig from "../services/config";
 
 const manifestUrl = "/downloads/servio-staging.json";
 const apkUrl = "/downloads/servio-staging.apk";
+const APP_VERSION = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "1.1.1";
 
 export default function DownloadApp() {
     const [release, setRelease] = useState(null);
@@ -51,7 +52,7 @@ export default function DownloadApp() {
                             <img src="/logo-yangversa.png" alt="YVS Computer" className="h-full w-full object-contain" />
                         </div>
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">YVS Computer Staging</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">YVS Computer Staging · v{APP_VERSION}</p>
                             <h1 className="text-xl font-bold text-slate-900">Pasang aplikasi staf</h1>
                         </div>
                     </div>
@@ -63,7 +64,7 @@ export default function DownloadApp() {
                         {release && !AppConfig.isNative ? (
                             <>
                                 <a href={`${apkUrl}?v=${encodeURIComponent(release.commit)}`} download="yvs-computer-staging.apk" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"><Download size={16} /> Unduh APK staging</a>
-                                <p className="mt-2 text-xs text-slate-500">Build #{release.versionCode} · Commit {release.commit.slice(0, 7)}</p>
+                                <p className="mt-2 text-xs text-slate-500">v{release.version || APP_VERSION} · Build #{release.versionCode} · Commit {release.commit.slice(0, 7)}</p>
                             </>
                         ) : (
                             <p className="mt-4 flex items-center gap-2 text-sm text-slate-500">{AppConfig.isNative ? "Buka halaman ini di browser untuk mengunduh APK." : loading ? <><RefreshCw size={15} className="animate-spin" /> Memeriksa APK…</> : "APK belum tersedia di server."}</p>
@@ -72,7 +73,10 @@ export default function DownloadApp() {
                     </section>
 
                     <section className="mt-4 rounded-xl border border-slate-200 p-4 sm:p-5">
-                        <h2 className="font-semibold text-slate-900">Web / PWA</h2>
+                        <div className="flex items-center justify-between gap-2">
+                            <h2 className="font-semibold text-slate-900">Web / PWA</h2>
+                            <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs font-semibold text-slate-600">v{APP_VERSION}</span>
+                        </div>
                         <p className="mt-1 text-sm text-slate-500">Buka web staging untuk versi yang diperbarui saat deploy. Di Chrome Android, pilih menu ⋮ lalu “Tambahkan ke Layar utama” bila tombol pasang tidak muncul.</p>
                         {installPrompt ? (
                             <button type="button" onClick={installPwa} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50"><Smartphone size={16} /> Pasang PWA</button>

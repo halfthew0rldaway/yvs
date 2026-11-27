@@ -791,8 +791,8 @@ async function update(req, res) {
                     catatan: `[Unit Selesai] Pengerjaan teknisi dan verifikasi QC telah selesai. Unit dinyatakan siap diambil oleh pelanggan.`,
                 },
             });
-        } else if (status && status !== "selesai" && tiket.status === "selesai") {
-            // Jika dikembalikan ke status sebelum selesai
+        } else if (status && !["selesai", "diambil"].includes(status) && tiket.status === "selesai") {
+            // Jika dikembalikan ke status sebelum selesai (mis. kembali ke dalam_perbaikan)
             updateData.completed_at = null;
             updateData.last_reminder_sent = 0;
         }
@@ -926,6 +926,9 @@ async function update(req, res) {
         if (status === "diambil") {
             const pickupDate = tiket.tgl_diambil || new Date();
             updateData.tgl_diambil = pickupDate;
+            if (!tiket.completed_at && !updateData.completed_at) {
+                updateData.completed_at = pickupDate;
+            }
             updateData.garansi_berakhir_at = calculateWarrantyExpiry(pickupDate, durasi_garansi || tiket.durasi_garansi);
         } else if (durasi_garansi && (tiket.status === "diambil" || status === "diambil")) {
             const pickupDate = tiket.tgl_diambil || new Date();
