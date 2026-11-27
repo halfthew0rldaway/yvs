@@ -275,9 +275,9 @@ const HeroTrackingStage = memo(function HeroTrackingStage({
                             <button
                                 type="button"
                                 onClick={onOpenScanner}
-                                aria-label="Pindai QR pada lembar nota"
-                                title="Pindai QR nota servis"
-                                className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] px-3 rounded-lg bg-[var(--yvs-paper-2)] hover:bg-blue-50 text-[var(--yvs-ink)] hover:text-[var(--yvs-accent)] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                                aria-label="Pindai atau unggah gambar QR pada lembar nota"
+                                title="Pindai kamera atau unggah gambar QR nota servis"
+                                className="absolute right-2 inset-y-0 my-auto z-20 h-[44px] px-3 rounded-lg bg-[var(--yvs-paper-2)] hover:bg-blue-50 text-[var(--yvs-ink)] hover:text-[var(--yvs-accent)] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                             >
                                 <Camera className="w-4 h-4 shrink-0" aria-hidden="true" />
                                 <span className="hidden xs:inline">Pindai QR</span>

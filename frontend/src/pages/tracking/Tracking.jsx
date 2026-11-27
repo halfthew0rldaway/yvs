@@ -50,7 +50,10 @@ function extractTicketFromScan(text) {
     try {
         if (clean.startsWith("http://") || clean.startsWith("https://")) {
             const url = new URL(clean);
-            const tParam = url.searchParams.get("nomor_tiket") || url.searchParams.get("tiket");
+            const tParam =
+                url.searchParams.get("nomor_tiket") ||
+                url.searchParams.get("tiket") ||
+                url.searchParams.get("search");
             if (tParam) return tParam.trim();
         }
     } catch (_) {}
@@ -283,8 +286,8 @@ export default function Tracking() {
                         isOpen={isCameraScannerOpen}
                         onClose={() => setIsCameraScannerOpen(false)}
                         onScan={handleScanReceipt}
-                        title="Pindai QR / Barcode Nota Servis"
-                        subtitle="Arahkan kamera ponsel Anda ke kode QR pada lembar nota fisik YVS Computer"
+                        title="Pindai atau Unggah QR Nota Servis"
+                        subtitle="Arahkan kamera ke QR nota atau unggah foto/screenshot QR (diproses lokal sementara)"
                     />
                 </Suspense>
             )}

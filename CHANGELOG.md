@@ -18,6 +18,10 @@ This project follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PA
 - **Field-Ready QR Sticker Labels (`TicketQrModal.jsx`)**:
   - Added customer WhatsApp number (`perangkat.customer.nomor_telepon`) with an interactive **`No. WA: Tampil / Sembunyi`** toggle (default ON) across all 5 thermal sizes (`50x30`, `60x40`, `80x50`, `100x75`, `Struk 58/80 mm`) so workshop staff can contact owners immediately even when scanners or ERP are offline.
   - Added priority badges (`EXP` / `EXPRESS` for express SLA, `KLAIM` for warranty claim), concise deposited accessories summary (`kelengkapan_detail` / `kelengkapan`), and short Serial Number (`SN`) without overflowing or altering physical mm label dimensions.
+- **Ephemeral Client-Side QR Media Upload (`CameraScannerModal.jsx`, `Tracking.jsx`)**:
+  - Added an **`Unggah Gambar QR`** tab (click gallery/file picker, drag-and-drop, and `Ctrl+V` clipboard paste) plus a 1-click fallback button when camera access is unavailable.
+  - Decodes QR/barcodes 100% locally in temporary browser memory (`BarcodeDetector` + `html5-qrcode` `scanFile` with white-backed canvas normalization) and immediately clears temporary canvas/input buffers—**zero server upload and zero disk persistence**.
+  - Updated `Tracking.jsx` QR URL parser (`extractTicketFromScan`) to also recognize `?search=` URLs from ERP-mode stickers alongside `?nomor_tiket=` and `?tiket=`.
 - **Automated A-to-Z Business Flow E2E Verification (`backend/tests/e2e/business_flow_a2z.test.js`)**:
   - Added reusable `npm --prefix backend run test:flow` suite running real Express controllers end-to-end (Intake -> Diagnosis -> SLA Pause -> Public 4-digit WA ACC -> Atomic Sparepart Deduction -> QC/Loaner/Invoice Interlocks -> HPP-Safe Promo Invoice -> Sign-to-Unlock -> Handover -> Admin/Technician KPI Sync -> Warranty H-3 & 6-Month Recall -> Cancellation Stock/Promo Rollback).
 - **Unified Semantic Version Tracking (`CHANGELOG.md`, `/download`, Android APK, Staging CI)**:
